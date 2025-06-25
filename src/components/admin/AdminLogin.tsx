@@ -88,7 +88,7 @@ export default function AdminLogin() {
             </div>
           )}
 
-          {user && user.email && (user.role === 'admin' || user.role === 'moderator') ? (
+          {user && user.email && (user.email === 'orbitandchill@gmail.com' || user.role === 'admin' || user.role === 'moderator') ? (
             // Current user is admin - show ONLY the button as requested
             <div className="text-center">
               {/* User Info */}
@@ -97,7 +97,7 @@ export default function AdminLogin() {
                   Signed in as {user.username}
                 </p>
                 <p className="font-inter text-black/80">
-                  {user.email} • {user.role?.charAt(0).toUpperCase() + user.role?.slice(1)}
+                  {user.email} • {user.email === 'orbitandchill@gmail.com' ? 'Master Admin' : (user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || 'Admin')}
                 </p>
               </div>
               

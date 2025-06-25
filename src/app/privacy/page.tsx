@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { BRAND } from '@/config/brand';
 
 export default function PrivacyPage() {
   return (
@@ -266,13 +267,13 @@ export default function PrivacyPage() {
                   <span>Contact Us</span>
                 </a>
                 <a 
-                  href="mailto:privacy@luckstrology.com" 
+                  href={`mailto:${BRAND.email}`} 
                   className="inline-flex items-center space-x-2 bg-transparent text-black px-8 py-4 border-2 border-black font-semibold transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
-                  <span>privacy@luckstrology.com</span>
+                  <span>{BRAND.email}</span>
                 </a>
               </div>
             </div>

@@ -21,6 +21,11 @@ interface VoidMoonStatus {
     source: 'birth' | 'current' | 'fallback';
     coordinates: { lat: string; lon: string };
   };
+  locationError?: {
+    type: 'permission_denied' | 'position_unavailable' | 'timeout' | 'not_supported' | 'unknown';
+    message: string;
+    canRetry: boolean;
+  };
 }
 
 export const useVoidMoonStatus = () => {
@@ -29,8 +34,24 @@ export const useVoidMoonStatus = () => {
     isVoid: false,
     isLoading: true
   });
+
+  const requestLocationPermission = async (): Promise<void> => {
+    try {
+      setVoidStatus(prev => ({ ...prev, isLoading: true, locationError: undefined }));
+      const position = await getCurrentPosition();
+      // Trigger a fresh check with new location
+      checkVoidStatus(position);
+    } catch (error) {
+      const locationError = getLocationError(error);
+      setVoidStatus(prev => ({ 
+        ...prev, 
+        isLoading: false,
+        locationError 
+      }));
+    }
+  };
   
-  const checkVoidStatus = async () => {
+  const checkVoidStatus = async (providedPosition?: GeolocationPosition) => {
     try {
       setVoidStatus(prev => ({ ...prev, isLoading: true }));
       
@@ -73,9 +94,13 @@ export const useVoidMoonStatus = () => {
           coordinates: user.birthData.coordinates
         };
       } else {
-        // Try to get current location
+        // Try to get current location (use provided position if available)
+        let position = providedPosition;
         try {
-          const position = await getCurrentPosition();
+          if (!position) {
+            position = await getCurrentPosition();
+          }
+          
           locationData = {
             locationOfBirth: 'Current Location',
             coordinates: {
@@ -91,8 +116,17 @@ export const useVoidMoonStatus = () => {
               lon: position.coords.longitude.toString()
             }
           };
+          
+          // Clear any previous location error
+          setVoidStatus(prev => ({ ...prev, locationError: undefined }));
+          
         } catch (geoError) {
           console.log('Could not get current location, using NY as fallback:', geoError);
+          
+          // Set location error for UI to handle
+          const locationError = getLocationError(geoError);
+          setVoidStatus(prev => ({ ...prev, locationError }));
+          
           // locationUsed already set to fallback above
         }
       }
@@ -155,7 +189,11 @@ export const useVoidMoonStatus = () => {
     return () => clearInterval(interval);
   }, [voidStatus.isVoid]);
   
-  return { voidStatus, refreshVoidStatus: checkVoidStatus };
+  return { 
+    voidStatus, 
+    refreshVoidStatus: checkVoidStatus, 
+    requestLocationPermission 
+  };
 };
 
 // Helper function to get current geolocation

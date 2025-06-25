@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { BRAND } from '@/config/brand';
 
 export default function AboutPage() {
   return (
@@ -11,11 +12,10 @@ export default function AboutPage() {
         <section className="px-[5%] py-16">
           <div className="text-center">
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
-              About Luckstrology
+              About {BRAND.name}
             </h1>
             <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
-              Discover the cosmic blueprint of your personality through the ancient art of astrology, 
-              powered by modern precision and community wisdom.
+              {BRAND.description}
             </p>
           </div>
         </section>
@@ -34,7 +34,7 @@ export default function AboutPage() {
                   <h2 className="font-space-grotesk text-3xl font-bold text-black">Our Mission</h2>
                 </div>
                 <p className="font-inter text-lg text-black leading-relaxed mb-4">
-                  At Luckstrology, we believe that understanding your astrological profile can provide 
+                  At {BRAND.name}, we believe that understanding your astrological profile can provide 
                   profound insights into your personality, relationships, and life path. Our mission is 
                   to make accurate, professional-grade astrology accessible to everyone.
                 </p>
@@ -162,7 +162,7 @@ export default function AboutPage() {
                 <h2 className="font-space-grotesk text-2xl font-bold text-black">Join Our Journey</h2>
                 <p className="font-inter text-black/80">
                   Whether you&apos;re just beginning to explore astrology or you&apos;re a seasoned 
-                  practitioner, Luckstrology is designed to grow with you on your cosmic journey.
+                  practitioner, {BRAND.name} is designed to grow with you on your cosmic journey.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link 

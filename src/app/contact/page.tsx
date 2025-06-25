@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { BRAND } from '@/config/brand';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -152,7 +153,7 @@ export default function ContactPage() {
                         </div>
                         <div>
                           <h4 className="font-inter font-semibold text-black">Email Support</h4>
-                          <p className="font-inter text-black/80">hello@luckstrology.com</p>
+                          <p className="font-inter text-black/80">{BRAND.email}</p>
                           <p className="font-inter text-sm text-black/60">We typically respond within 24 hours</p>
                         </div>
                       </div>
@@ -179,7 +180,7 @@ export default function ContactPage() {
                     <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Quick Answers</h3>
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-inter font-semibold text-black text-sm mb-1">Is Luckstrology free to use?</h4>
+                        <h4 className="font-inter font-semibold text-black text-sm mb-1">Is {BRAND.name} free to use?</h4>
                         <p className="font-inter text-xs text-black/70">Yes! Our core features including natal chart generation are completely free.</p>
                       </div>
                       

@@ -485,15 +485,34 @@ export class AdminSettingsService {
       };
     }
 
-    // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-    const result = await executeRawSelectOne(db, {
-      table: 'admin_settings',
-      conditions: [{ column: 'key', value: key }]
-    });
-    
-    const settings = result ? [result] : [];
+    try {
+      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      console.log(`🔍 getSetting: Looking for setting with key: ${key}`);
+      
+      const result = await executeRawSelectOne(db, {
+        table: 'admin_settings',
+        conditions: [{ column: 'key', value: key }]
+      });
+      
+      console.log(`🔍 getSetting: Raw result for ${key}:`, result);
 
-    return result ? this.transformSetting(transformDatabaseRow(result)) : null;
+      if (!result) {
+        console.log(`🔍 getSetting: No result found for key: ${key}`);
+        return null;
+      }
+
+      const transformed = transformDatabaseRow(result);
+      console.log(`🔍 getSetting: Transformed result for ${key}:`, transformed);
+      
+      const setting = this.transformSetting(transformed);
+      console.log(`🔍 getSetting: Final setting for ${key}:`, setting);
+      
+      return setting;
+      
+    } catch (error) {
+      console.error(`❌ getSetting: Error retrieving setting ${key}:`, error);
+      return null;
+    }
   }
 
   /**
@@ -600,14 +619,49 @@ export class AdminSettingsService {
         updatedBy: options.updatedBy || null // Use null for system updates
       };
 
-      await db
-        .insert(adminSettings)
-        .values(newSetting);
+      // BYPASS DRIZZLE ORM - Use raw SQL for consistency
+      const dbObj = db as any;
+      const client = dbObj?.client;
+      
+      if (!client) {
+        throw new Error('Database client not available');
+      }
+
+      await client.execute({
+        sql: `INSERT INTO admin_settings (key, value, type, category, description, updated_at, updated_by) 
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          newSetting.key,
+          newSetting.value,
+          newSetting.type,
+          newSetting.category,
+          newSetting.description,
+          newSetting.updatedAt.toISOString(),
+          newSetting.updatedBy
+        ]
+      });
 
       // Fetch the created setting since .returning() might not work consistently
+      console.log(`🔍 Attempting to verify created setting: ${key}`);
       const createdSetting = await this.getSetting(key);
       if (!createdSetting) {
-        throw new Error(`Failed to create setting: ${key}`);
+        console.error(`❌ Failed to retrieve setting after creation: ${key}`);
+        console.log(`🔧 Attempting direct database query for verification...`);
+        
+        // Try a direct verification query
+        try {
+          const verifyResult = await client.execute({
+            sql: 'SELECT * FROM admin_settings WHERE key = ?',
+            args: [key]
+          });
+          console.log(`🔍 Direct query result:`, verifyResult.rows);
+        } catch (verifyError) {
+          console.error(`❌ Direct verification failed:`, verifyError);
+        }
+        
+        throw new Error(`Failed to create setting: ${key}. Setting may not have been inserted or retrieval failed.`);
+      } else {
+        console.log(`✅ Successfully created and verified setting: ${key}`);
       }
       
       result = createdSetting;
@@ -822,12 +876,28 @@ export class AdminSettingsService {
    */
   private static transformSetting(dbSetting: any): AdminSetting {
     if (!dbSetting || !dbSetting.key) {
+      console.error(`❌ transformSetting: Invalid database setting:`, dbSetting);
       throw new Error('Invalid database setting: missing key');
     }
     
+    console.log(`🔍 transformSetting: Processing setting ${dbSetting.key}:`, dbSetting);
+    
     const defaultSetting = AdminSettingsService.DEFAULT_SETTINGS[dbSetting.key];
     
-    return {
+    // Handle potential date parsing issues
+    let updatedAt: Date;
+    try {
+      updatedAt = dbSetting.updatedAt ? new Date(dbSetting.updatedAt) : new Date();
+      if (isNaN(updatedAt.getTime())) {
+        console.warn(`⚠️ transformSetting: Invalid date for ${dbSetting.key}, using current date`);
+        updatedAt = new Date();
+      }
+    } catch (dateError) {
+      console.warn(`⚠️ transformSetting: Date parsing error for ${dbSetting.key}:`, dateError);
+      updatedAt = new Date();
+    }
+    
+    const result = {
       key: dbSetting.key,
       value: dbSetting.value,
       type: dbSetting.type,
@@ -835,9 +905,12 @@ export class AdminSettingsService {
       description: dbSetting.description,
       isRequired: defaultSetting?.isRequired || false,
       defaultValue: defaultSetting?.defaultValue,
-      updatedAt: new Date(dbSetting.updatedAt),
+      updatedAt: updatedAt,
       updatedBy: dbSetting.updatedBy
     };
+    
+    console.log(`🔍 transformSetting: Final result for ${dbSetting.key}:`, result);
+    return result;
   }
 
   /**

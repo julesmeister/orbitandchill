@@ -328,12 +328,19 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   // Authentication actions
   initializeAuth: () => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('admin_token');
-      if (token) {
-        set({ authToken: token });
-        // Verify token on next tick
-        setTimeout(() => get().verifyAuth(), 0);
-      }
+      // First check if current user is master admin
+      setTimeout(async () => {
+        const isAdmin = await get().checkCurrentUserAdmin();
+        if (!isAdmin) {
+          // If not master admin, check for stored admin token
+          const token = localStorage.getItem('admin_token');
+          if (token) {
+            set({ authToken: token });
+            // Verify token
+            get().verifyAuth();
+          }
+        }
+      }, 0);
     }
   },
 
@@ -463,9 +470,34 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       return false;
     }
 
-    // Check if current user has admin role
+    // Master admin account - orbitandchill@gmail.com
+    const MASTER_ADMIN_EMAIL = 'orbitandchill@gmail.com';
+    
+    // Check if current user is the master admin
+    if (currentUser.email === MASTER_ADMIN_EMAIL) {
+      // Bypass login for master admin - directly set authenticated state
+      const adminUser: AdminUser = {
+        id: currentUser.id,
+        username: currentUser.username || 'Master Admin',
+        email: currentUser.email,
+        role: 'master_admin',
+        permissions: ['all'] // Master admin has all permissions
+      };
+
+      set({
+        isAuthenticated: true,
+        adminUser: adminUser,
+        authToken: `master_admin_${currentUser.id}`, // Generate token for this session
+        authLoading: false,
+      });
+
+      console.log('✅ Master admin automatically authenticated:', adminUser.username);
+      return true;
+    }
+
+    // Fallback: Check if current user has admin role (for future admin users)
     if (currentUser.role === 'admin' || currentUser.role === 'moderator') {
-      // Auto-login the admin using their existing Google session
+      // Auto-login other admins using their existing Google session
       const success = await get().login(currentUser.email, process.env.NEXT_PUBLIC_ADMIN_ACCESS_KEY || 'admin-development-key-123');
       return success;
     }

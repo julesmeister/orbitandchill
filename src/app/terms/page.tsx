@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { BRAND } from '@/config/brand';
 
 export default function TermsPage() {
   return (
@@ -11,7 +12,7 @@ export default function TermsPage() {
           <div className="text-center">
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">Terms of Service</h1>
             <p className="font-inter text-xl text-black/80">
-              These terms govern your use of Luckstrology. By using our service, you agree to these terms.
+              These terms govern your use of {BRAND.name}. By using our service, you agree to these terms.
             </p>
             <p className="font-inter text-sm text-black/60 mt-4">Last updated: December 6, 2024</p>
           </div>
@@ -84,7 +85,7 @@ export default function TermsPage() {
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">1. Acceptance of Terms</h2>
               <div className="space-y-4 font-inter text-black/80">
                 <p>
-                  By accessing or using Luckstrology (&quot;the Service&quot;), you agree to be bound by these Terms of Service 
+                  By accessing or using {BRAND.name} (&quot;the Service&quot;), you agree to be bound by these Terms of Service 
                   and our Privacy Policy. If you do not agree to these terms, please do not use our service.
                 </p>
                 <p>
@@ -99,7 +100,7 @@ export default function TermsPage() {
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">2. Description of Service</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  Luckstrology is a web-based platform that provides:
+                  {BRAND.name} is a web-based platform that provides:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>Natal chart generation based on birth data</li>
@@ -197,7 +198,7 @@ export default function TermsPage() {
                   <h3 className="font-semibold text-gray-900 mb-3">⚠️ Important Disclaimers</h3>
                   <div className="space-y-3 text-gray-700">
                     <p>
-                      <strong>Entertainment Purpose:</strong> Luckstrology is provided for entertainment 
+                      <strong>Entertainment Purpose:</strong> {BRAND.name} is provided for entertainment 
                       and educational purposes only. Astrological information should not be considered 
                       factual or used for making important life decisions.
                     </p>
@@ -225,7 +226,7 @@ export default function TermsPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Limitation of Liability</h3>
                   <p className="text-gray-600">
-                    To the fullest extent permitted by law, Luckstrology shall not be liable for any 
+                    To the fullest extent permitted by law, {BRAND.name} shall not be liable for any 
                     indirect, incidental, special, or consequential damages arising from your use of 
                     our service.
                   </p>
@@ -238,7 +239,7 @@ export default function TermsPage() {
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">6. Intellectual Property</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  The Luckstrology platform, including its design, code, content, and features, 
+                  The {BRAND.name} platform, including its design, code, content, and features, 
                   is owned by us and protected by copyright, trademark, and other intellectual 
                   property laws.
                 </p>
@@ -309,13 +310,13 @@ export default function TermsPage() {
                   <span>Contact Form</span>
                 </a>
                 <a 
-                  href="mailto:legal@luckstrology.com" 
+                  href={`mailto:${BRAND.email}`} 
                   className="inline-flex items-center space-x-2 bg-transparent text-black px-8 py-4 border-2 border-black font-semibold transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
-                  <span>legal@luckstrology.com</span>
+                  <span>{BRAND.email}</span>
                 </a>
               </div>
             </div>

@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { BRAND } from '@/config/brand';
 
 interface FAQ {
   id: string;
@@ -16,20 +17,20 @@ const faqs: FAQ[] = [
   {
     id: '1',
     category: 'general',
-    question: 'What is Luckstrology?',
-    answer: 'Luckstrology is a free web-based platform that provides accurate natal chart generation, astrological interpretations, and a community space for astrology enthusiasts. We use astronomy-engine for professional-grade astronomical calculations with ±1 arcminute precision.'
+    question: `What is ${BRAND.name}?`,
+    answer: `${BRAND.name} is a free web-based platform that provides accurate natal chart generation, astrological interpretations, and a community space for astrology enthusiasts. We use astronomy-engine for professional-grade astronomical calculations with ±1 arcminute precision.`
   },
   {
     id: '2',
     category: 'general',
-    question: 'Is Luckstrology really free?',
+    question: `Is ${BRAND.name} really free?`,
     answer: 'Yes! Our core features including natal chart generation, basic interpretations, and community discussions are completely free. We believe everyone should have access to quality astrological tools.'
   },
   {
     id: '3',
     category: 'general',
     question: 'Do I need to create an account?',
-    answer: 'No, you don\'t need to create an account to use Luckstrology. Your birth data is automatically saved in your browser, and you\'ll get a unique anonymous identity. You can optionally sign in with Google for additional features.'
+    answer: `No, you don't need to create an account to use ${BRAND.name}. Your birth data is automatically saved in your browser, and you'll get a unique anonymous identity. You can optionally sign in with Google for additional features.`
   },
   
   // Chart Questions
@@ -55,7 +56,7 @@ const faqs: FAQ[] = [
     id: '7',
     category: 'charts',
     question: 'Can I generate charts for other people?',
-    answer: 'Currently, each browser session is associated with one person\'s chart data. To generate charts for others, you would need to temporarily enter their birth information (with their permission) or they can visit Luckstrology themselves.'
+    answer: `Currently, each browser session is associated with one person's chart data. To generate charts for others, you would need to temporarily enter their birth information (with their permission) or they can visit ${BRAND.name} themselves.`
   },
   
   // Technical Questions
@@ -74,14 +75,14 @@ const faqs: FAQ[] = [
   {
     id: '10',
     category: 'technical',
-    question: 'Does Luckstrology work on mobile devices?',
-    answer: 'Absolutely! Luckstrology is fully responsive and works great on smartphones, tablets, and desktop computers. The interface adapts to provide the best experience on your device.'
+    question: `Does ${BRAND.name} work on mobile devices?`,
+    answer: `Absolutely! ${BRAND.name} is fully responsive and works great on smartphones, tablets, and desktop computers. The interface adapts to provide the best experience on your device.`
   },
   {
     id: '11',
     category: 'technical',
     question: 'What browsers are supported?',
-    answer: 'Luckstrology works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend keeping your browser updated for the best experience.'
+    answer: `${BRAND.name} works on all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend keeping your browser updated for the best experience.`
   },
   
   // Privacy Questions
@@ -179,7 +180,7 @@ export default function FAQPage() {
               Frequently Asked Questions
             </h1>
             <p className="font-inter text-xl text-black/80 leading-relaxed">
-              Find answers to common questions about Luckstrology, natal charts, and astrology.
+              Find answers to common questions about {BRAND.name}, natal charts, and astrology.
             </p>
           </div>
         </section>
