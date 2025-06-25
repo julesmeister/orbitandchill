@@ -1,0 +1,22 @@
+CREATE TABLE `astrological_events` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`title` text NOT NULL,
+	`date` text NOT NULL,
+	`time` text,
+	`type` text NOT NULL,
+	`description` text NOT NULL,
+	`aspects` text NOT NULL,
+	`planetary_positions` text NOT NULL,
+	`score` integer DEFAULT 5 NOT NULL,
+	`is_generated` integer DEFAULT false NOT NULL,
+	`priorities` text,
+	`chart_data` text,
+	`is_bookmarked` integer DEFAULT false NOT NULL,
+	`time_window` text,
+	`timing_method` text,
+	`electional_data` text,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);

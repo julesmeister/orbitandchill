@@ -1,0 +1,6 @@
+[submodule "React-Thread-Lines-For-Comments"]
+	path = React-Thread-Lines-For-Comments
+	url = https://github.com/julesmeister/React-Thread-Lines-For-Comments
+[submodule "CircularNatalHoroscopeJS"]
+	path = CircularNatalHoroscopeJS
+	url = https://github.com/julesmeister/CircularNatalHoroscopeJS

@@ -1,0 +1,103 @@
+          
+          {/* Chart background and base structure */}
+          <ChartBackground />
+          
+          {/* Zodiac signs ring */}
+          <g className="zodiac-ring">
+            {ZODIAC_SYMBOLS.map((_, index) => (
+              <ZodiacWedge
+                key={`zodiac-${index}`}
+                index={index}
+                onMouseEnter={handleZodiacHover}
+                onMouseLeave={handleHoverEnd}
+              />
+            ))}
+          </g>
+
+          {/* Inner center circle */}
+          <circle 
+            cx="0" 
+            cy="0" 
+            r={CHART_CONFIG.radii.innerCircle} 
+            fill="#f8fafc" 
+            stroke="#d1d5db" 
+            strokeWidth="2" 
+          />
+
+          {/* House cusps */}
+          <g className="house-cusps">
+            {processedHouses.map((house) => (
+              <HouseCusp
+                key={`house-${house.number}`}
+                house={house}
+                onMouseEnter={handleHouseHover}
+                onMouseLeave={handleHoverEnd}
+              />
+            ))}
+          </g>
+
+          {/* Angular markers (ASC, DSC, MC, IC) */}
+          <AngularMarkers
+            houses={processedHouses}
+            chartData={chartDataToUse}
+            onMouseEnter={handleAngularMarkerHover}
+            onMouseLeave={handleHoverEnd}
+          />
+
+          {/* Planets */}
+          <g className="planets-ring">
+            {chartDataToUse.planets.map((planet) => (
+              <PlanetMarker
+                key={`planet-${planet.name}`}
+                planet={planet}
+                onMouseEnter={handlePlanetHover}
+                onMouseLeave={handleHoverEnd}
+              />
+            ))}
+          </g>
+          
+          {/* Aspect lines */}
+          <g className="aspect-lines">
+            {chartDataToUse.aspects.map((aspect) => {
+              const planet1 = chartDataToUse.planets.find(p => p.name === aspect.planet1);
+              const planet2 = chartDataToUse.planets.find(p => p.name === aspect.planet2);
+              
+              if (!planet1 || !planet2) return null;
+              
+              const angle1 = calculateSVGAngle(planet1.longitude);
+              const angle2 = calculateSVGAngle(planet2.longitude);
+              
+              const position1 = calculatePosition(angle1, CHART_CONFIG.radii.innerCircle);
+              const position2 = calculatePosition(angle2, CHART_CONFIG.radii.innerCircle);
+              
+              return (
+                <g key={`${aspect.planet1}-${aspect.planet2}-${aspect.aspect}`}>
+                  <line
+                    x1={position1.x}
+                    y1={position1.y}
+                    x2={position2.x}
+                    y2={position2.y}
+                    stroke={aspect.color}
+                    strokeWidth={aspect.applying ? "2.5" : "1.5"}
+                    strokeDasharray={getStrokeDashArray(aspect.aspect)}
+                    opacity={aspect.applying ? 0.8 : 0.6}
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={(e) => handleAspectHover(e, aspect)}
+                    onMouseLeave={() => setTooltip(prev => ({ ...prev, visible: false }))}
+                  />
+                  <circle
+                    cx={(position1.x + position2.x) / 2}
+                    cy={(position1.y + position2.y) / 2}
+                    r="4"
+                    fill={aspect.color}
+                    opacity={0.7}
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={(e) => handleAspectHover(e, aspect)}
+                    onMouseLeave={() => setTooltip(prev => ({ ...prev, visible: false }))}
+                  />
+                </g>
+              );
+            })}
+          </g>
+          
+        </g>{/* End global chart rotation */}

@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1750342351487,
+      "tag": "0000_ambiguous_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1750345695195,
+      "tag": "0001_far_microchip",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1750346538150,
+      "tag": "0002_peaceful_marvel_boy",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1750492845058,
+      "tag": "0003_first_zaladane",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1750526046413,
+      "tag": "0004_simple_molecule_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1750771545298,
+      "tag": "0005_ambitious_stellaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1750841079058,
+      "tag": "0006_wild_iron_lad",
+      "breakpoints": true
+    }
+  ]
+}

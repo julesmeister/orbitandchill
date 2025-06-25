@@ -1,0 +1,197 @@
+import React from 'react';
+import NextImage from 'next/image';
+import { useUserStore } from '../../store/userStore';
+import { useChartTab } from '../../store/chartStore';
+import ChartTabs from './ChartTabs';
+import ChartInterpretation from './ChartInterpretation';
+import ChartActions from './ChartActions';
+import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
+
+interface NatalChartDisplayProps {
+  svgContent: string;
+  chartName?: string;
+  birthData?: {
+    dateOfBirth: string;
+    timeOfBirth: string;
+    locationOfBirth: string;
+    coordinates?: { lat: string; lon: string };
+  };
+  chartData?: import('../../utils/natalChart').NatalChartData;
+  personName?: string;
+  personAvatar?: string;
+  onDownload?: () => void;
+  onShare?: () => void;
+  isSharedView?: boolean;
+}
+
+const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
+  svgContent,
+  chartName = 'Natal Chart',
+  birthData,
+  chartData,
+  personName,
+  personAvatar,
+  onDownload,
+  onShare,
+  isSharedView = false
+}) => {
+  const { user } = useUserStore();
+  const { activeTab, setActiveTab } = useChartTab();
+  const handleDownloadSVG = () => {
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${chartName.replace(/\s+/g, '_')}_natal_chart.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    if (onDownload) onDownload();
+  };
+
+  const handleDownloadPNG = async () => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      canvas.width = 800;
+      canvas.height = 800;
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${chartName.replace(/\s+/g, '_')}_natal_chart.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/png');
+      };
+
+      const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      img.src = svgUrl;
+    } catch (error) {
+      console.error('Error downloading PNG:', error);
+    }
+  };
+
+  return (
+    <div className="bg-white border border-black overflow-hidden">
+      {/* Header */}
+      <div className="relative p-8 overflow-hidden" style={{ backgroundColor: '#ff91e9' }}>
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="flex items-center mb-4">
+            {(personAvatar || user?.profilePictureUrl) ? (
+              <NextImage
+                src={personAvatar || user?.profilePictureUrl || ''}
+                alt={`${personName || user?.username}'s avatar`}
+                width={32}
+                height={32}
+                className="w-8 h-8 mr-3 border-2 border-black"
+              />
+            ) : (
+              <div className="w-8 h-8 mr-3 bg-black flex items-center justify-center text-white font-bold text-sm border-2 border-black">
+                {(personName || user?.username)?.[0]?.toUpperCase() || 'A'}
+              </div>
+            )}
+            <h3 className="font-space-grotesk text-2xl font-bold text-black">
+              {chartName}
+            </h3>
+          </div>
+
+          {birthData && (
+            <div className="bg-black text-white p-4 border border-black mb-4">
+              <div className="flex items-center mb-2">
+                <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+                <span className="font-inter text-sm font-medium">
+                  Born: {new Date(birthData.dateOfBirth).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })} at {birthData.timeOfBirth}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <svg className="w-4 h-4 mr-2 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                </svg>
+                <span className="font-inter text-sm">Location: {birthData.locationOfBirth}</span>
+              </div>
+            </div>
+          )}
+
+          <ChartTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+      </div>
+
+      {/* Content Display */}
+      <div className="border-t border-black">
+        <div className="p-6">
+          {activeTab === 'chart' ? (
+            // Chart View with Unified Astrological Chart
+            <div className="flex justify-center mb-6">
+              <div
+                className="p-2 bg-transparent w-full max-w-none"
+                style={{
+                  maxHeight: '90vh',
+                }}
+              >
+                {chartData ? (
+                  <UnifiedAstrologicalChart
+                    chartData={chartData}
+                    chartType="natal"
+                    showPlanetInfo={true}
+                    showAspects={true}
+                    showAngularMarkers={true}
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-96 text-gray-500">
+                    <p>Chart data not available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Interpretation View
+            <ChartInterpretation birthData={birthData} chartData={chartData} />
+          )}
+
+          <ChartActions
+            onDownloadSVG={handleDownloadSVG}
+            onDownloadPNG={handleDownloadPNG}
+            onShare={onShare}
+          />
+        </div>
+
+        {/* Chart Info */}
+        <div className="px-6 py-4 border-t border-black" style={{ backgroundColor: '#f2e356' }}>
+          <div className="flex items-center text-sm text-black">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-inter">Generated using astronomy-engine for professional-grade accuracy (±1 arcminute)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NatalChartDisplay;

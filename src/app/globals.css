@@ -1,0 +1,481 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --vh: 1vh;
+}
+
+/* Fix for mobile viewport height issues */
+@supports (height: 100dvh) {
+  :root {
+    --vh: 1dvh;
+  }
+}
+
+/* Alternative mobile-friendly hero height */
+.hero-section {
+  min-height: calc(var(--vh) * 100);
+  min-height: 100vh;
+  min-height: 100dvh; /* Modern browsers */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-arvo: var(--font-arvo);
+  --font-space-grotesk: var(--font-space-grotesk);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes rotate-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(5deg);
+  }
+  75% {
+    transform: rotate(-5deg);
+  }
+}
+
+.hover-sway-circular:hover {
+  animation: rotate-sway 2s ease-in-out infinite;
+}
+
+.folded-corner-card {
+  position: relative;
+  clip-path: polygon(0% 0%, calc(100% - 30px) 0%, 100% 30px, 100% 100%, 0% 100%);
+}
+
+.folded-corner-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  clip-path: polygon(0% 0%, 100% 100%, 0% 100%);
+  box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix dropdown arrow spacing for all select elements */
+select {
+  background-position: right 12px center !important;
+  padding-right: 2.5rem !important;
+}
+
+/* Ensure select elements have proper arrow styling */
+select:not([multiple]) {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center !important;
+  background-size: 16px;
+  padding-right: 2.5rem !important;
+}
+
+/* Synapsas Form System Styles */
+
+/* Synapsas Input System */
+.synapsas-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.synapsas-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #19181a;
+  font-family: 'Inter', sans-serif;
+  text-align: left;
+}
+
+.synapsas-input, .synapsas-select {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #19181a;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.synapsas-input:focus, .synapsas-select:focus {
+  border-color: #6b7280;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.15);
+}
+
+.synapsas-input::placeholder {
+  color: #6b7280;
+}
+
+/* Checkbox System */
+.synapsas-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.synapsas-checkbox-group:hover {
+  border-color: #6b7280;
+}
+
+.synapsas-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  background-color: white;
+  cursor: pointer;
+}
+
+.synapsas-checkbox:checked {
+  background-color: #19181a;
+  border-color: #19181a;
+}
+
+.synapsas-checkbox-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #19181a;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Date & Time System */
+.synapsas-datetime-section {
+  margin-bottom: 1rem;
+}
+
+.synapsas-date-field {
+  position: relative;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.synapsas-date-field:focus-within {
+  border-color: #6b7280;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.15);
+}
+
+.synapsas-date-select {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.synapsas-date-input {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #19181a;
+  text-align: center;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.synapsas-date-input::placeholder {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.synapsas-date-input::-webkit-outer-spin-button,
+.synapsas-date-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.synapsas-date-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.synapsas-month-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.synapsas-month-option {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #19181a;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.synapsas-month-option:hover {
+  background-color: #f3f4f6;
+}
+
+.synapsas-month-option.selected {
+  background-color: #19181a;
+  color: white;
+  font-weight: 600;
+}
+
+.synapsas-time-field {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+}
+
+.synapsas-time-field:focus-within {
+  border-color: #6b7280;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.15);
+}
+
+.synapsas-time-input {
+  width: 60px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #19181a;
+  text-align: center;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.synapsas-time-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.synapsas-time-input::-webkit-outer-spin-button,
+.synapsas-time-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.synapsas-time-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.synapsas-period-selector {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.synapsas-period-button {
+  width: 60px;
+  height: 60px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.synapsas-period-button:hover {
+  color: #19181a;
+  border-color: #6b7280;
+}
+
+.synapsas-period-button.active {
+  background-color: #19181a;
+  color: white;
+  border-color: #19181a;
+}
+
+/* Location Dropdown */
+.synapsas-location-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  max-height: 15rem;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+
+.synapsas-dropdown-message {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.synapsas-location-option {
+  width: 100%;
+  text-align: left;
+  padding: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.synapsas-location-option:hover {
+  background-color: #f9fafb;
+}
+
+.synapsas-location-option:last-child {
+  border-bottom: none;
+}
+
+/* Submit Button */
+.synapsas-submit-button {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+.synapsas-submit-button.primary {
+  background-color: #19181a;
+  color: white;
+  border-color: #19181a;
+}
+
+.synapsas-submit-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(25, 24, 26, 0.25);
+}
+
+.synapsas-submit-button.success {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.synapsas-submit-button.success:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
+}
+
+.synapsas-submit-button.disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.synapsas-submit-button.generating {
+  animation: pulse 2s infinite;
+}
+
+/* Helper Text */
+.synapsas-helper-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-family: 'Inter', sans-serif;
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 2s ease infinite;
+}
+
