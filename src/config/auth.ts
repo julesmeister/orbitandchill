@@ -27,7 +27,7 @@ export const AUTH_CONFIG = {
     googleOAuth: true,
     
     // Enable mock mode for development (disable for production)
-    mockMode: process.env.NODE_ENV === 'development',
+    mockMode: false, // Disabled since we have real Google OAuth credentials
     
     // Automatic sign-in prompting
     autoPrompt: {

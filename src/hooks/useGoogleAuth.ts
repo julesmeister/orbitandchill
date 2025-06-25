@@ -49,8 +49,8 @@ export function useGoogleAuth() {
         
         googleUser = {
           id: 'google_' + Date.now(),
-          email: 'user@gmail.com',
-          name: 'Google User',
+          email: 'john.doe@gmail.com',
+          name: 'John Doe',
           picture: 'https://lh3.googleusercontent.com/a/default-user=s96-c'
         };
       } else {

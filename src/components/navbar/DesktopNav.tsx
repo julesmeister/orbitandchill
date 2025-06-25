@@ -5,6 +5,7 @@ import Image from 'next/image';
 import NavigationLink from './NavigationLink';
 import UserProfile from './UserProfile';
 import NotificationBell from './NotificationBell';
+import OrbitingLogo from './OrbitingLogo';
 import { BRAND } from '@/config/brand';
 import { User } from '@/types/user';
 
@@ -49,13 +50,9 @@ const DesktopNav = React.memo(({
           <div className="flex items-center space-x-8 xl:space-x-12">
             {/* Brand */}
             <Link href="/" className="flex items-center space-x-3 group">
-              <Image
-                src="/images/logo.svg"
-                alt={`${BRAND.name} Logo`}
-                width={32}
-                height={32}
-                className="w-10 h-10 xl:w-12 xl:h-12 object-contain hover:scale-105 transition-transform duration-300"
-                priority
+              <OrbitingLogo 
+                size="normal"
+                className="text-black hover:scale-105 transition-transform duration-300"
               />
               <span className="text-xl xl:text-2xl font-bold text-black font-space-grotesk">
                 {BRAND.name}

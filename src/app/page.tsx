@@ -16,6 +16,8 @@ import { useNatalChart } from '@/hooks/useNatalChart';
 import { useRouter } from 'next/navigation';
 import { useStatusToast } from '@/hooks/useStatusToast';
 import StatusToast from '@/components/reusable/StatusToast';
+import { useBlogData } from '@/hooks/useBlogData';
+import FeaturedPostCard from '@/components/blog/FeaturedPostCard';
 
 export default function Home() {
   const router = useRouter();
@@ -25,6 +27,9 @@ export default function Home() {
   
   // Use status toast hook
   const { toast: statusToast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
+
+  // Get featured blog posts
+  const { featuredPosts } = useBlogData();
 
   // Load profile is handled by Navbar component, no need to duplicate here
   // useEffect(() => {
@@ -96,106 +101,165 @@ export default function Home() {
       {/* Hero Section with Features - Unified */}
       <section className="hero-section px-[5%] py-16 flex flex-col justify-center">
         <div className="max-w-7xl mx-auto">
-          {/* Hero Content */}
-          <div className="text-center mb-8 relative overflow-hidden">
-            {/* Zodiac Background - only behind text */}
-            <ZodiacBackground className="z-0" />
-            
-            <div className="relative z-10">
-              <h1 className="font-space-grotesk text-4xl lg:text-6xl xl:text-7xl font-bold text-black mb-4">
-                Welcome to
-                <span className="block text-blue-600">{BRAND.name}</span>
-              </h1>
-              <p className="font-inter text-lg lg:text-xl text-black/80 leading-relaxed max-w-4xl mx-auto mb-8">
-                {BRAND.tagline} {BRAND.description}
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Left Side - Compact Hero Content */}
+            <div className="space-y-8">
+              {/* Hero Content */}
+              <div className="text-left relative overflow-hidden">
+                {/* Zodiac Background - only behind text */}
+                <ZodiacBackground className="z-0" />
+                
+                <div className="relative z-10">
+                  <h1 className="font-space-grotesk text-3xl lg:text-5xl font-bold text-black mb-4">
+                    Welcome to
+                    <span className="block text-blue-600">{BRAND.name}</span>
+                  </h1>
+                  <p className="font-inter text-base lg:text-lg text-black/80 leading-relaxed mb-6">
+                    {BRAND.tagline} {BRAND.description}
+                  </p>
 
-              <h2 className="font-space-grotesk text-2xl lg:text-3xl font-bold text-black mb-4">
-                Explore Your Cosmic Journey
-              </h2>
-              <p className="font-inter text-base lg:text-lg text-black/80 leading-relaxed max-w-3xl mx-auto">
-                Dive deeper into astrology with our comprehensive tools and insights
-              </p>
+                  <h2 className="font-space-grotesk text-xl lg:text-2xl font-bold text-black mb-3">
+                    Explore Your Cosmic Journey
+                  </h2>
+                  <p className="font-inter text-sm lg:text-base text-black/80 leading-relaxed">
+                    Dive deeper into astrology with our comprehensive tools and insights
+                  </p>
+                </div>
+              </div>
+
+              {/* Compact Grid Partition System */}
+              <div className="grid grid-cols-2 gap-0 bg-white border border-black overflow-hidden">
+                {/* Natal Chart Analysis */}
+                <button
+                  onClick={() => scrollToSection('natal-chart-section')}
+                  className="group relative p-4 transition-all duration-300 border-r border-black border-b hover:bg-gray-50"
+                  style={{ backgroundColor: '#6bdbff' }}
+                >
+                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
+                  <div className="relative text-center">
+                    <div className="w-8 h-8 bg-black flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-space-grotesk text-sm font-bold text-black mb-1">Natal Chart</h3>
+                    <p className="font-inter text-black/80 text-xs leading-relaxed">
+                      Discover your cosmic blueprint
+                    </p>
+                  </div>
+                </button>
+
+                {/* Astrocartography */}
+                <button
+                  onClick={() => scrollToSection('astrocartography-section')}
+                  className="group relative p-4 transition-all duration-300 border-b hover:bg-gray-50"
+                  style={{ backgroundColor: '#f2e356' }}
+                >
+                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
+                  <div className="relative text-center">
+                    <div className="w-8 h-8 bg-black flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-space-grotesk text-sm font-bold text-black mb-1">Astrocartography</h3>
+                    <p className="font-inter text-black/80 text-xs leading-relaxed">
+                      Find your ideal locations
+                    </p>
+                  </div>
+                </button>
+
+                {/* Planetary Alignment */}
+                <button
+                  onClick={() => scrollToSection('planetary-alignment-section')}
+                  className="group relative p-4 transition-all duration-300 border-r border-black hover:bg-gray-50"
+                  style={{ backgroundColor: '#51bd94' }}
+                >
+                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
+                  <div className="relative text-center">
+                    <div className="w-8 h-8 bg-black flex items-center justify-center mb-2 mx-auto">
+                      <span className="text-lg">🌌</span>
+                    </div>
+                    <h3 className="font-space-grotesk text-sm font-bold text-black mb-1">Planetary Alignment</h3>
+                    <p className="font-inter text-black/80 text-xs leading-relaxed">
+                      View real-time 3D positions
+                    </p>
+                  </div>
+                </button>
+
+                {/* Electional Astrology */}
+                <button
+                  onClick={() => scrollToSection('electional-astrology-section')}
+                  className="group relative p-4 transition-all duration-300 hover:bg-gray-50"
+                  style={{ backgroundColor: '#ff91e9' }}
+                >
+                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
+                  <div className="relative text-center">
+                    <div className="w-8 h-8 bg-black flex items-center justify-center mb-2 mx-auto">
+                      <span className="text-lg">⏰</span>
+                    </div>
+                    <h3 className="font-space-grotesk text-sm font-bold text-black mb-1">Electional Astrology</h3>
+                    <p className="font-inter text-black/80 text-xs leading-relaxed">
+                      Perfect cosmic moments
+                    </p>
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Grid Partition System */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 bg-white border border-black overflow-hidden">
-            {/* Natal Chart Analysis */}
-            <button
-              onClick={() => scrollToSection('natal-chart-section')}
-              className="group relative p-8 transition-all duration-300 border-r border-black lg:border-r border-b md:border-b-0 lg:border-b-0 hover:bg-gray-50"
-              style={{ backgroundColor: '#6bdbff' }}
-            >
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
-              <div className="relative text-center">
-                <div className="w-12 h-12 bg-black flex items-center justify-center mb-4 mx-auto">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                  </svg>
-                </div>
-                <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">Natal Chart</h3>
-                <p className="font-inter text-black/80 text-sm leading-relaxed">
-                  Discover your cosmic blueprint through planetary positions.
+            {/* Right Side - Featured Articles */}
+            <div className="space-y-6">
+              <div className="border-l-4 border-black pl-4">
+                <h2 className="font-space-grotesk text-2xl lg:text-3xl font-bold text-black mb-2">
+                  Featured Articles
+                </h2>
+                <p className="font-inter text-black/80 text-sm lg:text-base">
+                  Discover the latest insights and cosmic wisdom from our astrology experts
                 </p>
               </div>
-            </button>
 
-            {/* Astrocartography */}
-            <button
-              onClick={() => scrollToSection('astrocartography-section')}
-              className="group relative p-8 transition-all duration-300 border-r border-black lg:border-r border-b md:border-b-0 lg:border-b-0 hover:bg-gray-50"
-              style={{ backgroundColor: '#f2e356' }}
-            >
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
-              <div className="relative text-center">
-                <div className="w-12 h-12 bg-black flex items-center justify-center mb-4 mx-auto">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">Astrocartography</h3>
-                <p className="font-inter text-black/80 text-sm leading-relaxed">
-                  Find your ideal locations based on planetary energies.
-                </p>
+              {/* Featured Posts List */}
+              <div className="space-y-4">
+                {featuredPosts.slice(0, 3).map((post) => (
+                  <div key={post.id} className="border border-black bg-white hover:shadow-lg transition-shadow duration-300">
+                    <div className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <h3 className="font-space-grotesk font-bold text-black text-sm lg:text-base mb-2 line-clamp-2">
+                            {post.title}
+                          </h3>
+                          <p className="font-inter text-black/70 text-xs lg:text-sm leading-relaxed mb-3 line-clamp-2">
+                            {post.excerpt}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="font-inter text-xs text-black/60">
+                              {post.author} • {post.readTime}
+                            </span>
+                            <button 
+                              onClick={() => router.push(`/blog/${post.slug}`)}
+                              className="font-space-grotesk text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              Read More →
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </button>
 
-            {/* Planetary Alignment */}
-            <button
-              onClick={() => scrollToSection('planetary-alignment-section')}
-              className="group relative p-8 transition-all duration-300 border-r border-black lg:border-r border-b md:border-b-0 lg:border-b-0 hover:bg-gray-50"
-              style={{ backgroundColor: '#51bd94' }}
-            >
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
-              <div className="relative text-center">
-                <div className="w-12 h-12 bg-black flex items-center justify-center mb-4 mx-auto">
-                  <span className="text-2xl">🌌</span>
-                </div>
-                <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">Planetary Alignment</h3>
-                <p className="font-inter text-black/80 text-sm leading-relaxed">
-                  View real-time 3D positions of planets in our solar system.
-                </p>
+              {/* View All Articles Button */}
+              <div className="pt-4">
+                <button
+                  onClick={() => router.push('/blog')}
+                  className="w-full bg-black text-white p-3 font-space-grotesk font-semibold hover:bg-gray-800 transition-all duration-300 border border-black"
+                >
+                  View All Articles
+                </button>
               </div>
-            </button>
-
-            {/* Electional Astrology */}
-            <button
-              onClick={() => scrollToSection('electional-astrology-section')}
-              className="group relative p-8 transition-all duration-300 hover:bg-gray-50"
-              style={{ backgroundColor: '#ff91e9' }}
-            >
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
-              <div className="relative text-center">
-                <div className="w-12 h-12 bg-black flex items-center justify-center mb-4 mx-auto">
-                  <span className="text-2xl">⏰</span>
-                </div>
-                <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">Electional Astrology</h3>
-                <p className="font-inter text-black/80 text-sm leading-relaxed">
-                  Find the perfect cosmic moments for important decisions.
-                </p>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
       </section>

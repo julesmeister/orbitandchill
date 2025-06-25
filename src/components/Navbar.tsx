@@ -9,6 +9,8 @@ import MobileNav from './navbar/MobileNav';
 import UserProfile from './navbar/UserProfile';
 import GoogleSignInPrompt from './navbar/GoogleSignInPrompt';
 import NotificationBell from './navbar/NotificationBell';
+import OrbitingLogo from './navbar/OrbitingLogo';
+import StatusToast from './reusable/StatusToast';
 import { BRAND } from '@/config/brand';
 import { useUserStore } from '../store/userStore';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
@@ -19,6 +21,14 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showGooglePrompt, setShowGooglePrompt] = useState(false);
+  
+  // Toast state
+  const [toast, setToast] = useState<{
+    isVisible: boolean;
+    title: string;
+    message: string;
+    status: 'loading' | 'success' | 'error' | 'info';
+  }>({ isVisible: false, title: '', message: '', status: 'info' });
   
   // Custom hooks
   const { user, updateUser, loadProfile, ensureAnonymousUser, clearProfile } = useUserStore();
@@ -50,17 +60,38 @@ export default function Navbar() {
     }
   }, []); // Empty dependency array - run only once on mount
 
+  // Toast helper functions
+  const showToast = (title: string, message: string, status: 'loading' | 'success' | 'error' | 'info') => {
+    setToast({ isVisible: true, title, message, status });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
   // Authentication handlers
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      showToast('Signing In', 'Connecting to Google...', 'loading');
+      const googleUser = await signInWithGoogle();
+      showToast('Welcome!', `Successfully signed in as ${googleUser.name}`, 'success');
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => hideToast(), 3000);
     } catch (err) {
       console.error("Google Sign-In failed:", err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in with Google';
+      showToast('Sign-In Failed', errorMessage, 'error');
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => hideToast(), 5000);
     }
   };
 
   const handleSignOut = async () => {
     try {
+      showToast('Signing Out', 'Ending your session...', 'loading');
+      
       // Call logout API for both user types
       if (user) {
         await fetch('/api/auth/logout', {
@@ -72,14 +103,24 @@ export default function Navbar() {
 
       if (user?.authProvider === "google") {
         await signOut();
+        showToast('Signed Out', 'You have been signed out successfully', 'success');
       } else {
         await clearProfile();
         // Create new anonymous user with new name
         const anonymousName = generateAnonymousName();
         await ensureAnonymousUser(anonymousName);
+        showToast('Session Reset', 'Starting fresh with a new anonymous identity', 'success');
       }
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => hideToast(), 3000);
     } catch (err) {
       console.error("Sign out failed:", err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign out';
+      showToast('Sign-Out Failed', errorMessage, 'error');
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => hideToast(), 5000);
     }
   };
 
@@ -118,13 +159,9 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 px-4">
             {/* Brand - Mobile */}
             <Link href="/" className="flex items-center space-x-2 group">
-              <Image
-                src="/images/logo.svg"
-                alt={`${BRAND.name} Logo`}
-                width={32}
-                height={32}
-                className="w-8 h-8 object-contain hover:scale-105 transition-transform duration-300"
-                priority
+              <OrbitingLogo 
+                size="small"
+                className="text-black hover:scale-105 transition-transform duration-300"
               />
               <span className="text-black text-lg font-bold font-space-grotesk">
                 {BRAND.name}
@@ -179,6 +216,16 @@ export default function Navbar() {
         />
       </div>
     </nav>
+    
+    {/* Status Toast */}
+    <StatusToast
+      title={toast.title}
+      message={toast.message}
+      status={toast.status}
+      isVisible={toast.isVisible}
+      onHide={hideToast}
+      duration={0} // Manual control via setTimeout
+    />
     </>
   );
 }
