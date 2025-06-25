@@ -114,6 +114,10 @@ export async function POST(request: NextRequest) {
         await handleSettingsChanged(data, today, context);
         break;
         
+      case 'location_analytics':
+        await handleLocationAnalytics(data, today, context);
+        break;
+        
       default:
         return NextResponse.json(
           { success: false, error: 'Unknown event type' },
@@ -401,5 +405,31 @@ async function handleSettingsChanged(data: any, date: string, context: any) {
     }
   } catch (error) {
     console.warn('Failed to handle settings change analytics:', error);
+  }
+}
+
+async function handleLocationAnalytics(data: any, date: string, context: any) {
+  try {
+    const { type, source, coordinates, errorType, sessionId } = data;
+    
+    // Track location analytics event
+    await AnalyticsService.incrementDailyCounter('locationRequests', date);
+    
+    // Track specific location event types
+    if (type === 'permission_granted') {
+      await AnalyticsService.incrementDailyCounter('locationPermissionsGranted', date);
+    } else if (type === 'permission_denied') {
+      await AnalyticsService.incrementDailyCounter('locationPermissionsDenied', date);
+    } else if (type === 'fallback_used') {
+      await AnalyticsService.incrementDailyCounter('locationFallbackUsed', date);
+    } else if (type === 'location_error') {
+      await AnalyticsService.incrementDailyCounter('locationErrors', date);
+    }
+    
+    // For user activity tracking, we'd need a userId
+    // Location analytics are typically anonymous, so we may not track individual user activity
+    
+  } catch (error) {
+    console.warn('Failed to handle location analytics:', error);
   }
 }

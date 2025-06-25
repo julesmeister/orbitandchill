@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { generateNatalChart } from '../utils/natalChart';
 import { getChartAnalysis } from '../components/horary/InteractiveHoraryChart';
 import { useUserStore } from '../store/userStore';
+import { locationAnalytics } from '../utils/locationAnalytics';
 
 interface VoidMoonStatus {
   isVoid: boolean;
@@ -38,11 +39,28 @@ export const useVoidMoonStatus = () => {
   const requestLocationPermission = async (): Promise<void> => {
     try {
       setVoidStatus(prev => ({ ...prev, isLoading: true, locationError: undefined }));
+      locationAnalytics.trackLocationRequest();
+      
       const position = await getCurrentPosition();
+      
+      // Track successful permission grant
+      locationAnalytics.trackPermissionGranted({
+        lat: position.coords.latitude.toString(),
+        lon: position.coords.longitude.toString()
+      });
+      
       // Trigger a fresh check with new location
       checkVoidStatus(position);
     } catch (error) {
       const locationError = getLocationError(error);
+      
+      // Track the specific error type
+      if (locationError.type === 'permission_denied') {
+        locationAnalytics.trackPermissionDenied();
+      } else {
+        locationAnalytics.trackLocationError(locationError.type);
+      }
+      
       setVoidStatus(prev => ({ 
         ...prev, 
         isLoading: false,
@@ -93,6 +111,9 @@ export const useVoidMoonStatus = () => {
           source: 'birth',
           coordinates: user.birthData.coordinates
         };
+        
+        // Track birth location usage
+        locationAnalytics.trackBirthLocationUsed(user.birthData.coordinates);
       } else {
         // Try to get current location (use provided position if available)
         let position = providedPosition;
@@ -126,6 +147,14 @@ export const useVoidMoonStatus = () => {
           // Set location error for UI to handle
           const locationError = getLocationError(geoError);
           setVoidStatus(prev => ({ ...prev, locationError }));
+          
+          // Track fallback usage and the error type
+          locationAnalytics.trackFallbackUsed();
+          if (locationError.type === 'permission_denied') {
+            locationAnalytics.trackPermissionDenied();
+          } else {
+            locationAnalytics.trackLocationError(locationError.type);
+          }
           
           // locationUsed already set to fallback above
         }
@@ -249,4 +278,57 @@ const calculateTimeUntil = (futureDate: Date) => {
   const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
   
   return { days, hours, minutes, seconds };
+};
+
+// Helper function to categorize geolocation errors
+const getLocationError = (error: any): { type: 'permission_denied' | 'position_unavailable' | 'timeout' | 'not_supported' | 'unknown'; message: string; canRetry: boolean } => {
+  if (!error) {
+    return { type: 'unknown', message: 'Unknown location error', canRetry: true };
+  }
+
+  // Handle GeolocationPositionError
+  if (error.code !== undefined) {
+    switch (error.code) {
+      case 1: // PERMISSION_DENIED
+        return {
+          type: 'permission_denied',
+          message: 'Location access was denied. Please enable location permissions in your browser.',
+          canRetry: true
+        };
+      case 2: // POSITION_UNAVAILABLE
+        return {
+          type: 'position_unavailable',
+          message: 'Your location could not be determined. Please check your device settings.',
+          canRetry: true
+        };
+      case 3: // TIMEOUT
+        return {
+          type: 'timeout',
+          message: 'Location request timed out. Please try again.',
+          canRetry: true
+        };
+      default:
+        return {
+          type: 'unknown',
+          message: 'An unknown location error occurred.',
+          canRetry: true
+        };
+    }
+  }
+
+  // Handle browser support error
+  if (error.message && error.message.includes('not supported')) {
+    return {
+      type: 'not_supported',
+      message: 'Geolocation is not supported by your browser.',
+      canRetry: false
+    };
+  }
+
+  // Fallback for other errors
+  return {
+    type: 'unknown',
+    message: error.message || 'An unexpected error occurred while getting your location.',
+    canRetry: true
+  };
 };

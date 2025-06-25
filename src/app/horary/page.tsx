@@ -90,7 +90,7 @@ export default function HoraryPage() {
   const { user } = useUserStore();
   const { questions, loadQuestions, addQuestion, updateQuestion, deleteQuestion, clearAllQuestions } = useHoraryStore();
   const { generateHoraryChart, isGenerating, toast } = useHoraryChart();
-  const { voidStatus } = useVoidMoonStatus();
+  const { voidStatus, requestLocationPermission } = useVoidMoonStatus();
 
   // Force component re-render when store updates
   const [forceUpdate, setForceUpdate] = useState(0);
@@ -477,24 +477,49 @@ export default function HoraryPage() {
                   className="mt-4"
                 />
               ) : (
-                <p className="text-xs text-black/60 mt-4">
-                  {voidStatus.locationUsed ? (
-                    <>
-                      Using: <span className="font-medium">{voidStatus.locationUsed.name}</span>
-                      {voidStatus.locationUsed.source === 'current' && (
-                        <span className="text-green-600 ml-1">📍</span>
-                      )}
-                      {voidStatus.locationUsed.source === 'birth' && (
-                        <span className="text-blue-600 ml-1">🏠</span>
-                      )}
-                      {voidStatus.locationUsed.source === 'fallback' && (
-                        <span className="text-gray-600 ml-1">🏙️</span>
-                      )}
-                    </>
-                  ) : (
-                    'Detecting location for calculations...'
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs text-black/60">
+                    {voidStatus.locationUsed ? (
+                      <>
+                        Using: <span className="font-medium">{voidStatus.locationUsed.name}</span>
+                        {voidStatus.locationUsed.source === 'current' && (
+                          <span className="text-green-600 ml-1">📍</span>
+                        )}
+                        {voidStatus.locationUsed.source === 'birth' && (
+                          <span className="text-blue-600 ml-1">🏠</span>
+                        )}
+                        {voidStatus.locationUsed.source === 'fallback' && (
+                          <span className="text-gray-600 ml-1">🏙️</span>
+                        )}
+                      </>
+                    ) : (
+                      'Detecting location for calculations...'
+                    )}
+                  </p>
+                  
+                  {/* Location Error Message & Retry Button */}
+                  {voidStatus.locationError && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-yellow-600 text-sm">⚠️</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-yellow-800 mb-2">
+                            {voidStatus.locationError.message}
+                          </p>
+                          {voidStatus.locationError.canRetry && (
+                            <button
+                              onClick={requestLocationPermission}
+                              disabled={voidStatus.isLoading}
+                              className="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {voidStatus.isLoading ? 'Requesting...' : 'Enable Location'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </p>
+                </div>
               )}
               
               {/* Time Selection Toggle */}

@@ -6,6 +6,12 @@ interface TrafficData {
   visitors: number;
   pageViews: number;
   chartsGenerated: number;
+  topCountries?: Array<{ country: string; count: number; percentage: number }>;
+  locationBreakdown?: {
+    currentLocation: number;
+    birthLocation: number;
+    fallbackLocation: number;
+  };
 }
 
 interface TrafficMetricsSectionProps {

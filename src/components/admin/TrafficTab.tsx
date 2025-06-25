@@ -3,6 +3,7 @@ import TrafficMetricsSection from './traffic/TrafficMetricsSection';
 import DailyAveragesCard from './traffic/DailyAveragesCard';
 import TrafficSourcesCard from './traffic/TrafficSourcesCard';
 import TopPagesCard from './traffic/TopPagesCard';
+import LocationAnalyticsCard from './traffic/LocationAnalyticsCard';
 import TrafficTable from './traffic/TrafficTable';
 
 interface TrafficData {
@@ -10,6 +11,12 @@ interface TrafficData {
   visitors: number;
   pageViews: number;
   chartsGenerated: number;
+  topCountries?: Array<{ country: string; count: number; percentage: number }>;
+  locationBreakdown?: {
+    currentLocation: number;
+    birthLocation: number;
+    fallbackLocation: number;
+  };
 }
 
 interface TrafficTabProps {
@@ -49,10 +56,11 @@ export default function TrafficTab({ trafficData, isLoading }: TrafficTabProps) 
         isLoading={isLoading}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
         <DailyAveragesCard filteredTrafficData={filteredTrafficData} />
         <TrafficSourcesCard isLoading={isLoading} trafficData={trafficData} />
         <TopPagesCard isLoading={isLoading} trafficData={trafficData} />
+        <LocationAnalyticsCard isLoading={isLoading} />
       </div>
 
       <TrafficTable

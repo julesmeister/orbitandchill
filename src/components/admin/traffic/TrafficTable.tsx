@@ -8,6 +8,12 @@ interface TrafficData {
   visitors: number;
   pageViews: number;
   chartsGenerated: number;
+  topCountries?: Array<{ country: string; count: number; percentage: number }>;
+  locationBreakdown?: {
+    currentLocation: number;
+    birthLocation: number;
+    fallbackLocation: number;
+  };
 }
 
 interface TrafficTableProps {
@@ -109,6 +115,12 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                 Charts Generated
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider font-space-grotesk">
+                Top Countries
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider font-space-grotesk">
+                Location Source
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider font-space-grotesk">
                 Conversion Rate
               </th>
             </tr>
@@ -145,7 +157,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
               ))
             ) : paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
+                <td colSpan={7} className="px-6 py-12 text-center">
                   <div className="text-gray-500">
                     <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -204,6 +216,52 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                               style={{ width: `${maxCharts > 0 ? (day.chartsGenerated / maxCharts) * 100 : 0}%` }}
                             ></div>
                           </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                        <div className="space-y-1">
+                          {day.topCountries && day.topCountries.length > 0 ? (
+                            day.topCountries.slice(0, 2).map((country, i) => (
+                              <div key={country.country} className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-xs">{country.country}</span>
+                                <span className="text-xs text-gray-500">({country.percentage}%)</span>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">No data</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                        <div className="space-y-1">
+                          {day.locationBreakdown ? (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-green-600">📍</span>
+                                  <span className="text-xs">Current</span>
+                                </div>
+                                <span className="text-xs font-bold">{day.locationBreakdown.currentLocation}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-gray-600">🏙️</span>
+                                  <span className="text-xs">Fallback</span>
+                                </div>
+                                <span className="text-xs font-bold">{day.locationBreakdown.fallbackLocation}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-blue-600">🏠</span>
+                                  <span className="text-xs">Birth</span>
+                                </div>
+                                <span className="text-xs font-bold">{day.locationBreakdown.birthLocation}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-400">No data</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
