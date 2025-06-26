@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { generateNatalChart } from '../utils/natalChart';
 import { getChartAnalysis } from '../components/horary/InteractiveHoraryChart';
 import { useUserStore } from '../store/userStore';
-import { locationAnalytics } from '../utils/locationAnalytics';
+import { getLocationAnalytics } from '../utils/locationAnalytics';
 
 interface VoidMoonStatus {
   isVoid: boolean;
@@ -27,24 +27,26 @@ interface VoidMoonStatus {
     message: string;
     canRetry: boolean;
   };
+  showLocationToast?: boolean;
 }
 
 export const useVoidMoonStatus = () => {
   const { user } = useUserStore();
   const [voidStatus, setVoidStatus] = useState<VoidMoonStatus>({
     isVoid: false,
-    isLoading: true
+    isLoading: true,
+    showLocationToast: false
   });
 
   const requestLocationPermission = async (): Promise<void> => {
     try {
       setVoidStatus(prev => ({ ...prev, isLoading: true, locationError: undefined }));
-      locationAnalytics.trackLocationRequest();
+      getLocationAnalytics().trackLocationRequest();
       
       const position = await getCurrentPosition();
       
       // Track successful permission grant
-      locationAnalytics.trackPermissionGranted({
+      getLocationAnalytics().trackPermissionGranted({
         lat: position.coords.latitude.toString(),
         lon: position.coords.longitude.toString()
       });
@@ -56,9 +58,9 @@ export const useVoidMoonStatus = () => {
       
       // Track the specific error type
       if (locationError.type === 'permission_denied') {
-        locationAnalytics.trackPermissionDenied();
+        getLocationAnalytics().trackPermissionDenied();
       } else {
-        locationAnalytics.trackLocationError(locationError.type);
+        getLocationAnalytics().trackLocationError(locationError.type);
       }
       
       setVoidStatus(prev => ({ 
@@ -69,7 +71,7 @@ export const useVoidMoonStatus = () => {
     }
   };
   
-  const checkVoidStatus = async (providedPosition?: GeolocationPosition) => {
+  const checkVoidStatus = async (providedPosition?: GeolocationPosition, providedLocation?: { name: string; coordinates: { lat: string; lon: string } }) => {
     try {
       setVoidStatus(prev => ({ ...prev, isLoading: true }));
       
@@ -97,66 +99,119 @@ export const useVoidMoonStatus = () => {
         coordinates: { lat: '40.7128', lon: '-74.0060' }
       };
 
-      if (user?.birthData?.coordinates?.lat && user?.birthData?.coordinates?.lon) {
-        // Use user's birth location
+      // First check if we have a provided location (from manual input)
+      if (providedLocation) {
         locationData = {
-          locationOfBirth: user.birthData.locationOfBirth || 'User Birth Location',
-          coordinates: {
-            lat: user.birthData.coordinates.lat,
-            lon: user.birthData.coordinates.lon
-          }
+          locationOfBirth: providedLocation.name,
+          coordinates: providedLocation.coordinates
         };
         locationUsed = {
-          name: user.birthData.locationOfBirth || 'Your Birth Location',
-          source: 'birth',
-          coordinates: user.birthData.coordinates
+          name: providedLocation.name,
+          source: 'current',
+          coordinates: providedLocation.coordinates
         };
         
-        // Track birth location usage
-        locationAnalytics.trackBirthLocationUsed(user.birthData.coordinates);
+        // Clear any previous location error
+        setVoidStatus(prev => ({ ...prev, locationError: undefined }));
       } else {
-        // Try to get current location (use provided position if available)
-        let position = providedPosition;
-        try {
-          if (!position) {
-            position = await getCurrentPosition();
-          }
-          
-          locationData = {
-            locationOfBirth: 'Current Location',
-            coordinates: {
-              lat: position.coords.latitude.toString(),
-              lon: position.coords.longitude.toString()
+        // Try to get saved current location from database first
+        let savedLocation = null;
+        if (user?.id) {
+          try {
+            const response = await fetch(`/api/users/location?userId=${user.id}`);
+            const result = await response.json();
+            if (result.success && result.location) {
+              savedLocation = result.location;
+              console.log('Found saved location:', savedLocation);
             }
+          } catch (error) {
+            console.log('Could not fetch saved location:', error);
+          }
+        }
+
+        if (savedLocation) {
+          // Use saved current location
+          locationData = {
+            locationOfBirth: savedLocation.name,
+            coordinates: savedLocation.coordinates
           };
           locationUsed = {
-            name: `Your Current Location (${position.coords.latitude.toFixed(2)}°, ${position.coords.longitude.toFixed(2)}°)`,
+            name: savedLocation.name,
             source: 'current',
-            coordinates: {
-              lat: position.coords.latitude.toString(),
-              lon: position.coords.longitude.toString()
-            }
+            coordinates: savedLocation.coordinates
           };
           
           // Clear any previous location error
           setVoidStatus(prev => ({ ...prev, locationError: undefined }));
+        } else if (user?.birthData?.coordinates?.lat && user?.birthData?.coordinates?.lon) {
+          // Use user's birth location
+          locationData = {
+            locationOfBirth: user.birthData.locationOfBirth || 'User Birth Location',
+            coordinates: {
+              lat: user.birthData.coordinates.lat,
+              lon: user.birthData.coordinates.lon
+            }
+          };
+          locationUsed = {
+            name: user.birthData.locationOfBirth || 'Your Birth Location',
+            source: 'birth',
+            coordinates: user.birthData.coordinates
+          };
           
-        } catch (geoError) {
-          console.log('Could not get current location, using NY as fallback:', geoError);
-          
-          // Set location error for UI to handle
-          const locationError = getLocationError(geoError);
-          setVoidStatus(prev => ({ ...prev, locationError }));
-          
-          // Track fallback usage and the error type
-          locationAnalytics.trackFallbackUsed();
-          if (locationError.type === 'permission_denied') {
-            locationAnalytics.trackPermissionDenied();
-          } else {
-            locationAnalytics.trackLocationError(locationError.type);
+          // Track birth location usage
+          getLocationAnalytics().trackBirthLocationUsed(user.birthData.coordinates);
+        } else {
+          // Try to get current location (use provided position if available)
+          let position = providedPosition;
+          try {
+            if (!position) {
+              position = await getCurrentPosition();
+            }
+            
+            locationData = {
+              locationOfBirth: 'Current Location',
+              coordinates: {
+                lat: position.coords.latitude.toString(),
+                lon: position.coords.longitude.toString()
+              }
+            };
+            locationUsed = {
+              name: `Your Current Location (${position.coords.latitude.toFixed(2)}°, ${position.coords.longitude.toFixed(2)}°)`,
+              source: 'current',
+              coordinates: {
+                lat: position.coords.latitude.toString(),
+                lon: position.coords.longitude.toString()
+              }
+            };
+            
+            // Clear any previous location error
+            setVoidStatus(prev => ({ ...prev, locationError: undefined }));
+            
+          } catch (geoError) {
+            console.log('Could not get current location, showing location toast:', geoError);
+            
+            // Set location error for UI to handle
+            const locationError = getLocationError(geoError);
+            
+            // Show location toast instead of just falling back to NY
+            setVoidStatus(prev => ({ 
+              ...prev, 
+              locationError,
+              showLocationToast: true,
+              isLoading: false
+            }));
+            
+            // Track fallback usage and the error type
+            getLocationAnalytics().trackFallbackUsed();
+            if (locationError.type === 'permission_denied') {
+              getLocationAnalytics().trackPermissionDenied();
+            } else {
+              getLocationAnalytics().trackLocationError(locationError.type);
+            }
+            
+            // Return early, don't continue with fallback location
+            return;
           }
-          
-          // locationUsed already set to fallback above
         }
       }
 
@@ -218,10 +273,27 @@ export const useVoidMoonStatus = () => {
     return () => clearInterval(interval);
   }, [voidStatus.isVoid]);
   
+  const showLocationToast = () => {
+    setVoidStatus(prev => ({ ...prev, showLocationToast: true }));
+  };
+
+  const hideLocationToast = () => {
+    setVoidStatus(prev => ({ ...prev, showLocationToast: false }));
+  };
+
+  const handleLocationSet = (locationData: { name: string; coordinates: { lat: string; lon: string } }) => {
+    // Update the void status calculation with new location immediately
+    checkVoidStatus(undefined, locationData);
+    hideLocationToast();
+  };
+
   return { 
     voidStatus, 
     refreshVoidStatus: checkVoidStatus, 
-    requestLocationPermission 
+    requestLocationPermission,
+    showLocationToast,
+    hideLocationToast,
+    handleLocationSet
   };
 };
 
