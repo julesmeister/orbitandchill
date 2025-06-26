@@ -4,13 +4,47 @@ import React from 'react';
 import Link from 'next/link';
 import Navbar from './Navbar';
 import { useNewsletterSettings } from '@/hooks/useNewsletterSettings';
+import { usePageTracking } from '@/hooks/usePageTracking';
+import { useUserStore } from '@/store/userStore';
+import AnalyticsConsentBanner from './analytics/AnalyticsConsentBanner';
+import { acceptAnalyticsConsent, declineAnalyticsConsent } from '@/utils/analyticsConsent';
 
 type LayoutProps = {
   children: React.ReactNode;
 };
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { settings: newsletterSettings, isLoading: newsletterLoading } = useNewsletterSettings();
+  const { settings: newsletterSettings, isLoading: newsletterLoading, refresh: refreshNewsletterSettings } = useNewsletterSettings();
+  const { user } = useUserStore();
+  
+  // Debug logging for newsletter state
+  React.useEffect(() => {
+    console.log('🔍 Layout Newsletter Debug:', {
+      isLoading: newsletterLoading,
+      settings: newsletterSettings,
+      enabled: newsletterSettings.enabled,
+      willRender: !newsletterLoading && newsletterSettings.enabled,
+      timestamp: new Date().toISOString()
+    });
+  }, [newsletterLoading, newsletterSettings]);
+  
+  // Automatically track page views
+  usePageTracking(user?.id);
+
+  // Listen for admin settings updates
+  React.useEffect(() => {
+    const handleSettingsUpdate = () => {
+      console.log('🔔 Admin settings updated event received, refreshing newsletter settings...');
+      refreshNewsletterSettings();
+    };
+
+    // Listen for custom event from admin settings
+    window.addEventListener('adminSettingsUpdated', handleSettingsUpdate);
+    
+    return () => {
+      window.removeEventListener('adminSettingsUpdated', handleSettingsUpdate);
+    };
+  }, [refreshNewsletterSettings]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -190,6 +224,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </section>
       </footer>
+      
+      {/* Analytics Consent Banner */}
+      <AnalyticsConsentBanner
+        onAccept={acceptAnalyticsConsent}
+        onDecline={declineAnalyticsConsent}
+      />
     </div>
   );
 };

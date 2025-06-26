@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import DiscussionForm from '../../../components/forms/DiscussionForm';
 import { useUserStore } from '../../../store/userStore';
+import StatusToast from '../../../components/reusable/StatusToast';
 
 interface DiscussionFormData {
   title: string;
@@ -14,6 +15,8 @@ interface DiscussionFormData {
   tags: string[];
   isBlogPost?: boolean;
   isPublished?: boolean;
+  embeddedChart?: any;
+  embeddedVideo?: any;
 }
 
 export default function NewDiscussionPage() {
@@ -24,7 +27,31 @@ export default function NewDiscussionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [initialData, setInitialData] = useState<DiscussionFormData | null>(null);
   const [loadingData, setLoadingData] = useState(isEditMode);
+  const [toast, setToast] = useState<{
+    title: string;
+    message: string;
+    status: 'loading' | 'success' | 'error' | 'info';
+    isVisible: boolean;
+  }>({
+    title: '',
+    message: '',
+    status: 'info',
+    isVisible: false
+  });
   const { user, ensureAnonymousUser, loadProfile } = useUserStore();
+
+  const showToast = (title: string, message: string, status: 'loading' | 'success' | 'error' | 'info') => {
+    setToast({
+      title,
+      message,
+      status,
+      isVisible: true
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
 
   // Load user profile and discussion data if editing
   useEffect(() => {
@@ -45,11 +72,20 @@ export default function NewDiscussionPage() {
             
             // Check if current user is the author
             if (discussion.authorId !== user.id) {
-              alert('You can only edit your own discussions');
-              router.push('/discussions');
+              showToast('Access Denied', 'You can only edit your own discussions', 'error');
+              setTimeout(() => router.push('/discussions'), 2000);
               return;
             }
             
+            console.log('🔍 Discussion data loaded for editing:', {
+              id: discussion.id,
+              title: discussion.title,
+              hasEmbeddedChart: !!discussion.embeddedChart,
+              hasEmbeddedVideo: !!discussion.embeddedVideo,
+              embeddedChart: discussion.embeddedChart,
+              embeddedVideo: discussion.embeddedVideo
+            });
+
             setInitialData({
               title: discussion.title,
               content: discussion.content,
@@ -57,16 +93,18 @@ export default function NewDiscussionPage() {
               category: discussion.category,
               tags: discussion.tags || [],
               isBlogPost: discussion.isBlogPost,
-              isPublished: discussion.isPublished
+              isPublished: discussion.isPublished,
+              embeddedChart: discussion.embeddedChart || null,
+              embeddedVideo: discussion.embeddedVideo || null
             });
           } else {
-            alert('Discussion not found');
-            router.push('/discussions');
+            showToast('Not Found', 'Discussion not found', 'error');
+            setTimeout(() => router.push('/discussions'), 2000);
           }
         } catch (error) {
           console.error('Error loading discussion:', error);
-          alert('Failed to load discussion');
-          router.push('/discussions');
+          showToast('Error', 'Failed to load discussion', 'error');
+          setTimeout(() => router.push('/discussions'), 2000);
         } finally {
           setLoadingData(false);
         }
@@ -101,7 +139,9 @@ export default function NewDiscussionPage() {
         isBlogPost: false, // Public discussions are forum threads
         isPublished: !isDraft, // Drafts are not published
         isDraft,
-        authorId: currentUser?.id // Include the user ID
+        authorId: currentUser?.id, // Include the user ID
+        embeddedChart: formData.embeddedChart || null,
+        embeddedVideo: formData.embeddedVideo || null
       };
 
       const url = isEditMode ? `/api/discussions/${editId}` : '/api/discussions/create';
@@ -127,14 +167,18 @@ export default function NewDiscussionPage() {
       if (result.success) {
         // Show success message or toast
         const action = isEditMode ? 'updated' : 'created';
-        alert(result.message || (isDraft ? `Draft ${action}!` : `Discussion ${action}!`));
-        router.push('/discussions');
+        const message = result.message || (isDraft ? `Draft ${action}!` : `Discussion ${action}!`);
+        
+        // Use different toast title for fallback mode
+        const toastTitle = result.fallbackMode ? 'Created (Offline Mode)' : 'Success!';
+        showToast(toastTitle, message, 'success');
+        setTimeout(() => router.push('/discussions'), 2000);
       } else {
         throw new Error(result.error || `Failed to ${isEditMode ? 'update' : 'create'} discussion`);
       }
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} discussion:`, error);
-      alert(`Failed to ${isEditMode ? 'update' : 'create'} discussion. Please try again.`);
+      showToast('Error', `Failed to ${isEditMode ? 'update' : 'create'} discussion. Please try again.`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -304,6 +348,16 @@ export default function NewDiscussionPage() {
           </div>
         </div>
       </section>
+
+      {/* Status Toast */}
+      <StatusToast
+        title={toast.title}
+        message={toast.message}
+        status={toast.status}
+        isVisible={toast.isVisible}
+        onHide={hideToast}
+        duration={toast.status === 'success' ? 5000 : 0}
+      />
     </div>
   );
 }

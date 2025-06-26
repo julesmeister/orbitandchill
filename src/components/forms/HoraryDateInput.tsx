@@ -59,7 +59,15 @@ const HoraryDateInput = React.memo(({
         Date <span className="text-red-500">*</span>
       </label>
       <div className="grid grid-cols-5 gap-3">
-        <div className="col-span-2 relative" ref={monthDropdownRef}>
+        <div 
+          className="col-span-2 relative" 
+          ref={monthDropdownRef}
+          style={{ 
+            zIndex: 2000,
+            isolation: 'isolate',
+            transform: 'translateZ(0)'
+          }}
+        >
           <label className="block text-xs font-medium text-black/70 mb-1">Month</label>
           <div className="synapsas-date-field">
             <button
@@ -76,7 +84,15 @@ const HoraryDateInput = React.memo(({
             </button>
             
             {showMonthDropdown && (
-              <div className="synapsas-month-dropdown">
+              <div 
+                className="synapsas-month-dropdown"
+                style={{ 
+                  zIndex: 2001,
+                  transform: 'translateZ(0)',
+                  isolation: 'isolate',
+                  position: 'absolute'
+                }}
+              >
                 {months.map((month) => (
                   <button
                     key={month.value}

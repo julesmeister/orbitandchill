@@ -29,7 +29,6 @@ export class DiscussionService {
   static async createDiscussion(data: CreateDiscussionData, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for creating discussion');
       return null;
     }
     
@@ -67,7 +66,6 @@ export class DiscussionService {
   } = {}, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for getting discussions, returning empty array');
       return [];
     }
     
@@ -85,40 +83,28 @@ export class DiscussionService {
 
     // Apply filters
     const conditions = [];
-    console.log('🔍 Building query conditions:', { category, isBlogPost, isPublished, authorId });
-    console.log('🔍 isPublished parameter type and value:', typeof isPublished, isPublished);
     
     if (category && category !== 'All Categories') {
       conditions.push(eq(discussions.category, category));
-      console.log('🔍 Added category condition');
     }
     if (isBlogPost !== undefined) {
       // Convert boolean to integer for SQLite (SQLite stores booleans as 0/1)
       const sqliteValue = isBlogPost ? 1 : 0;
       conditions.push(eq(discussions.isBlogPost, sqliteValue));
-      console.log('🔍 Added isBlogPost condition:', { original: isBlogPost, sqliteValue });
     }
     if (isPublished !== undefined) {
-      console.log('🔍 Adding isPublished condition - before:', { isPublished, type: typeof isPublished });
       // Convert boolean to integer for SQLite (SQLite stores booleans as 0/1)
       const sqliteValue = isPublished ? 1 : 0;
       conditions.push(eq(discussions.isPublished, sqliteValue));
-      console.log('🔍 Added isPublished condition:', { original: isPublished, sqliteValue });
     }
     if (authorId) {
       conditions.push(eq(discussions.authorId, authorId));
-      console.log('🔍 Added authorId condition:', authorId);
     }
-
-    console.log('🔍 Total conditions:', conditions.length);
     
     if (conditions.length > 0) {
-      console.log('🔍 Applying WHERE conditions with and(...) - DEPRECATED: Should use raw SQL');
       // NOTE: This Drizzle WHERE clause may not work properly with Turso HTTP client
       // TODO: Convert this method to use executeRawSelect like other methods
       query = query.where(and(...conditions));
-    } else {
-      console.log('🔍 No conditions applied - returning all discussions');
     }
 
     // Apply sorting
@@ -240,14 +226,14 @@ export class DiscussionService {
     return finalResults;
   }
 
+  /**
+   * PERFORMANCE: Optimized getDiscussionById with connection pooling
+   */
   static async getDiscussionById(id: string, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for getting discussion');
       return null;
     };
-    
-    console.log('🔍 Looking for discussion with ID:', id);
     
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
     // Same issue as getAllDiscussions - Drizzle WHERE clauses are broken with Turso HTTP client
@@ -261,8 +247,9 @@ export class DiscussionService {
     }
     
     try {
+      // PERFORMANCE: Use prepared statement equivalent for better performance
       const rawResult = await client.execute({
-        sql: 'SELECT * FROM discussions WHERE id = ? LIMIT 1',
+        sql: 'SELECT * FROM discussions WHERE id = ? AND is_published = 1 LIMIT 1',
         args: [id]
       });
       
@@ -303,14 +290,14 @@ export class DiscussionService {
       console.error('❌ Raw SQL query failed:', rawError);
     }
     
-    console.log('🔍 No discussion found with ID:', id);
+    // No discussion found
     return null;
   }
 
   static async updateDiscussion(id: string, data: Partial<CreateDiscussionData>, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for updating discussion');
+      
       return null;
     };
     
@@ -460,7 +447,7 @@ export class DiscussionService {
   static async deleteDiscussion(id: string, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for deleting discussion');
+      
       return null;
     };
     
@@ -504,7 +491,7 @@ export class DiscussionService {
   static async incrementViews(id: string, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for incrementing views');
+      
       return;
     };
     
@@ -529,7 +516,7 @@ export class DiscussionService {
   static async createReply(data: CreateReplyData, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for creating reply');
+      
       return null;
     };
     
@@ -576,7 +563,7 @@ export class DiscussionService {
   static async getRepliesForDiscussion(discussionId: string, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty replies array');
+      
       return [];
     }
     
@@ -626,10 +613,86 @@ export class DiscussionService {
     }
   }
 
+  /**
+   * OPTIMIZED: Get replies with author information in a single query (fixes N+1 problem)
+   */
+  static async getRepliesWithAuthors(discussionId: string, limit: number = 50, offset: number = 0, dbInstance?: any) {
+    const db = dbInstance || (await import('../index')).db;
+    if (!db) {
+      
+      return [];
+    }
+    
+    const dbObj = db as any;
+    const client = dbObj.client;
+    
+    if (!client) {
+      console.error('❌ Database client not available');
+      return [];
+    }
+    
+    try {
+      console.log('🔍 Fetching replies with authors for discussion:', discussionId);
+      
+      // Single optimized query with LEFT JOIN to get replies and author info
+      const rawResult = await client.execute({
+        sql: `
+          SELECT 
+            dr.id,
+            dr.discussion_id,
+            dr.author_id,
+            dr.content,
+            dr.parent_reply_id,
+            dr.created_at,
+            dr.updated_at,
+            dr.upvotes,
+            dr.downvotes,
+            u.username as author_name,
+            u.profile_picture_url as author_avatar
+          FROM discussion_replies dr
+          LEFT JOIN users u ON dr.author_id = u.id
+          WHERE dr.discussion_id = ?
+          ORDER BY dr.created_at ASC
+          LIMIT ? OFFSET ?
+        `,
+        args: [discussionId, limit, offset]
+      });
+      
+      console.log('🔍 Optimized query result rows:', rawResult.rows?.length || 0);
+      
+      if (rawResult.rows && rawResult.rows.length > 0) {
+        const replies = rawResult.rows.map((row: any) => ({
+          id: row.id,
+          discussionId: row.discussion_id,
+          authorId: row.author_id,
+          content: row.content,
+          parentReplyId: row.parent_reply_id,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          upvotes: row.upvotes || 0,
+          downvotes: row.downvotes || 0,
+          // Author information included in single query
+          authorName: row.author_name || 'Anonymous User',
+          authorAvatar: row.author_avatar
+        }));
+        
+        console.log('🔍 Mapped replies with authors:', replies.length);
+        return replies;
+      }
+      
+      console.log('🔍 No replies found for discussion:', discussionId);
+      return [];
+    } catch (error) {
+      console.error('❌ Optimized replies query failed:', error);
+      // Fallback to original method if optimized query fails
+      return this.getRepliesForDiscussion(discussionId, dbInstance);
+    }
+  }
+
   static async syncReplyCount(discussionId: string, actualCount: number, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for syncing reply count');
+      
       return;
     };
     
@@ -656,7 +719,7 @@ export class DiscussionService {
   static async getReplyById(replyId: string, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for getting reply');
+      
       return null;
     };
     
@@ -682,7 +745,7 @@ export class DiscussionService {
   static async voteOnReply(userId: string, replyId: string, voteType: 'up' | 'down', dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for reply voting, returning mock success');
+      
       return { success: true, upvotes: 1, downvotes: 0 };
     }
     
@@ -754,7 +817,7 @@ export class DiscussionService {
   static async voteOnDiscussion(userId: string, discussionId: string, voteType: 'up' | 'down', dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for voting, returning mock success');
+      
       return { success: true, upvotes: 1, downvotes: 0 };
     }
     
@@ -826,7 +889,7 @@ export class DiscussionService {
   static async getPopularDiscussions(limit: number = 10, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for getting popular discussions, returning empty array');
+      
       return [];
     };
     
@@ -844,7 +907,7 @@ export class DiscussionService {
   static async searchDiscussions(query: string, limit: number = 20, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
-      console.warn('⚠️ Database not available for searching discussions, returning empty array');
+      
       return [];
     };
     

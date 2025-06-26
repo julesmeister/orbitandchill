@@ -12,7 +12,7 @@ export interface NewsletterSettings {
 }
 
 const DEFAULT_NEWSLETTER_SETTINGS: NewsletterSettings = {
-  enabled: false, // Temporarily disabled while debugging
+  enabled: false, // Should be FALSE by default - if you see newsletter, it means DB has enabled: true
   title: 'Stay Connected to the Cosmos',
   description: 'Get weekly astrology insights, new feature updates, and cosmic wisdom delivered to your inbox.',
   placeholderText: 'Enter your email',
@@ -25,15 +25,21 @@ export function useNewsletterSettings() {
   const [settings, setSettings] = useState<NewsletterSettings>(DEFAULT_NEWSLETTER_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   useEffect(() => {
     async function fetchNewsletterSettings() {
       try {
+        console.log('🚀 Starting newsletter settings fetch, refreshCounter:', refreshCounter);
         setIsLoading(true);
         setError(null);
 
         // Fetch newsletter settings from admin API
-        const response = await fetch('/api/admin/settings?keys=newsletter.enabled,newsletter.title,newsletter.description,newsletter.placeholder_text,newsletter.button_text,newsletter.privacy_text,newsletter.background_color');
+        const url = '/api/admin/settings?keys=newsletter.enabled,newsletter.title,newsletter.description,newsletter.placeholder_text,newsletter.button_text,newsletter.privacy_text,newsletter.background_color';
+        console.log('📡 Fetching from URL:', url);
+        
+        const response = await fetch(url);
+        console.log('📥 Response status:', response.status, response.statusText);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch settings: ${response.status}`);
@@ -42,18 +48,21 @@ export function useNewsletterSettings() {
         const data = await response.json();
         
         // Debug logging
-        console.log('Newsletter API Response:', { 
+        console.log('📊 Newsletter API Response:', { 
           success: data.success, 
           settingsCount: data.settings?.length || 0,
-          settings: data.settings 
+          settings: data.settings,
+          rawResponse: data
         });
         
         if (data.success && data.settings) {
           // Convert admin settings to newsletter settings object
           const fetchedSettings = data.settings.reduce((acc: any, setting: any) => {
+            console.log(`🔧 Processing setting: ${setting.key} = ${setting.value} (type: ${typeof setting.value})`);
             switch (setting.key) {
               case 'newsletter.enabled':
                 acc.enabled = setting.value === 'true';
+                console.log(`✅ Enabled set to: ${acc.enabled} (from "${setting.value}")`);
                 break;
               case 'newsletter.title':
                 acc.title = setting.value;
@@ -79,36 +88,37 @@ export function useNewsletterSettings() {
 
           // Merge with defaults to ensure all properties exist
           const finalSettings = { ...DEFAULT_NEWSLETTER_SETTINGS, ...fetchedSettings };
-          console.log('Final Newsletter Settings:', { 
+          console.log('🎯 Final Newsletter Settings:', { 
             fetchedSettings, 
             defaults: DEFAULT_NEWSLETTER_SETTINGS, 
-            final: finalSettings 
+            final: finalSettings,
+            enabled: finalSettings.enabled
           });
           setSettings(finalSettings);
         } else {
           // Use defaults if API returns no settings
-          console.log('Newsletter API returned no settings, using defaults:', DEFAULT_NEWSLETTER_SETTINGS);
+          console.log('⚠️ Newsletter API returned no settings, using defaults:', DEFAULT_NEWSLETTER_SETTINGS);
           setSettings(DEFAULT_NEWSLETTER_SETTINGS);
         }
       } catch (err) {
-        console.warn('Failed to fetch newsletter settings, using defaults:', err);
+        console.error('❌ Failed to fetch newsletter settings, using defaults:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         setSettings(DEFAULT_NEWSLETTER_SETTINGS);
       } finally {
         setIsLoading(false);
+        console.log('✅ Newsletter settings fetch complete');
       }
     }
 
     fetchNewsletterSettings();
-  }, []);
+  }, [refreshCounter]);
 
   return {
     settings,
     isLoading,
     error,
     refresh: () => {
-      setIsLoading(true);
-      // Re-trigger the effect by updating a dependency (could use a counter)
+      setRefreshCounter(prev => prev + 1);
     }
   };
 }

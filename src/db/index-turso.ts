@@ -10,8 +10,6 @@ let db: ReturnType<typeof drizzle> | null = null;
 
 // Initialize Turso connection
 try {
-  console.log('🔄 Connecting to Turso database...');
-  
   const databaseUrl = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
   
@@ -19,15 +17,12 @@ try {
     throw new Error('Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN environment variables');
   }
   
-  console.log('📡 Database URL:', databaseUrl);
-  
   client = createClient({
     url: databaseUrl,
     authToken: authToken,
   });
   
   db = drizzle(client, { schema });
-  console.log('✅ Turso database connection established');
 } catch (error) {
   console.error('❌ Failed to connect to Turso database:', error);
   // Don't throw - let the app continue with fallback mode
@@ -41,9 +36,6 @@ let isInitialized = false;
 
 export async function initializeDatabase() {
   if (isInitialized || !db) {
-    if (!db) {
-      console.log('⚠️  Database not available, skipping initialization');
-    }
     return;
   }
   

@@ -112,6 +112,28 @@ export async function POST(request: NextRequest) {
       );
 
       if (existingChart) {
+        // Track cached chart analytics
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/analytics/track`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              event: 'chart_generated',
+              data: {
+                chartType: body.chartType || 'natal',
+                userId: body.userId,
+                chartId: existingChart.id,
+                title: body.title || 'Natal Chart',
+                theme: body.theme || 'default',
+                cached: true,
+                source: 'api_cache'
+              }
+            })
+          });
+        } catch (analyticsError) {
+          console.debug('Analytics tracking failed (non-critical):', analyticsError);
+        }
+
         return NextResponse.json({
           success: true,
           chart: existingChart,
@@ -145,6 +167,31 @@ export async function POST(request: NextRequest) {
     });
 
     console.log('Chart saved:', !!savedChart, savedChart?.id);
+
+    // Track chart generation analytics
+    if (savedChart) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/analytics/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'chart_generated',
+            data: {
+              chartType: body.chartType || 'natal',
+              userId: body.userId,
+              chartId: savedChart.id,
+              title: body.title || 'Natal Chart',
+              theme: body.theme || 'default',
+              isPublic: body.isPublic || false,
+              hasCoordinates: !!(latitude && longitude),
+              source: 'api_endpoint'
+            }
+          })
+        });
+      } catch (analyticsError) {
+        console.debug('Analytics tracking failed (non-critical):', analyticsError);
+      }
+    }
 
     // Update user stellium data if this is their own chart and we have chart data
     if (savedChart && metadata?.chartData) {

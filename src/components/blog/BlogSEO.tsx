@@ -3,6 +3,7 @@
 import React from 'react';
 import Head from 'next/head';
 import { BlogPost } from '@/types/blog';
+import { BRAND } from '@/config/brand';
 
 interface BlogSEOProps {
   title?: string;
@@ -20,12 +21,12 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
   // Generate appropriate meta data based on context
   const getMetaTitle = () => {
     if (post) {
-      return `${post.title} | Luckstrology Blog`;
+      return `${post.title} | ${BRAND.name} Blog`;
     }
     if (title) {
-      return `${title} | Luckstrology Blog`;
+      return `${title} | ${BRAND.name} Blog`;
     }
-    return 'Astrology Blog | Guides, Insights & Cosmic Wisdom | Luckstrology';
+    return `Astrology Blog | Guides, Insights & Cosmic Wisdom | ${BRAND.name}`;
   };
 
   const getMetaDescription = () => {
@@ -39,7 +40,7 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
   };
 
   const getCanonicalUrl = () => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luckstrology.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || BRAND.domain;
     if (post) {
       return `${baseUrl}/blog/${post.slug}`;
     }
@@ -47,7 +48,7 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
   };
 
   const getStructuredData = () => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luckstrology.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || BRAND.domain;
     
     if (post) {
       return {
@@ -64,7 +65,7 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
         image: post.imageUrl ? `${baseUrl}${post.imageUrl}` : undefined,
         publisher: {
           '@type': 'Organization',
-          name: 'Luckstrology',
+          name: BRAND.name,
           logo: {
             '@type': 'ImageObject',
             url: `${baseUrl}/logo.png`
@@ -81,12 +82,12 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
     return {
       '@context': 'https://schema.org',
       '@type': 'Blog',
-      name: 'Luckstrology Astrology Blog',
+      name: `${BRAND.name} Astrology Blog`,
       description: getMetaDescription(),
       url: `${baseUrl}/blog`,
       publisher: {
         '@type': 'Organization',
-        name: 'Luckstrology',
+        name: BRAND.name,
         logo: {
           '@type': 'ImageObject',
           url: `${baseUrl}/logo.png`
@@ -114,7 +115,7 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
       {post?.imageUrl && (
-        <meta property="og:image" content={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://luckstrology.com'}${post.imageUrl}`} />
+        <meta property="og:image" content={`${process.env.NEXT_PUBLIC_BASE_URL || BRAND.domain}${post.imageUrl}`} />
       )}
 
       {/* Twitter */}
@@ -123,7 +124,7 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
       <meta property="twitter:title" content={metaTitle} />
       <meta property="twitter:description" content={metaDescription} />
       {post?.imageUrl && (
-        <meta property="twitter:image" content={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://luckstrology.com'}${post.imageUrl}`} />
+        <meta property="twitter:image" content={`${process.env.NEXT_PUBLIC_BASE_URL || BRAND.domain}${post.imageUrl}`} />
       )}
 
       {/* Article specific meta tags */}
@@ -143,7 +144,7 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
       <meta name="robots" content="index, follow" />
       <meta name="googlebot" content="index, follow" />
       <meta name="keywords" content="astrology blog, zodiac signs, natal charts, planetary transits, horoscope, astrology guides, cosmic wisdom" />
-      <meta name="author" content="Luckstrology" />
+      <meta name="author" content={BRAND.name} />
 
       {/* Structured Data */}
       <script

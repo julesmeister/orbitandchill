@@ -129,6 +129,39 @@ export function useGoogleAuth() {
         updatedAt: new Date()
       });
 
+      // Persist user to server database
+      try {
+        const response = await fetch('/api/users/profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: googleUser.id,
+            username: googleUser.name,
+            email: googleUser.email,
+            profilePictureUrl: googleUser.picture,
+            authProvider: 'google',
+            // Include default privacy settings
+            showZodiacPublicly: DEFAULT_USER_PREFERENCES.privacy.showZodiacPublicly,
+            showStelliumsPublicly: DEFAULT_USER_PREFERENCES.privacy.showStelliumsPublicly,
+            showBirthInfoPublicly: DEFAULT_USER_PREFERENCES.privacy.showBirthInfoPublicly,
+            allowDirectMessages: DEFAULT_USER_PREFERENCES.privacy.allowDirectMessages,
+            showOnlineStatus: DEFAULT_USER_PREFERENCES.privacy.showOnlineStatus,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ User persisted to server database:`, result.action);
+        } else {
+          console.warn('⚠️ Failed to persist user to server database:', response.status);
+        }
+      } catch (dbError) {
+        console.warn('⚠️ Could not persist user to server database:', dbError);
+        // Don't fail the authentication if database persistence fails
+      }
+
       // Log user activity
       await UserActivityService.recordUserActivity(
         googleUser.id,

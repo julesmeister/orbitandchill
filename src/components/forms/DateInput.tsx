@@ -52,7 +52,15 @@ const DateInput = React.memo(({ dateInput, onDateChange }: DateInputProps) => {
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      <div className="synapsas-date-field month-field relative" ref={monthDropdownRef}>
+      <div 
+        className="synapsas-date-field month-field relative" 
+        ref={monthDropdownRef}
+        style={{
+          zIndex: 2000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)'
+        }}
+      >
         <button
           type="button"
           onClick={() => setShowMonthDropdown(!showMonthDropdown)}
@@ -67,7 +75,15 @@ const DateInput = React.memo(({ dateInput, onDateChange }: DateInputProps) => {
         </button>
         
         {showMonthDropdown && (
-          <div className="synapsas-month-dropdown">
+          <div 
+            className="synapsas-month-dropdown"
+            style={{
+              zIndex: 2001,
+              transform: 'translateZ(0)',
+              isolation: 'isolate',
+              position: 'absolute'
+            }}
+          >
             {MONTHS.map((month) => (
               <button
                 key={month.value}

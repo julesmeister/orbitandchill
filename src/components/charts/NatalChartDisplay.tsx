@@ -37,6 +37,14 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
 }) => {
   const { user } = useUserStore();
   const { activeTab, setActiveTab } = useChartTab();
+  
+  // In development, ensure interpretation tab is active by default to prevent hot reload issues
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && activeTab !== 'interpretation') {
+      console.log('Development mode: Setting activeTab to interpretation to prevent hot reload issues');
+      setActiveTab('interpretation');
+    }
+  }, [activeTab, setActiveTab]);
   const handleDownloadSVG = () => {
     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
@@ -171,6 +179,18 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
           ) : (
             // Interpretation View
             <ChartInterpretation birthData={birthData} chartData={chartData} />
+          )}
+          
+          {/* In development, always show interpretation below chart for debugging */}
+          {process.env.NODE_ENV === 'development' && activeTab === 'chart' && (
+            <div className="mt-8 border-t border-gray-300 pt-6">
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Development Only:</strong> Showing interpretation below for debugging hot reload issues
+                </p>
+              </div>
+              <ChartInterpretation birthData={birthData} chartData={chartData} />
+            </div>
           )}
 
           <ChartActions

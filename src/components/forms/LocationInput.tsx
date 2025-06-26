@@ -26,7 +26,14 @@ const LocationInput = React.memo(({
   dropdownRef,
   onLocationSelect
 }: LocationInputProps) => (
-  <div className="synapsas-input-group relative">
+  <div
+    className="synapsas-input-group relative"
+    style={{
+      zIndex: 1000,
+      isolation: 'isolate',
+      transform: 'translateZ(0)'
+    }}
+  >
     <label className="synapsas-label">
       Location of Birth <span className="text-red-500">*</span>
     </label>
@@ -50,6 +57,12 @@ const LocationInput = React.memo(({
       <div
         ref={dropdownRef}
         className="synapsas-location-dropdown"
+        style={{
+          zIndex: 4999,
+          transform: 'translateZ(0)',
+          isolation: 'isolate',
+          position: 'absolute'
+        }}
       >
         {isLoadingLocations ? (
           <div className="synapsas-dropdown-message">

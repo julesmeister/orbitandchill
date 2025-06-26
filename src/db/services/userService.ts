@@ -9,6 +9,7 @@ import { createResilientService } from '@/db/resilience';
 import { executeRawSelectOne, executeRawUpdate, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
 
 export interface CreateUserData {
+  id?: string; // Optional ID for Google users
   username: string;
   email?: string;
   profilePictureUrl?: string;
@@ -24,6 +25,11 @@ export interface UpdateUserData {
   locationOfBirth?: string;
   latitude?: number;
   longitude?: number;
+  // Current location data
+  currentLocationName?: string;
+  currentLatitude?: number;
+  currentLongitude?: number;
+  currentLocationUpdatedAt?: Date;
   sunSign?: string;
   stelliumSigns?: string[];
   stelliumHouses?: string[];
@@ -70,24 +76,45 @@ const resilient = createResilientService('UserService');
 export class UserService {
   static async createUser(data: CreateUserData) {
     return resilient.operation(db, 'createUser', async () => {
-      const id = data.authProvider === 'anonymous' 
+      // Use provided ID for Google users, or generate for anonymous users
+      const id = data.id || (data.authProvider === 'anonymous' 
         ? `anon_${nanoid(10)}` 
-        : data.email || nanoid(12);
+        : data.email || nanoid(12));
 
       const now = new Date();
-      const user = await db.insert(users).values({
-        id,
-        username: data.username,
-        email: data.email,
-        profilePictureUrl: data.profilePictureUrl,
-        authProvider: data.authProvider,
-        createdAt: now,
-        updatedAt: now,
-        stelliumSigns: JSON.stringify([]),
-        stelliumHouses: JSON.stringify([]),
-      }).returning();
+      
+      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      const dbObj = db as any;
+      const client = dbObj.client;
+      
+      const result = await client.execute({
+        sql: `INSERT INTO users (
+          id, username, email, profile_picture_url, auth_provider, 
+          created_at, updated_at, stellium_signs, stellium_houses, has_natal_chart,
+          show_zodiac_publicly, show_stelliums_publicly, show_birth_info_publicly,
+          allow_direct_messages, show_online_status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          id,
+          data.username,
+          data.email || null,
+          data.profilePictureUrl || null,
+          data.authProvider,
+          now.toISOString(),
+          now.toISOString(),
+          JSON.stringify([]),
+          JSON.stringify([]),
+          false,
+          false,
+          false,
+          false,
+          true,
+          true
+        ]
+      });
 
-      return user[0];
+      // Return the created user by fetching it
+      return await this.getUserById(id);
     }, null);
   }
 

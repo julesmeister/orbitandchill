@@ -1,9 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { EmbeddedChart } from '../../types/threads';
 import ChartSummaryCard from './ChartSummaryCard';
+import InteractiveNatalChart from './InteractiveNatalChart.rings';
+import InteractiveHoraryChart from '../horary/InteractiveHoraryChart';
+import VertexBorderButton from '../reusable/VertexBorderButton';
+import MajorAspectsSection from './sections/MajorAspectsSection';
+import { useNatalChart } from '../../hooks/useNatalChart';
+import { useUserStore } from '../../store/userStore';
+import { getFullAspectInfo } from '../../utils/astrologicalInterpretations';
+import { BRAND } from '../../config/brand';
 
 interface EmbeddedChartDisplayProps {
   chart: EmbeddedChart;
@@ -18,6 +26,131 @@ export default function EmbeddedChartDisplay({
 }: EmbeddedChartDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(showFullDetails);
   const [showChartModal, setShowChartModal] = useState(false);
+  const { user } = useUserStore();
+  const { cachedChart } = useNatalChart();
+
+  // Use ref to track if we've logged this chart data already
+  const lastLoggedChartId = useRef<string | null>(null);
+
+  // Check if this embedded chart matches the user's current chart
+  const isUserChart = useMemo(() => {
+    if (!chart.metadata.birthData || !user?.birthData) return false;
+    
+    return (
+      chart.metadata.birthData.dateOfBirth === user.birthData.dateOfBirth &&
+      chart.metadata.birthData.timeOfBirth === user.birthData.timeOfBirth &&
+      chart.metadata.birthData.locationOfBirth === user.birthData.locationOfBirth
+    );
+  }, [chart.metadata.birthData, user?.birthData]);
+
+  // Get real chart data if this is the user's chart
+  const realChartData = useMemo(() => {
+    if (isUserChart && cachedChart?.metadata?.chartData) {
+      console.log('🔍 Found matching cached chart with real data:', {
+        planetsCount: cachedChart.metadata.chartData.planets?.length,
+        aspectsCount: cachedChart.metadata.chartData.aspects?.length,
+        samplePlanet: cachedChart.metadata.chartData.planets?.[0]
+      });
+      return cachedChart.metadata.chartData;
+    }
+    return null;
+  }, [isUserChart, cachedChart]);
+
+  // Calculate aspects from existing planet data
+  const calculateAspectsFromPlanets = (planetSummary: any[]) => {
+    if (!planetSummary || planetSummary.length === 0) return [];
+    
+    const aspects = [];
+    const aspectDefinitions = {
+      conjunction: { angle: 0, orb: 8 },
+      sextile: { angle: 60, orb: 6 },
+      square: { angle: 90, orb: 8 },
+      trine: { angle: 120, orb: 8 },
+      opposition: { angle: 180, orb: 8 }
+    };
+
+    // First, let's see what data we actually have
+    console.log('🔍 Planet summary data structure:', planetSummary[0]);
+    console.log('🔍 All planet data keys:', Object.keys(planetSummary[0] || {}));
+    console.log('🔍 Full planetSummary array:', planetSummary);
+    
+    // Convert planet data to format needed for aspect calculation
+    const planets = planetSummary.map(p => ({
+      name: p.planet,
+      longitude: p.degree || 0, // Use degree if available
+      sign: p.sign
+    }));
+
+    console.log('🔍 Calculating aspects from embedded chart planets:', {
+      count: planets.length,
+      samplePlanet: planets[0],
+      allLongitudes: planets.map(p => `${p.name}: ${p.longitude}`)
+    });
+
+    // Calculate aspects between all planet pairs
+    for (let i = 0; i < planets.length; i++) {
+      for (let j = i + 1; j < planets.length; j++) {
+        const planet1 = planets[i];
+        const planet2 = planets[j];
+        
+        let angle = Math.abs(planet1.longitude - planet2.longitude);
+        if (angle > 180) angle = 360 - angle;
+
+        // Check each aspect type
+        for (const [aspectName, aspectDef] of Object.entries(aspectDefinitions)) {
+          const orb = Math.abs(angle - aspectDef.angle);
+          if (orb <= aspectDef.orb) {
+            aspects.push(`${planet1.name} ${aspectName} ${planet2.name}`);
+            break;
+          }
+        }
+      }
+    }
+
+    console.log('🔍 Calculated aspects from embedded chart:', {
+      aspectsCount: aspects.length,
+      aspects: aspects
+    });
+
+    return aspects;
+  };
+
+  // Calculate aspects using useMemo to prevent infinite loops
+  const computedAspects = useMemo(() => {
+    // First priority: Use real chart data if this is the user's chart
+    if (realChartData?.aspects && realChartData.aspects.length > 0) {
+      console.log('🔍 Using real chart aspects:', realChartData.aspects.length);
+      return realChartData.aspects.map(aspect => 
+        `${aspect.planet1} ${aspect.aspect} ${aspect.planet2}`
+      );
+    }
+    
+    // Second priority: Use embedded chart's majorAspects if available
+    if (chart.metadata.majorAspects?.length > 0) {
+      return chart.metadata.majorAspects;
+    }
+    
+    // Last resort: Try to calculate from planetSummary (will likely fail due to missing degrees)
+    return calculateAspectsFromPlanets(chart.metadata.planetSummary);
+  }, [realChartData?.aspects, chart.metadata.majorAspects, chart.metadata.planetSummary]);
+  
+  // Debug logging to see what data we receive (only log once per chart)
+  useEffect(() => {
+    if (chart.id !== lastLoggedChartId.current) {
+      console.log('🔍 EmbeddedChartDisplay received chart:', {
+        chartId: chart.id,
+        chartType: chart.chartType,
+        hasNatalChartData: !!chart.metadata.natalChartData,
+        natalChartDataAspects: chart.metadata.natalChartData?.aspects?.length || 0,
+        majorAspects: chart.metadata.majorAspects?.length || 0,
+        computedAspects: computedAspects.length,
+        allMetadataKeys: Object.keys(chart.metadata),
+        planetSummaryCount: chart.metadata.planetSummary?.length || 0,
+        houseSummaryCount: chart.metadata.houseSummary?.length || 0
+      });
+      lastLoggedChartId.current = chart.id;
+    }
+  }, [chart.id, chart.chartType, chart.metadata, computedAspects]);
 
   const handleViewMore = () => {
     if (isPreview) {
@@ -57,6 +190,20 @@ export default function EmbeddedChartDisplay({
                   {chart.metadata.chartScore}%
                 </span>
               )}
+              {/* Show Less Button in Header */}
+              {isPreview && isExpanded && (
+                <VertexBorderButton
+                  onClick={() => setIsExpanded(false)}
+                  className="px-3 py-1 border border-gray-200 font-space-grotesk font-bold text-xs transition-all duration-300 hover:bg-black hover:text-white hover:border-transparent"
+                  cornerSize="small"
+                  style={{ 
+                    backgroundColor: 'white',
+                    color: '#19181a'
+                  }}
+                >
+                  Show Less
+                </VertexBorderButton>
+              )}
             </div>
           </div>
         </div>
@@ -91,78 +238,163 @@ export default function EmbeddedChartDisplay({
                 )}
               </div>
 
-              {/* Chart Visual Preview */}
-              <div>
-                <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Chart Preview</h4>
-                <div className="relative bg-gray-50 border border-gray-300 rounded p-4 h-64 flex items-center justify-center">
-                  {chart.chartData ? (
-                    <div 
-                      className="w-full h-full flex items-center justify-center"
-                      dangerouslySetInnerHTML={{ __html: chart.chartData }}
-                      style={{ maxWidth: '200px', maxHeight: '200px' }}
-                    />
-                  ) : (
-                    <div className="text-center text-gray-500">
-                      <div className="text-4xl mb-2">
-                        {chart.chartType === 'natal' ? '🌟' : chart.chartType === 'horary' ? '❓' : '📅'}
+              {/* Chart and Planets Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Interactive Chart - Left Side (3/4 width) */}
+                <div className="lg:col-span-3">
+                  <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Interactive Chart</h4>
+                  <div className="bg-white rounded-lg p-4 overflow-hidden" style={{ height: '600px' }}>
+                    {chart.chartData && chart.metadata ? (
+                      <div className="w-full h-full overflow-hidden">
+                        {chart.chartType === 'natal' ? (
+                          <InteractiveNatalChart
+                            svgContent={chart.chartData}
+                            chartData={chart.metadata.natalChartData}
+                            className="w-full h-full [&>svg]:!min-h-0 [&>svg]:!max-h-full"
+                          />
+                        ) : chart.chartType === 'horary' ? (
+                          <InteractiveHoraryChart
+                            svgContent={chart.chartData}
+                            chartData={chart.metadata.horaryChartData}
+                            className="w-full h-full [&>svg]:!min-h-0 [&>svg]:!max-h-full"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div 
+                              className="w-full h-full"
+                              dangerouslySetInnerHTML={{ __html: chart.chartData }}
+                              style={{ maxHeight: '100%' }}
+                            />
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm font-inter">
-                        {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Key Planets Preview */}
-              {chart.metadata.planetSummary && chart.metadata.planetSummary.length > 0 && (
-                <div>
-                  <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Key Planets</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {chart.metadata.planetSummary.slice(0, 4).map((planet, index) => (
-                      <span 
-                        key={index}
-                        className="text-xs bg-gray-100 border border-gray-300 px-2 py-1 font-inter"
-                      >
-                        {planet.planet} in {planet.sign}
-                      </span>
-                    ))}
-                    {chart.metadata.planetSummary.length > 4 && (
-                      <span className="text-xs text-black/60 px-2 py-1 font-inter">
-                        +{chart.metadata.planetSummary.length - 4} more
-                      </span>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">
+                        <div className="text-center">
+                          <div className="text-6xl mb-4">
+                            {chart.chartType === 'natal' ? '🌟' : chart.chartType === 'horary' ? '❓' : '📅'}
+                          </div>
+                          <p className="text-lg font-inter">
+                            {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
+                          </p>
+                          <p className="text-sm text-gray-400 mt-2">Loading chart data...</p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
-              )}
 
-              {/* View More Button */}
-              <button
-                onClick={handleViewMore}
-                className="w-full py-3 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors font-space-grotesk font-bold text-sm"
-              >
-                View Full Chart Details
-              </button>
+                {/* Key Planets as Badges - Right Side (1/4 width) */}
+                <div className="space-y-4">
+                  <h4 className="font-space-grotesk font-bold text-black text-sm">Key Planets</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {chart.metadata.planetSummary && chart.metadata.planetSummary.length > 0 ? (
+                      chart.metadata.planetSummary.map((planet, index) => (
+                        <span 
+                          key={index}
+                          className="inline-block px-2 py-1 text-xs font-inter font-medium border bg-white"
+                          style={{ borderColor: '#e5e7eb', color: '#19181a' }}
+                        >
+                          {planet.planet} {planet.sign} {planet.house}H
+                          {planet.isRetrograde && <span className="text-red-600"> ℞</span>}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-xs font-inter text-gray-500">No planet data available</p>
+                    )}
+                  </div>
+
+                  {/* View More Button */}
+                  <VertexBorderButton
+                    onClick={handleViewMore}
+                    className="w-full px-3 py-2 border border-gray-200 font-space-grotesk font-bold text-xs transition-all duration-300 hover:bg-black hover:text-white hover:border-transparent"
+                    cornerSize="small"
+                    style={{ 
+                      backgroundColor: 'white',
+                      color: '#19181a'
+                    }}
+                  >
+                    View Full Details
+                  </VertexBorderButton>
+                </div>
+              </div>
             </div>
           ) : (
             /* Full Display Mode */
-            <ChartSummaryCard
-              chartType={chart.chartType}
-              metadata={chart.metadata}
-              isPreview={false}
-              onViewMore={() => setShowChartModal(true)}
-            />
+            <div className="space-y-4">
+              <ChartSummaryCard
+                chartType={chart.chartType}
+                metadata={chart.metadata}
+                isPreview={false}
+                onViewMore={() => setShowChartModal(true)}
+              />
+              
+              {/* Major Aspects Section - Show computed aspects if available */}
+              {chart.chartType === 'natal' && computedAspects.length > 0 && (
+                <div className="border border-black bg-white">
+                  <div className="p-4 bg-gray-50 border-b border-black">
+                    <h4 className="font-space-grotesk font-bold text-black">
+                      🌟 Major Aspects
+                    </h4>
+                    <p className="text-sm text-black/70 font-inter">
+                      {computedAspects.length} aspects found
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {computedAspects.map((aspect, index) => {
+                        // Parse aspect string to get aspect type for color coding
+                        const aspectParts = aspect.split(' ');
+                        const aspectType = aspectParts[1]?.toLowerCase() || '';
+                        
+                        // Get color based on aspect type (matching guides page colors)
+                        const getAspectColor = () => {
+                          switch (aspectType) {
+                            case 'trine':
+                            case 'sextile':
+                              return 'text-black border-black';
+                            case 'square':
+                            case 'opposition':
+                              return 'text-black border-black';
+                            case 'conjunction':
+                              return 'text-black border-black';
+                            default:
+                              return 'text-black border-black';
+                          }
+                        };
+                        
+                        const getAspectBgColor = () => {
+                          switch (aspectType) {
+                            case 'trine':
+                            case 'sextile':
+                              return '#a2ffdb'; // harmonious - light green from guides
+                            case 'square':
+                            case 'opposition':
+                              return '#ffd1f6'; // challenging - light pink from guides
+                            case 'conjunction':
+                              return '#a8e9ff'; // neutral - light blue from guides
+                            default:
+                              return '#fff27e'; // other - light yellow from guides
+                          }
+                        };
+                        
+                        return (
+                          <span 
+                            key={index}
+                            className={`inline-block px-3 py-1 text-sm font-inter font-medium border ${getAspectColor()}`}
+                            style={{ backgroundColor: getAspectBgColor() }}
+                          >
+                            {aspect}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Collapse Button for expanded preview */}
-          {isPreview && isExpanded && (
-            <button
-              onClick={() => setIsExpanded(false)}
-              className="w-full mt-4 py-2 border border-black bg-gray-50 text-black hover:bg-gray-100 transition-colors font-space-grotesk font-bold text-sm"
-            >
-              Show Less
-            </button>
-          )}
         </div>
 
         {/* Chart Attribution */}
@@ -172,7 +404,7 @@ export default function EmbeddedChartDisplay({
               Chart created {new Date(chart.createdAt).toLocaleDateString()}
             </span>
             <span>
-              Powered by Luckstrology
+              Powered by {BRAND.name}
             </span>
           </div>
         </div>

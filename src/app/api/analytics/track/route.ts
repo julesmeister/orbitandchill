@@ -118,6 +118,22 @@ export async function POST(request: NextRequest) {
         await handleLocationAnalytics(data, today, context);
         break;
         
+      case 'session_end':
+        await handleSessionEnd(data, today, context);
+        break;
+        
+      case 'custom_event':
+        await handleCustomEvent(data, today, context);
+        break;
+        
+      case 'discussion_interaction':
+        await handleDiscussionInteraction(data, today, context);
+        break;
+        
+      case 'horary_question_submitted':
+        await handleHoraryQuestion(data, today, context);
+        break;
+        
       default:
         return NextResponse.json(
           { success: false, error: 'Unknown event type' },
@@ -149,6 +165,9 @@ async function handlePageView(data: any, date: string, context: any) {
       await AnalyticsService.incrementDailyCounter('visitors', date);
     }
     
+    // Categorize traffic source based on referrer
+    const trafficSource = categorizeTrafficSource(referrer || '');
+    
     // Record top pages data
     const topPages = [
       { page: page || '/', views: 1, percentage: 100 }
@@ -157,7 +176,7 @@ async function handlePageView(data: any, date: string, context: any) {
     await AnalyticsService.recordTrafficData({
       date,
       topPages,
-      trafficSources: referrer ? { [referrer]: 1 } : { direct: 1 }
+      trafficSources: { [trafficSource]: 1 }
     });
 
     // Record user activity if userId is provided
@@ -167,7 +186,7 @@ async function handlePageView(data: any, date: string, context: any) {
         activityType: 'page_view',
         entityType: 'page',
         description: `Viewed page: ${page || '/'}`,
-        metadata: { page, referrer },
+        metadata: { page, referrer, trafficSource },
         pageUrl: page,
         referrer,
         ...context
@@ -431,5 +450,238 @@ async function handleLocationAnalytics(data: any, date: string, context: any) {
     
   } catch (error) {
     console.warn('Failed to handle location analytics:', error);
+  }
+}
+
+async function handleSessionEnd(data: any, date: string, context: any) {
+  try {
+    const { sessionId, duration, pages, userId } = data;
+    
+    // Track session metrics
+    if (duration && duration > 0) {
+      await AnalyticsService.recordTrafficData({
+        date,
+        avgSessionDuration: duration
+      });
+    }
+    
+    // Track engagement if we have page count
+    if (pages && pages > 0) {
+      await AnalyticsService.recordEngagementData({
+        date,
+        pageViewsPerSession: pages
+      });
+    }
+
+    // Record user activity if userId is provided
+    if (userId && sessionId) {
+      await UserActivityService.recordActivity({
+        userId,
+        activityType: 'session_ended',
+        entityType: 'session',
+        description: `Session ended after ${Math.round(duration / 1000)}s`,
+        metadata: { sessionId, duration, pages },
+        ...context
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to handle session end analytics:', error);
+  }
+}
+
+async function handleDiscussionInteraction(data: any, date: string, context: any) {
+  try {
+    const { action, discussionId, userId, title } = data;
+    
+    // Track different types of discussion interactions
+    switch (action) {
+      case 'view':
+        await AnalyticsService.recordEngagementData({
+          date,
+          activeUsers: userId ? 1 : 0
+        });
+        break;
+        
+      case 'reply':
+        await AnalyticsService.incrementEngagementCounter('repliesPosted', date);
+        break;
+        
+      case 'vote_up':
+      case 'vote_down':
+        await AnalyticsService.incrementEngagementCounter('votesTotal', date);
+        break;
+    }
+
+    // Record user activity if userId is provided
+    if (userId && discussionId) {
+      // Map action to proper activity type
+      let activityType: 'discussion_created' | 'discussion_viewed' | 'discussion_replied' | 'discussion_voted';
+      
+      switch (action) {
+        case 'view':
+          activityType = 'discussion_viewed';
+          break;
+        case 'create':
+          activityType = 'discussion_created';
+          break;
+        case 'reply':
+          activityType = 'discussion_replied';
+          break;
+        case 'vote_up':
+        case 'vote_down':
+          activityType = 'discussion_voted';
+          break;
+        default:
+          console.warn(`Unknown discussion action: ${action}`);
+          return; // Skip recording if action is unknown
+      }
+      
+      await UserActivityService.recordDiscussionActivity(
+        userId,
+        discussionId,
+        activityType,
+        { title, action },
+        context
+      );
+    }
+  } catch (error) {
+    console.warn('Failed to handle discussion interaction analytics:', error);
+  }
+}
+
+async function handleHoraryQuestion(data: any, date: string, context: any) {
+  try {
+    const { userId, source } = data;
+    
+    // Track horary question submissions
+    await AnalyticsService.incrementEngagementCounter('horaryQuestions', date);
+    await AnalyticsService.incrementEngagementCounter('activeUsers', date);
+
+    // Record user activity if userId is provided
+    if (userId) {
+      await UserActivityService.recordActivity({
+        userId,
+        activityType: 'horary_question_submitted',
+        entityType: 'horary',
+        description: 'Submitted a horary question',
+        metadata: { source: source || 'horary_oracle' },
+        ...context
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to handle horary question analytics:', error);
+  }
+}
+
+async function handleCustomEvent(data: any, date: string, context: any) {
+  try {
+    const { eventName, eventData, userId } = data;
+    
+    // Generic handler for custom events
+    await AnalyticsService.incrementDailyCounter('customEvents', date);
+
+    // Record user activity if userId is provided
+    if (userId && eventName) {
+      await UserActivityService.recordActivity({
+        userId,
+        activityType: 'custom_event',
+        entityType: 'event',
+        description: `Custom event: ${eventName}`,
+        metadata: { eventName, ...eventData },
+        ...context
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to handle custom event analytics:', error);
+  }
+}
+
+// Helper function to categorize traffic sources based on referrer
+function categorizeTrafficSource(referrer: string): string {
+  if (!referrer || referrer === 'direct') {
+    return 'Direct';
+  }
+  
+  const url = referrer.toLowerCase();
+  
+  // Search engines
+  if (url.includes('google.com') || url.includes('google.')) {
+    return 'Google';
+  }
+  if (url.includes('bing.com') || url.includes('bing.')) {
+    return 'Bing';
+  }
+  if (url.includes('yahoo.com') || url.includes('yahoo.')) {
+    return 'Yahoo';
+  }
+  if (url.includes('duckduckgo.com')) {
+    return 'DuckDuckGo';
+  }
+  if (url.includes('baidu.com')) {
+    return 'Baidu';
+  }
+  
+  // Social media
+  if (url.includes('facebook.com') || url.includes('fb.com')) {
+    return 'Facebook';
+  }
+  if (url.includes('twitter.com') || url.includes('t.co')) {
+    return 'Twitter';
+  }
+  if (url.includes('instagram.com')) {
+    return 'Instagram';
+  }
+  if (url.includes('linkedin.com')) {
+    return 'LinkedIn';
+  }
+  if (url.includes('reddit.com')) {
+    return 'Reddit';
+  }
+  if (url.includes('pinterest.com')) {
+    return 'Pinterest';
+  }
+  if (url.includes('tiktok.com')) {
+    return 'TikTok';
+  }
+  if (url.includes('youtube.com')) {
+    return 'YouTube';
+  }
+  
+  // Email
+  if (url.includes('mail.') || url.includes('gmail.') || url.includes('outlook.')) {
+    return 'Email';
+  }
+  
+  // Astrology communities
+  if (url.includes('astro.com') || url.includes('astrodienst.com')) {
+    return 'Astro.com';
+  }
+  if (url.includes('cafeastrology.com')) {
+    return 'Cafe Astrology';
+  }
+  if (url.includes('astrotheme.com')) {
+    return 'Astrotheme';
+  }
+  if (url.includes('astrolabe.com')) {
+    return 'Astrolabe';
+  }
+  
+  // News/Media
+  if (url.includes('news.') || url.includes('bbc.') || url.includes('cnn.') || 
+      url.includes('reuters.') || url.includes('ap.org')) {
+    return 'News';
+  }
+  
+  // Forums
+  if (url.includes('forum') || url.includes('community') || url.includes('discussion')) {
+    return 'Forums';
+  }
+  
+  // Try to extract domain name for "Other" category
+  try {
+    const domain = new URL(referrer).hostname.replace('www.', '');
+    return `Other: ${domain}`;
+  } catch {
+    return 'Other';
   }
 }

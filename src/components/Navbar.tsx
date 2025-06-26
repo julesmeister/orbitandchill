@@ -11,6 +11,7 @@ import GoogleSignInPrompt from './navbar/GoogleSignInPrompt';
 import NotificationBell from './navbar/NotificationBell';
 import OrbitingLogo from './navbar/OrbitingLogo';
 import StatusToast from './reusable/StatusToast';
+import VertexBorderButton from './reusable/VertexBorderButton';
 import { BRAND } from '@/config/brand';
 import { useUserStore } from '../store/userStore';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
@@ -53,11 +54,8 @@ export default function Navbar() {
       }
     };
 
-    // Only run if we haven't initialized yet
-    const currentUser = useUserStore.getState().user;
-    if (!currentUser || currentUser.username === "Anonymous") {
-      initializeUser();
-    }
+    // Always run initialization on mount
+    initializeUser();
   }, []); // Empty dependency array - run only once on mount
 
   // Toast helper functions
@@ -188,9 +186,20 @@ export default function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-black hover:text-gray-600 transition-colors p-2 border border-black bg-white"
+                className="text-black transition-colors p-2 bg-white relative group"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {/* Vertex borders on hover - visible corners */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  {/* Top-left corner */}
+                  <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-black"></span>
+                  {/* Top-right corner */}
+                  <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-black"></span>
+                  {/* Bottom-left corner */}
+                  <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-black"></span>
+                  {/* Bottom-right corner */}
+                  <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-black"></span>
+                </div>
+                <svg className="h-5 w-5 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

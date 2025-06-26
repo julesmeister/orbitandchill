@@ -7,6 +7,7 @@ import NatalChartDisplay from "../../../../components/charts/NatalChartDisplay";
 import BirthDataSummary from "../../../../components/charts/BirthDataSummary";
 import { useStatusToast } from "../../../../hooks/useStatusToast";
 import StatusToast from "../../../../components/reusable/StatusToast";
+import { BRAND } from "../../../../config/brand";
 
 export default function SharedChartPage() {
   const params = useParams();
@@ -102,7 +103,7 @@ export default function SharedChartPage() {
               {chart.title || `${chart.subjectName}'s Natal Chart`}
             </h1>
             <p className="font-inter text-black/70">
-              Shared from Luckstrology
+              Shared from {BRAND.name}
             </p>
           </div>
 

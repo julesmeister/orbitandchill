@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { BRAND } from '../../config/brand';
 
 interface StructuredDataProps {
   type?: 'website' | 'article' | 'faq' | 'breadcrumb';
@@ -23,18 +24,18 @@ export default function StructuredData({ type = 'website', data }: StructuredDat
         return {
           ...baseData,
           '@type': 'WebSite',
-          name: 'Luckstrology',
-          url: 'https://luckstrology.com',
+          name: BRAND.name,
+          url: BRAND.domain,
           description: 'Free natal chart generator and astrology community platform',
           potentialAction: {
             '@type': 'SearchAction',
-            target: 'https://luckstrology.com/search?q={search_term_string}',
+            target: `${BRAND.domain}/search?q={search_term_string}`,
             'query-input': 'required name=search_term_string',
           },
           sameAs: [
-            'https://twitter.com/luckstrology',
-            'https://instagram.com/luckstrology',
-            'https://facebook.com/luckstrology',
+            `https://twitter.com/${BRAND.socialHandles.twitter.replace('@', '')}`,
+            `https://instagram.com/${BRAND.socialHandles.instagram.replace('@', '')}`,
+            `https://facebook.com/${BRAND.socialHandles.facebook.replace('@', '')}`,
           ],
         };
 
@@ -42,25 +43,25 @@ export default function StructuredData({ type = 'website', data }: StructuredDat
         return {
           ...baseData,
           '@type': 'Article',
-          headline: data?.title || 'Luckstrology Article',
+          headline: data?.title || `${BRAND.name} Article`,
           description: data?.description || 'Astrology insights and natal chart analysis',
           author: {
             '@type': 'Organization',
-            name: 'Luckstrology',
+            name: BRAND.name,
           },
           publisher: {
             '@type': 'Organization',
-            name: 'Luckstrology',
+            name: BRAND.name,
             logo: {
               '@type': 'ImageObject',
-              url: 'https://luckstrology.com/logo.png',
+              url: `${BRAND.domain}/logo.png`,
             },
           },
           datePublished: data?.datePublished || '2024-01-01T00:00:00.000Z',
           dateModified: data?.dateModified || '2024-01-01T00:00:00.000Z',
           mainEntityOfPage: {
             '@type': 'WebPage',
-            '@id': data?.url || 'https://luckstrology.com',
+            '@id': data?.url || BRAND.domain,
           },
         };
 
@@ -97,7 +98,7 @@ export default function StructuredData({ type = 'website', data }: StructuredDat
               '@type': 'ListItem',
               position: 1,
               name: 'Home',
-              item: 'https://luckstrology.com',
+              item: BRAND.domain,
             },
           ],
         };

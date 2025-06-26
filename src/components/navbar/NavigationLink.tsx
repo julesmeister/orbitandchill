@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+import VertexCorners from '@/components/ui/VertexCorners';
 
 interface NavigationLinkProps {
   href: string;
@@ -31,14 +32,17 @@ const NavigationLink = React.memo(({
     <button
       onClick={handleClick}
       disabled={isLoading}
-      className={`relative overflow-hidden ${className} ${
+      className={`relative overflow-hidden group ${className} ${
         isActive
           ? 'bg-black text-white font-medium'
           : isLoading 
             ? 'bg-transparent text-black cursor-wait' 
-            : 'text-black font-medium hover:bg-black hover:text-white transition-colors duration-200'
-      } font-inter text-sm xl:text-base px-3 py-1`}
+            : 'text-black font-medium transition-colors duration-200'
+      } font-space-grotesk text-sm xl:text-base px-3 py-1`}
     >
+      {/* Vertex borders on hover - only show when not active and not loading */}
+      <VertexCorners show={!isActive && !isLoading} />
+
       {/* Progress bar */}
       {isLoading && (
         <div 

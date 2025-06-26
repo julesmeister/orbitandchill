@@ -95,7 +95,7 @@ export default function ProfilePage() {
               <div className="flex items-center space-x-4 mb-4">
                 <div className="w-16 h-16 border-2 border-black bg-white p-1">
                   <Image
-                    src={getAvatarByIdentifier(user.username)}
+                    src={user.profilePictureUrl || getAvatarByIdentifier(user.username)}
                     alt={user.username}
                     width={64}
                     height={64}

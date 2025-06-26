@@ -285,6 +285,11 @@ export async function calculatePlanetaryPositions(
 
     // Calculate aspects
     const aspects = calculateAspects(planets);
+    console.log('🔍 Chart generation - aspects calculated:', {
+      aspectsCount: aspects.length,
+      firstFewAspects: aspects.slice(0, 3),
+      planetsCount: planets.length
+    });
 
     // Planetary positions calculation completed
 
@@ -470,6 +475,7 @@ function determineHouse(planetLongitude: number, houses: HousePosition[]): numbe
  * Calculate aspects between planets
  */
 function calculateAspects(planets: PlanetPosition[]): ChartAspect[] {
+  console.log('🔍 calculateAspects called with planets:', planets.length);
   const aspects: ChartAspect[] = [];
   
   // Define aspect colors
@@ -514,6 +520,11 @@ function calculateAspects(planets: PlanetPosition[]): ChartAspect[] {
       }
     }
   }
+  
+  console.log('🔍 calculateAspects returning:', {
+    aspectsCount: aspects.length,
+    aspects: aspects.map(a => `${a.planet1} ${a.aspect} ${a.planet2}`)
+  });
   
   return aspects;
 }

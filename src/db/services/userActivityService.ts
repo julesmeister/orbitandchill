@@ -12,10 +12,11 @@ export type ActivityType =
   | 'event_created' | 'event_bookmarked' | 'event_unbookmarked' | 'event_viewed'
   | 'user_registered' | 'user_login' | 'user_logout' | 'user_updated'
   | 'settings_changed' | 'premium_activated' | 'premium_feature_used'
-  | 'page_view' | 'navigation' | 'search_performed' | 'export_data';
+  | 'page_view' | 'navigation' | 'search_performed' | 'export_data'
+  | 'horary_question_submitted';
 
 export type EntityType = 
-  | 'chart' | 'discussion' | 'reply' | 'event' | 'user' | 'page' | 'search' | 'settings' | 'premium_feature';
+  | 'chart' | 'discussion' | 'reply' | 'event' | 'user' | 'page' | 'search' | 'settings' | 'premium_feature' | 'horary';
 
 export interface CreateUserActivityData {
   userId: string;
@@ -74,7 +75,7 @@ export class UserActivityService {
    */
   static async recordActivity(data: CreateUserActivityData): Promise<UserActivityRecord | null> {
     if (!db) {
-      console.warn('⚠️ Database not available, activity not persisted:', data.description);
+      
       // Return mock activity record for UI consistency
       return {
         id: `local_${Date.now()}`,
@@ -131,7 +132,7 @@ export class UserActivityService {
    */
   static async getUserActivityTimeline(options: ActivityTimelineOptions): Promise<UserActivityRecord[]> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty activity timeline');
+      
       return [];
     }
 
@@ -188,7 +189,7 @@ export class UserActivityService {
    */
   static async getUserActivitySummary(userId: string, days: number = 30): Promise<ActivitySummary> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty activity summary');
+      
       return {
         totalActivities: 0,
         chartActivities: 0,
@@ -266,7 +267,7 @@ export class UserActivityService {
    */
   static async getRecentActivities(limit: number = 100): Promise<UserActivityRecord[]> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty recent activities');
+      
       return [];
     }
 
@@ -287,11 +288,40 @@ export class UserActivityService {
   }
 
   /**
+   * Get activities by specific activity type
+   */
+  static async getActivitiesByType(activityType: ActivityType): Promise<UserActivityRecord[]> {
+    if (!db) {
+      
+      return [];
+    }
+
+    try {
+      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      const activities = await executeRawSelect(db, {
+        table: 'user_activity',
+        conditions: [
+          { column: 'activity_type', value: activityType }
+        ],
+        orderBy: [{ column: 'created_at', direction: 'DESC' }]
+      });
+
+      return activities.map((activity: any) => ({
+        ...transformDatabaseRow(activity),
+        metadata: activity.metadata ? JSON.parse(activity.metadata) : undefined,
+      }));
+    } catch (error) {
+      console.error(`Error getting activities by type '${activityType}':`, error);
+      return [];
+    }
+  }
+
+  /**
    * Get activity stats by date range
    */
   static async getActivityStatsByDateRange(startDate: Date, endDate: Date): Promise<Record<string, number>> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty activity stats');
+      
       return {};
     }
 
@@ -321,7 +351,7 @@ export class UserActivityService {
    */
   static async cleanupOldActivities(daysToKeep: number = 365): Promise<number> {
     if (!db) {
-      console.warn('⚠️ Database not available, cannot cleanup old activities');
+      
       return 0;
     }
 
@@ -349,7 +379,7 @@ export class UserActivityService {
    */
   static async getSessionActivities(sessionId: string): Promise<UserActivityRecord[]> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty session activities');
+      
       return [];
     }
 

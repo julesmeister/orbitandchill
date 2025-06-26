@@ -24,6 +24,9 @@ import EventsEmptyState from '../../components/events/EventsEmptyState';
 import NextBookmarkedEventCountdown from '../../components/events/NextBookmarkedEventCountdown';
 import ConfirmationToast from '../../components/reusable/ConfirmationToast';
 import StatusToast from '../../components/reusable/StatusToast';
+import LocationRequestToast from '../../components/reusable/LocationRequestToast';
+import { useSharedLocation } from '../../hooks/useSharedLocation';
+import { BRAND } from '../../config/brand';
 
 // Remove duplicate interface - using from store
 
@@ -47,6 +50,16 @@ export default function EventsPage() {
 
   // Use status toast hook
   const { toast: statusToast, showLoading, showSuccess, showError, showInfo, updateProgress, hideStatus } = useStatusToast();
+
+  // Use shared location hook
+  const { 
+    isLocationToastVisible, 
+    locationDisplay,
+    requestLocationPermission,
+    showLocationToast,
+    hideLocationToast,
+    setLocation
+  } = useSharedLocation();
 
   // Use events store for all state management
   const {
@@ -106,7 +119,7 @@ export default function EventsPage() {
 
   // Set document title and meta tags for SEO
   useEffect(() => {
-    document.title = "Astrological Events Dashboard | Luckstrology";
+    document.title = `Astrological Events Dashboard | ${BRAND.name}`;
   }, []);
 
   // Load events when user is available (only once per session)
@@ -181,6 +194,30 @@ export default function EventsPage() {
     return true;
   });
 
+  // Helper function to get location for events generation
+  const getLocationForGeneration = () => {
+    // If we have manually set location data, use it
+    if (currentLocationData) {
+      return {
+        latitude: parseFloat(currentLocationData.coordinates.lat),
+        longitude: parseFloat(currentLocationData.coordinates.lon),
+        locationName: currentLocationData.name
+      };
+    }
+
+    // If user has birth data, use it
+    if (user?.birthData?.coordinates?.lat && user?.birthData?.coordinates?.lon) {
+      return {
+        latitude: parseFloat(user.birthData.coordinates.lat),
+        longitude: parseFloat(user.birthData.coordinates.lon),
+        locationName: user.birthData.locationOfBirth || 'Your Birth Location'
+      };
+    }
+
+    // No location available
+    return null;
+  };
+
   // Wrapper function to use the hook's generateOptimalTiming
   const handleGenerateOptimalTiming = async () => {
     if (selectedPriorities.length === 0) {
@@ -188,8 +225,11 @@ export default function EventsPage() {
       return;
     }
 
-    if (!user?.birthData) {
-      showError("Incomplete Profile", "Please complete your birth data in your profile for accurate calculations.");
+    // Check for location (birth data or manually set location)
+    const locationData = getLocationForGeneration();
+    if (!locationData) {
+      showError("Location Required", "Please provide your location for accurate astrological calculations. You can either complete your birth data in your profile or set your current location.");
+      setShowLocationToast(true);
       return;
     }
 
@@ -214,10 +254,9 @@ export default function EventsPage() {
     }
 
     try {
-      const latitude = parseFloat(user.birthData.coordinates.lat);
-      const longitude = parseFloat(user.birthData.coordinates.lon);
+      const { latitude, longitude, locationName } = locationData;
 
-      updateProgress(20, "Starting astronomical calculations...");
+      updateProgress(20, `Starting astronomical calculations for ${locationName}...`);
 
       await generateOptimalTiming({
         latitude,
@@ -314,10 +353,16 @@ export default function EventsPage() {
       userId: user?.id
     });
 
+    // Check for location
+    const locationData = getLocationForGeneration();
+    if (!locationData) {
+      showError("Location Required", "Please provide your location for accurate astrological analysis. You can either complete your birth data in your profile or set your current location.");
+      setShowLocationToast(true);
+      return;
+    }
+
     try {
-      // Use user's coordinates if available, otherwise default to a major city
-      const latitude = user?.birthData?.coordinates?.lat ? parseFloat(user.birthData.coordinates.lat) : 40.7128; // NYC
-      const longitude = user?.birthData?.coordinates?.lon ? parseFloat(user.birthData.coordinates.lon) : -74.0060; // NYC
+      const { latitude, longitude } = locationData;
 
       const analyzedEvent = await analyzeManualEvent({
         title: newEvent.title,
@@ -594,21 +639,49 @@ export default function EventsPage() {
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       <main className="bg-white">
         {/* Hero Section */}
-        <section className="px-6 md:px-12 lg:px-20 py-16">
-          <div className="text-center">
-            <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
-              Electional Astrology
-            </h1>
-            <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto mb-8">
-              Find the most auspicious times for your important life events. Generate personalized timing recommendations based on your birth chart and current planetary conditions.
-            </p>
+        <section className="px-6 md:px-12 lg:px-20 py-12">
+          <div className="max-w-4xl mx-auto">
+            
+            {/* Header with Location */}
+            <div className="text-center mb-8">
+              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-4">
+                Electional Astrology
+              </h1>
+              <p className="font-inter text-lg text-black/70 leading-relaxed mb-6">
+                Find the most auspicious times for your important life events. Generate personalized timing recommendations based on your birth chart and current planetary conditions.
+              </p>
+              
+              {/* Location Display */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                <span>
+                  {locationDisplay.source === 'current' ? '📍' : 
+                   locationDisplay.source === 'birth' ? '🏠' : '🏙️'}
+                </span>
+                <span className="text-black/70">
+                  Location: <span className="font-medium text-black">
+                    {locationDisplay.shortName}
+                  </span>
+                </span>
+                {locationDisplay.source !== 'current' && (
+                  <span className="text-xs text-black/40">
+                    ({locationDisplay.source === 'birth' ? 'birth' : 'default'})
+                  </span>
+                )}
+                <button
+                  onClick={showLocationToast}
+                  className="ml-1 p-1 text-black/40 hover:text-black hover:bg-gray-200 rounded transition-all duration-200"
+                  title="Change location"
+                >
+                  ⚙️
+                </button>
+              </div>
+            </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 justify-center mb-6">
               <button
                 onClick={() => {
                   setShowTimingOptions(!showTimingOptions);
-                  // Scroll to timing options if showing it
                   if (!showTimingOptions) {
                     setTimeout(() => {
                       const element = document.querySelector('[data-timing-options]');
@@ -619,18 +692,18 @@ export default function EventsPage() {
                   }
                 }}
                 disabled={isTimingGenerating}
-                className={`inline-flex items-center gap-3 px-8 py-4 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${showTimingOptions
+                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${showTimingOptions
                     ? 'bg-transparent text-black hover:bg-black hover:text-white'
-                    : 'bg-black text-white hover:shadow-xl hover:shadow-black/25'
+                    : 'bg-black text-white hover:shadow-lg'
                   }`}
               >
                 <span>✨</span>
                 {showTimingOptions ? 'Hide' : 'Generate'} Optimal Times
               </button>
+              
               <button
                 onClick={() => {
                   setShowAddForm(!showAddForm);
-                  // Scroll to add form if showing it
                   if (!showAddForm) {
                     setTimeout(() => {
                       const element = document.querySelector('[data-add-form]');
@@ -640,18 +713,18 @@ export default function EventsPage() {
                     }, 100);
                   }
                 }}
-                className={`inline-flex items-center gap-3 px-8 py-4 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 ${showAddForm
-                    ? 'bg-black text-white hover:shadow-xl hover:shadow-black/25'
+                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 ${showAddForm
+                    ? 'bg-black text-white hover:shadow-lg'
                     : 'bg-transparent text-black hover:bg-black hover:text-white'
                   }`}
               >
                 <span>📅</span>
                 {showAddForm ? 'Hide' : 'Add'} Manual Event
               </button>
+              
               <button
                 onClick={() => {
                   setShowCalendar(!showCalendar);
-                  // Scroll to calendar if showing it
                   if (!showCalendar) {
                     setTimeout(() => {
                       const element = document.querySelector('[data-calendar]');
@@ -661,8 +734,8 @@ export default function EventsPage() {
                     }, 100);
                   }
                 }}
-                className={`inline-flex items-center gap-3 px-8 py-4 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 ${showCalendar
-                    ? 'bg-black text-white hover:shadow-xl hover:shadow-black/25'
+                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 ${showCalendar
+                    ? 'bg-black text-white hover:shadow-lg'
                     : 'bg-transparent text-black hover:bg-black hover:text-white'
                   }`}
               >
@@ -685,7 +758,18 @@ export default function EventsPage() {
             </div>
 
             {/* Next Bookmarked Event Countdown */}
-            <NextBookmarkedEventCountdown events={events} />
+            <NextBookmarkedEventCountdown 
+              events={events} 
+              currentLocationData={locationDisplay.isUserSet ? {
+                name: locationDisplay.name,
+                coordinates: locationDisplay.coordinates
+              } : null}
+              birthLocationData={user?.birthData ? {
+                name: user.birthData.locationOfBirth || 'Your Birth Location',
+                coordinates: user.birthData.coordinates
+              } : null}
+              onEditLocation={showLocationToast}
+            />
 
             {/* Error Display */}
             {error && (
@@ -1000,6 +1084,36 @@ export default function EventsPage() {
         duration={statusToast.duration}
         showProgress={statusToast.showProgress}
         progress={statusToast.progress}
+      />
+
+      {/* Location Request Toast */}
+      <LocationRequestToast
+        isVisible={isLocationToastVisible}
+        onHide={hideLocationToast}
+        onLocationSet={(locationData) => {
+          setLocation(locationData);
+          showSuccess(
+            'Location Set',
+            `Using ${locationData.name} for astrological calculations`,
+            3000
+          );
+        }}
+        onRequestPermission={async () => {
+          try {
+            await requestLocationPermission();
+            showSuccess(
+              'Location Detected',
+              `Using your current location for astrological calculations`,
+              3000
+            );
+          } catch (error) {
+            showError(
+              'Location Error',
+              'Unable to get your current location. Please search for your city instead.',
+              5000
+            );
+          }
+        }}
       />
     </div>
   );

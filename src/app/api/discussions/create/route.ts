@@ -11,38 +11,84 @@ import { nanoid } from 'nanoid';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('📨 POST /api/discussions/create - Request received');
-    
     // Extract request context for audit logging
     const requestContext = AdminAuditService.extractRequestContext(request, Object.fromEntries(request.headers.entries()));
     
     const body = await request.json();
     const { title, content, excerpt, category, tags, embeddedChart, embeddedVideo, isBlogPost, isPublished, isDraft, authorId } = body;
-    
-    console.log('📝 Creating discussion:', { title, category, tags, authorId });
 
     try {
-      console.log('🔌 Initializing database...');
-      await initializeDatabase();
-      console.log('✅ Database initialized successfully');
+      const { db } = await initializeDatabase();
       
-      // Skip user creation for now and just generate a creative name
-      const adjectives = ["Cosmic", "Stellar", "Mystic", "Lunar", "Solar", "Astral", "Celestial"];
-      const nouns = ["Seeker", "Wanderer", "Observer", "Dreamer", "Voyager", "Explorer", "Sage"];
-      const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-      const randomNumber = Math.floor(Math.random() * 999) + 1;
-      const creativeName = `${randomAdjective} ${randomNoun} ${randomNumber}`;
-      
-      // Create a mock user object for discussion creation
-      const user = {
-        id: authorId || `anon_${Date.now()}`,
-        username: creativeName
-      };
-      
-      console.log('✅ Using creative name for discussion:', user.username);
+      // Check if database is available
+      if (!db) {
+        console.log('⚠️  Database not available, using fallback mode for discussion creation');
+        
+        // Use fallback creation pattern from protocol
+        const now = new Date();
+        const fallbackDiscussion = {
+          id: nanoid(12),
+          title,
+          content,
+          excerpt: excerpt || content.substring(0, 150) + '...',
+          authorId: authorId || `anon_${Date.now()}`,
+          authorName: 'Anonymous User', // Use simple fallback name when DB unavailable
+          author: 'Anonymous User',
+          avatar: 'AU',
+          category,
+          tags: tags || [],
+          replies: 0,
+          views: 0,
+          upvotes: 0,
+          downvotes: 0,
+          isLocked: false,
+          isPinned: false,
+          isBlogPost: isBlogPost || false,
+          isPublished: isDraft ? false : (isPublished ?? true),
+          createdAt: now,
+          updatedAt: now,
+          lastActivity: now
+        };
 
-      // Create the discussion (without tags initially)
+        return NextResponse.json({
+          success: true,
+          discussion: fallbackDiscussion,
+          message: isDraft ? 'Discussion saved as draft (offline mode)' : 'Discussion published successfully (offline mode)',
+          fallbackMode: true,
+          stored: 'local' // Indicates local-only storage
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+      
+      // Database is available, proceed with normal creation
+      
+      // Get the actual user from the database using the provided authorId
+      let user = null;
+      if (authorId) {
+        user = await UserService.getUserById(authorId);
+      }
+      
+      // If no user found, create a fallback with creative name (for anonymous users)
+      if (!user) {
+        const adjectives = ["Cosmic", "Stellar", "Mystic", "Lunar", "Solar", "Astral", "Celestial"];
+        const nouns = ["Seeker", "Wanderer", "Observer", "Dreamer", "Voyager", "Explorer", "Sage"];
+        const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+        const randomNumber = Math.floor(Math.random() * 999) + 1;
+        const creativeName = `${randomAdjective} ${randomNoun} ${randomNumber}`;
+        
+        user = {
+          id: authorId || `anon_${Date.now()}`,
+          username: creativeName
+        };
+      }
+      
+      console.log('🔍 Creating discussion with user:', user.username, user.id);
+
+      // Create the discussion with tags directly stored in the discussions table
       const discussion = await DiscussionService.createDiscussion({
         title,
         content,
@@ -50,17 +96,12 @@ export async function POST(request: NextRequest) {
         authorId: user.id,
         authorName: user.username, // Store the username at time of creation
         category,
-        tags: [], // We'll handle tags separately now
+        tags: tags || [], // Store tags directly in the discussions table
         embeddedChart,
         embeddedVideo,
         isBlogPost: isBlogPost || false,
         isPublished: isDraft ? false : (isPublished ?? true)
       });
-
-      // Add tags using the TagService
-      if (tags && tags.length > 0) {
-        await TagService.addTagsToDiscussion(discussion.id, tags);
-      }
 
       // Increment category discussion count
       await CategoryService.incrementDiscussionCount(category);
@@ -119,44 +160,21 @@ export async function POST(request: NextRequest) {
         }
       });
     } catch (dbError) {
-      console.error('Database error, using fallback creation:', dbError);
-      
-      // Fallback to mock creation if database fails
-      const now = new Date();
-      const discussion = {
-        id: nanoid(12),
-        title,
-        content,
-        excerpt: excerpt || content.substring(0, 150) + '...',
-        authorId: 'anon_' + nanoid(8),
-        authorName: 'Anonymous User',
-        author: 'Anonymous User',
-        avatar: 'AU',
-        category,
-        tags: tags || [],
-        replies: 0,
-        views: 0,
-        upvotes: 0,
-        downvotes: 0,
-        isLocked: false,
-        isPinned: false,
-        isBlogPost: isBlogPost || false,
-        isPublished: isDraft ? false : (isPublished ?? true),
-        createdAt: now,
-        updatedAt: now,
-        lastActivity: now
-      };
-
-      return NextResponse.json({
-        success: true,
-        discussion,
-        message: isDraft ? 'Discussion saved as draft (fallback)' : 'Discussion published successfully (fallback)',
-        fallbackMode: true
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
+      console.error('Unexpected database operation error:', dbError);
+      // Database was available but operation failed
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to create discussion',
+          message: 'Database operation failed. Please try again.'
+        },
+        { 
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
     }
 
   } catch (error) {

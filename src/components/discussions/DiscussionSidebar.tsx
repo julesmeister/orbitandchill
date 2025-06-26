@@ -21,10 +21,14 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
       } else {
         date = new Date(dateValue);
       }
-      return isNaN(date.getTime()) ? 'Recently' : date.toLocaleDateString('en-US', {
-        month: 'short',
+      return isNaN(date.getTime()) ? 'Recently' : date.toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
         day: 'numeric',
-        year: 'numeric'
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
       });
     } catch {
       return 'Recently';
@@ -59,9 +63,13 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
             <span className="text-black/60 font-inter">Created</span>
             <span className="text-black font-medium font-inter">{formatDate(discussion.createdAt || discussion.lastActivity)}</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between border-b border-black pb-2">
             <span className="text-black/60 font-inter">Reading time</span>
             <span className="text-black font-medium font-inter">{estimateReadingTime(discussion.content || discussion.excerpt)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-black/60 font-inter">Last activity</span>
+            <span className="text-black font-medium font-inter">{formatDate(discussion.lastActivity)}</span>
           </div>
         </div>
       </div>
@@ -119,10 +127,6 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
           </div>
         </div>
 
-        {/* Last Activity */}
-        <div className="mt-6 pt-4 border-t border-black text-sm text-black/60 text-center font-inter">
-          Last activity: <span className="text-black font-medium">{formatDate(discussion.lastActivity)}</span>
-        </div>
       </div>
 
       {/* Vote on Discussion */}

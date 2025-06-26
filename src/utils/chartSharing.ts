@@ -69,8 +69,11 @@ export function extractMajorAspects(chartData: any): string[] {
   if (!chartData?.aspects) return [];
   
   return chartData.aspects
-    .filter((aspect: any) => ['conjunction', 'opposition', 'trine', 'square', 'sextile'].includes(aspect.type?.toLowerCase()))
-    .map((aspect: any) => `${aspect.planet1} ${aspect.type} ${aspect.planet2}`)
+    .filter((aspect: any) => {
+      const aspectName = aspect.aspect?.toLowerCase();
+      return ['conjunction', 'opposition', 'trine', 'square', 'sextile'].includes(aspectName);
+    })
+    .map((aspect: any) => `${aspect.planet1} ${aspect.aspect} ${aspect.planet2}`)
     .slice(0, 8); // Limit to most important aspects
 }
 
@@ -78,6 +81,14 @@ export function extractMajorAspects(chartData: any): string[] {
  * Create embedded chart data for sharing
  */
 export function createEmbeddedChart(shareData: ChartShareData): EmbeddedChart {
+  console.log('🔍 createEmbeddedChart called with:', {
+    chartType: shareData.chartType,
+    hasMetadata: !!shareData.metadata,
+    hasChartData: !!shareData.metadata?.chartData,
+    chartDataAspects: shareData.metadata?.chartData?.aspects?.length || 0,
+    chartData: shareData.metadata?.chartData
+  });
+  
   const planetSummary = extractPlanetSummary(shareData.metadata?.chartData);
   const houseSummary = extractHouseSummary(shareData.metadata?.chartData);
   const majorAspects = extractMajorAspects(shareData.metadata?.chartData);
@@ -92,12 +103,24 @@ export function createEmbeddedChart(shareData: ChartShareData): EmbeddedChart {
   };
   
   // Add specific data based on chart type
-  if (shareData.chartType === 'natal' && shareData.metadata?.birthData) {
-    metadata.birthData = shareData.metadata.birthData;
+  if (shareData.chartType === 'natal') {
+    if (shareData.metadata?.birthData) {
+      metadata.birthData = shareData.metadata.birthData;
+    }
+    // Include the full chart data for natal charts so MajorAspectsSection can access it
+    if (shareData.metadata?.chartData) {
+      metadata.natalChartData = shareData.metadata.chartData;
+    }
   } else if (shareData.chartType === 'event' && shareData.metadata?.eventData) {
     metadata.eventData = shareData.metadata.eventData;
+    if (shareData.metadata?.chartData) {
+      metadata.eventChartData = shareData.metadata.chartData;
+    }
   } else if (shareData.chartType === 'horary' && shareData.metadata?.horaryData) {
     metadata.horaryData = shareData.metadata.horaryData;
+    if (shareData.metadata?.chartData) {
+      metadata.horaryChartData = shareData.metadata.chartData;
+    }
   }
   
   return {

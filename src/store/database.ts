@@ -119,21 +119,30 @@ export class LuckstrologyDatabase extends Dexie {
   }
 
   async getCurrentUserProfile(): Promise<UserProfile | null> {
-    // Get the most recently updated profile
-    const profiles = await this.userProfiles.toArray();
-    if (profiles.length === 0) return null;
+    try {
+      // Get the most recently updated profile
+      const profiles = await this.userProfiles.toArray();
+      
+      if (profiles.length === 0) {
+        return null;
+      }
 
-    // Sort by updatedAt and get the most recent
-    profiles.sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-    return profiles[0];
+      // Sort by updatedAt and get the most recent
+      profiles.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      
+      return profiles[0];
+    } catch (error) {
+      console.error('getCurrentUserProfile error:', error);
+      return null;
+    }
   }
 
   // Utility method to convert UserProfile to User type
   userProfileToUser(profile: UserProfile): import("../types/user").User {
-    return {
+    const user = {
       id: profile.id,
       username: profile.username,
       email: profile.email,
@@ -169,6 +178,8 @@ export class LuckstrologyDatabase extends Dexie {
         showOnlineStatus: profile.showOnlineStatus,
       }
     };
+    
+    return user;
   }
 
   // Utility method to convert User type to UserProfile for storage

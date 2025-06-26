@@ -3,9 +3,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Person, PersonFormData } from '../../types/people';
 import { useLocationSearch } from '../../hooks/useLocationSearch';
 import { usePeopleStore } from '../../store/peopleStore';
+import SynapsasDropdown from '../reusable/SynapsasDropdown';
 
 interface CompactNatalChartFormProps {
   editingPerson?: Person | null;
@@ -19,6 +21,16 @@ const CompactNatalChartForm = ({
   onCancel
 }: CompactNatalChartFormProps) => {
   const { addPerson, updatePerson } = usePeopleStore();
+
+  // Define relationshipOptions at the very top
+  const relationshipOptions = [
+    { value: 'self', label: 'Self' },
+    { value: 'friend', label: 'Friend' },
+    { value: 'family', label: 'Family' },
+    { value: 'partner', label: 'Partner' },
+    { value: 'colleague', label: 'Colleague' },
+    { value: 'other', label: 'Other' }
+  ];
 
   const [formData, setFormData] = useState({
     name: '',
@@ -36,7 +48,14 @@ const CompactNatalChartForm = ({
   const [timeInput, setTimeInput] = useState({ hours: '', minutes: '', period: 'AM' });
   const [dateInput, setDateInput] = useState({ month: '', day: '', year: '' });
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [showMinutesPicker, setShowMinutesPicker] = useState(false);
+  const [showRelationshipDropdown, setShowRelationshipDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const monthDropdownRef = useRef<HTMLDivElement>(null);
+  const minutesInputRef = useRef<HTMLInputElement>(null);
+  const minutesDropdownRef = useRef<HTMLDivElement>(null);
+  const relationshipDropdownRef = useRef<HTMLDivElement>(null);
+  const relationshipButtonRef = useRef<HTMLButtonElement>(null);
 
   // Helper functions for time conversion
   const convertTo24Hour = useCallback((hours: string, minutes: string, period: string) => {
@@ -217,6 +236,39 @@ const CompactNatalChartForm = ({
     return month ? month.label : 'Month';
   }, [months]);
 
+  // Generate minutes options (00, 01, 02, ..., 59)
+  const minutesOptions = Array.from({ length: 60 }, (_, i) => 
+    i.toString().padStart(2, '0')
+  );
+
+  const handleMinuteSelect = useCallback((minute: string) => {
+    handleTimeInputChange('minutes', minute);
+    setShowMinutesPicker(false);
+    minutesInputRef.current?.blur();
+  }, [handleTimeInputChange]);
+
+  const handleRelationshipSelect = useCallback((value: Person['relationship']) => {
+    setRelationship(value);
+    setShowRelationshipDropdown(false);
+  }, []);
+
+  const handleRelationshipDropdownToggle = useCallback(() => {
+    if (!showRelationshipDropdown && relationshipButtonRef.current) {
+      const rect = relationshipButtonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+    setShowRelationshipDropdown(!showRelationshipDropdown);
+  }, [showRelationshipDropdown]);
+
+  const getRelationshipLabel = useCallback((value: Person['relationship']) => {
+    const option = relationshipOptions.find(opt => opt.value === value);
+    return option ? option.label : 'Select relationship';
+  }, [relationshipOptions]);
+
   // Close month dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -230,6 +282,66 @@ const CompactNatalChartForm = ({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showMonthDropdown]);
+
+  // Close minutes picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        minutesDropdownRef.current &&
+        !minutesDropdownRef.current.contains(event.target as Node) &&
+        minutesInputRef.current &&
+        !minutesInputRef.current.contains(event.target as Node)
+      ) {
+        setShowMinutesPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Update dropdown position on scroll and handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (relationshipDropdownRef.current && !relationshipDropdownRef.current.contains(event.target as Node) &&
+          relationshipButtonRef.current && !relationshipButtonRef.current.contains(event.target as Node)) {
+        setShowRelationshipDropdown(false);
+      }
+    };
+
+    const handleScroll = () => {
+      if (relationshipButtonRef.current) {
+        const rect = relationshipButtonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    const handleResize = () => {
+      if (relationshipButtonRef.current) {
+        const rect = relationshipButtonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom,
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
+    if (showRelationshipDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [showRelationshipDropdown]);
 
   // Handle window focus to reset location dropdown state
   useEffect(() => {
@@ -310,10 +422,17 @@ const CompactNatalChartForm = ({
   };
 
   return (
-    <div className="w-full bg-white">
-      <form onSubmit={handleSubmit} className="space-y-0">
+    <div className="w-full bg-white" style={{ overflow: 'visible' }}>
+      <form onSubmit={handleSubmit} className="space-y-0" style={{ overflow: 'visible' }}>
         {/* Name & Relationship Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-b border-black">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-b border-black"
+          style={{ 
+            zIndex: 15000,
+            isolation: 'isolate',
+            transform: 'translateZ(0)',
+            overflow: 'visible'
+          }}
+        >
           <div className="p-4 md:border-r border-black">
             <label className="synapsas-label mb-2 block">
               Name <span className="text-red-500">*</span>
@@ -327,36 +446,65 @@ const CompactNatalChartForm = ({
               required
             />
           </div>
-          <div className="p-4">
+          <div className="p-4"
+            style={{ 
+              zIndex: 1000000,
+              isolation: 'isolate',
+              transform: 'translateZ(0)',
+              overflow: 'visible'
+            }}
+          >
             <label className="synapsas-label mb-2 block">
               Relationship <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center space-x-2">
               <span className="text-xl">{relationshipIcons[relationship]}</span>
-              <select
-                value={relationship}
-                onChange={(e) => setRelationship(e.target.value as Person['relationship'])}
-                className="synapsas-select flex-1"
-                required
+              <div className="flex-1 relative" ref={relationshipDropdownRef}
+                style={{ 
+                  zIndex: 1000001,
+                  isolation: 'isolate',
+                  transform: 'translateZ(0)'
+                }}
               >
-                <option value="self">Self</option>
-                <option value="friend">Friend</option>
-                <option value="family">Family</option>
-                <option value="partner">Partner</option>
-                <option value="colleague">Colleague</option>
-                <option value="other">Other</option>
-              </select>
+                <div className="synapsas-date-field">
+                  <button
+                    ref={relationshipButtonRef}
+                    type="button"
+                    onClick={handleRelationshipDropdownToggle}
+                    className="synapsas-date-select"
+                  >
+                    <span className="text-black">
+                      {getRelationshipLabel(relationship)}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Date Section */}
-        <div className="p-4 border-b border-black">
+        <div className="p-4 border-b border-black relative z-50"
+          style={{ 
+            zIndex: 1200,
+            isolation: 'isolate',
+            transform: 'translateZ(0)'
+          }}
+        >
           <label className="synapsas-label mb-3 block">
             Date of Birth <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-5 gap-3">
-            <div className="col-span-2 relative" ref={monthDropdownRef}>
+            <div className="col-span-2 relative z-60" ref={monthDropdownRef}
+              style={{ 
+                zIndex: 1201,
+                isolation: 'isolate',
+                transform: 'translateZ(0)'
+              }}
+            >
               <label className="block text-xs font-medium text-black/70 mb-1">Month</label>
               <div className="synapsas-date-field">
                 <button
@@ -388,7 +536,13 @@ const CompactNatalChartForm = ({
                 )}
               </div>
             </div>
-            <div>
+            <div
+              style={{ 
+                zIndex: 1100,
+                isolation: 'isolate',
+                transform: 'translateZ(0)'
+              }}
+            >
               <label className="block text-xs font-medium text-black/70 mb-1">Day</label>
               <div className="synapsas-date-field">
                 <input
@@ -403,7 +557,13 @@ const CompactNatalChartForm = ({
                 />
               </div>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2"
+              style={{ 
+                zIndex: 1099,
+                isolation: 'isolate',
+                transform: 'translateZ(0)'
+              }}
+            >
               <label className="block text-xs font-medium text-black/70 mb-1">Year</label>
               <div className="synapsas-date-field">
                 <input
@@ -422,7 +582,13 @@ const CompactNatalChartForm = ({
         </div>
 
         {/* Time Section */}
-        <div className="p-4 border-b border-black">
+        <div className="p-4 border-b border-black relative z-40"
+          style={{ 
+            zIndex: 1000,
+            isolation: 'isolate',
+            transform: 'translateZ(0)'
+          }}
+        >
           <label className="synapsas-label mb-3 block">
             Time of Birth <span className="text-red-500">*</span>
           </label>
@@ -438,20 +604,82 @@ const CompactNatalChartForm = ({
               required
             />
             <span className="text-xl font-bold text-gray-400">:</span>
-            <input
-              type="text"
-              value={timeInput.minutes}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (/^\d{0,2}$/.test(value) && (value === '' || parseInt(value) <= 59)) {
-                  handleTimeInputChange('minutes', value);
-                }
+            <div 
+              className="relative" 
+              style={{ 
+                zIndex: 10000,
+                isolation: 'isolate',
+                transform: 'translateZ(0)'
               }}
-              placeholder="00"
-              className="synapsas-time-input w-16 text-center"
-              maxLength={2}
-              required
-            />
+            >
+              <input
+                ref={minutesInputRef}
+                type="text"
+                value={timeInput.minutes}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow empty string, or 1-2 digits with valid minute values (00-59)
+                  if (value === '' || (/^\d{1,2}$/.test(value) && parseInt(value) <= 59)) {
+                    handleTimeInputChange('minutes', value);
+                  }
+                }}
+                onFocus={() => setShowMinutesPicker(true)}
+                onBlur={(e) => {
+                  // Small delay to allow clicking on dropdown options
+                  setTimeout(() => {
+                    if (!minutesDropdownRef.current?.contains(document.activeElement)) {
+                      const value = e.target.value;
+                      if (value.length === 1 && /^\d$/.test(value)) {
+                        handleTimeInputChange('minutes', value.padStart(2, '0'));
+                      }
+                    }
+                  }, 150);
+                }}
+                placeholder="00"
+                className="synapsas-time-input w-16 text-center"
+                maxLength={2}
+                required
+              />
+              
+              {/* Minutes Picker Dropdown */}
+              {showMinutesPicker && (
+                <div
+                  ref={minutesDropdownRef}
+                  className="absolute bg-white border max-h-48 overflow-y-auto"
+                  style={{ 
+                    top: '100%',
+                    left: '0',
+                    width: '240px',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+                    borderRadius: '0',
+                    zIndex: 9999,
+                    transform: 'translateZ(0)',
+                    isolation: 'isolate',
+                    position: 'absolute'
+                  }}
+                >
+                  <div className="grid grid-cols-6 gap-0">
+                    {minutesOptions.map((minute) => (
+                      <button
+                        key={minute}
+                        type="button"
+                        onClick={() => handleMinuteSelect(minute)}
+                        className={`
+                          w-full h-10 text-sm font-medium border-b border-r border-gray-100 transition-all duration-200 ease-in-out
+                          ${timeInput.minutes === minute 
+                            ? 'bg-gray-900 text-white font-semibold' 
+                            : 'text-gray-900 bg-transparent hover:bg-gray-50'
+                          }
+                        `}
+                        style={{ borderRadius: '0' }}
+                      >
+                        {minute}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="flex bg-white">
               <button
                 type="button"
@@ -518,7 +746,7 @@ const CompactNatalChartForm = ({
           {showLocationDropdown && isLocationFocused && (
             <div
               ref={dropdownRef}
-              className="absolute top-full left-4 right-4 bg-white border border-black z-50 max-h-40 overflow-y-auto mt-1"
+              className="absolute top-full left-4 right-4 bg-white border border-black z-[9998] max-h-40 overflow-y-auto mt-1"
             >
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-black text-sm">
@@ -739,7 +967,7 @@ const CompactNatalChartForm = ({
           border: 1px solid #d1d5db;
           border-radius: 0;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-          z-index: 60;
+          z-index: 9999;
           max-height: 200px;
           overflow-y: auto;
           margin-top: 0.5rem;
@@ -770,7 +998,85 @@ const CompactNatalChartForm = ({
           color: white;
           font-weight: 600;
         }
+
+        .synapsas-relationship-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #d1d5db;
+          border-radius: 0;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+          z-index: 9999;
+          max-height: 200px;
+          overflow-y: auto;
+          margin-top: 0.5rem;
+        }
+
+        .synapsas-relationship-option {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          text-align: left;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #19181a;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          outline: none;
+          font-family: 'Inter', sans-serif;
+          display: flex;
+          align-items: center;
+        }
+
+        .synapsas-relationship-option:hover {
+          background-color: #f3f4f6;
+          padding-left: 1.25rem;
+        }
+
+        .synapsas-relationship-option.selected {
+          background-color: #19181a;
+          color: white;
+          font-weight: 600;
+        }
       `}</style>
+
+      {/* Portal dropdown for relationship */}
+      {showRelationshipDropdown && typeof window !== 'undefined' && createPortal(
+        <div 
+          ref={relationshipDropdownRef}
+          className="synapsas-relationship-dropdown"
+          style={{
+            position: 'fixed',
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+            background: 'white',
+            border: '1px solid #d1d5db',
+            borderRadius: '0',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+            zIndex: 999999,
+            maxHeight: '200px',
+            overflowY: 'auto',
+            marginTop: '0.5rem'
+          }}
+        >
+          {relationshipOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleRelationshipSelect(option.value as Person['relationship'])}
+              className={`synapsas-relationship-option ${relationship === option.value ? 'selected' : ''}`}
+            >
+              <span className="text-xl mr-2">{relationshipIcons[option.value as Person['relationship']]}</span>
+              {option.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

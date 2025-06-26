@@ -29,6 +29,9 @@ import VoidMoonWarningModal from "../../components/horary/VoidMoonWarningModal";
 import VoidMoonCountdown from "../../components/horary/VoidMoonCountdown";
 import HoraryTimeForm from "../../components/forms/HoraryTimeForm";
 import StatusToast from "../../components/reusable/StatusToast";
+import LocationRequestToast from "../../components/reusable/LocationRequestToast";
+import { trackHoraryQuestion } from "../../hooks/usePageTracking";
+import { useSharedLocation } from "../../hooks/useSharedLocation";
 
 // Dynamic import with no SSR for the clock component
 const LiveClock = dynamic(() => import("../../components/horary/LiveClock"), {
@@ -90,7 +93,31 @@ export default function HoraryPage() {
   const { user } = useUserStore();
   const { questions, loadQuestions, addQuestion, updateQuestion, deleteQuestion, clearAllQuestions } = useHoraryStore();
   const { generateHoraryChart, isGenerating, toast } = useHoraryChart();
-  const { voidStatus, requestLocationPermission } = useVoidMoonStatus();
+  const { voidStatus, requestLocationPermission, showLocationToast: showVoidLocationToast, hideLocationToast: hideVoidLocationToast, handleLocationSet } = useVoidMoonStatus();
+  
+  // Use shared location for consistency across app
+  const {
+    locationDisplay: sharedLocationDisplay,
+    isLocationToastVisible: isSharedLocationToastVisible,
+    showLocationToast: showSharedLocationToast,
+    hideLocationToast: hideSharedLocationToast,
+    setLocation: setSharedLocation,
+    requestLocationPermission: requestSharedLocationPermission
+  } = useSharedLocation();
+
+  // Wrapper to show success feedback when location is set
+  const handleLocationSetWithFeedback = (locationData: { name: string; coordinates: { lat: string; lon: string } }) => {
+    // Update both shared location and void moon status
+    setSharedLocation(locationData);
+    handleLocationSet(locationData);
+    
+    // Show success toast
+    toast.show(
+      'Location Saved',
+      `Using ${locationData.name} for horary calculations`,
+      'success'
+    );
+  };
 
   // Force component re-render when store updates
   const [forceUpdate, setForceUpdate] = useState(0);
@@ -107,9 +134,7 @@ export default function HoraryPage() {
   const [showQuestionForm, setShowQuestionForm] = useState(true);
   const [showVoidMoonWarning, setShowVoidMoonWarning] = useState(false);
   const [useCustomTime, setUseCustomTime] = useState(false);
-  const [showTimeForm, setShowTimeForm] = useState(false);
   const [customTimeData, setCustomTimeData] = useState<any>(null);
-  const timeFormRef = useRef<HTMLDivElement>(null);
 
   // Filter questions for current user
   const userQuestions = useMemo(() => {
@@ -151,18 +176,14 @@ export default function HoraryPage() {
     setIsAnalyzing(true);
 
     // Create new question entry with custom time if specified
-    const questionDate = useCustomTime && customTimeData 
+    const questionDate = useCustomTime && customTimeData
       ? new Date(`${customTimeData.date}T${customTimeData.time}`)
       : new Date();
-      
+
     const newQuestionData = {
       question: question.trim(),
       date: questionDate,
       userId: user?.id,
-      customLocation: useCustomTime && customTimeData ? {
-        name: customTimeData.location,
-        coordinates: customTimeData.coordinates
-      } : undefined,
     };
 
     try {
@@ -186,17 +207,17 @@ export default function HoraryPage() {
             chartData: chartData,
             chartSvg: chartData.svg,
             ascendantDegree: chartData.metadata?.chartData?.ascendantDegree,
-            moonSign: chartData.metadata?.chartData?.moonSign,
-            moonVoidOfCourse: chartData.metadata?.chartData?.moonVoidOfCourse,
-            planetaryHour: chartData.metadata?.chartData?.planetaryHour,
-            isRadical: chartData.metadata?.chartData?.isRadical,
+            moonSign: chartData.metadata?.chartData?.moonSign ? String(chartData.metadata.chartData.moonSign) : undefined,
+            moonVoidOfCourse: chartData.metadata?.chartData?.moonVoidOfCourse ? Boolean(chartData.metadata.chartData.moonVoidOfCourse) : undefined,
+            planetaryHour: chartData.metadata?.chartData?.planetaryHour ? String(chartData.metadata.chartData.planetaryHour) : undefined,
+            isRadical: chartData.metadata?.chartData?.isRadical ? Boolean(chartData.metadata.chartData.isRadical) : undefined,
             aspectCount: chartData.metadata?.chartData?.aspects?.length,
             retrogradeCount: chartData.metadata?.chartData?.retrogradeCount,
           });
 
           // Get the updated question from the store
           const updatedQuestion = useHoraryStore.getState().questions.find(q => q.id === newlyAddedQuestion.id);
-          
+
           if (updatedQuestion) {
             setSelectedQuestion(updatedQuestion);
             setCurrentChartData(chartData);
@@ -216,6 +237,13 @@ export default function HoraryPage() {
           setShowQuestionForm(false);
           setQuestion('');
           setCurrentPage(1);
+
+          // Track horary question submission analytics
+          try {
+            await trackHoraryQuestion(user?.id);
+          } catch (analyticsError) {
+            console.debug('Analytics tracking failed (non-critical):', analyticsError);
+          }
         } else {
           console.log('Chart generation failed');
         }
@@ -316,18 +344,14 @@ export default function HoraryPage() {
     setIsAnalyzing(true);
 
     // Create new question entry with custom time if specified
-    const questionDate = useCustomTime && customTimeData 
+    const questionDate = useCustomTime && customTimeData
       ? new Date(`${customTimeData.date}T${customTimeData.time}`)
       : new Date();
-      
+
     const newQuestionData = {
       question: question.trim(),
       date: questionDate,
       userId: user?.id,
-      customLocation: useCustomTime && customTimeData ? {
-        name: customTimeData.location,
-        coordinates: customTimeData.coordinates
-      } : undefined,
     };
 
     try {
@@ -365,14 +389,14 @@ export default function HoraryPage() {
             chartData: chartData,
             chartSvg: chartData.svg,
             ascendantDegree: chartData.metadata?.ascendantDegree,
-            moonSign: chartData.metadata?.moonSign,
-            moonVoidOfCourse: chartData.metadata?.moonVoidOfCourse,
-            planetaryHour: chartData.metadata?.planetaryHour,
-            isRadical: chartData.metadata?.isRadical,
-            chartWarnings: chartData.metadata?.chartWarnings || [],
+            moonSign: chartData.metadata?.moonSign ? String(chartData.metadata.moonSign) : undefined,
+            moonVoidOfCourse: chartData.metadata?.moonVoidOfCourse ? Boolean(chartData.metadata.moonVoidOfCourse) : undefined,
+            planetaryHour: chartData.metadata?.planetaryHour ? String(chartData.metadata.planetaryHour) : undefined,
+            isRadical: chartData.metadata?.isRadical ? Boolean(chartData.metadata.isRadical) : undefined,
+            chartWarnings: Array.isArray(chartData.metadata?.chartWarnings) ? chartData.metadata.chartWarnings : [],
             aspectCount: chartData.metadata?.aspectCount,
             retrogradeCount: chartData.metadata?.retrogradeCount,
-            significatorPlanet: chartData.metadata?.significatorPlanet
+            significatorPlanet: chartData.metadata?.significatorPlanet ? String(chartData.metadata.significatorPlanet) : undefined
           });
 
           // Get the updated question from store
@@ -428,216 +452,160 @@ export default function HoraryPage() {
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       <div className="min-h-screen bg-white">
-        {/* Hero Section */}
-        <section className="px-[5%] pt-12">
-          <div className="text-center">
-            <div className="w-20 h-20 bg-black flex items-center justify-center mx-auto mb-6">
-              <span className="text-white text-3xl">🔮</span>
-            </div>
-            <h1 className="font-space-grotesk text-5xl font-bold text-black mb-6">
-              Horary Oracle
-            </h1>
-            <p className="font-inter text-xl text-black/80 leading-relaxed max-w-2xl mx-auto mb-8">
-              Ask a specific question and receive astrological guidance based on the exact moment of inquiry.
-              The heavens reflect earthly matters at the precise time you seek answers.
-            </p>
-          </div>
-        </section>
 
-        {/* Current Time Display */}
-        <section className="px-[5%]">
-          <div className="text-center">
-            <h3 className="font-space-grotesk text-lg font-bold text-black mb-4">Chart Cast Time</h3>
-            <div className="border-x border-t border-black p-6 bg-gray-50">
-              <p className="text-sm text-black mb-4">Your chart will be cast for this exact moment:</p>
 
-              {/* Live Clock with Void Moon Status */}
-              <div className="flex items-center justify-center gap-4">
-                <LiveClock />
-                <div className="h-8 w-px bg-slate-300"></div>
-
-                {/* Void Moon Status - Compact */}
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${voidStatus.isLoading ? 'bg-gray-400 animate-pulse' : voidStatus.isVoid ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
-                  <span className="text-lg font-space-grotesk font-bold text-black/70">☽</span>
-                  <span className={`text-lg font-inter font-bold ${voidStatus.isVoid ? 'text-yellow-700' : 'text-green-700'}`}>
-                    {voidStatus.isLoading ? 'Checking' : voidStatus.isVoid ? 'Void' : 'Active'}
-                  </span>
-                  {voidStatus.moonSign && (
-                    <span className="text-lg text-black/60 font-inter capitalize">
-                      in {voidStatus.moonSign}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {voidStatus.isVoid && voidStatus.nextSignChange ? (
-                <VoidMoonCountdown
-                  nextSignChange={voidStatus.nextSignChange}
-                  className="mt-4"
-                />
-              ) : (
-                <div className="mt-4 space-y-3">
-                  <p className="text-xs text-black/60">
-                    {voidStatus.locationUsed ? (
-                      <>
-                        Using: <span className="font-medium">{voidStatus.locationUsed.name}</span>
-                        {voidStatus.locationUsed.source === 'current' && (
-                          <span className="text-green-600 ml-1">📍</span>
-                        )}
-                        {voidStatus.locationUsed.source === 'birth' && (
-                          <span className="text-blue-600 ml-1">🏠</span>
-                        )}
-                        {voidStatus.locationUsed.source === 'fallback' && (
-                          <span className="text-gray-600 ml-1">🏙️</span>
-                        )}
-                      </>
-                    ) : (
-                      'Detecting location for calculations...'
-                    )}
-                  </p>
-                  
-                  {/* Location Error Message & Retry Button */}
-                  {voidStatus.locationError && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                      <div className="flex items-start space-x-2">
-                        <span className="text-yellow-600 text-sm">⚠️</span>
-                        <div className="flex-1">
-                          <p className="text-xs text-yellow-800 mb-2">
-                            {voidStatus.locationError.message}
-                          </p>
-                          {voidStatus.locationError.canRetry && (
-                            <button
-                              onClick={requestLocationPermission}
-                              disabled={voidStatus.isLoading}
-                              className="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {voidStatus.isLoading ? 'Requesting...' : 'Enable Location'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Time Selection Toggle */}
-              <div className="mt-6 border-t border-black pt-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={() => {
-                      setUseCustomTime(false);
-                      setShowTimeForm(false);
-                      setCustomTimeData(null);
-                    }}
-                    className={`group relative flex-1 px-4 py-3 text-sm font-semibold border border-black transition-all duration-300 overflow-hidden ${
-                      !useCustomTime 
-                        ? 'bg-black text-white' 
-                        : 'bg-white text-black hover:bg-black hover:text-white'
-                    }`}
-                  >
-                    {useCustomTime && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-200/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    )}
-                    <span className="relative flex items-center justify-center">
-                      <span className="mr-2">🕐</span>
-                      Current Time
-                    </span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      setUseCustomTime(true);
-                      setShowTimeForm(true);
-                      // Scroll to form after a brief delay to allow rendering
-                      setTimeout(() => {
-                        timeFormRef.current?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start'
-                        });
-                      }, 100);
-                    }}
-                    className={`group relative flex-1 px-4 py-3 text-sm font-semibold border border-black transition-all duration-300 overflow-hidden ${
-                      useCustomTime 
-                        ? 'bg-black text-white' 
-                        : 'bg-white text-black hover:bg-black hover:text-white'
-                    }`}
-                  >
-                    {!useCustomTime && (
-                      <div className="absolute inset-0 bg-gradient-to-l from-transparent via-purple-200/20 to-transparent translate-x-[100%] group-hover:translate-x-[-100%] transition-transform duration-700"></div>
-                    )}
-                    <span className="relative flex items-center justify-center">
-                      <span className="mr-2">⏰</span>
-                      Custom Time
-                    </span>
-                  </button>
-                </div>
-                
-                {useCustomTime && customTimeData && (
-                  <div className="text-sm text-black/70 bg-white p-3 border border-gray-300 mt-3">
-                    <p className="font-medium">Selected Time:</p>
-                    <p>{new Date(`${customTimeData.date}T${customTimeData.time}`).toLocaleString()}</p>
-                    <p className="text-xs text-black/50 mt-1">{customTimeData.location}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Custom Time Form Modal */}
-            {showTimeForm && (
-              <div ref={timeFormRef} className="border-t border-black">
-                <HoraryTimeForm
-                  onSubmit={(data) => {
-                    setCustomTimeData(data);
-                    setShowTimeForm(false);
-                  }}
-                  onCancel={() => {
-                    setShowTimeForm(false);
-                    setUseCustomTime(false);
-                  }}
-                  initialData={customTimeData}
-                />
-              </div>
-            )}
-          </div>
-        </section>
 
         {/* Main Content Section */}
-        <section className="px-[5%] pb-12">
+        <section className="px-[5%] py-12">
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-0 border border-black mb-12">
             {/* Question Input Card or Chart Display - 2 columns */}
             <div className="lg:col-span-2 border-r border-black">
               {showQuestionForm ? (
                 <div className="bg-white p-8">
-                  <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-6">
-                    <span className="text-white text-2xl">❓</span>
+                  {/* Compact Oracle & Time Info */}
+                  <div className="mb-6 border border-black">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                      {/* Oracle Header & Time Selection */}
+                      <div className="lg:border-r border-black flex flex-col" style={{ backgroundColor: '#f0e3ff' }}>
+                        <div className="p-4 flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 bg-black flex items-center justify-center">
+                              <span className="text-white text-lg">🔮</span>
+                            </div>
+                            <div>
+                              <h2 className="font-space-grotesk text-lg font-bold text-black">Horary Oracle</h2>
+                              <p className="font-inter text-xs text-black/70">Astrological guidance at inquiry moment</p>
+                            </div>
+                          </div>
+                          
+                          {/* Information about time & location when custom time is selected */}
+                          {useCustomTime && (
+                            <div className="mt-3 p-3 border border-black/30 bg-white/90">
+                              <div className="text-xs text-black/80 space-y-1.5 font-inter">
+                                <div className="font-bold text-black mb-1">Why Time & Location Matter</div>
+                                <p>Horary requires the exact moment and place to calculate planetary positions. The cosmic snapshot at your question's birth reveals the answer.</p>
+                                <div className="space-y-0.5 text-black/60">
+                                  <p>• <strong>Time:</strong> Determines planetary houses and aspects</p>
+                                  <p>• <strong>Location:</strong> Sets the ascendant and house cusps</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Time Selection - Anchored to bottom */}
+                        <div className="p-4 border-t border-black/20">
+                          <h4 className="font-space-grotesk text-xs font-bold text-black/80 mb-2">Time Selection</h4>
+
+                          <div className="grid grid-cols-2 gap-1">
+                            <button
+                              onClick={() => {
+                                setUseCustomTime(false);
+                                setCustomTimeData(null);
+                              }}
+                              className={`px-3 py-2 text-xs font-semibold font-space-grotesk border border-black transition-all duration-300 ${!useCustomTime
+                                ? 'bg-black text-white'
+                                : 'bg-white text-black hover:bg-black hover:text-white'
+                                }`}
+                            >
+                              🕐 Current
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setUseCustomTime(true);
+                              }}
+                              className={`px-3 py-2 text-xs font-semibold font-space-grotesk border border-black transition-all duration-300 ${useCustomTime
+                                ? 'bg-black text-white'
+                                : 'bg-white text-black hover:bg-black hover:text-white'
+                                }`}
+                            >
+                              ⏰ Custom
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Time Display or Custom Time Form */}
+                      {!useCustomTime ? (
+                        <div className="p-4 bg-white">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-space-grotesk text-sm font-bold text-black">Chart Cast Time</h3>
+                              <div className="flex-1 h-px bg-gray-300"></div>
+                            </div>
+
+                            <LiveClock />
+
+                            <div className="flex items-center justify-between text-xs border-t border-gray-200 pt-2">
+                              <div className="flex items-center space-x-1">
+                                <div className={`w-1.5 h-1.5 rounded-full ${voidStatus.isLoading ? 'bg-gray-400 animate-pulse' : voidStatus.isVoid ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                                <span className="font-space-grotesk font-bold text-black/70">☽</span>
+                                <span className={`font-inter font-bold ${voidStatus.isVoid ? 'text-yellow-700' : 'text-green-700'}`}>
+                                  {voidStatus.isLoading ? 'Checking' : voidStatus.isVoid ? 'Void' : 'Active'}
+                                </span>
+                              </div>
+                              {voidStatus.moonSign && (
+                                <span className="text-black/60 font-inter capitalize text-xs">
+                                  {voidStatus.moonSign}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="text-xs text-black/60">
+                              <div className="flex items-center justify-between">
+                                <span className="truncate">Using: <span className="font-medium">{sharedLocationDisplay.shortName}</span></span>
+                                <div className="flex items-center gap-1 ml-2">
+                                  <span>
+                                    {sharedLocationDisplay.source === 'current' && '📍'}
+                                    {sharedLocationDisplay.source === 'birth' && '🏠'}
+                                    {sharedLocationDisplay.source === 'fallback' && '🏙️'}
+                                  </span>
+                                  <button
+                                    onClick={showSharedLocationToast}
+                                    className="ml-1 px-1 py-0.5 text-xs text-black/40 hover:text-black hover:bg-black/5 rounded transition-all duration-200"
+                                    title="Change location"
+                                  >
+                                    ⚙️
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Void Moon Countdown */}
+                            {voidStatus.isVoid && voidStatus.nextSignChange && (
+                              <VoidMoonCountdown
+                                nextSignChange={voidStatus.nextSignChange}
+                                className="text-xs border-t border-gray-200 pt-2"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4" style={{ backgroundColor: '#f2e356' }}>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 mb-3">
+                              <h3 className="font-space-grotesk text-sm font-bold text-black">Custom Chart Time</h3>
+                              <div className="flex-1 h-px bg-black"></div>
+                            </div>
+                            
+                            <HoraryTimeForm
+                              onSubmit={(data) => {
+                                setCustomTimeData(data);
+                              }}
+                              onCancel={() => {
+                                setUseCustomTime(false);
+                              }}
+                              initialData={customTimeData}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <h2 className="font-space-grotesk text-3xl font-bold text-black mb-3 text-center">
-                    Ask Your Question
-                  </h2>
-                  <p className="font-inter text-black/70 text-center mb-8">
-                    Frame your question clearly and specifically for the most accurate guidance
-                  </p>
-
-                  <div className="space-y-8">
-                    {/* Question Categories */}
-                    <div className="flex flex-wrap justify-center gap-3">
-                      {Object.keys(exampleQuestions).map((category) => (
-                        <button
-                          key={category}
-                          onClick={() => {
-                            setSelectedCategory(category);
-                            setShowExamples(true);
-                          }}
-                          className="px-4 py-2 bg-white border border-black text-black hover:bg-black hover:text-white transition-all duration-300 font-medium text-sm capitalize"
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="space-y-6">
 
                     {/* Question Input */}
                     <div className="relative">
@@ -654,27 +622,6 @@ export default function HoraryPage() {
                         </div>
                       )}
                     </div>
-
-                    {/* Example Questions Dropdown */}
-                    {showExamples && selectedCategory && (
-                      <div className="border border-black bg-gray-50 p-4">
-                        <p className="font-space-grotesk font-bold text-black mb-3">
-                          Example {selectedCategory} questions:
-                        </p>
-                        <div className="space-y-2">
-                          {exampleQuestions[selectedCategory as keyof typeof exampleQuestions].map((example, index) => (
-                            <button
-                              key={index}
-                              onClick={() => selectExample(example)}
-                              className="block w-full text-left px-4 py-3 text-sm text-black hover:bg-white border border-transparent hover:border-black transition-all duration-300 font-inter"
-                            >
-                              "{example}"
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
 
                     <button
                       onClick={handleSubmitQuestion}
@@ -1261,7 +1208,7 @@ export default function HoraryPage() {
                                     ⏳ Analyzing...
                                   </span>
                                 )}
-                                
+
                                 {/* Status indicator inline */}
                                 <div className="flex items-center space-x-1">
                                   <div className={`w-2 h-2 rounded-full ${q.answer ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
@@ -1270,7 +1217,7 @@ export default function HoraryPage() {
                                   </span>
                                 </div>
                               </div>
-                              
+
                               {/* Timing row - full width for better readability */}
                               {q.timing && (
                                 <div className="w-full">
@@ -1545,6 +1492,29 @@ export default function HoraryPage() {
           isVisible={toast.isVisible}
           onHide={toast.hide}
           duration={toast.status === 'success' ? 3000 : toast.status === 'error' ? 5000 : 0}
+        />
+
+        {/* Location Request Toast */}
+        <LocationRequestToast
+          isVisible={isSharedLocationToastVisible}
+          onHide={hideSharedLocationToast}
+          onLocationSet={handleLocationSetWithFeedback}
+          onRequestPermission={async () => {
+            try {
+              await requestSharedLocationPermission();
+              toast.show(
+                'Location Detected',
+                `Using your current location for horary calculations`,
+                'success'
+              );
+            } catch (error) {
+              toast.show(
+                'Location Error',
+                'Unable to get your current location. Please search for your city instead.',
+                'error'
+              );
+            }
+          }}
         />
       </div>
     </div>

@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { db, notifications, notificationPreferences, notificationTemplates } from '@/db/index';
+import { getDb, notifications, notificationPreferences, notificationTemplates, users } from '@/db/index';
 import { eq, desc, and, gte, lte, count, sql, asc, inArray, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { executeRawSelect, executeRawSelectOne, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow, prepareConditions } from '@/db/rawSqlUtils';
+import { UserService } from './userService';
 
 export type NotificationType = 
   | 'discussion_reply' | 'discussion_like' | 'discussion_mention'
@@ -117,8 +118,9 @@ export class NotificationService {
    * Create a new notification
    */
   static async createNotification(data: CreateNotificationData): Promise<NotificationRecord | null> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, notification not persisted:', data.title);
+      
       // Return mock notification for UI consistency
       return {
         id: `local_${Date.now()}`,
@@ -183,8 +185,9 @@ export class NotificationService {
    * Get notifications for a user with filtering and pagination
    */
   static async getNotifications(userId: string, filters: NotificationFilters = {}): Promise<NotificationRecord[]> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty notifications');
+      
       return [];
     }
 
@@ -272,8 +275,9 @@ export class NotificationService {
    * Mark notification as read
    */
   static async markAsRead(notificationId: string, userId: string): Promise<boolean> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot mark notification as read');
+      
       return false;
     }
 
@@ -299,8 +303,9 @@ export class NotificationService {
    * Mark all notifications as read for a user
    */
   static async markAllAsRead(userId: string): Promise<number> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot mark all notifications as read');
+      
       return 0;
     }
 
@@ -328,8 +333,9 @@ export class NotificationService {
    * Archive notification
    */
   static async archiveNotification(notificationId: string, userId: string): Promise<boolean> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot archive notification');
+      
       return false;
     }
 
@@ -356,8 +362,9 @@ export class NotificationService {
    * Delete notification
    */
   static async deleteNotification(notificationId: string, userId: string): Promise<boolean> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot delete notification');
+      
       return false;
     }
 
@@ -379,8 +386,9 @@ export class NotificationService {
    * Get notification summary for a user
    */
   static async getNotificationSummary(userId: string): Promise<NotificationSummary> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty notification summary');
+      
       return {
         total: 0,
         unread: 0,
@@ -480,8 +488,9 @@ export class NotificationService {
    * Get user notification preferences
    */
   static async getUserPreferences(userId: string): Promise<UserNotificationPreferences | null> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning default notification preferences');
+      
       return this.getDefaultPreferences(userId);
     }
 
@@ -512,8 +521,9 @@ export class NotificationService {
     userId: string, 
     updates: Partial<UserNotificationPreferences>
   ): Promise<UserNotificationPreferences | null> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot update notification preferences');
+      
       return this.getDefaultPreferences(userId);
     }
 
@@ -566,8 +576,9 @@ export class NotificationService {
    * Clean up expired notifications
    */
   static async cleanupExpiredNotifications(): Promise<number> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot cleanup expired notifications');
+      
       return 0;
     }
 
@@ -723,6 +734,7 @@ export class NotificationService {
    * Helper: Create default preferences for a user
    */
   private static async createDefaultPreferences(userId: string): Promise<UserNotificationPreferences> {
+    const db = getDb();
     if (!db) {
       return this.getDefaultPreferences(userId);
     }
@@ -762,7 +774,68 @@ export class NotificationService {
       }
 
       return defaults;
-    } catch (error) {
+    } catch (error: any) {
+      // Check if this is a foreign key constraint error
+      if (error?.code === 'SQLITE_CONSTRAINT' && error?.message?.includes('FOREIGN KEY constraint failed')) {
+        console.warn(`⚠️ User ${userId} doesn't exist in database, attempting to create user first`);
+        
+        try {
+          // Try to create a basic user record
+          // For Google users, we need to create them with the exact Google ID
+          await db.insert(users).values({
+            id: userId,
+            username: userId.startsWith('anon_') ? 'Anonymous' : 'User',
+            authProvider: userId.startsWith('anon_') ? 'anonymous' : 'google',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            stelliumSigns: JSON.stringify([]),
+            stelliumHouses: JSON.stringify([]),
+            hasNatalChart: false,
+            showZodiacPublicly: false,
+            showStelliumsPublicly: false,
+            showBirthInfoPublicly: false,
+            allowDirectMessages: true,
+            showOnlineStatus: true,
+          }).returning();
+          
+          console.log(`✅ Created user ${userId}, retrying notification preferences creation`);
+          
+          // Retry creating the notification preferences
+          const defaultPrefs = this.getDefaultPreferences(userId);
+          const retryNow = new Date();
+          const retryCreated = await db.insert(notificationPreferences).values({
+            id: nanoid(12),
+            userId,
+            enableInApp: defaultPrefs.enableInApp,
+            enableEmail: defaultPrefs.enableEmail,
+            enablePush: defaultPrefs.enablePush,
+            enableSms: defaultPrefs.enableSms,
+            quietHoursEnabled: defaultPrefs.quietHoursEnabled,
+            quietHoursStart: defaultPrefs.quietHoursStart,
+            quietHoursEnd: defaultPrefs.quietHoursEnd,
+            quietHoursTimezone: defaultPrefs.quietHoursTimezone,
+            socialNotifications: JSON.stringify(defaultPrefs.socialNotifications),
+            systemNotifications: JSON.stringify(defaultPrefs.systemNotifications),
+            adminNotifications: JSON.stringify(defaultPrefs.adminNotifications),
+            premiumNotifications: JSON.stringify(defaultPrefs.premiumNotifications),
+            reminderNotifications: JSON.stringify(defaultPrefs.reminderNotifications),
+            achievementNotifications: JSON.stringify(defaultPrefs.achievementNotifications),
+            dailyDigest: defaultPrefs.dailyDigest,
+            weeklyDigest: defaultPrefs.weeklyDigest,
+            digestTime: defaultPrefs.digestTime,
+            digestDayOfWeek: defaultPrefs.digestDayOfWeek,
+            createdAt: retryNow,
+            updatedAt: retryNow
+          }).returning();
+          
+          if (retryCreated.length > 0) {
+            return this.transformUserPreferences(retryCreated[0]);
+          }
+        } catch (retryError) {
+          console.error('Failed to create user and retry notification preferences:', retryError);
+        }
+      }
+      
       console.error('Error creating default notification preferences:', error);
       return this.getDefaultPreferences(userId);
     }

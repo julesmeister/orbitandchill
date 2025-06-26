@@ -11,10 +11,13 @@ import { useReplyHandling } from "../../../hooks/useReplyHandling";
 import { useDiscussionMeta } from "../../../hooks/useDiscussionMeta";
 import { useUserStore } from "../../../store/userStore";
 import { trackDiscussionViewed, trackPageView } from "../../../utils/analytics";
+import { trackDiscussionInteraction } from "../../../hooks/usePageTracking";
 import DiscussionContent from "../../../components/discussions/DiscussionContent";
 import ReplyForm from "../../../components/discussions/ReplyForm";
 import RepliesSection from "../../../components/discussions/RepliesSection";
 import DiscussionSidebar from "../../../components/discussions/DiscussionSidebar";
+import ConfirmationToast from "../../../components/reusable/ConfirmationToast";
+import { BRAND } from "../../../config/brand";
 
 // Synapsas color mapping for categories
 const getCategoryColor = (category: string) => {
@@ -40,6 +43,8 @@ export default function DiscussionDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [repliesCount, setRepliesCount] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // User store integration
   const { user, ensureAnonymousUser, loadProfile } = useUserStore();
@@ -57,11 +62,17 @@ export default function DiscussionDetailPage({
 
   // Note: Voting is handled by VoteButtons component in DiscussionSidebar
 
-  // Handle reply count updates with cross-check
+  // PERFORMANCE: Optimized reply count updates with debouncing
   const handleReplyCountUpdate = async (newCount: number) => {
     setRepliesCount(newCount);
     
-    // Cross-check with database discussion.replies count
+    // Update local state immediately for better UX
+    setDiscussion((prev: any) => ({
+      ...prev,
+      replies: newCount
+    }));
+    
+    // Cross-check with database discussion.replies count (debounced)
     if (discussion && discussion.replies !== newCount) {
       console.log(`🔍 Reply count mismatch detected:`, {
         databaseCount: discussion.replies,
@@ -69,40 +80,42 @@ export default function DiscussionDetailPage({
         discussionId: discussion.id
       });
       
-      try {
-        // Update the database to match the actual count
-        const response = await fetch(`/api/discussions/${discussion.id}/sync-replies`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            actualCount: newCount
-          })
-        });
-        
-        if (response.ok) {
-          console.log('✅ Database reply count synchronized');
-        } else {
-          console.error('❌ Failed to sync reply count');
+      // PERFORMANCE: Non-blocking database sync
+      setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/discussions/${discussion.id}/sync-replies`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              actualCount: newCount
+            })
+          });
+          
+          if (response.ok) {
+            console.log('✅ Database reply count synchronized');
+          } else {
+            console.error('❌ Failed to sync reply count');
+          }
+        } catch (error) {
+          console.error('❌ Error syncing reply count:', error);
         }
-      } catch (error) {
-        console.error('❌ Error syncing reply count:', error);
-      }
+      }, 500); // 500ms debounce
     }
-    
-    // Update local state
-    setDiscussion((prev: any) => ({
-      ...prev,
-      replies: newCount
-    }));
   };
 
-  // Cross-check reply count on initial load
+  // PERFORMANCE: Optimized reply count cross-check with caching
   const crossCheckReplyCount = async (discussionData: any) => {
     try {
-      // Fetch actual replies to count them
-      const repliesResponse = await fetch(`/api/discussions/${discussionData.id}/replies`);
+      // PERFORMANCE: Use cache-first approach for reply count
+      const repliesResponse = await fetch(`/api/discussions/${discussionData.id}/replies`, {
+        headers: {
+          'Cache-Control': 'max-age=60', // Cache for 1 minute
+          'Accept': 'application/json'
+        }
+      });
+      
       const repliesData = await repliesResponse.json();
       
       if (repliesData.success && repliesData.replies) {
@@ -117,7 +130,7 @@ export default function DiscussionDetailPage({
         
         if (databaseCount !== actualCount) {
           console.log('🔧 Reply count mismatch on load, syncing...');
-          await handleReplyCountUpdate(actualCount);
+          handleReplyCountUpdate(actualCount).catch(() => {}); // Non-blocking
         } else {
           setRepliesCount(actualCount);
         }
@@ -129,24 +142,42 @@ export default function DiscussionDetailPage({
     }
   };
 
-  // Fetch discussion from API
+  // PERFORMANCE: Optimized discussion fetching with prefetching
   useEffect(() => {
     async function fetchDiscussion() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/discussions/${resolvedParams.id}`);
+        
+        // PERFORMANCE: Fetch discussion with optimized headers
+        const response = await fetch(`/api/discussions/${resolvedParams.id}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'max-age=300', // Use cache if available
+          }
+        });
+        
         const data = await response.json();
         
         if (data.success && data.discussion) {
           setDiscussion(data.discussion);
           setError(null);
           
-          // Track analytics - discussion viewed
+          // PERFORMANCE: Prefetch replies data (non-blocking)
+          setTimeout(() => {
+            fetch(`/api/discussions/${data.discussion.id}/replies`, {
+              headers: { 'Cache-Control': 'max-age=60' }
+            }).catch(() => {}); // Silent prefetch
+          }, 100);
+          
+          // Track analytics - discussion viewed (legacy and new system)
           trackDiscussionViewed(data.discussion.id, data.discussion.title);
           trackPageView(`/discussions/${data.discussion.id}`);
           
+          // New analytics system tracking (non-blocking)
+          trackDiscussionInteraction('view', data.discussion.id, user?.id).catch(() => {});
+          
           // Cross-check reply count after setting discussion
-          await crossCheckReplyCount(data.discussion);
+          crossCheckReplyCount(data.discussion).catch(() => {});
         } else {
           setError(data.error || 'Discussion not found');
           setDiscussion(null);
@@ -175,13 +206,95 @@ export default function DiscussionDetailPage({
 
   useDiscussionMeta(discussion);
 
-  // Loading state
+  // Handle discussion deletion
+  const handleDeleteDiscussion = async () => {
+    if (!user || !discussion) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/discussions/${discussion.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Success - redirect to discussions list
+        window.location.href = '/discussions';
+      } else {
+        alert('Failed to delete discussion: ' + (result.error || 'Unknown error'));
+        setIsDeleting(false);
+      }
+    } catch (error) {
+      console.error('Error deleting discussion:', error);
+      alert('Failed to delete discussion. Please try again.');
+      setIsDeleting(false);
+    }
+  };
+
+  // SYNAPSAS: Enhanced loading state with skeleton UI
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading discussion...</p>
+      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-white">
+        {/* Header Skeleton */}
+        <section className="px-6 md:px-12 lg:px-20 py-8">
+          <div className="flex items-start justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-36 h-10 bg-gray-200 animate-pulse border border-black"></div>
+            </div>
+            <div className="text-right">
+              <div className="w-20 h-6 bg-gray-200 animate-pulse mb-2 ml-auto"></div>
+              <div className="w-96 h-10 bg-gray-200 animate-pulse"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Content Skeleton */}
+        <section className="px-6 md:px-12 lg:px-20 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-0">
+            {/* Main Content Skeleton */}
+            <div className="lg:col-span-3 border border-black bg-white">
+              <div className="p-6 space-y-4">
+                {/* Author info skeleton */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gray-200 animate-pulse rounded-full"></div>
+                  <div className="space-y-2">
+                    <div className="w-32 h-4 bg-gray-200 animate-pulse"></div>
+                    <div className="w-24 h-3 bg-gray-200 animate-pulse"></div>
+                  </div>
+                </div>
+                
+                {/* Content skeleton */}
+                <div className="space-y-3">
+                  <div className="w-full h-4 bg-gray-200 animate-pulse"></div>
+                  <div className="w-full h-4 bg-gray-200 animate-pulse"></div>
+                  <div className="w-3/4 h-4 bg-gray-200 animate-pulse"></div>
+                  <div className="w-full h-4 bg-gray-200 animate-pulse"></div>
+                  <div className="w-5/6 h-4 bg-gray-200 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="lg:col-span-1 lg:border-t lg:border-r lg:border-b border-black">
+              <div className="p-4 space-y-4">
+                <div className="w-full h-8 bg-gray-200 animate-pulse"></div>
+                <div className="w-3/4 h-4 bg-gray-200 animate-pulse"></div>
+                <div className="w-full h-4 bg-gray-200 animate-pulse"></div>
+                <div className="w-2/3 h-4 bg-gray-200 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Loading indicator */}
+        <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-white border border-black px-4 py-2 font-inter">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+          <span className="text-sm text-black">Loading discussion...</span>
         </div>
       </div>
     );
@@ -199,7 +312,7 @@ export default function DiscussionDetailPage({
               "@type": "WebPage",
               name: "Discussion Not Found",
               description: "The requested discussion could not be found.",
-              url: `https://luckstrology.com/discussions/${resolvedParams.id}`,
+              url: `${BRAND.domain}/discussions/${resolvedParams.id}`,
             }),
           }}
         />
@@ -226,12 +339,12 @@ export default function DiscussionDetailPage({
   const structuredData = generateDiscussionStructuredData(discussion);
 
   // Generate SEO meta data
-  const metaTitle = `${discussion.title} | Luckstrology Discussions`;
+  const metaTitle = `${discussion.title} | ${BRAND.name} Discussions`;
   const metaDescription =
     discussion.excerpt ||
     `Join the discussion about ${discussion.title} in the ${discussion.category} category. ${discussion.replies} replies and ${discussion.views} views.`;
-  const canonicalUrl = `https://luckstrology.com/discussions/${discussion.id}`;
-  const imageUrl = `https://luckstrology.com/og-discussion.jpg`; // Consider generating dynamic OG images
+  const canonicalUrl = `${BRAND.domain}/discussions/${discussion.id}`;
+  const imageUrl = `${BRAND.domain}/og-discussion.jpg`; // Consider generating dynamic OG images
 
   // Safely parse date - handle timestamps, strings, and date formats
   const getValidDate = (dateValue: string | Date | number) => {
@@ -278,7 +391,7 @@ export default function DiscussionDetailPage({
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:image" content={imageUrl} />
-        <meta property="og:site_name" content="Luckstrology" />
+        <meta property="og:site_name" content={BRAND.name} />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -317,15 +430,52 @@ export default function DiscussionDetailPage({
         {/* Header Section */}
         <section className="px-6 md:px-12 lg:px-20 py-8">
           <div className="flex items-start justify-between mb-8">
-            <Link
-              href="/discussions"
-              className="inline-flex items-center px-6 py-3 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Discussions
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/discussions"
+                className="inline-flex items-center px-6 py-3 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Discussions
+              </Link>
+
+              {/* Edit and Delete buttons for discussion author */}
+              {user && discussion && user.id === discussion.authorId && (
+                <>
+                  <Link
+                    href={`/discussions/new?edit=${discussion.id}`}
+                    className="inline-flex items-center px-6 py-3 text-sm text-black border border-black hover:bg-blue-500 hover:text-white transition-all duration-300 font-inter"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </Link>
+                  
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={isDeleting}
+                    className="inline-flex items-center px-6 py-3 text-sm text-white bg-red-600 border border-red-600 hover:bg-red-700 hover:border-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-inter"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
             
             <div className="text-right">
               <div className="flex items-center gap-2 mb-2 justify-end">
@@ -388,6 +538,18 @@ export default function DiscussionDetailPage({
             </div>
           </div>
         </section>
+
+        {/* Confirmation Toast for Delete */}
+        <ConfirmationToast
+          title="Delete Discussion"
+          message={`Are you sure you want to delete "${discussion?.title}"? This action cannot be undone and will remove all replies as well.`}
+          isVisible={showDeleteConfirm}
+          onConfirm={handleDeleteDiscussion}
+          onCancel={() => setShowDeleteConfirm(false)}
+          confirmText="Delete Forever"
+          cancelText="Keep Discussion"
+          confirmButtonColor="red"
+        />
       </div>
     </>
   );

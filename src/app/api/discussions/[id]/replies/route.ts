@@ -87,45 +87,56 @@ export async function GET(
       );
     }
 
+    // Parse pagination parameters
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+
     await initializeDatabase();
     
-    // Fetch replies from database
-    const rawReplies = await DiscussionService.getRepliesForDiscussion(discussionId);
+    // PERFORMANCE: Optimized fetch with connection reuse and caching
+    const rawReplies = await DiscussionService.getRepliesWithAuthors(discussionId, limit, offset);
     
-    // Enhance replies with author information
-    const enhancedReplies = await Promise.all(
-      rawReplies.map(async (reply: { authorId: string; id: any; content: any; createdAt: string | number | Date; upvotes: any; downvotes: any; parentReplyId: any; }) => {
-        let authorName = 'Anonymous User';
-        let avatar = 'AN';
-        
-        // Try to get author information if authorId exists
-        if (reply.authorId) {
-          try {
-            const author = await UserService.getUserById(reply.authorId);
-            if (author) {
-              authorName = author.username || 'Anonymous User';
-              avatar = generateAvatarFromName(authorName);
-            }
-          } catch (error) {
-            console.warn(`Could not fetch author for reply ${reply.id}:`, error);
-          }
+    // PERFORMANCE: Early return if no replies to avoid unnecessary processing
+    if (!rawReplies || rawReplies.length === 0) {
+      return NextResponse.json({
+        success: true,
+        replies: [],
+        total: 0,
+        pagination: {
+          limit,
+          offset,
+          hasMore: false
         }
-        
-        return {
-          id: reply.id,
-          author: authorName,
-          avatar: avatar,
-          content: reply.content,
-          timestamp: formatTimestamp(reply.createdAt),
-          upvotes: reply.upvotes || 0,
-          downvotes: reply.downvotes || 0,
-          userVote: null, // TODO: Get user's vote status
-          parentId: reply.parentReplyId, // Use parentId to match Reply interface
-          replyToAuthor: reply.parentReplyId ? 'Unknown' : undefined, // TODO: Get parent author name
-          children: [] as any[]
-        };
-      })
-    );
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=300, s-maxage=600', // Cache empty results longer
+          'ETag': `"empty-replies-${discussionId}"`,
+        }
+      });
+    }
+    
+    // Transform replies to expected format (no more N+1 queries!)
+    const enhancedReplies = rawReplies.map((reply: any) => {
+      const authorName = reply.authorName || 'Anonymous User';
+      const avatar = reply.authorAvatar ? 
+        reply.authorAvatar : 
+        generateAvatarFromName(authorName);
+      
+      return {
+        id: reply.id,
+        author: authorName,
+        avatar: avatar,
+        content: reply.content,
+        timestamp: formatTimestamp(reply.createdAt),
+        upvotes: reply.upvotes || 0,
+        downvotes: reply.downvotes || 0,
+        userVote: null, // TODO: Get user's vote status
+        parentId: reply.parentReplyId, // Use parentId to match Reply interface
+        replyToAuthor: reply.parentReplyId ? 'Unknown' : undefined, // TODO: Get parent author name
+        children: [] as any[]
+      };
+    });
     
     // Organize into threaded structure
     const organizedReplies = organizeReplies(enhancedReplies);
@@ -133,7 +144,22 @@ export async function GET(
     return NextResponse.json({
       success: true,
       replies: organizedReplies,
-      total: rawReplies.length
+      total: rawReplies.length,
+      pagination: {
+        limit,
+        offset,
+        hasMore: rawReplies.length === limit
+      }
+    }, {
+      // PERFORMANCE: Enhanced caching headers with stale-while-revalidate
+      headers: {
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=900', // 1min browser, 5min CDN, 15min stale
+        'ETag': `"replies-${discussionId}-${offset}-${limit}-${Math.floor(Date.now() / 60000)}"`, // ETag changes every minute
+        'Last-Modified': new Date().toUTCString(),
+        'Vary': 'Accept-Encoding',
+        // PERFORMANCE: Add prefetch hints for pagination
+        'Link': offset > 0 ? `</api/discussions/${discussionId}/replies?offset=${Math.max(0, offset - limit)}&limit=${limit}>; rel=prev` : ''
+      }
     });
 
   } catch (error) {

@@ -61,7 +61,7 @@ const MobileNav = React.memo(({
           <div key={href} className="border-b border-black last:border-b-0">
             <NavigationLink
               href={href}
-              className="block px-4 py-4 w-full text-left font-inter font-medium hover:bg-black hover:text-white transition-colors duration-200"
+              className="block px-4 py-4 w-full text-left font-inter font-medium"
               isLoading={loadingLink === href}
               isActive={isActiveLink(href)}
               progressWidth={progressWidth}

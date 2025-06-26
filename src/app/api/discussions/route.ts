@@ -50,27 +50,25 @@ export async function GET(request: NextRequest) {
         };
       });
 
-      // Track analytics - discussions API accessed
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        await AnalyticsService.incrementDailyCounter('pageViews', today);
-        
-        // Track popular discussions based on access
-        if (enhancedDiscussions.length > 0) {
-          const popularDiscussions = enhancedDiscussions.slice(0, 5).map((d: any) => ({
+      // OPTIMIZED: Track analytics asynchronously (non-blocking)
+      const today = new Date().toISOString().split('T')[0];
+      Promise.allSettled([
+        AnalyticsService.incrementDailyCounter('pageViews', today),
+        enhancedDiscussions.length > 0 ? AnalyticsService.recordEngagementData({
+          date: today,
+          popularDiscussions: enhancedDiscussions.slice(0, 5).map((d: any) => ({
             id: d.id,
             title: d.title,
             engagement: d.upvotes + d.replies + d.views
-          }));
-          
-          await AnalyticsService.recordEngagementData({
-            date: today,
-            popularDiscussions
-          });
-        }
-      } catch (analyticsError) {
-        console.warn('Failed to record analytics:', analyticsError);
-      }
+          }))
+        }) : Promise.resolve()
+      ]).catch(err => console.warn('Analytics failed:', err));
+
+      // Generate cache key based on parameters
+      const cacheKey = `discussions-${category || 'all'}-${sortBy}-${isBlogPost}-${drafts}-${limit}`;
+      const lastModified = enhancedDiscussions.length > 0 ? 
+        new Date(Math.max(...enhancedDiscussions.map((d: any) => new Date(d.updatedAt).getTime()))).toUTCString() :
+        new Date().toUTCString();
 
       return NextResponse.json({
         success: true,
@@ -78,7 +76,12 @@ export async function GET(request: NextRequest) {
         count: enhancedDiscussions.length
       }, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // PERFORMANCE: Add caching headers
+          'Cache-Control': drafts ? 'private, no-cache' : 'public, max-age=300, s-maxage=600', // 5min browser, 10min CDN (no cache for drafts)
+          'ETag': `"${cacheKey}-${enhancedDiscussions.length}"`,
+          'Last-Modified': lastModified,
+          'Vary': 'Accept-Encoding'
         }
       });
     } catch (dbError) {

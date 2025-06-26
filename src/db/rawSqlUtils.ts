@@ -94,7 +94,7 @@ export async function executeRawSelect(
       args.push(options.offset);
     }
 
-    console.log('🔍 Executing raw SQL:', { sql, args });
+    // SQL query execution (no logging to reduce noise)
     
     const result = await client.execute({ sql, args });
     return result.rows || [];
@@ -163,7 +163,7 @@ export async function executeRawUpdate(
       sql += ` WHERE ${whereConditions.join(' AND ')}`;
     }
 
-    console.log('🔍 Executing raw UPDATE:', { sql, args });
+    // SQL update execution (no logging to reduce noise)
     
     const result = await client.execute({ sql, args });
     return result.rowsAffected || 0;
@@ -207,7 +207,7 @@ export async function executeRawDelete(
       sql += ` WHERE ${whereConditions.join(' AND ')}`;
     }
 
-    console.log('🔍 Executing raw DELETE:', { sql, args });
+    // SQL delete execution (no logging to reduce noise)
     
     const result = await client.execute({ sql, args });
     return result.rowsAffected || 0;
@@ -260,7 +260,12 @@ export function camelToSnakeCase(camelField: string): string {
     'showStelliumsPublicly': 'show_stelliums_publicly',
     'showBirthInfoPublicly': 'show_birth_info_publicly',
     'allowDirectMessages': 'allow_direct_messages',
-    'showOnlineStatus': 'show_online_status'
+    'showOnlineStatus': 'show_online_status',
+    // Current location fields for void moon calculations
+    'currentLocationName': 'current_location_name',
+    'currentLatitude': 'current_latitude',
+    'currentLongitude': 'current_longitude',
+    'currentLocationUpdatedAt': 'current_location_updated_at'
   };
 
   // Check specific mappings first

@@ -14,6 +14,7 @@ import DiscussionsPagination from '@/components/discussions/DiscussionsPaginatio
 import DiscussionsLoadingState from '@/components/discussions/DiscussionsLoadingState';
 import DiscussionsErrorState from '@/components/discussions/DiscussionsErrorState';
 import CommunityStats from '@/components/discussions/CommunityStats';
+import { BRAND } from '@/config/brand';
 
 const categories = [
   "All Categories",
@@ -80,7 +81,7 @@ export default function DiscussionsPage() {
 
   // Set document title and meta tags
   useEffect(() => {
-    document.title = "Astrology Discussions - Luckstrology Community";
+    document.title = `Astrology Discussions - ${BRAND.name} Community`;
     
     // Track page view analytics
     trackPageView('/discussions');

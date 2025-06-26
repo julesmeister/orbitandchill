@@ -45,7 +45,7 @@ const NatalChartForm = ({
   const router = useRouter();
   const { user, updateBirthData, hasStoredData, isProfileComplete } = useUserStore();
   const { addPerson, updatePerson } = usePeopleStore();
-  const { cachedChart, generateChart, isGenerating: isChartGenerating } = useNatalChart();
+  const { cachedChart, generateChart, isGenerating: isChartGenerating, hasExistingChart, isLoadingCache } = useNatalChart();
 
   const [formData, setFormData] = useState<NatalChartFormData>({
     name: '',
@@ -60,12 +60,12 @@ const NatalChartForm = ({
   const [isDefault, setIsDefault] = useState(false);
 
   const [isLocationFocused, setIsLocationFocused] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [timeInput, setTimeInput] = useState({ hours: '', minutes: '', period: 'AM' });
   const [dateInput, setDateInput] = useState({ month: '', day: '', year: '' });
+  const [isUserTypingTime, setIsUserTypingTime] = useState(false);
   
   // Use status toast hook
-  const { toast: statusToast, showError } = useStatusToast();
+  const { toast: statusToast, showError, showSuccess } = useStatusToast();
 
   // Helper functions for time conversion
   const convertTo24Hour = useCallback((hours: string, minutes: string, period: string) => {
@@ -73,7 +73,8 @@ const NatalChartForm = ({
     let hour24 = parseInt(hours);
     if (period === 'PM' && hour24 !== 12) hour24 += 12;
     if (period === 'AM' && hour24 === 12) hour24 = 0;
-    const paddedMinutes = minutes.length === 1 ? minutes.padStart(2, '0') : minutes;
+    // Always pad minutes to 2 digits for the final time string
+    const paddedMinutes = minutes.padStart(2, '0');
     return `${hour24.toString().padStart(2, '0')}:${paddedMinutes}`;
   }, []);
 
@@ -135,7 +136,7 @@ const NatalChartForm = ({
       if (user.birthData.locationOfBirth) {
         setLocationQuery(user.birthData.locationOfBirth);
       }
-      if (user.birthData.timeOfBirth) {
+      if (user.birthData.timeOfBirth && !isUserTypingTime) {
         const time12 = convertTo12Hour(user.birthData.timeOfBirth);
         setTimeInput(time12);
       }
@@ -158,7 +159,7 @@ const NatalChartForm = ({
       if (editingPerson.birthData.locationOfBirth) {
         setLocationQuery(editingPerson.birthData.locationOfBirth);
       }
-      if (editingPerson.birthData.timeOfBirth) {
+      if (editingPerson.birthData.timeOfBirth && !isUserTypingTime) {
         const time12 = convertTo12Hour(editingPerson.birthData.timeOfBirth);
         setTimeInput(time12);
       }
@@ -181,7 +182,7 @@ const NatalChartForm = ({
       setTimeInput({ hours: '', minutes: '', period: 'AM' });
       setDateInput({ month: '', day: '', year: '' });
     }
-  }, [user, convertTo12Hour, convertFromDateString, mode, editingPerson]);
+  }, [user, convertTo12Hour, convertFromDateString, mode, editingPerson, isUserTypingTime]);
 
   const {
     locationQuery,
@@ -214,15 +215,21 @@ const NatalChartForm = ({
   }, [setLocationQuery, updateFormData]);
 
   const handleTimeInputChange = useCallback((field: 'hours' | 'minutes' | 'period', value: string) => {
+    setIsUserTypingTime(true);
     const newTimeInput = { ...timeInput, [field]: value };
     setTimeInput(newTimeInput);
 
-    if (newTimeInput.hours && newTimeInput.minutes && newTimeInput.period) {
+    // Only update form data if all fields are complete
+    if (newTimeInput.hours && newTimeInput.minutes && newTimeInput.period && 
+        newTimeInput.hours.length > 0 && newTimeInput.minutes.length >= 1) {
       const time24 = convertTo24Hour(newTimeInput.hours, newTimeInput.minutes, newTimeInput.period);
       if (time24) {
         updateFormData({ timeOfBirth: time24 });
       }
     }
+    
+    // Reset typing flag after user stops typing
+    setTimeout(() => setIsUserTypingTime(false), 500);
   }, [timeInput, convertTo24Hour, updateFormData]);
 
   const handleDateInputChange = useCallback((field: 'month' | 'day' | 'year', value: string) => {
@@ -262,8 +269,6 @@ const NatalChartForm = ({
 
     if (!isFormValid) return;
 
-    setIsGenerating(true);
-
     try {
       if (mode === 'person') {
         const { name, ...birthData } = formData;
@@ -295,7 +300,16 @@ const NatalChartForm = ({
         const chartData = await generateChart(formData);
         
         if (chartData) {
-          router.push('/chart');
+          // Show brief success message before redirecting
+          showSuccess(
+            "Chart Generated!",
+            "Your natal chart has been generated successfully. Redirecting...",
+            2000
+          );
+          // Delay redirect to show success message
+          setTimeout(() => {
+            router.push('/chart');
+          }, 1500);
         } else {
           showError(
             "Chart Generation Failed",
@@ -315,10 +329,8 @@ const NatalChartForm = ({
         "Failed to save your data. Please check your connection and try again.",
         5000
       );
-    } finally {
-      setIsGenerating(false);
     }
-  }, [formData, onSubmit, isFormValid, cachedChart, router, mode, relationship, notes, isDefault, editingPerson, addPerson, updatePerson, onPersonSaved, generateChart, showError]);
+  }, [formData, onSubmit, isFormValid, cachedChart, router, mode, relationship, notes, isDefault, editingPerson, addPerson, updatePerson, onPersonSaved, generateChart, showError, showSuccess]);
 
   return (
     <div className="max-w-lg">
@@ -424,9 +436,11 @@ const NatalChartForm = ({
         {showSubmitButton && (
           <SubmitButton
             isFormValid={isFormValid}
-            isGenerating={isGenerating}
+            isGenerating={isChartGenerating}
             isChartGenerating={isChartGenerating}
             cachedChart={cachedChart}
+            hasExistingChart={hasExistingChart}
+            isLoadingCache={isLoadingCache}
             mode={mode}
             editingPerson={editingPerson}
             submitText={submitText}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Embedded Chart Aspects</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        pre { background: #333; color: #fff; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Embedded Chart Aspects Test</h1>
+    <div class="debug">
+        <h2>Debug Information</h2>
+        <p>This is a test file to verify the embedded chart aspects functionality.</p>
+        
+        <h3>Expected Data Structure:</h3>
+        <pre id="expectedStructure"></pre>
+        
+        <h3>What should happen:</h3>
+        <ol>
+            <li>Generate a natal chart with birth data</li>
+            <li>Chart should include aspects array in chartData</li>
+            <li>When sharing to discussion, createEmbeddedChart() should copy chartData to natalChartData</li>
+            <li>EmbeddedChartDisplay should show MajorAspectsSection when natalChartData.aspects exists</li>
+        </ol>
+    </div>
+    
+    <script>
+        const expectedEmbeddedChart = {
+            id: "chart_123",
+            chartType: "natal",
+            chartData: "<svg>...</svg>",
+            metadata: {
+                name: "Test User",
+                chartTitle: "Test User's Natal Chart",
+                birthData: {
+                    dateOfBirth: "1990-01-15",
+                    timeOfBirth: "14:30",
+                    locationOfBirth: "New York, NY",
+                    coordinates: { lat: "40.7128", lon: "-74.0060" }
+                },
+                planetSummary: [],
+                houseSummary: [],
+                majorAspects: ["Sun conjunction Moon", "Mars square Venus"],
+                natalChartData: {
+                    planets: [],
+                    houses: [],
+                    aspects: [
+                        { planet1: "Sun", planet2: "Moon", aspect: "conjunction", angle: 2.5, orb: 2.5 },
+                        { planet1: "Mars", planet2: "Venus", aspect: "square", angle: 90.2, orb: 0.2 }
+                    ],
+                    ascendant: 120.5,
+                    midheaven: 210.3
+                }
+            },
+            createdAt: new Date()
+        };
+        
+        document.getElementById('expectedStructure').textContent = JSON.stringify(expectedEmbeddedChart, null, 2);
+    </script>
+</body>
+</html>

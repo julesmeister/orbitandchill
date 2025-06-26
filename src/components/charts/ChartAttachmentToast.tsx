@@ -12,6 +12,7 @@ import { useEventsStore } from '../../store/eventsStore';
 import { parseEventParams } from '../../utils/urlParams';
 import ChartSummaryCard from './ChartSummaryCard';
 import StatusToast from '../reusable/StatusToast';
+import { logger } from '../../utils/logger';
 
 interface ChartAttachmentToastProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export default function ChartAttachmentToast({
   const { user } = useUserStore();
   const { cachedChart, generateChart } = useNatalChart();
   const { generateHoraryChart, toast } = useHoraryChart();
-  const { questions, activeQuestion } = useHoraryStore();
+  const { questions } = useHoraryStore();
   const { events } = useEventsStore();
   
   // Get bookmarked events
@@ -62,35 +63,35 @@ export default function ChartAttachmentToast({
   // Debug logging
   useEffect(() => {
     if (isOpen) {
-      console.log('Chart Toast Debug:', {
+      logger.debug('Chart Toast Debug', {
         currentPageType,
         userHasBirthData: !!user?.birthData,
         questionsCount: questions.length,
         bookmarkedEventsCount: bookmarkedEvents.length,
-        activeQuestion: !!activeQuestion
+        hasQuestions: questions.length > 0
       });
     }
-  }, [isOpen, currentPageType, user?.birthData, questions.length, bookmarkedEvents.length, activeQuestion]);
+  }, [isOpen, currentPageType, user?.birthData, questions.length, bookmarkedEvents.length]);
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
-      console.log('Page detection:', { path, isOpen });
+      logger.debug('Page detection', { path, isOpen });
       
       if (path.includes('/horary')) {
-        console.log('Setting page type to horary');
+        logger.debug('Setting page type to horary');
         setCurrentPageType('horary');
         setSelectedChartType('horary');
       } else if (path.includes('/event-chart')) {
-        console.log('Setting page type to event');
+        logger.debug('Setting page type to event');
         setCurrentPageType('event');
         setSelectedChartType('event');
       } else if (path.includes('/chart')) {
-        console.log('Setting page type to natal');
+        logger.debug('Setting page type to natal');
         setCurrentPageType('natal');
         setSelectedChartType('natal');
       } else {
-        console.log('No specific page type detected, path:', path);
+        logger.debug('No specific page type detected', { path });
       }
     }
   }, [isOpen]);
@@ -147,7 +148,7 @@ export default function ChartAttachmentToast({
           break;
           
         case 'horary':
-          const questionToUse = specificData || activeQuestion;
+          const questionToUse = specificData || questions[0];
           if (!questionToUse) {
             showComponentToast('No Question Available', 'Please create a horary question first from the Horary page.', 'info');
             return;
@@ -259,7 +260,7 @@ export default function ChartAttachmentToast({
       const embeddedChart = createEmbeddedChart(shareData);
       onChartSelect(embeddedChart);
     } catch (error) {
-      console.error('Error generating chart:', error);
+      logger.error('Error generating chart', error);
       showComponentToast('Unexpected Error', 'Failed to generate chart. Please try again.', 'error');
     } finally {
       setIsGenerating(false);
@@ -411,7 +412,7 @@ export default function ChartAttachmentToast({
               </div>
             )}
 
-            {selectedChartType === 'horary' && activeQuestion && currentPageType === 'horary' && (
+            {selectedChartType === 'horary' && questions.length > 0 && currentPageType === 'horary' && (
               <div className="mb-4 p-3 border border-gray-300 bg-gray-50">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm">❓</span>
@@ -420,7 +421,7 @@ export default function ChartAttachmentToast({
                   </span>
                 </div>
                 <p className="text-xs text-black/70 font-inter truncate">
-                  "{activeQuestion.question}"
+                  "{questions[0].question}"
                 </p>
               </div>
             )}

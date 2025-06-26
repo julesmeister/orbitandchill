@@ -2,6 +2,272 @@
 
 Based on the Synapsas Webflow template analysis, here's a comprehensive style guide to modernize your Luckstrology app's design:
 
+## Z-Index and Dropdown Positioning
+
+### Dropdown Z-Index Solution
+When creating dropdowns that appear over other form elements, use this stacking context solution:
+
+```tsx
+// Parent container
+<div 
+  className="relative" 
+  style={{ 
+    zIndex: 1000000,
+    isolation: 'isolate',
+    transform: 'translateZ(0)'
+  }}
+>
+  {/* Dropdown */}
+  <div
+    className="absolute bg-white border max-h-48 overflow-y-auto"
+    style={{ 
+      top: '100%',
+      left: '0',
+      zIndex: 99999,
+      transform: 'translateZ(0)',
+      isolation: 'isolate',
+      position: 'absolute'
+    }}
+  >
+    {/* Dropdown content */}
+  </div>
+</div>
+```
+
+**Key properties:**
+- `isolation: 'isolate'` - Forces element isolation from parent stacking contexts
+- `transform: 'translateZ(0)'` - Creates new stacking context
+- Coordinated z-index hierarchy to prevent component conflicts
+- Applied at multiple levels to break problematic stacking inheritance
+
+**Z-Index Hierarchy:**
+```
+Compact Minutes:       10000 (highest - CompactNatalChartForm minutes picker)
+Compact Minutes Cont:   9999
+Location Dropdown:      5000 (location search dropdown)
+Location Container:     4999
+People Dropdown:        3000 
+People Container:       2999
+Month Dropdown:         2001 
+Month Container:        2000
+SynapsasDropdown:       1401 (relationship dropdown)
+SynapsasDropdown Cont:  1400
+Time Minutes:           1001  
+Time Container:         1000
+Base Time Input:         500 (lowest time component)
+```
+
+**Used in:** 
+- TimeInput component minutes picker
+- HoraryTimeInput component minutes picker
+- HoraryDateInput component month dropdown
+- PeopleSelector component dropdown
+- CompactNatalChartForm minutes picker (✅ **FIXED** - Applied complete 3-layer isolation)
+- CompactNatalChartForm month picker (✅ **FIXED** - Applied complete 3-layer isolation)
+- SynapsasDropdown component (relationship selector)
+- LocationInput component dropdown (✅ **FIXED** - Applied complete 3-layer isolation)
+- DateInput component month dropdown (✅ **FIXED** - Applied complete 3-layer isolation)
+
+### Time Input Design Patterns
+
+**TimeInput vs HoraryTimeInput Comparison:**
+
+| Component | Hours | Minutes | AM/PM | Dropdown Issues |
+|-----------|-------|---------|-------|----------------|
+| `TimeInput` | Number input | **Text input + minutes picker dropdown** | Button toggle | ✅ **Fixed with z-index solution** |
+| `HoraryTimeInput` | Number input | **Text input + minutes picker dropdown** | Button toggle | ✅ **Fixed with z-index solution** |
+
+**Both components now feature:**
+- Text input with manual typing validation
+- Minutes picker dropdown for easy selection  
+- Proper z-index stacking context handling
+- Consistent UI/UX across the application
+
+**TimeInput Pattern** (Complex - requires z-index fixes):
+```tsx
+// Needs special z-index handling for dropdown
+<div className="relative" style={{ zIndex: 1000000, isolation: 'isolate' }}>
+  <input type="text" onFocus={() => setShowPicker(true)} />
+  {showPicker && <DropdownPicker />}
+</div>
+```
+
+**HoraryTimeInput Pattern** (Simple - no z-index issues):
+```tsx
+// Clean, no dropdown complications
+<input 
+  type="text" 
+  onChange={(e) => {
+    if (/^\d{0,2}$/.test(value) && parseInt(value) <= 59) {
+      setValue(value);
+    }
+  }}
+/>
+```
+
+### Complete 3-Layer Z-Index Solution
+
+**CRITICAL**: For complex form components with multiple dropdowns, apply isolation at ALL THREE levels:
+
+```tsx
+{/* Layer 1: Section Container */}
+<div 
+  className="p-4 border-b border-black relative"
+  style={{ 
+    zIndex: 1000,
+    isolation: 'isolate',
+    transform: 'translateZ(0)'
+  }}
+>
+  {/* Layer 2: Dropdown Parent Container */}
+  <div 
+    className="relative" 
+    style={{ 
+      zIndex: 10000,
+      isolation: 'isolate',
+      transform: 'translateZ(0)'
+    }}
+  >
+    <input onFocus={() => setShowDropdown(true)} />
+    
+    {/* Layer 3: Dropdown Content */}
+    {showDropdown && (
+      <div
+        className="absolute bg-white border max-h-48 overflow-y-auto"
+        style={{ 
+          top: '100%',
+          left: '0',
+          zIndex: 9999,
+          transform: 'translateZ(0)',
+          isolation: 'isolate',
+          position: 'absolute'
+        }}
+      >
+        {/* Dropdown options */}
+      </div>
+    )}
+  </div>
+</div>
+```
+
+**Why 3 layers are needed:**
+1. **Section isolation**: Prevents interference from other form sections
+2. **Container isolation**: Creates clean stacking context for dropdown positioning  
+3. **Dropdown isolation**: Ensures dropdown appears above all other elements
+
+**Applied successfully in:**
+- `CompactNatalChartForm` minutes picker (Time Section → Minutes Container → Minutes Dropdown)
+- `CompactNatalChartForm` month picker (Date Section → Month Container → Month Dropdown)
+
+### Nuclear Option: React Portal Solution
+
+**When z-index fails completely**, use React Portal to bypass all parent container constraints:
+
+```tsx
+import { createPortal } from 'react-dom';
+
+// State for portal positioning
+const [showDropdown, setShowDropdown] = useState(false);
+const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+const buttonRef = useRef<HTMLButtonElement>(null);
+const dropdownRef = useRef<HTMLDivElement>(null);
+
+// Calculate position when opening
+const handleToggle = useCallback(() => {
+  if (!showDropdown && buttonRef.current) {
+    const rect = buttonRef.current.getBoundingClientRect();
+    setDropdownPosition({
+      top: rect.bottom,
+      left: rect.left,
+      width: rect.width
+    });
+  }
+  setShowDropdown(!showDropdown);
+}, [showDropdown]);
+
+// Update position on scroll
+useEffect(() => {
+  const handleScroll = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+      setShowDropdown(false);
+    }
+  };
+
+  if (showDropdown) {
+    window.addEventListener('scroll', handleScroll, true);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }
+}, [showDropdown]);
+
+// Button (normal component tree)
+<button ref={buttonRef} onClick={handleToggle}>
+  Dropdown Trigger
+</button>
+
+// Portal dropdown (rendered to document.body)
+{showDropdown && typeof window !== 'undefined' && createPortal(
+  <div 
+    ref={dropdownRef}
+    style={{
+      position: 'fixed',
+      top: dropdownPosition.top,
+      left: dropdownPosition.left,
+      width: dropdownPosition.width,
+      background: 'white',
+      border: '1px solid #d1d5db',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+      zIndex: 999999,
+      maxHeight: '200px',
+      overflowY: 'auto'
+    }}
+  >
+    {/* Dropdown content */}
+  </div>,
+  document.body
+)}
+```
+
+**Why Portal works when z-index fails:**
+- **Completely bypasses parent containers** - No CSS inheritance issues
+- **Rendered to document.body** - Outside all form/layout constraints  
+- **position: fixed** - Positioned relative to viewport, not parents
+- **Ultra-high z-index** - Can use extreme values without conflicts
+- **Immune to overflow: hidden** - Cannot be clipped by parent containers
+- **Breaks stacking context issues** - Creates entirely new rendering context
+
+**Portal Trade-offs:**
+- ✅ **Guaranteed to work** - Bypasses all CSS constraints
+- ✅ **No parent interference** - Immune to all container styling
+- ✅ **Professional solution** - Used by major UI libraries (React Select, Ant Design)
+- ⚠️ **More complex** - Requires position calculation and scroll handling
+- ⚠️ **Accessibility concerns** - May need additional ARIA attributes for screen readers
+
+**When to use Portal:**
+- Z-index solutions have failed after trying 3-layer isolation
+- Parent containers have `overflow: hidden` that can't be changed
+- Complex form layouts with multiple stacking contexts
+- Third-party components that interfere with z-index hierarchy
+- Mission-critical dropdowns that must appear above everything
+
+**Successfully implemented in:**
+- `CompactNatalChartForm` relationship picker (Portal solution due to z-index failures)
+
 ## Typography System
 
 ### Font Families
@@ -260,6 +526,398 @@ Based on the exact implementation found in Synapsas template:
   min-width: 200px;
 }
 ```
+
+## Vertex Corners Hover Animation System
+
+### Overview
+The vertex corners hover animation is a reusable UI pattern that creates sophisticated geometric hover effects. It features four L-shaped corner borders that appear on hover, providing elegant visual feedback while maintaining the sharp, geometric aesthetic of the Synapsas design system.
+
+### Reusable Components
+
+#### VertexCorners Component
+**Location:** `/src/components/ui/VertexCorners.tsx`
+
+A flexible, reusable component for adding vertex corner animations to any interactive element:
+
+```tsx
+interface VertexCornersProps {
+  show?: boolean;                                    // Whether to show animation
+  size?: 'w-1 h-1' | 'w-2 h-2' | 'w-3 h-3' | 'w-4 h-4';  // Corner size
+  thickness?: 'border' | 'border-2' | 'border-4';   // Border thickness
+  color?: string;                                    // Border color (default: 'border-black')
+  duration?: 'duration-200' | 'duration-300' | 'duration-500'; // Animation speed
+  className?: string;                                // Custom classes
+}
+```
+
+#### VertexButton Component
+**Location:** `/src/components/ui/VertexButton.tsx`
+
+A complete button component with built-in vertex corners animation:
+
+```tsx
+<VertexButton 
+  variant="primary"           // 'primary' | 'secondary' | 'outline'
+  size="md"                   // 'sm' | 'md' | 'lg'
+  cornerSize="w-2 h-2"        // Corner dimensions
+  cornerColor="border-black"  // Corner color
+  onClick={handleClick}
+>
+  Button Text
+</VertexButton>
+```
+
+### Usage Examples
+
+#### Basic Implementation
+```tsx
+import VertexCorners from '@/components/ui/VertexCorners';
+
+// Any button with vertex corners
+<button className="relative overflow-hidden group bg-white text-black border-2 border-black px-4 py-2">
+  <VertexCorners />
+  <span className="relative z-10">Custom Button</span>
+</button>
+```
+
+#### Navigation Link Implementation
+```tsx
+// File: /src/components/navbar/NavigationLink.tsx
+<button className="relative overflow-hidden group font-inter px-3 py-1">
+  <VertexCorners show={!isActive && !isLoading} />
+  <span className="relative z-10">{children}</span>
+</button>
+```
+
+#### Advanced Customization
+```tsx
+// Large corners with custom color and slow animation
+<button className="relative overflow-hidden group">
+  <VertexCorners 
+    size="w-4 h-4"
+    thickness="border-4"
+    color="border-blue-500"
+    duration="duration-500"
+  />
+  <span className="relative z-10">Prominent Button</span>
+</button>
+
+// Subtle corners for minimal design
+<button className="relative overflow-hidden group">
+  <VertexCorners 
+    size="w-1 h-1"
+    thickness="border"
+    color="border-gray-400"
+    duration="duration-200"
+  />
+  <span className="relative z-10">Subtle Button</span>
+</button>
+```
+
+### Animation Breakdown
+
+#### 1. **Base Button Setup**
+```css
+/* Essential classes for the hover effect to work */
+.nav-button {
+  position: relative;          /* Enables absolute positioning of corners */
+  overflow: hidden;            /* Contains corner elements within bounds */
+  /* group class enables coordinated hover effects */
+}
+```
+
+#### 2. **Corner Element Positioning**
+```css
+/* Each corner is positioned absolutely and styled as L-shaped borders */
+
+/* Top-left corner */
+.corner-tl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.5rem;              /* 8px corner size */
+  height: 0.5rem;
+  border-top: 2px solid black;
+  border-left: 2px solid black;
+}
+
+/* Top-right corner */
+.corner-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-top: 2px solid black;
+  border-right: 2px solid black;
+}
+
+/* Bottom-left corner */
+.corner-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-bottom: 2px solid black;
+  border-left: 2px solid black;
+}
+
+/* Bottom-right corner */
+.corner-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-bottom: 2px solid black;
+  border-right: 2px solid black;
+}
+```
+
+#### 3. **Opacity Animation**
+```css
+/* Corner container with smooth opacity transition */
+.corner-container {
+  position: absolute;
+  inset: 0;                   /* Fill entire button area */
+  opacity: 0;                 /* Hidden by default */
+  transition: opacity 300ms ease;
+  pointer-events: none;       /* Prevents interference with button clicks */
+}
+
+.corner-container.group-hover {
+  opacity: 1;                 /* Visible on hover */
+}
+```
+
+### Design Principles
+
+#### 1. **Geometric Consistency**
+- **Sharp Corners**: Uses 90-degree angle corners that align with Synapsas geometric aesthetic
+- **Precise Positioning**: 8px corner size provides subtle but visible feedback
+- **Black Borders**: 2px solid black borders for high contrast definition
+
+#### 2. **State-Aware Animation**
+- **Conditional Rendering**: Only shows on inactive, non-loading navigation items
+- **Active State Override**: Active navigation items use solid black background instead
+- **Loading State Prevention**: Loading animation takes precedence over hover effect
+
+#### 3. **Smooth Transitions**
+- **300ms Duration**: Provides smooth but responsive feedback
+- **Opacity-Based**: Uses opacity transitions for optimal performance
+- **Hardware Acceleration**: CSS opacity changes are GPU-accelerated
+
+### Integration with DesktopNav
+
+#### Navigation Layout Structure
+```tsx
+// File: /src/components/navbar/DesktopNav.tsx
+<div className="hidden lg:flex items-center bg-white px-6 py-2">
+  {NAVIGATION_LINKS.map(({ href, label }, index) => (
+    <React.Fragment key={href}>
+      <NavigationLink
+        href={href}
+        isLoading={loadingLink === href}
+        isActive={isActiveLink(href)}
+        progressWidth={progressWidth}
+        onNavigate={onNavigate}
+      >
+        {label}
+      </NavigationLink>
+      {index < NAVIGATION_LINKS.length - 1 && (
+        <div className="w-px h-4 bg-black mx-2"></div>
+      )}
+    </React.Fragment>
+  ))}
+</div>
+```
+
+#### Key Integration Features
+- **Divider Elements**: Vertical black dividers between navigation items (`w-px h-4 bg-black`)
+- **Responsive Typography**: `text-sm xl:text-base` scales text size appropriately
+- **State Management**: Proper loading, active, and hover state coordination
+
+### Usage Guidelines
+
+#### 1. **When to Apply This Pattern**
+- ✅ Primary navigation links
+- ✅ Secondary navigation items
+- ✅ Interactive menu buttons
+- ✅ Tab-style navigation elements
+
+#### 2. **When NOT to Apply**
+- ❌ Call-to-action buttons (use different hover effects)
+- ❌ Form submit buttons (use solid hover states)
+- ❌ Already active/selected items (redundant feedback)
+- ❌ Disabled or loading states (conflicting feedback)
+
+#### 3. **Customization Options**
+```tsx
+// Corner size variations
+w-1 h-1    // Subtle 4px corners for small elements
+w-2 h-2    // Standard 8px corners for normal navigation
+w-3 h-3    // Prominent 12px corners for large elements
+
+// Border weight options
+border-t border-l         // Thin 1px borders for subtle effect
+border-t-2 border-l-2     // Standard 2px borders (recommended)
+border-t-4 border-l-4     // Heavy 4px borders for emphasis
+
+// Animation timing
+duration-200   // Fast 200ms for immediate feedback
+duration-300   // Standard 300ms (recommended)
+duration-500   // Slow 500ms for dramatic effect
+```
+
+### Performance Considerations
+
+#### 1. **Optimized Animations**
+- **Opacity-Based**: Uses GPU-accelerated opacity transitions
+- **No Layout Thrashing**: Absolute positioning prevents layout recalculations
+- **Minimal DOM Changes**: Corner elements exist but are hidden/shown via opacity
+
+#### 2. **State Efficiency**
+- **Conditional Rendering**: Only renders corner elements when needed
+- **Event Cleanup**: No custom event listeners required
+- **CSS-Only Animation**: No JavaScript animation loops
+
+#### 3. **Memory Usage**
+- **Static Elements**: Corner elements don't change size or position
+- **Reusable Pattern**: Same structure across all navigation links
+- **Minimal Overhead**: Four simple span elements per navigation item
+
+### Accessibility Features
+
+#### 1. **Interaction Friendly**
+- **Pointer Events None**: Corner overlay doesn't interfere with clicks
+- **Clear Visual Feedback**: High contrast corners indicate interactivity
+- **Keyboard Navigation**: Works seamlessly with keyboard focus states
+
+#### 2. **Screen Reader Compatibility**
+- **Semantic Button**: Uses proper button element for navigation
+- **Content Separation**: Visual effects don't interfere with text content
+- **Focus Management**: Corner animation doesn't affect focus indication
+
+### Component Hierarchy
+
+#### Required Container Setup
+For VertexCorners to work properly, the parent element needs:
+
+```css
+.vertex-container {
+  position: relative;          /* Enables absolute positioning of corners */
+  overflow: hidden;            /* Contains corner elements within bounds */
+}
+
+/* Add 'group' class to enable hover coordination */
+.vertex-container.group:hover .vertex-corners {
+  opacity: 1;
+}
+```
+
+#### Essential Tailwind Classes
+```tsx
+// Minimum required classes for any element using VertexCorners
+className="relative overflow-hidden group"
+
+// Content should be positioned above corners
+<span className="relative z-10">{content}</span>
+```
+
+### Integration Patterns
+
+#### 1. **Form Buttons**
+```tsx
+// Submit button with corners
+<button className="relative overflow-hidden group bg-black text-white px-6 py-3 border-2 border-black">
+  <VertexCorners color="border-white" />
+  <span className="relative z-10">Submit</span>
+</button>
+
+// Cancel button with corners
+<button className="relative overflow-hidden group bg-white text-black px-6 py-3 border-2 border-black">
+  <VertexCorners />
+  <span className="relative z-10">Cancel</span>
+</button>
+```
+
+#### 2. **Card Interactive Elements**
+```tsx
+// Clickable cards with corner feedback
+<div className="relative overflow-hidden group p-6 bg-white border border-black cursor-pointer">
+  <VertexCorners size="w-3 h-3" />
+  <div className="relative z-10">
+    <h3>Card Title</h3>
+    <p>Card content...</p>
+  </div>
+</div>
+```
+
+#### 3. **Tab Components**
+```tsx
+// Tab buttons with corners
+<button className="relative overflow-hidden group px-4 py-2 border-2 border-black">
+  <VertexCorners show={!isActive} />
+  <span className="relative z-10">Tab Label</span>
+</button>
+```
+
+### Customization Guidelines
+
+#### Corner Size Recommendations
+```tsx
+// UI Element Size → Recommended Corner Size
+'text-xs'  → size="w-1 h-1"    // Small buttons, tags
+'text-sm'  → size="w-1 h-1"    // Form inputs, small buttons  
+'text-base'→ size="w-2 h-2"    // Standard buttons, navigation
+'text-lg'  → size="w-3 h-3"    // Large buttons, cards
+'text-xl'+ → size="w-4 h-4"    // Hero elements, prominent CTAs
+```
+
+#### Color Coordination
+```tsx
+// Match corner color to existing element borders
+<button className="border-2 border-blue-500">
+  <VertexCorners color="border-blue-500" />
+</button>
+
+// Contrast colors for visibility
+<button className="bg-black text-white">
+  <VertexCorners color="border-white" />  {/* White corners on dark background */}
+</button>
+
+<button className="bg-white text-black">
+  <VertexCorners color="border-black" />  {/* Black corners on light background */}
+</button>
+```
+
+### Performance Benefits
+
+#### 1. **Optimized Rendering**
+- **Single Component**: Reusable across all buttons eliminates code duplication
+- **Conditional Rendering**: Only renders when `show={true}`
+- **CSS-Only Animation**: No JavaScript animation loops required
+
+#### 2. **Memory Efficiency**
+- **Shared Implementation**: All buttons use same corner logic
+- **Static Elements**: Corner positions never change, only opacity
+- **Minimal DOM Impact**: Four simple span elements per instance
+
+#### 3. **Development Efficiency**
+- **Consistent API**: Same props interface across all use cases
+- **TypeScript Support**: Full type safety and IntelliSense
+- **Easy Maintenance**: Updates propagate to all instances automatically
+
+### Files in the System
+- `/src/components/ui/VertexCorners.tsx` - Core reusable component
+- `/src/components/ui/VertexButton.tsx` - Complete button with corners
+- `/src/components/navbar/NavigationLink.tsx` - Navigation implementation
+- `/src/components/navbar/DesktopNav.tsx` - Navigation integration
+- `/synapsas.md` - System documentation
+
+### Result
+The extracted vertex corners system provides a flexible, reusable animation pattern that can be applied to any interactive element. By separating the animation logic into dedicated components, we enable consistent geometric hover effects across the entire application while maintaining the sharp, professional aesthetic of the Synapsas design system. The system scales from subtle navigation feedback to prominent button interactions, all while ensuring optimal performance and developer experience.
 
 ## Card Components
 

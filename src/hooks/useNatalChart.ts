@@ -24,6 +24,8 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
   const { defaultPerson } = usePeopleStore();
   const [isGenerating, setIsGenerating] = useState(false);
   const [cachedChart, setCachedChart] = useState<NatalChartData | null>(null);
+  const [hasExistingChart, setHasExistingChart] = useState(false);
+  const [isLoadingCache, setIsLoadingCache] = useState(false);
 
   // Determine which person's data to use
   const activePerson = selectedPerson || defaultPerson;
@@ -72,6 +74,9 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
       });
       
       if (user && activePersonData?.dateOfBirth && activePersonData?.timeOfBirth && activePersonData?.coordinates?.lat && activePersonData?.coordinates?.lon) {
+        setIsLoadingCache(true);
+        setHasExistingChart(true); // We have complete data, so a chart should exist or can be generated
+        
         const personId = activePerson?.id || user.id;
         const cacheKey = `natal_chart_${personId}_${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${activePersonData.coordinates.lat}_${activePersonData.coordinates.lon}`;
         console.log('useNatalChart: Cache key:', cacheKey);
@@ -82,6 +87,7 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
           
           if (cached) {
             setCachedChart(cached);
+            setIsLoadingCache(false);
           } else {
             // Clear cached chart if person changed and no cache exists
             setCachedChart(null);
@@ -131,19 +137,23 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
             } catch (error) {
               console.error('useNatalChart: Error loading charts from API:', error);
             }
+            setIsLoadingCache(false);
           }
         } catch (error) {
           console.error('Error loading cached chart:', error);
+          setIsLoadingCache(false);
         }
       } else {
         // Clear cached chart if no valid person data
         console.log('useNatalChart: Clearing cached chart - no valid person data');
         setCachedChart(null);
+        setHasExistingChart(false);
+        setIsLoadingCache(false);
       }
     };
     
     loadCachedChart();
-  }, [user, activePerson, activePersonData]);
+  }, [user, activePerson, activePersonData, getUserCharts]);
 
   const generateChart = useCallback(async (formData?: {
     name: string;
@@ -266,7 +276,6 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
     } catch (error) {
       console.error('Error generating natal chart:', error);
       // Component should handle errors
-      setIsGenerating(false);
       return null;
     } finally {
       setIsGenerating(false);
@@ -370,5 +379,7 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
     shareChart,
     isGenerating,
     cachedChart,
+    hasExistingChart,
+    isLoadingCache,
   };
 };

@@ -149,7 +149,7 @@ export const useChartStore = create<ChartStore>()(
   persist(
     (set, get) => ({
       // Initial state
-      activeTab: 'chart' as ChartTab,
+      activeTab: 'interpretation' as ChartTab,
       interpretationSections: DEFAULT_SECTIONS,
       aspectFilters: {
         selectedCategory: 'all',
@@ -280,6 +280,11 @@ export const useChartStore = create<ChartStore>()(
           
           state.interpretationSections = [...mergedSections, ...newSections]
             .sort((a, b) => a.order - b.order);
+            
+          // In development, always default to interpretation tab to help with debugging
+          if (process.env.NODE_ENV === 'development' && !state.activeTab) {
+            state.activeTab = 'interpretation';
+          }
         }
       }
     }

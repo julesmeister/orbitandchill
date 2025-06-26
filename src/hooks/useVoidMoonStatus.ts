@@ -141,8 +141,8 @@ export const useVoidMoonStatus = () => {
             coordinates: savedLocation.coordinates
           };
           
-          // Clear any previous location error
-          setVoidStatus(prev => ({ ...prev, locationError: undefined }));
+          // Clear any previous location error and location toast
+          setVoidStatus(prev => ({ ...prev, locationError: undefined, showLocationToast: false }));
         } else if (user?.birthData?.coordinates?.lat && user?.birthData?.coordinates?.lon) {
           // Use user's birth location
           locationData = {
@@ -158,8 +158,9 @@ export const useVoidMoonStatus = () => {
             coordinates: user.birthData.coordinates
           };
           
-          // Track birth location usage
+          // Track birth location usage and clear location toast
           getLocationAnalytics().trackBirthLocationUsed(user.birthData.coordinates);
+          setVoidStatus(prev => ({ ...prev, showLocationToast: false }));
         } else {
           // Try to get current location (use provided position if available)
           let position = providedPosition;
@@ -184,8 +185,8 @@ export const useVoidMoonStatus = () => {
               }
             };
             
-            // Clear any previous location error
-            setVoidStatus(prev => ({ ...prev, locationError: undefined }));
+            // Clear any previous location error and location toast
+            setVoidStatus(prev => ({ ...prev, locationError: undefined, showLocationToast: false }));
             
           } catch (geoError) {
             console.log('Could not get current location, showing location toast:', geoError);
@@ -271,7 +272,7 @@ export const useVoidMoonStatus = () => {
     const interval = setInterval(checkVoidStatus, checkInterval);
     
     return () => clearInterval(interval);
-  }, [voidStatus.isVoid]);
+  }, [voidStatus.isVoid, user?.id]); // Re-run when user becomes available
   
   const showLocationToast = () => {
     setVoidStatus(prev => ({ ...prev, showLocationToast: true }));

@@ -27,12 +27,23 @@ async function initializeTurso() {
       authToken: authToken,
     });
     
-    // Test connection
-    await client.execute('SELECT 1 as test');
+    // Test connection with retry mechanism
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await client.execute('SELECT 1 as test');
+        break; // Success, exit retry loop
+      } catch (testError) {
+        retries--;
+        if (retries === 0) throw testError;
+        console.warn(`⚠️ Database connection test failed, retrying... (${3 - retries}/3)`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+      }
+    }
     
     return client;
   } catch (error) {
-    console.error('❌ Failed to connect to Turso database:', error);
+    console.error('❌ Failed to connect to Turso database after retries:', error);
     return null;
   }
 }
@@ -65,6 +76,8 @@ const createMockDb = () => ({
         else if (table === schema.notificationPreferences) tableName = 'notification_preferences';
         else if (table === schema.notificationTemplates) tableName = 'notification_templates';
         else if (table === schema.adminSettings) tableName = 'admin_settings';
+        else if (table === schema.userActivity) tableName = 'user_activity';
+        else if (table === schema.horaryQuestions) tableName = 'horary_questions';
         else throw new Error('Unknown table');
         
         // Build INSERT query with camelCase to snake_case conversion
@@ -268,7 +281,6 @@ const createMockDb = () => ({
           
           // Force conversion to array if needed
           if (!Array.isArray(rows)) {
-            console.log('🔧 Converting non-array result to array');
             return [];
           }
           
@@ -300,7 +312,7 @@ const createMockDb = () => ({
                 const fieldName = condition.left.name || condition.left;
                 const value = condition.right.value !== undefined ? condition.right.value : condition.right;
                 
-                console.log('🔍 Processing eq condition:', { fieldName, value, leftObj: condition.left, rightObj: condition.right });
+                // Processing eq condition
                 
                 // Convert camelCase field name to snake_case for database
                 let dbFieldName = fieldName;
@@ -705,11 +717,8 @@ const createMockDb = () => ({
           
           const sql = `DELETE FROM ${tableName} WHERE ${whereClause}`;
           
-          console.log('🔍 Executing DELETE:', sql, 'params:', whereParams);
-          
           try {
             const result = await client.execute({ sql, args: whereParams });
-            console.log('✅ Delete successful:', result);
             return result;
           } catch (error) {
             console.error('❌ Delete failed:', error);
@@ -729,16 +738,100 @@ const createMockDb = () => ({
   }
 });
 
-// Initialize on load
-(async () => {
-  client = await initializeTurso();
-  if (client) {
-    db = createMockDb();
-  }
-})();
+// Database initialization with proper promise handling
+let initializationPromise: Promise<any> | null = null;
 
-// Export the database instance
-export { db };
+const ensureInitialized = async () => {
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      try {
+        client = await initializeTurso();
+        if (client) {
+          db = createMockDb();
+          return db;
+        } else {
+          db = null;
+          return null;
+        }
+      } catch (error) {
+        console.error('❌ Database initialization failed:', error);
+        db = null;
+        return null;
+      }
+    })();
+  }
+  return initializationPromise;
+};
+
+// Create a database wrapper that ensures initialization
+const getDatabase = async () => {
+  await ensureInitialized();
+  return db;
+};
+
+// Initialize immediately and add startup delay if needed
+const startupInitialization = async () => {
+  await ensureInitialized();
+  
+  // Initialize connection pool for better performance
+  if (client) {
+    try {
+      const { initializeConnectionPool } = await import('./connectionPool');
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        await initializeConnectionPool(databaseUrl, authToken, {
+          minConnections: 2,
+          maxConnections: 8,
+          acquireTimeoutMs: 5000,
+          idleTimeoutMs: 300000, // 5 minutes
+          maxLifetimeMs: 1800000  // 30 minutes
+        });
+      }
+    } catch (poolError) {
+      console.warn('⚠️ Connection pool initialization failed:', poolError);
+    }
+  }
+  
+  // Run warmup queries after initialization
+  if (db) {
+    try {
+      await db.client.execute('SELECT 1 as startup_warmup');
+    } catch (warmupError) {
+      // Database warmup queries failed silently
+    }
+  }
+};
+
+// Start initialization immediately but don't block module loading
+startupInitialization();
+
+// Export a getter function that ensures initialization
+export function getDb() {
+  // If db is already initialized, return it immediately
+  if (db) return db;
+  
+  // If initialization is in progress, log warning but don't block
+  if (initializationPromise) {
+    console.warn('⚠️ Database still initializing, returning null');
+    return null;
+  }
+  
+  // Start initialization if not started yet
+  console.warn('⚠️ Database not initialized, starting initialization');
+  ensureInitialized();
+  return null;
+}
+
+// Export async version that waits for initialization
+export async function getDbAsync() {
+  await ensureInitialized();
+  return db;
+}
+
+// Export the db variable directly - it will be null until initialized
+export { db, getDatabase };
 
 // Export initialization function
 export async function initializeDatabase() {

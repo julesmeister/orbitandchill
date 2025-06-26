@@ -19,14 +19,23 @@ export async function POST(request: NextRequest) {
     // For anonymous users, we don't need to do anything server-side
     // For Google authenticated users, we could track last activity or session cleanup
     
-    // Update user's last activity timestamp
-    await db
-      .update(users)
-      .set({ 
-        updatedAt: new Date(),
-        showOnlineStatus: false // Set offline status
-      })
-      .where(eq(users.id, userId));
+    // Update user's last activity timestamp (only if database is available)
+    if (db) {
+      try {
+        await db
+          .update(users)
+          .set({ 
+            updatedAt: new Date(),
+            showOnlineStatus: false // Set offline status
+          })
+          .where(eq(users.id, userId));
+      } catch (dbError) {
+        console.warn('Failed to update user logout status in database:', dbError);
+        // Continue with logout even if database update fails
+      }
+    } else {
+      console.warn('Database not available during logout, skipping user status update');
+    }
 
     // Clear any server-side session data if we had any
     // For now, we rely on client-side session management

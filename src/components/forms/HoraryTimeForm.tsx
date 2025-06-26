@@ -3,18 +3,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useLocationSearch } from '../../hooks/useLocationSearch';
 import HoraryTimeHeader from './HoraryTimeHeader';
 import HoraryDateInput from './HoraryDateInput';
 import HoraryTimeInput from './HoraryTimeInput';
-import HoraryLocationInput from './HoraryLocationInput';
 import HoraryTimeSubmitButton from './HoraryTimeSubmitButton';
 
 interface HoraryTimeData {
   date: string;
   time: string;
-  location: string;
-  coordinates: { lat: string; lon: string };
 }
 
 interface HoraryTimeFormProps {
@@ -31,11 +27,8 @@ const HoraryTimeForm = ({
   const [formData, setFormData] = useState({
     date: '',
     time: '',
-    location: '',
-    coordinates: { lat: '', lon: '' },
   });
 
-  const [isLocationFocused, setIsLocationFocused] = useState(false);
   const [timeInput, setTimeInput] = useState({ hours: '', minutes: '', period: 'AM' });
   const [dateInput, setDateInput] = useState({ month: '', day: '', year: '' });
 
@@ -80,27 +73,6 @@ const HoraryTimeForm = ({
     };
   }, []);
 
-  const {
-    locationQuery,
-    setLocationQuery,
-    locationOptions,
-    showLocationDropdown,
-    setShowLocationDropdown,
-    isLoadingLocations,
-    locationInputRef,
-    dropdownRef,
-    handleLocationSelect: onLocationSelect,
-  } = useLocationSearch((location) => {
-    setFormData(prev => ({
-      ...prev,
-      location: location.display_name,
-      coordinates: {
-        lat: location.lat,
-        lon: location.lon
-      }
-    }));
-    setIsLocationFocused(false);
-  });
 
   // Initialize form with current date/time and detected location
   useEffect(() => {
@@ -137,21 +109,9 @@ const HoraryTimeForm = ({
         setTimeInput(timeObj);
         setFormData(prev => ({ ...prev, time: initialData.time! }));
       }
-      if (initialData.location) {
-        setLocationQuery(initialData.location);
-        setFormData(prev => ({ 
-          ...prev, 
-          location: initialData.location!,
-          coordinates: initialData.coordinates || { lat: '', lon: '' }
-        }));
-      }
     }
-  }, [initialData, convertTo12Hour, convertFromDateString, convertToDateString, convertTo24Hour, setLocationQuery]);
+  }, [initialData, convertTo12Hour, convertFromDateString, convertToDateString, convertTo24Hour]);
 
-  const handleLocationInputChange = useCallback((value: string) => {
-    setLocationQuery(value);
-    setFormData(prev => ({ ...prev, location: value }));
-  }, [setLocationQuery]);
 
   const handleTimeInputChange = useCallback((field: 'hours' | 'minutes' | 'period', value: string) => {
     const newTimeInput = { ...timeInput, [field]: value };
@@ -174,39 +134,13 @@ const HoraryTimeForm = ({
   }, [dateInput, convertToDateString]);
 
 
-  // Handle window focus to reset location dropdown state
-  useEffect(() => {
-    const handleWindowFocus = () => {
-      if (isLocationFocused && !locationInputRef.current?.matches(':focus')) {
-        setIsLocationFocused(false);
-      }
-    };
-
-    const handleWindowBlur = () => {
-      setIsLocationFocused(false);
-    };
-
-    window.addEventListener('focus', handleWindowFocus);
-    window.addEventListener('blur', handleWindowBlur);
-    
-    return () => {
-      window.removeEventListener('focus', handleWindowFocus);
-      window.removeEventListener('blur', handleWindowBlur);
-    };
-  }, [isLocationFocused]);
 
   const isFormValid = useMemo(() => {
-    return !!(formData.date && formData.time && formData.location && 
-             formData.coordinates.lat && formData.coordinates.lon);
+    return !!(formData.date && formData.time);
   }, [formData]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.coordinates.lat || !formData.coordinates.lon) {
-      alert('Please select a location from the dropdown');
-      return;
-    }
     
     if (!isFormValid) return;
 
@@ -228,18 +162,6 @@ const HoraryTimeForm = ({
           onTimeChange={handleTimeInputChange}
         />
 
-        <HoraryLocationInput
-          locationQuery={locationQuery}
-          onLocationChange={handleLocationInputChange}
-          isLocationFocused={isLocationFocused}
-          setIsLocationFocused={setIsLocationFocused}
-          locationOptions={locationOptions}
-          showLocationDropdown={showLocationDropdown}
-          isLoadingLocations={isLoadingLocations}
-          locationInputRef={locationInputRef}
-          dropdownRef={dropdownRef}
-          onLocationSelect={onLocationSelect}
-        />
 
         <HoraryTimeSubmitButton
           isFormValid={isFormValid}

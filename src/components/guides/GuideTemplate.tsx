@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { BRAND } from '../../config/brand';
 
 interface GuideSection {
   id: string;
@@ -47,7 +48,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
 
   // Update document title and meta tags
   useEffect(() => {
-    document.title = `${guide.title} | Luckstrology`;
+    document.title = `${guide.title} | ${BRAND.name}`;
     
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {

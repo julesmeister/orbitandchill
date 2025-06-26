@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NotificationService } from '@/db/services/notificationService';
 import type { CreateNotificationData } from '@/db/services/notificationService';
+import { BRAND } from '@/config/brand';
 
 /**
  * Helper functions to create common notifications
@@ -292,13 +293,13 @@ export const createWelcomeNotification = async (
   isNewUser: boolean = true
 ) => {
   const message = isNewUser 
-    ? `Welcome to Luckstrology, ${username}! Explore your natal chart, discover optimal timing, and connect with our astrology community.`
+    ? `Welcome to ${BRAND.name}, ${username}! Explore your natal chart, discover optimal timing, and connect with our astrology community.`
     : `Welcome back, ${username}! Check out what's new since your last visit.`;
 
   return NotificationService.createNotification({
     userId,
     type: 'welcome',
-    title: isNewUser ? 'Welcome to Luckstrology!' : 'Welcome back!',
+    title: isNewUser ? `Welcome to ${BRAND.name}!` : 'Welcome back!',
     message,
     icon: '👋',
     priority: 'medium',

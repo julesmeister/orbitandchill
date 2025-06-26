@@ -1,0 +1,1 @@
+ALTER TABLE `analytics_traffic` ADD `location_requests` integer DEFAULT 0;

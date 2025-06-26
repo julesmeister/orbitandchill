@@ -14,10 +14,14 @@ class LocationAnalytics {
   private static instance: LocationAnalytics;
   private events: LocationAnalyticsEvent[] = [];
   private sessionId: string;
+  private isClient: boolean;
 
   private constructor() {
+    this.isClient = typeof window !== 'undefined';
     this.sessionId = this.generateSessionId();
-    this.loadFromStorage();
+    if (this.isClient) {
+      this.loadFromStorage();
+    }
   }
 
   public static getInstance(): LocationAnalytics {
@@ -32,6 +36,8 @@ class LocationAnalytics {
   }
 
   private loadFromStorage(): void {
+    if (!this.isClient) return;
+    
     try {
       const stored = localStorage.getItem('location_analytics_events');
       if (stored) {
@@ -46,6 +52,8 @@ class LocationAnalytics {
   }
 
   private saveToStorage(): void {
+    if (!this.isClient) return;
+    
     try {
       // Keep only last 100 events to prevent storage bloat
       const eventsToStore = this.events.slice(-100);
@@ -60,7 +68,7 @@ class LocationAnalytics {
       type: 'location_request',
       source: 'current',
       timestamp: new Date(),
-      userAgent: navigator.userAgent,
+      userAgent: this.isClient ? navigator.userAgent : 'server',
       sessionId: this.sessionId
     });
   }
@@ -71,7 +79,7 @@ class LocationAnalytics {
       source: 'current',
       coordinates,
       timestamp: new Date(),
-      userAgent: navigator.userAgent,
+      userAgent: this.isClient ? navigator.userAgent : 'server',
       sessionId: this.sessionId
     });
   }
@@ -81,7 +89,7 @@ class LocationAnalytics {
       type: 'permission_denied',
       source: 'current',
       timestamp: new Date(),
-      userAgent: navigator.userAgent,
+      userAgent: this.isClient ? navigator.userAgent : 'server',
       sessionId: this.sessionId
     });
   }
@@ -92,7 +100,7 @@ class LocationAnalytics {
       source: 'current',
       errorType,
       timestamp: new Date(),
-      userAgent: navigator.userAgent,
+      userAgent: this.isClient ? navigator.userAgent : 'server',
       sessionId: this.sessionId
     });
   }
@@ -103,7 +111,7 @@ class LocationAnalytics {
       source: 'fallback',
       coordinates: { lat: '40.7128', lon: '-74.0060' }, // NYC
       timestamp: new Date(),
-      userAgent: navigator.userAgent,
+      userAgent: this.isClient ? navigator.userAgent : 'server',
       sessionId: this.sessionId
     });
   }
@@ -114,7 +122,7 @@ class LocationAnalytics {
       source: 'birth',
       coordinates,
       timestamp: new Date(),
-      userAgent: navigator.userAgent,
+      userAgent: this.isClient ? navigator.userAgent : 'server',
       sessionId: this.sessionId
     });
   }
@@ -177,12 +185,40 @@ class LocationAnalytics {
 
   public clearData(): void {
     this.events = [];
-    localStorage.removeItem('location_analytics_events');
+    if (this.isClient) {
+      localStorage.removeItem('location_analytics_events');
+    }
   }
 }
 
-// Export singleton instance
-export const locationAnalytics = LocationAnalytics.getInstance();
+// Export singleton instance getter to avoid SSR issues
+export const getLocationAnalytics = () => {
+  if (typeof window === 'undefined') {
+    // Return a mock object on server side
+    return {
+      trackLocationRequest: () => {},
+      trackPermissionGranted: () => {},
+      trackPermissionDenied: () => {},
+      trackLocationError: () => {},
+      trackFallbackUsed: () => {},
+      trackBirthLocationUsed: () => {},
+      getAnalyticsSummary: () => ({
+        totalRequests: 0,
+        permissionGranted: 0,
+        permissionDenied: 0,
+        fallbackUsed: 0,
+        errorBreakdown: {},
+        recentEvents: []
+      }),
+      exportData: () => [],
+      clearData: () => {}
+    };
+  }
+  return LocationAnalytics.getInstance();
+};
+
+// For backward compatibility
+export const locationAnalytics = typeof window !== 'undefined' ? LocationAnalytics.getInstance() : getLocationAnalytics();
 
 // Utility function to get country from coordinates (basic implementation)
 export async function getCountryFromCoordinates(lat: string, lon: string): Promise<string> {

@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useAdminStore } from '@/store/adminStore';
 import { useUserStore } from '@/store/userStore';
+import { BRAND } from '@/config/brand';
 
 export default function AdminLogin() {
   const { 
@@ -71,7 +72,7 @@ export default function AdminLogin() {
             Admin Access
           </h1>
           <p className="font-inter text-xl text-black/80 leading-relaxed">
-            Access the Luckstrology administration dashboard
+            Access the {BRAND.name} administration dashboard
           </p>
         </div>
       </section>

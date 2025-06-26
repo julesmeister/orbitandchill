@@ -18,10 +18,21 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to refresh replies
-  const refreshReplies = async () => {
+  // PERFORMANCE: Optimized refresh with caching and error handling
+  const refreshReplies = async (useCache = true) => {
     try {
-      const response = await fetch(`/api/discussions/${discussionId}/replies`);
+      const cacheHeaders = useCache ? {
+        'Cache-Control': 'max-age=60',
+        'Accept': 'application/json'
+      } : {
+        'Cache-Control': 'no-cache',
+        'Accept': 'application/json'
+      };
+
+      const response = await fetch(`/api/discussions/${discussionId}/replies`, {
+        headers: cacheHeaders
+      });
+      
       const data = await response.json();
       
       if (data.success) {
@@ -33,9 +44,12 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
         if (onReplyCountChange) {
           onReplyCountChange(data.total || 0);
         }
+      } else {
+        throw new Error(data.error || 'Failed to fetch replies');
       }
     } catch (err) {
       console.error('Error refreshing replies:', err);
+      setError('Failed to load replies');
     }
   };
 
@@ -109,11 +123,15 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
           ))}
         </div>
         
-        {/* Loading indicator */}
+        {/* Modern loading indicator with dots animation */}
         <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-3">
-            <div className="animate-spin border-2 border-black border-t-transparent w-6 h-6"></div>
-            <span className="font-inter text-black/60 text-sm">Loading replies...</span>
+          <div className="flex items-center space-x-2">
+            <span className="font-inter text-black/60 text-sm">Loading replies</span>
+            <div className="flex space-x-1">
+              <div className="w-1.5 h-1.5 bg-black/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-1.5 h-1.5 bg-black/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-1.5 h-1.5 bg-black/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
           </div>
         </div>
       </section>

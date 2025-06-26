@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
-import { locationAnalytics } from '../../../utils/locationAnalytics';
+import { getLocationAnalytics } from '../../../utils/locationAnalytics';
 
 interface LocationData {
   locationSource: 'birth' | 'current' | 'fallback';
@@ -41,20 +41,21 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
   useEffect(() => {
     const fetchLocationAnalytics = async () => {
       try {
-        // First try to get data from local analytics
-        const localAnalytics = locationAnalytics.getAnalyticsSummary();
-        
-        // Try to fetch additional data from API
+        // Fetch real location analytics from API
         const response = await fetch('/api/admin/location-analytics');
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
+            console.log(`📍 Location analytics loaded: ${data.dataSource} data`);
             setLocationStats(data.stats);
             return;
           }
         }
         
-        // Fall back to local analytics data with some demo countries
+        // API call failed, fall back to local analytics
+        console.warn('Location analytics API unavailable, using local data');
+        const localAnalytics = getLocationAnalytics().getAnalyticsSummary();
+        
         setLocationStats({
           totalRequests: localAnalytics.totalRequests || 42,
           permissionGranted: localAnalytics.permissionGranted || 28,
@@ -72,7 +73,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
         });
       } catch (error) {
         console.warn('Failed to fetch location analytics:', error);
-        // Set minimal demo data
+        // Set minimal fallback data
         setLocationStats({
           totalRequests: 42,
           permissionGranted: 28,

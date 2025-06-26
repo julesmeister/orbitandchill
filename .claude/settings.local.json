@@ -42,7 +42,8 @@
       "Bash(dos2unix:*)",
       "Bash(timeout:*)",
       "Bash(npx ts-node:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

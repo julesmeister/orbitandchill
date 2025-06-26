@@ -5,6 +5,9 @@ import { AstrologicalEvent } from '../../store/eventsStore';
 
 interface NextBookmarkedEventCountdownProps {
   events: AstrologicalEvent[];
+  currentLocationData?: { name: string; coordinates: { lat: string; lon: string } } | null;
+  birthLocationData?: { name: string; coordinates: { lat: string; lon: string } } | null;
+  onEditLocation?: () => void;
 }
 
 interface TimeRemaining {
@@ -14,7 +17,12 @@ interface TimeRemaining {
   seconds: number;
 }
 
-export default function NextBookmarkedEventCountdown({ events }: NextBookmarkedEventCountdownProps) {
+export default function NextBookmarkedEventCountdown({ 
+  events, 
+  currentLocationData, 
+  birthLocationData, 
+  onEditLocation 
+}: NextBookmarkedEventCountdownProps) {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null);
   const [nextEvent, setNextEvent] = useState<AstrologicalEvent | null>(null);
 
@@ -112,11 +120,7 @@ export default function NextBookmarkedEventCountdown({ events }: NextBookmarkedE
 
   // Don't render if no upcoming bookmarked events
   if (!nextEvent || !timeRemaining) {
-    return (
-      <p className="mt-4 text-sm text-black/60 font-inter">
-        Bookmark events to see countdown to your next important date
-      </p>
-    );
+    return null;
   }
 
   const formatTimeUnit = (value: number, unit: string) => {
@@ -144,8 +148,10 @@ export default function NextBookmarkedEventCountdown({ events }: NextBookmarkedE
   };
 
   return (
-    <p className="mt-4 text-sm text-black/60 font-inter">
-      Next bookmarked event: <span className="text-black/80">{nextEvent.title}</span> in <span className="font-medium text-black">{getTimeDisplay()}</span>
-    </p>
+    <div className="text-center">
+      <p className="text-sm text-black/60 font-inter">
+        Next bookmarked event: <span className="text-black/80">{nextEvent.title}</span> in <span className="font-medium text-black">{getTimeDisplay()}</span>
+      </p>
+    </div>
   );
 }

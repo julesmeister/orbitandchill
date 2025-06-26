@@ -242,7 +242,7 @@ select:not([multiple]) {
   border: 1px solid #d1d5db;
   border-radius: 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  z-index: 50;
+  z-index: 2001;
   max-height: 200px;
   overflow-y: auto;
   margin-top: 0.5rem;
@@ -363,7 +363,7 @@ select:not([multiple]) {
   border: 1px solid #d1d5db;
   border-radius: 0;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  z-index: 50;
+  z-index: 4999;
   max-height: 15rem;
   overflow-y: auto;
   margin-top: 0.5rem;

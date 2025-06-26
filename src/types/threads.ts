@@ -121,6 +121,10 @@ export interface ChartMetadata {
   houseSummary: HouseSummary[];
   majorAspects: string[];
   chartScore?: number;
+  // Chart-specific data for different chart types
+  natalChartData?: import('../utils/natalChart').NatalChartData;
+  horaryChartData?: any; // TODO: Import proper type when available
+  eventChartData?: any; // TODO: Import proper type when available
 }
 
 export interface ChartBirthData {

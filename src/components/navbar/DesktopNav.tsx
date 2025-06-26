@@ -50,7 +50,7 @@ const DesktopNav = React.memo(({
           <div className="flex items-center space-x-8 xl:space-x-12">
             {/* Brand */}
             <Link href="/" className="flex items-center space-x-3 group">
-              <OrbitingLogo 
+              <OrbitingLogo
                 size="normal"
                 className="text-black hover:scale-105 transition-transform duration-300"
               />
@@ -60,7 +60,7 @@ const DesktopNav = React.memo(({
             </Link>
 
             {/* Main Navigation */}
-            <div className="hidden lg:flex items-center bg-white border border-black px-6 py-2">
+            <div className="hidden lg:flex items-center bg-white px-6 py-2">
               {NAVIGATION_LINKS.map(({ href, label }, index) => (
                 <React.Fragment key={href}>
                   <NavigationLink
@@ -86,7 +86,7 @@ const DesktopNav = React.memo(({
             {user && (
               <NotificationBell />
             )}
-            
+
             <UserProfile
               user={user}
               isLoading={isAuthLoading}

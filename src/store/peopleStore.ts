@@ -44,9 +44,7 @@ export const usePeopleStore = create<PeopleState>()(
       // Computed values
       get selectedPerson() {
         const { people, selectedPersonId } = get();
-        const found = selectedPersonId ? people.find(p => p.id === selectedPersonId) || null : null;
-        console.log('selectedPerson getter:', { selectedPersonId, peopleCount: people.length, found: found?.name });
-        return found;
+        return selectedPersonId ? people.find(p => p.id === selectedPersonId) || null : null;
       },
 
       get defaultPerson() {
@@ -273,7 +271,26 @@ export const usePeopleStore = create<PeopleState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         selectedPersonId: state.selectedPersonId,
+        // In development, also persist people array to prevent hot reload issues
+        ...(process.env.NODE_ENV === 'development' && { people: state.people }),
       }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.log('People store hydration error:', error);
+          return;
+        }
+        
+        if (state && process.env.NODE_ENV === 'development') {
+          // Restore people array with proper date objects in development
+          if (state.people && Array.isArray(state.people)) {
+            state.people = state.people.map(person => ({
+              ...person,
+              createdAt: person.createdAt ? new Date(person.createdAt) : new Date(),
+              updatedAt: person.updatedAt ? new Date(person.updatedAt) : new Date(),
+            }));
+          }
+        }
+      },
     }
   )
 );

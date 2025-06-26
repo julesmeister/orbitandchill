@@ -12,6 +12,7 @@ import { useBlogData } from '@/hooks/useBlogData';
 import { useCarousel } from '@/hooks/useCarousel';
 import { getSectionTitle, shouldShowCarousel } from '@/utils/blogUtils';
 import { BookOpen } from 'lucide-react';
+import { BRAND } from '@/config/brand';
 
 export default function BlogPage() {
   // Get blog data and functionality from custom hook
@@ -36,7 +37,7 @@ export default function BlogPage() {
 
   // Set document title
   useEffect(() => {
-    document.title = "Astrology Blog - Expert Insights & Cosmic Wisdom | Luckstrology";
+    document.title = `Astrology Blog - Expert Insights & Cosmic Wisdom | ${BRAND.name}`;
   }, []);
 
   return (

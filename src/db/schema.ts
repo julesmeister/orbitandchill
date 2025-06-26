@@ -19,6 +19,12 @@ export const users = sqliteTable('users', {
   latitude: real('latitude'),
   longitude: real('longitude'),
   
+  // Current location data (for void moon calculations)
+  currentLocationName: text('current_location_name'),
+  currentLatitude: real('current_latitude'),
+  currentLongitude: real('current_longitude'),
+  currentLocationUpdatedAt: integer('current_location_updated_at', { mode: 'timestamp' }),
+  
   // Astrological data
   sunSign: text('sun_sign'),
   stelliumSigns: text('stellium_signs'), // JSON array
@@ -269,6 +275,11 @@ export const analyticsTraffic = sqliteTable('analytics_traffic', {
   bounceRate: real('bounce_rate').default(0), // percentage
   topPages: text('top_pages'), // JSON array
   trafficSources: text('traffic_sources'), // JSON object
+  locationRequests: integer('location_requests').default(0), // Location request count
+  locationPermissionsGranted: integer('location_permissions_granted').default(0), // GPS permissions granted
+  locationPermissionsDenied: integer('location_permissions_denied').default(0), // GPS permissions denied
+  locationFallbackUsed: integer('location_fallback_used').default(0), // Fallback location used
+  locationErrors: integer('location_errors').default(0), // Location errors count
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -325,13 +336,14 @@ export const userActivity = sqliteTable('user_activity', {
       'event_created', 'event_bookmarked', 'event_unbookmarked', 'event_viewed',
       'user_registered', 'user_login', 'user_logout', 'user_updated',
       'settings_changed', 'premium_activated', 'premium_feature_used',
-      'page_view', 'navigation', 'search_performed', 'export_data'
+      'page_view', 'navigation', 'search_performed', 'export_data',
+      'horary_question_submitted'
     ]
   }).notNull(),
   
   // Entity information
   entityType: text('entity_type', {
-    enum: ['chart', 'discussion', 'reply', 'event', 'user', 'page', 'search', 'settings', 'premium_feature']
+    enum: ['chart', 'discussion', 'reply', 'event', 'user', 'page', 'search', 'settings', 'premium_feature', 'horary']
   }),
   entityId: text('entity_id'), // ID of the entity acted upon
   

@@ -58,7 +58,9 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     initialData?.content,
     initialData?.isBlogPost,
     initialData?.isPublished,
-    initialData?.isPinned
+    initialData?.isPinned,
+    initialData?.embeddedChart,
+    initialData?.embeddedVideo
   ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

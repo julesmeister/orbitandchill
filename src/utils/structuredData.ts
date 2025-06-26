@@ -1,4 +1,8 @@
 import { DiscussionTemp } from "../types/threads";
+import { BRAND } from "../config/brand";
+
+// Use centralized domain from brand config
+const BASE_URL = BRAND.domain;
 
 export const generateDiscussionStructuredData = (
   discussion: DiscussionTemp
@@ -36,15 +40,15 @@ export const generateDiscussionStructuredData = (
       name: discussion.category,
     },
     keywords: discussion.tags.join(", "),
-    url: `https://luckstrology.com/discussions/${discussion.id}`,
+    url: `${BASE_URL}/discussions/${discussion.id}`,
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://luckstrology.com/discussions/${discussion.id}`,
+      "@id": `${BASE_URL}/discussions/${discussion.id}`,
     },
     publisher: {
       "@type": "Organization",
-      name: "Luckstrology",
-      url: "https://luckstrology.com",
+      name: BRAND.name,
+      url: BASE_URL,
     },
   };
 };

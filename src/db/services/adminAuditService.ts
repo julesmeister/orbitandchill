@@ -61,7 +61,7 @@ export class AdminAuditService {
    */
   static async log(data: CreateAuditLogData): Promise<AdminLogEntry> {
     if (!db) {
-      console.warn('⚠️ Database not available, audit log not persisted:', data.description);
+      
       // Return a mock audit log entry for UI consistency
       return {
         id: `local_${Date.now()}`,
@@ -295,7 +295,7 @@ export class AdminAuditService {
     hasMore: boolean;
   }> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty audit logs');
+      
       return { logs: [], total: 0, hasMore: false };
     }
 
@@ -374,7 +374,7 @@ export class AdminAuditService {
     topAdmins: Array<{ adminUsername: string; count: number }>;
   }> {
     if (!db) {
-      console.warn('⚠️ Database not available, returning empty audit statistics');
+      
       return {
         totalLogs: 0,
         logsByAction: {},

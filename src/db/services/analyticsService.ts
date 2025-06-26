@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { db, analyticsTraffic, analyticsEngagement } from '@/db/index';
+import { getDb, getDbAsync, analyticsTraffic, analyticsEngagement } from '@/db/index';
 import { eq, gte, lte, desc, sql, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { executeRawSelect, executeRawSelectOne, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
@@ -30,10 +30,15 @@ export interface EngagementDataInput {
 export class AnalyticsService {
   // Traffic Analytics
   static async recordTrafficData(data: TrafficDataInput) {
-    // Import db dynamically
-    const { db } = await import('../index');
-    if (!db) {
-      console.warn('⚠️ Database not available for analytics tracking');
+    let db;
+    try {
+      db = await getDbAsync();
+      if (!db) {
+        
+        return null;
+      }
+    } catch (error) {
+      console.warn('⚠️ Database initialization failed for analytics tracking:', error);
       return null;
     }
     
@@ -78,10 +83,9 @@ export class AnalyticsService {
   }
 
   static async getTrafficData(startDate: string, endDate: string) {
-    // Import db dynamically
-    const { db } = await import('../index');
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available for analytics retrieval');
+      
       return [];
     }
     
@@ -130,10 +134,15 @@ export class AnalyticsService {
 
   // Engagement Analytics
   static async recordEngagementData(data: EngagementDataInput) {
-    // Import db dynamically
-    const { db } = await import('../index');
-    if (!db) {
-      console.warn('⚠️ Database not available for engagement tracking');
+    let db;
+    try {
+      db = await getDbAsync();
+      if (!db) {
+        
+        return null;
+      }
+    } catch (error) {
+      console.warn('⚠️ Database initialization failed for engagement tracking:', error);
       return null;
     }
     
@@ -178,10 +187,9 @@ export class AnalyticsService {
   }
 
   static async getEngagementData(startDate: string, endDate: string) {
-    // Import db dynamically
-    const { db } = await import('../index');
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available for engagement data retrieval');
+      
       return [];
     }
     
@@ -204,15 +212,20 @@ export class AnalyticsService {
 
   // Helper method to increment daily counters
   static async incrementDailyCounter(
-    metric: 'visitors' | 'pageViews' | 'chartsGenerated' | 'newUsers' | 'returningUsers',
+    metric: 'visitors' | 'pageViews' | 'chartsGenerated' | 'newUsers' | 'returningUsers' | 'locationRequests' | 'locationPermissionsGranted' | 'locationPermissionsDenied' | 'locationFallbackUsed' | 'locationErrors',
     date?: string
   ) {
     const targetDate = date || new Date().toISOString().split('T')[0];
     
-    // Import db dynamically
-    const { db } = await import('../index');
-    if (!db) {
-      console.warn('⚠️ Database not available for analytics counter');
+    let db;
+    try {
+      db = await getDbAsync();
+      if (!db) {
+        
+        return;
+      }
+    } catch (error) {
+      console.warn('⚠️ Database initialization failed for analytics counter:', error);
       return;
     }
     
@@ -221,8 +234,24 @@ export class AnalyticsService {
     
     // Then increment the specific metric
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-    await db.execute({
-      sql: `UPDATE analytics_traffic SET ${metric} = ${metric} + 1 WHERE date = ?`,
+    // Convert camelCase to snake_case for database column names
+    const columnMap: Record<string, string> = {
+      'visitors': 'visitors',
+      'pageViews': 'page_views',
+      'chartsGenerated': 'charts_generated',
+      'newUsers': 'new_users',
+      'returningUsers': 'returning_users',
+      'locationRequests': 'location_requests',
+      'locationPermissionsGranted': 'location_permissions_granted',
+      'locationPermissionsDenied': 'location_permissions_denied',
+      'locationFallbackUsed': 'location_fallback_used',
+      'locationErrors': 'location_errors'
+    };
+    
+    const dbColumn = columnMap[metric] || metric;
+    
+    await db.client.execute({
+      sql: `UPDATE analytics_traffic SET ${dbColumn} = ${dbColumn} + 1 WHERE date = ?`,
       args: [targetDate]
     });
   }
@@ -233,10 +262,15 @@ export class AnalyticsService {
   ) {
     const targetDate = date || new Date().toISOString().split('T')[0];
     
-    // Import db dynamically
-    const { db } = await import('../index');
-    if (!db) {
-      console.warn('⚠️ Database not available for engagement counter');
+    let db;
+    try {
+      db = await getDbAsync();
+      if (!db) {
+        
+        return;
+      }
+    } catch (error) {
+      console.warn('⚠️ Database initialization failed for engagement counter:', error);
       return;
     }
     
@@ -251,7 +285,7 @@ export class AnalyticsService {
     };
     const dbColumn = metricMap[metric] || metric;
     
-    await db.execute({
+    await db.client.execute({
       sql: `UPDATE analytics_engagement SET ${dbColumn} = ${dbColumn} + 1 WHERE date = ?`,
       args: [targetDate]
     });

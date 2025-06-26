@@ -53,7 +53,9 @@ export default function ChartSummaryCard({
                 {metadata.chartTitle}
               </h3>
               <p className="text-sm text-black/70 font-inter">
-                {chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart
+                {chartType === 'natal' ? 'Birth Chart Analysis' : 
+                 chartType === 'horary' ? 'Divination Chart' : 
+                 chartType === 'event' ? 'Event Chart' : 'Astrological Chart'}
               </p>
             </div>
           </div>
@@ -151,11 +153,11 @@ export default function ChartSummaryCard({
         )}
 
         {/* Major Aspects */}
-        {metadata.majorAspects && metadata.majorAspects.length > 0 && (
+        {metadata.majorAspects && metadata.majorAspects.length > 0 && !isPreview && (
           <div className="mb-4">
             <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Major Aspects</h4>
             <div className="flex flex-wrap gap-1">
-              {metadata.majorAspects.slice(0, isPreview ? 3 : 6).map((aspect, index) => (
+              {metadata.majorAspects.slice(0, 6).map((aspect, index) => (
                 <span 
                   key={index} 
                   className="text-xs bg-black text-white px-2 py-1 font-inter"
@@ -164,9 +166,9 @@ export default function ChartSummaryCard({
                 </span>
               ))}
             </div>
-            {metadata.majorAspects.length > (isPreview ? 3 : 6) && (
+            {metadata.majorAspects.length > 6 && (
               <p className="text-xs text-black/60 mt-2 font-inter">
-                +{metadata.majorAspects.length - (isPreview ? 3 : 6)} more aspects
+                +{metadata.majorAspects.length - 6} more aspects
               </p>
             )}
           </div>

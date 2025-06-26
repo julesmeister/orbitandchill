@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 import Dropdown from '../reusable/Dropdown';
 import { User } from '@/types/user';
@@ -25,17 +25,10 @@ const UserProfile = ({
 }: UserProfileProps) => {
   const userInitials = getUserInitials(displayName);
 
-  // Debug: Log the current user state
-  console.log('UserProfile render - user:', user);
-  console.log('UserProfile render - authProvider:', user?.authProvider);
-
   const isAnonymousUser = user?.authProvider === "anonymous";
   const isGoogleUser = user?.authProvider === "google";
-  
-  console.log('UserProfile render - isAnonymousUser:', isAnonymousUser);
-  console.log('UserProfile render - isGoogleUser:', isGoogleUser);
 
-  const profileDropdownItems = [
+  const profileDropdownItems = useMemo(() => [
     {
       type: "link" as const,
       label: "My Profile",
@@ -126,7 +119,7 @@ const UserProfile = ({
         </svg>
       ),
     },
-  ];
+  ], [isAnonymousUser, isLoading, onGoogleSignIn, onSignOut]);
 
   if (isMobile) {
     return (
@@ -135,9 +128,21 @@ const UserProfile = ({
         align="right"
         trigger={(isOpen) => (
           <div className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors">
-            <div className="w-8 h-8 bg-white \ flex items-center justify-center">
-              <span className="text-xs font-bold font-inter">{userInitials}</span>
-            </div>
+            {user?.profilePictureUrl ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden">
+                <Image
+                  src={user.profilePictureUrl}
+                  alt={displayName}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-white flex items-center justify-center">
+                <span className="text-xs font-bold font-inter">{userInitials}</span>
+              </div>
+            )}
             <svg
               className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"}`}
               fill="none"
@@ -166,7 +171,7 @@ const UserProfile = ({
           </div>
           <div className="w-8 h-8 xl:w-10 xl:h-10 rounded-full overflow-hidden">
             <Image
-              src={getAvatarByIdentifier(displayName)}
+              src={user?.profilePictureUrl || getAvatarByIdentifier(displayName)}
               alt={displayName}
               width={40}
               height={40}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "../../store/userStore";
 import { usePeopleStore } from "../../store/peopleStore";
@@ -15,24 +15,41 @@ import BirthDataSummary from "../../components/charts/BirthDataSummary";
 import InterpretationSidebar from "../../components/charts/InterpretationSidebar";
 import { useStatusToast } from "../../hooks/useStatusToast";
 import StatusToast from "../../components/reusable/StatusToast";
+import { BRAND } from "../../config/brand";
 
 export default function ChartPage() {
   const router = useRouter();
   const { user, isProfileComplete } =
     useUserStore();
-  const { setSelectedPerson: setGlobalSelectedPerson } = usePeopleStore();
+  const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
   const { activeTab } = useChartTab();
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  
+  // Use global selected person if available, otherwise fall back to local state
+  const activeSelectedPerson = globalSelectedPerson || selectedPerson;
+  
   const {
     generateChart,
     isGenerating,
     cachedChart,
     shareChart,
     getUserCharts,
-  } = useNatalChart(selectedPerson);
+    hasExistingChart,
+    isLoadingCache,
+  } = useNatalChart(activeSelectedPerson);
   
   // Use status toast hook
   const { toast: statusToast, showSuccess, showError, hideStatus } = useStatusToast();
+
+  // Create refs for stable function references
+  const generateChartRef = useRef(generateChart);
+  const getUserChartsRef = useRef(getUserCharts);
+  
+  // Update refs when functions change
+  useEffect(() => {
+    generateChartRef.current = generateChart;
+    getUserChartsRef.current = getUserCharts;
+  }, [generateChart, getUserCharts]);
 
   // Check for existing charts and auto-generate if needed
   useEffect(() => {
@@ -48,7 +65,7 @@ export default function ChartPage() {
     const loadOrGenerateChart = async () => {
       if (user && !cachedChart && !isGenerating) {
         // First, try to load existing charts
-        const existingCharts = await getUserCharts();
+        const existingCharts = await getUserChartsRef.current();
         console.log('Existing charts:', existingCharts);
         
         if (existingCharts.length > 0) {
@@ -62,7 +79,7 @@ export default function ChartPage() {
         // If no existing charts and profile is complete, generate new one
         if (isProfileComplete && user.birthData) {
           console.log('Auto-generating chart for complete profile');
-          generateChart({
+          generateChartRef.current({
             name: user.username || '',
             dateOfBirth: user.birthData.dateOfBirth,
             timeOfBirth: user.birthData.timeOfBirth,
@@ -80,7 +97,7 @@ export default function ChartPage() {
     };
     
     loadOrGenerateChart();
-  }, [isProfileComplete, cachedChart, isGenerating, user, generateChart, getUserCharts]);
+  }, [isProfileComplete, cachedChart, isGenerating, user?.id, user?.birthData]);
 
   // Track page view analytics
   useEffect(() => {
@@ -144,8 +161,9 @@ export default function ChartPage() {
     setGlobalSelectedPerson(person?.id || null);
     console.log('Selected person:', person);
     
-    // Generate chart for selected person
-    if (person?.birthData && user) {
+    // Only generate chart for selected person if we don't already have a cached chart
+    // This prevents disrupting existing chart views when person selector auto-selects
+    if (person?.birthData && user && !cachedChart) {
       try {
         await generateChart({
           name: person.name || "",
@@ -214,7 +232,7 @@ export default function ChartPage() {
                             try {
                               await navigator.share({
                                 title: `${cachedChart.metadata?.name || 'My'} Natal Chart`,
-                                text: `Check out ${cachedChart.metadata?.name || 'my'} natal chart from Luckstrology!`,
+                                text: `Check out ${cachedChart.metadata?.name || 'my'} natal chart from ${BRAND.name}!`,
                                 url: shareUrl,
                               });
                             } catch {
@@ -233,7 +251,7 @@ export default function ChartPage() {
                   />
                 );
               })()}
-            </div>
+              </div>
 
             {/* Sidebar with Actions */}
             <div className="lg:col-span-2 bg-white">
@@ -263,8 +281,8 @@ export default function ChartPage() {
                 );
               })()}
 
-              {/* Interpretation Sidebar - Only show when interpretation tab is active */}
-              {activeTab === 'interpretation' && (
+              {/* Interpretation Sidebar - Show when interpretation tab is active or we have a cached chart */}
+              {(activeTab === 'interpretation' || (cachedChart && process.env.NODE_ENV === 'development')) && (
                 <div className="border-t border-black">
                   <InterpretationSidebar
                     onSectionClick={(sectionId) => {
@@ -277,6 +295,25 @@ export default function ChartPage() {
                   />
                 </div>
               )}
+            </div>
+          </div>
+        ) : isLoadingCache && hasExistingChart ? (
+          <div className="border border-black bg-white">
+            <div className="p-12 text-center">
+              {/* Loading Icon */}
+              <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-8">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+
+              {/* Heading */}
+              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
+                Loading Your Chart
+              </h1>
+              
+              {/* Description */}
+              <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto mb-12">
+                We're retrieving your cosmic blueprint. This should only take a moment...
+              </p>
             </div>
           </div>
         ) : (

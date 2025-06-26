@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import SynapsasDropdown from '@/components/reusable/SynapsasDropdown';
+import { BRAND } from '@/config/brand';
 
 interface Guide {
   id: string;
@@ -152,9 +153,9 @@ export default function GuidesPage() {
   }));
 
   // SEO metadata
-  const pageTitle = "Astrology Guides & Learning Resources | Luckstrology";
+  const pageTitle = `Astrology Guides & Learning Resources | ${BRAND.name}`;
   const pageDescription = "Master astrology with our comprehensive guides covering natal charts, zodiac signs, houses, aspects, and more. From beginner to advanced tutorials.";
-  const pageUrl = "https://luckstrology.com/guides";
+  const pageUrl = `${BRAND.domain}/guides`;
 
   // Structured data for guides
   const structuredData = {
@@ -172,12 +173,12 @@ export default function GuidesPage() {
       "url": `${pageUrl}/${guide.id}`,
       "author": {
         "@type": "Organization",
-        "name": "Luckstrology"
+        "name": BRAND.name
       },
       "publisher": {
         "@type": "Organization",
-        "name": "Luckstrology",
-        "url": "https://luckstrology.com"
+        "name": BRAND.name,
+        "url": BRAND.domain
       },
       "about": {
         "@type": "Thing",
@@ -198,7 +199,7 @@ export default function GuidesPage() {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://luckstrology.com"
+        "item": BRAND.domain
       },
       {
         "@type": "ListItem",

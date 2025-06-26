@@ -13,6 +13,7 @@ interface SynapsasDropdownProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  variant?: 'default' | 'thin';
 }
 
 export default function SynapsasDropdown({
@@ -20,7 +21,8 @@ export default function SynapsasDropdown({
   value,
   onChange,
   placeholder = "Select option",
-  className = ""
+  className = "",
+  variant = "default"
 }: SynapsasDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -48,12 +50,20 @@ export default function SynapsasDropdown({
   const displayLabel = selectedOption ? selectedOption.label : placeholder;
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
-      <div className="synapsas-sort-field">
+    <div 
+      className={`relative ${className}`} 
+      ref={dropdownRef}
+      style={{ 
+        zIndex: 15002,
+        isolation: 'isolate',
+        transform: 'translateZ(0)'
+      }}
+    >
+      <div className={variant === 'thin' ? 'synapsas-input-field' : 'synapsas-sort-field'}>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="synapsas-sort-select"
+          className={variant === 'thin' ? 'synapsas-input-select' : 'synapsas-sort-select'}
         >
           <span className="text-black">{displayLabel}</span>
           <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +72,25 @@ export default function SynapsasDropdown({
         </button>
         
         {isOpen && (
-          <div className="synapsas-sort-dropdown">
+          <div 
+            className="synapsas-sort-dropdown"
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: '0',
+              right: '0',
+              background: 'white',
+              border: '1px solid #d1d5db',
+              borderRadius: '0',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+              zIndex: 15003,
+              maxHeight: '200px',
+              overflowY: 'auto',
+              marginTop: '0.5rem',
+              transform: 'translateZ(0)',
+              isolation: 'isolate'
+            }}
+          >
             {options.map((option) => (
               <button
                 key={option.value}
@@ -88,6 +116,20 @@ export default function SynapsasDropdown({
           transition: all 0.3s ease;
         }
 
+        .synapsas-input-field {
+          position: relative;
+          background-color: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 0;
+          padding: 0;
+          transition: all 0.3s ease;
+        }
+
+        .synapsas-input-field:focus-within {
+          border-color: #6b7280;
+          box-shadow: 0 4px 12px rgba(107, 114, 128, 0.15);
+        }
+
         .synapsas-sort-field:focus-within {
           border-color: #6b7280;
           box-shadow: 0 4px 12px rgba(107, 114, 128, 0.15);
@@ -110,6 +152,27 @@ export default function SynapsasDropdown({
           color: #19181a;
         }
 
+        .synapsas-input-select {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.75rem;
+          font-size: 1rem;
+          font-weight: 500;
+          background: transparent;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          transition: all 0.3s ease;
+          color: #19181a;
+        }
+
+        .synapsas-input-select:hover {
+          opacity: 0.8;
+        }
+
         .synapsas-sort-select:hover {
           opacity: 0.8;
         }
@@ -123,7 +186,7 @@ export default function SynapsasDropdown({
           border: 1px solid #d1d5db;
           border-radius: 0;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-          z-index: 60;
+          z-index: 15003;
           max-height: 200px;
           overflow-y: auto;
           margin-top: 0.5rem;

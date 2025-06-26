@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { db, adminSettings } from '@/db/index';
+import { getDb, adminSettings } from '@/db/index';
 import { eq, inArray, like } from 'drizzle-orm';
 import { executeRawSelect, executeRawSelectOne, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
 import { AdminAuditService } from './adminAuditService';
+import { BRAND } from '../../config/brand';
 
 export interface AdminSetting {
   key: string;
@@ -48,12 +49,12 @@ export class AdminSettingsService {
     // SEO Settings
     'seo.site_title': {
       key: 'seo.site_title',
-      value: 'Luckstrology - Astrology & Natal Charts',
+      value: `${BRAND.name} - Astrology & Natal Charts`,
       type: 'string',
       category: 'seo',
       description: 'Main site title used in meta tags',
       isRequired: true,
-      defaultValue: 'Luckstrology - Astrology & Natal Charts'
+      defaultValue: `${BRAND.name} - Astrology & Natal Charts`
     },
     'seo.meta_description': {
       key: 'seo.meta_description',
@@ -225,12 +226,12 @@ export class AdminSettingsService {
     },
     'email.from_name': {
       key: 'email.from_name',
-      value: 'Luckstrology',
+      value: BRAND.name,
       type: 'string',
       category: 'email',
       description: 'Default "from" name',
       isRequired: false,
-      defaultValue: 'Luckstrology'
+      defaultValue: BRAND.name
     },
     'email.notifications_enabled': {
       key: 'email.notifications_enabled',
@@ -377,8 +378,9 @@ export class AdminSettingsService {
    * Initialize default settings in database
    */
   static async initializeDefaults(): Promise<void> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, skipping admin settings initialization');
+      
       return;
     }
 
@@ -418,8 +420,9 @@ export class AdminSettingsService {
    * Get all settings, optionally filtered
    */
   static async getSettings(filters: AdminSettingsFilters = {}): Promise<AdminSetting[]> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning default admin settings');
+      
       // Return default settings transformed to proper format
       return Object.values(AdminSettingsService.DEFAULT_SETTINGS).map(setting => ({
         ...setting,
@@ -474,8 +477,9 @@ export class AdminSettingsService {
    * Get a single setting by key
    */
   static async getSetting(key: string): Promise<AdminSetting | null> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning default setting for key:', key);
+      
       const defaultSetting = AdminSettingsService.DEFAULT_SETTINGS[key];
       if (!defaultSetting) return null;
       return {
@@ -545,8 +549,9 @@ export class AdminSettingsService {
       };
     } = {}
   ): Promise<AdminSetting> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning mock admin setting update for key:', key);
+      
       const defaultSetting = AdminSettingsService.DEFAULT_SETTINGS[key];
       return {
         key,
@@ -744,8 +749,9 @@ export class AdminSettingsService {
       };
     } = {}
   ): Promise<boolean> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot delete admin setting:', key);
+      
       return false;
     }
 
@@ -783,8 +789,9 @@ export class AdminSettingsService {
    * Get all available categories
    */
   static async getCategories(): Promise<Array<{ category: string; count: number }>> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, returning default categories');
+      
       // Return categories from default settings
       const categoryCount: Record<string, number> = {};
       Object.values(AdminSettingsService.DEFAULT_SETTINGS).forEach(setting => {
@@ -828,8 +835,9 @@ export class AdminSettingsService {
       };
     } = {}
   ): Promise<void> {
+    const db = getDb();
     if (!db) {
-      console.warn('⚠️ Database not available, cannot reset settings to defaults');
+      
       return;
     }
 

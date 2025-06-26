@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { DiscussionTemp } from "../types/threads";
+import { BRAND } from "../config/brand";
 
 export const useDiscussionMeta = (discussion: DiscussionTemp | undefined) => {
   useEffect(() => {
@@ -10,7 +11,7 @@ export const useDiscussionMeta = (discussion: DiscussionTemp | undefined) => {
         .replace(/#{1,6}\s/g, "")
         .replace(/\*\*/g, "");
 
-      document.title = `${discussion.title} - Luckstrology Discussions`;
+      document.title = `${discussion.title} - ${BRAND.name} Discussions`;
 
       // Update meta description
       const metaDescription = document.querySelector(

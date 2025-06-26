@@ -222,6 +222,8 @@ export const useUserStore = create<UserState>()(
           ? {
               id: state.user.id,
               username: state.user.username,
+              email: state.user.email,
+              profilePictureUrl: state.user.profilePictureUrl,
               authProvider: state.user.authProvider,
               createdAt: state.user.createdAt,
               updatedAt: state.user.updatedAt,

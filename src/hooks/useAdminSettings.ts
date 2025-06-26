@@ -87,6 +87,10 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
           isSaving: false,
         }));
         showNotification('success', 'Settings saved successfully');
+        
+        // Dispatch custom event to notify other components of settings update
+        console.log('🔔 Dispatching adminSettingsUpdated event...');
+        window.dispatchEvent(new CustomEvent('adminSettingsUpdated'));
       } else {
         showNotification('error', data.error || 'Failed to save settings');
         setState(prev => ({ ...prev, isSaving: false }));
@@ -128,6 +132,9 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
           isResetting: false,
         }));
         showNotification('success', 'Settings reset to defaults');
+        
+        // Dispatch custom event to notify other components of settings update
+        window.dispatchEvent(new CustomEvent('adminSettingsUpdated'));
       } else {
         showNotification('error', data.error || 'Failed to reset settings');
         setState(prev => ({ ...prev, isResetting: false }));

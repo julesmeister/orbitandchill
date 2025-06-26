@@ -374,7 +374,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
     position: "bottom-right",
   });
 
-  console.log("🎯 PERFECT SOLUTION: React Chart with 3 Rings - Houses 4 & 8 work identically!");
 
   if (!chartData) {
     return <div className={className} dangerouslySetInnerHTML={{ __html: svgContent }} />;

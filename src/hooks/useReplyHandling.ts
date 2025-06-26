@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ReplyFormState, Reply } from "../types/threads";
 import { useUserStore } from "../store/userStore";
+import { trackDiscussionInteraction } from "./usePageTracking";
 
 export const useReplyHandling = (discussionId?: string) => {
   const { user } = useUserStore();
@@ -58,6 +59,13 @@ export const useReplyHandling = (discussionId?: string) => {
       const data = await response.json();
 
       if (data.success) {
+        // Track reply submission analytics
+        try {
+          await trackDiscussionInteraction('reply', discussionId, user?.id);
+        } catch (analyticsError) {
+          console.debug('Analytics tracking failed (non-critical):', analyticsError);
+        }
+
         // Reset form on success
         setFormState({
           newReply: "",

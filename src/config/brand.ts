@@ -8,6 +8,13 @@ export const BRAND = {
   tagline: "Discover the cosmic blueprint of your personality through the ancient art of astrology.",
   description: "Unlock the secrets written in the stars at your birth and explore your unique celestial fingerprint.",
   email: "orbitandchill@gmail.com",
+  // TODO: Update when domain is finalized
+  domain: "https://luckstrology.com",
+  socialHandles: {
+    twitter: "@luckstrology",
+    instagram: "@luckstrology", 
+    facebook: "@luckstrology"
+  }
 } as const;
 
 export default BRAND;

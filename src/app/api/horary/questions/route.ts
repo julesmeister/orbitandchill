@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { horaryQuestions, users } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import crypto from 'crypto';
+import { withDatabaseResilience } from '@/db/resilience';
 
 // POST - Create new horary question
 export async function POST(request: NextRequest) {
@@ -38,27 +39,38 @@ export async function POST(request: NextRequest) {
     const questionLatitude = customLocation?.coordinates?.lat || latitude;
     const questionLongitude = customLocation?.coordinates?.lon || longitude;
 
-    // Create horary question record
-    const [newQuestion] = await db.insert(horaryQuestions).values({
-      id: questionId,
-      userId: userId || null, // Allow anonymous questions
-      question: question.trim(),
-      date: new Date(date),
-      location: questionLocation,
-      latitude: questionLatitude,
-      longitude: questionLongitude,
-      timezone: timezone || 'UTC',
-      category: category || null,
-      tags: tags ? JSON.stringify(tags) : null,
-      // Initial values - will be updated when chart analysis completes
-      answer: null,
-      timing: null,
-      interpretation: null,
-      chartData: null,
-      chartSvg: null,
-      isRadical: null,
-      moonVoidOfCourse: null,
-    }).returning();
+    // Create horary question record with resilience
+    const newQuestion = await withDatabaseResilience(
+      db,
+      async () => {
+        const [result] = await db.insert(horaryQuestions).values({
+          id: questionId,
+          userId: userId || null, // Allow anonymous questions
+          question: question.trim(),
+          date: new Date(date),
+          location: questionLocation,
+          latitude: questionLatitude,
+          longitude: questionLongitude,
+          timezone: timezone || 'UTC',
+          category: category || null,
+          tags: tags ? JSON.stringify(tags) : null,
+          // Initial values - will be updated when chart analysis completes
+          answer: null,
+          timing: null,
+          interpretation: null,
+          chartData: null,
+          chartSvg: null,
+          isRadical: null,
+          moonVoidOfCourse: null,
+        }).returning();
+        return result;
+      },
+      {
+        fallbackValue: null,
+        serviceName: 'HoraryAPI',
+        methodName: 'createQuestion'
+      }
+    );
 
     if (!newQuestion) {
       return NextResponse.json(
@@ -140,14 +152,24 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(horaryQuestions.category, category));
     }
 
-    // Execute query
-    const questions = await db
-      .select()
-      .from(horaryQuestions)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(horaryQuestions.createdAt))
-      .limit(limit + 1) // Get one extra to check if there are more
-      .offset(offset);
+    // Execute query with resilience
+    const questions = await withDatabaseResilience(
+      db,
+      async () => {
+        return await db
+          .select()
+          .from(horaryQuestions)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(horaryQuestions.createdAt))
+          .limit(limit + 1) // Get one extra to check if there are more
+          .offset(offset);
+      },
+      {
+        fallbackValue: [],
+        serviceName: 'HoraryAPI',
+        methodName: 'getQuestions'
+      }
+    );
 
     // Check if there are more questions
     const hasMore = questions.length > limit;

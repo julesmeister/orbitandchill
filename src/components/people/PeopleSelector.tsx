@@ -72,7 +72,8 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
       if (personToSelect) {
         console.log('Auto-selecting person:', personToSelect.name);
         setSelectedPerson(personToSelect.id);
-        onPersonSelect(personToSelect);
+        // Only call onPersonSelect if explicitly needed - this prevents disrupting existing charts
+        // onPersonSelect(personToSelect);
         
         // If this person isn't marked as default, make them default
         if (!personToSelect.isDefault) {
@@ -304,7 +305,14 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative ${className}`}
+      style={{ 
+        zIndex: 2999,
+        isolation: 'isolate',
+        transform: 'translateZ(0)'
+      }}
+    >
       {/* Selected Person Display */}
       <button
         ref={buttonRef}
@@ -360,7 +368,15 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
           isOpen ? 'max-h-[600px] opacity-100 mt-2' : 'max-h-0 opacity-0'
         }`}
       >
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[600px] flex flex-col overflow-hidden">
+        <div 
+          className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[600px] flex flex-col overflow-hidden"
+          style={{ 
+            zIndex: 3000,
+            transform: 'translateZ(0)',
+            isolation: 'isolate',
+            position: 'relative'
+          }}
+        >
           {/* Duplicate Management Section */}
           {duplicateGroups.size > 0 && (
             <div className="border-b border-gray-200 bg-yellow-50 p-3">

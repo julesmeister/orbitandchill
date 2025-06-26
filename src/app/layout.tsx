@@ -6,6 +6,8 @@ import Layout from "@/components/Layout"; // Import the Layout component
 import StructuredData from "@/components/SEO/StructuredData";
 import { BRAND } from "@/config/brand";
 import { Toaster } from "sonner";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { startMemoryMonitoring } from "@/utils/memoryMonitor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -152,6 +154,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Start memory monitoring in production and development
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+    startMemoryMonitoring(300000); // Monitor every 5 minutes (reduced from 1 minute)
+  }
+
   return (
     <html lang="en">
       <head>
@@ -161,7 +168,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${arvo.variable} ${epilogue.variable} ${spaceGrotesk.variable} ${inter.variable} antialiased`}
       >
-        <Layout>{children}</Layout> {/* Wrap children with Layout */}
+        <ErrorBoundary>
+          <Layout>{children}</Layout> {/* Wrap children with Layout */}
+        </ErrorBoundary>
         <Toaster 
           position="bottom-right"
           richColors

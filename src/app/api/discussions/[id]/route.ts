@@ -33,27 +33,23 @@ export async function GET(
         );
       }
 
-      // Increment view count
-      await DiscussionService.incrementViews(discussionId);
-
-      // Track analytics - discussion viewed
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        await AnalyticsService.incrementDailyCounter('pageViews', today);
-        await AnalyticsService.incrementEngagementCounter('activeUsers', today);
-        
-        // Record this as a popular discussion
-        await AnalyticsService.recordEngagementData({
+      // PERFORMANCE: Async non-blocking analytics with faster Promise.allSettled
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Fire-and-forget analytics (no await)
+      Promise.allSettled([
+        DiscussionService.incrementViews(discussionId),
+        AnalyticsService.incrementDailyCounter('pageViews', today),
+        AnalyticsService.incrementEngagementCounter('activeUsers', today),
+        AnalyticsService.recordEngagementData({
           date: today,
           popularDiscussions: [{
             id: discussionId,
             title: discussion.title,
             engagement: (discussion.upvotes || 0) + (discussion.replies || 0) + (discussion.views || 0)
           }]
-        });
-      } catch (analyticsError) {
-        console.warn('Failed to record analytics for discussion view:', analyticsError);
-      }
+        })
+      ]).catch(err => console.warn('Analytics tracking failed:', err));
 
       // Use stored author name
       const authorName = discussion.authorName || 'Anonymous User';
@@ -68,7 +64,16 @@ export async function GET(
         success: true,
         discussion: enhancedDiscussion
       }, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          // PERFORMANCE: Optimized caching strategy
+          'Cache-Control': 'public, max-age=300, s-maxage=900, stale-while-revalidate=3600', // 5min browser, 15min CDN, 1hr stale
+          'ETag': `"discussion-${discussionId}-${Math.floor(Date.now() / 300000)}"`, // ETag changes every 5 minutes
+          'Last-Modified': new Date(discussion.updatedAt).toUTCString(),
+          'Vary': 'Accept-Encoding',
+          // PERFORMANCE: Preload hints for related resources
+          'Link': '</api/discussions/' + discussionId + '/replies>; rel=prefetch'
+        }
       });
 
     } catch (dbError) {

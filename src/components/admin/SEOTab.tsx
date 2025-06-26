@@ -3,6 +3,7 @@
 "use client";
 
 import { useState } from 'react';
+import { BRAND } from '@/config/brand';
 
 interface SEOSettings {
   // Global Meta Settings
@@ -66,16 +67,16 @@ interface SEOTabProps {
 export default function SEOTab({ isLoading }: SEOTabProps) {
   const [activeSection, setActiveSection] = useState('global');
   const [seoSettings, setSeoSettings] = useState<SEOSettings>({
-    siteName: 'Luckstrology',
-    defaultTitle: 'Luckstrology - Professional Astrology Charts & Insights',
+    siteName: BRAND.name,
+    defaultTitle: `${BRAND.name} - Professional Astrology Charts & Insights`,
     defaultDescription: 'Generate accurate natal charts, explore astrology insights, and connect with a community of astrology enthusiasts. Professional-grade calculations with modern design.',
     defaultKeywords: ['astrology', 'natal chart', 'horoscope', 'birth chart', 'astrology calculator', 'zodiac'],
     defaultOGImage: '/images/og-default.jpg',
-    twitterHandle: '@luckstrology',
+    twitterHandle: BRAND.socialHandles.twitter,
     facebookAppId: '',
     
     organizationType: 'Organization',
-    organizationName: 'Luckstrology',
+    organizationName: BRAND.name,
     organizationLogo: '/images/logo.png',
     organizationAddress: {
       streetAddress: '',
@@ -85,16 +86,16 @@ export default function SEOTab({ isLoading }: SEOTabProps) {
       addressCountry: 'US'
     },
     organizationPhone: '',
-    organizationEmail: 'contact@luckstrology.com',
+    organizationEmail: BRAND.email,
     
-    canonicalBaseURL: 'https://luckstrology.com',
+    canonicalBaseURL: BRAND.domain,
     robotsTxt: `User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
 
-Sitemap: https://luckstrology.com/sitemap.xml`,
+Sitemap: ${BRAND.domain}/sitemap.xml`,
     
     sitemapSettings: {
       enabled: true,
@@ -112,7 +113,7 @@ Sitemap: https://luckstrology.com/sitemap.xml`,
     
     pageSettings: {
       '/': {
-        title: 'Professional Astrology Charts & Insights | Luckstrology',
+        title: `Professional Astrology Charts & Insights | ${BRAND.name}`,
         description: 'Generate accurate natal charts with professional-grade calculations. Explore astrology insights and connect with our community.',
         keywords: ['astrology', 'natal chart', 'birth chart', 'horoscope'],
         ogImage: '/images/og-home.jpg',
@@ -120,7 +121,7 @@ Sitemap: https://luckstrology.com/sitemap.xml`,
         nofollow: false
       },
       '/chart': {
-        title: 'Free Natal Chart Calculator | Luckstrology',
+        title: `Free Natal Chart Calculator | ${BRAND.name}`,
         description: 'Create your personalized natal chart with precise astronomical calculations. Discover your astrological profile instantly.',
         keywords: ['natal chart calculator', 'free birth chart', 'astrology chart'],
         ogImage: '/images/og-chart.jpg',
@@ -128,7 +129,7 @@ Sitemap: https://luckstrology.com/sitemap.xml`,
         nofollow: false
       },
       '/guides': {
-        title: 'Astrology Guides & Learning Center | Luckstrology',
+        title: `Astrology Guides & Learning Center | ${BRAND.name}`,
         description: 'Learn astrology with our comprehensive guides. From beginner to advanced, master the art of chart interpretation.',
         keywords: ['astrology guides', 'learn astrology', 'astrology education'],
         ogImage: '/images/og-guides.jpg',
