@@ -67,19 +67,7 @@ export default function EventsPage() {
   // Use events limits hook
   const eventsLimits = useEventsLimits();
 
-  // Wrapper for toggleBookmark with limit checking
-  const handleToggleBookmark = (eventId: string) => {
-    const event = events.find(e => e.id === eventId);
-    
-    // If event is being bookmarked (not unbookmarked) and user has reached limit
-    if (event && !event.isBookmarked && !eventsLimits.canBookmarkMore) {
-      showError("Bookmark Limit Reached", "You have reached your bookmark limit. Remove some bookmarks or upgrade to premium for unlimited bookmarks.");
-      return;
-    }
-    
-    // Otherwise, proceed with toggle
-    toggleBookmark(eventId);
-  };
+  // Note: handleToggleBookmark is defined later in the component with full logic
 
   // Use events store for all state management
   const {
@@ -557,6 +545,13 @@ export default function EventsPage() {
         "Please complete your profile or sign in to bookmark events. Your bookmarks will be saved and synced across devices.",
         5000
       );
+      return;
+    }
+
+    // Check bookmark limits before proceeding
+    const event = events.find(e => e.id === id);
+    if (event && !event.isBookmarked && !eventsLimits.canBookmarkMore) {
+      showError("Bookmark Limit Reached", "You have reached your bookmark limit. Remove some bookmarks or upgrade to premium for unlimited bookmarks.");
       return;
     }
     
