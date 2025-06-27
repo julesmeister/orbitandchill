@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 // Import newsletter config from root
-const newsletterConfig = require('../../../newsletter.config.js');
+const newsletterConfig = require('../../newsletter.config.js');
 
 export interface NewsletterSettings {
   enabled: boolean;

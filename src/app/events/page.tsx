@@ -67,6 +67,12 @@ export default function EventsPage() {
   // Use events limits hook
   const eventsLimits = useEventsLimits();
 
+  // Get current location data from the shared location hook
+  const currentLocationData = locationDisplay.isUserSet ? {
+    name: locationDisplay.name,
+    coordinates: locationDisplay.coordinates
+  } : null;
+
   // Note: handleToggleBookmark is defined later in the component with full logic
 
   // Use events store for all state management
@@ -243,7 +249,7 @@ export default function EventsPage() {
     const locationData = getLocationForGeneration();
     if (!locationData) {
       showError("Location Required", "Please provide your location for accurate astrological calculations. You can either complete your birth data in your profile or set your current location.");
-      setShowLocationToast(true);
+      showLocationToast();
       return;
     }
 
@@ -377,7 +383,7 @@ export default function EventsPage() {
     const locationData = getLocationForGeneration();
     if (!locationData) {
       showError("Location Required", "Please provide your location for accurate astrological analysis. You can either complete your birth data in your profile or set your current location.");
-      setShowLocationToast(true);
+      showLocationToast();
       return;
     }
 
