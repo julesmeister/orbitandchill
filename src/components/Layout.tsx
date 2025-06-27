@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Navbar from './Navbar';
 import { useNewsletterSettings } from '@/hooks/useNewsletterSettings';
-import { usePageTracking } from '@/hooks/usePageTracking';
+import PageTrackingWrapper from './PageTrackingWrapper';
 import { useUserStore } from '@/store/userStore';
 import AnalyticsConsentBanner from './analytics/AnalyticsConsentBanner';
 import { acceptAnalyticsConsent, declineAnalyticsConsent } from '@/utils/analyticsConsent';
@@ -34,7 +34,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   
   // Automatically track page views
-  usePageTracking(user?.id);
 
   // Listen for admin settings updates
   React.useEffect(() => {
@@ -52,6 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <PageTrackingWrapper userId={user?.id} />
       <Navbar />
       <main className="flex-grow">
         {memoizedChildren}
