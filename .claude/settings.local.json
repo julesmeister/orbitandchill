@@ -45,7 +45,8 @@
       "Bash(git config:*)",
       "Bash(git commit:*)",
       "Bash(source:*)",
-      "Bash(npx next lint:*)"
+      "Bash(npx next lint:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
