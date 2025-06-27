@@ -47,7 +47,8 @@
       "Bash(source:*)",
       "Bash(npx next lint:*)",
       "Bash(git push:*)",
-      "Bash(NODE_OPTIONS='--max-old-space-size=8192' npm run build)"
+      "Bash(NODE_OPTIONS='--max-old-space-size=8192' npm run build)",
+      "Bash(npm --version)"
     ],
     "deny": []
   }

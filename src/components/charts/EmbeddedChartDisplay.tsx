@@ -60,32 +60,29 @@ export default function EmbeddedChartDisplay({
   const calculateAspectsFromPlanets = (planetSummary: any[]) => {
     if (!planetSummary || planetSummary.length === 0) return [];
     
-    const aspects = [];
-    const aspectDefinitions = {
+    // Only calculate major aspects (conjunction, square, trine, opposition)
+    const majorAspectDefinitions = {
       conjunction: { angle: 0, orb: 8 },
-      sextile: { angle: 60, orb: 6 },
       square: { angle: 90, orb: 8 },
       trine: { angle: 120, orb: 8 },
       opposition: { angle: 180, orb: 8 }
     };
-
-    // First, let's see what data we actually have
-    console.log('🔍 Planet summary data structure:', planetSummary[0]);
-    console.log('🔍 All planet data keys:', Object.keys(planetSummary[0] || {}));
-    console.log('🔍 Full planetSummary array:', planetSummary);
     
-    // Convert planet data to format needed for aspect calculation
-    const planets = planetSummary.map(p => ({
-      name: p.planet,
-      longitude: p.degree || 0, // Use degree if available
-      sign: p.sign
-    }));
+    // Convert planet data and filter out planets without valid degree data
+    const planets = planetSummary
+      .filter(p => p.degree && p.degree !== 0) // Only include planets with valid degree data
+      .map(p => ({
+        name: p.planet,
+        longitude: p.degree,
+        sign: p.sign
+      }));
 
-    console.log('🔍 Calculating aspects from embedded chart planets:', {
-      count: planets.length,
-      samplePlanet: planets[0],
-      allLongitudes: planets.map(p => `${p.name}: ${p.longitude}`)
-    });
+    if (planets.length < 2) {
+      console.log('🔍 Not enough planets with valid degree data for aspect calculation');
+      return [];
+    }
+
+    const aspects = [];
 
     // Calculate aspects between all planet pairs
     for (let i = 0; i < planets.length; i++) {
@@ -96,23 +93,19 @@ export default function EmbeddedChartDisplay({
         let angle = Math.abs(planet1.longitude - planet2.longitude);
         if (angle > 180) angle = 360 - angle;
 
-        // Check each aspect type
-        for (const [aspectName, aspectDef] of Object.entries(aspectDefinitions)) {
+        // Check each major aspect type
+        for (const [aspectName, aspectDef] of Object.entries(majorAspectDefinitions)) {
           const orb = Math.abs(angle - aspectDef.angle);
           if (orb <= aspectDef.orb) {
             aspects.push(`${planet1.name} ${aspectName} ${planet2.name}`);
-            break;
+            break; // Only add the first matching aspect
           }
         }
       }
     }
 
-    console.log('🔍 Calculated aspects from embedded chart:', {
-      aspectsCount: aspects.length,
-      aspects: aspects
-    });
-
-    return aspects;
+    // Limit to maximum 6 major aspects to avoid cluttering
+    return aspects.slice(0, 6);
   };
 
   // Calculate aspects using useMemo to prevent infinite loops
@@ -120,17 +113,20 @@ export default function EmbeddedChartDisplay({
     // First priority: Use real chart data if this is the user's chart
     if (realChartData?.aspects && realChartData.aspects.length > 0) {
       console.log('🔍 Using real chart aspects:', realChartData.aspects.length);
-      return realChartData.aspects.map(aspect => 
-        `${aspect.planet1} ${aspect.aspect} ${aspect.planet2}`
-      );
+      // Filter to major aspects only and limit to 6
+      const majorAspects = realChartData.aspects
+        .filter(aspect => ['conjunction', 'square', 'trine', 'opposition'].includes(aspect.aspect.toLowerCase()))
+        .slice(0, 6)
+        .map(aspect => `${aspect.planet1} ${aspect.aspect} ${aspect.planet2}`);
+      return majorAspects;
     }
     
     // Second priority: Use embedded chart's majorAspects if available
     if (chart.metadata.majorAspects?.length > 0) {
-      return chart.metadata.majorAspects;
+      return chart.metadata.majorAspects.slice(0, 6); // Limit to 6 aspects
     }
     
-    // Last resort: Try to calculate from planetSummary (will likely fail due to missing degrees)
+    // Last resort: Calculate from planetSummary
     return calculateAspectsFromPlanets(chart.metadata.planetSummary);
   }, [realChartData?.aspects, chart.metadata.majorAspects, chart.metadata.planetSummary]);
   
@@ -263,25 +259,35 @@ export default function EmbeddedChartDisplay({
                             className="w-full h-full [&>svg]:!min-h-0 [&>svg]:!max-h-full"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div 
-                              className="w-full h-full"
-                              dangerouslySetInnerHTML={{ __html: chart.chartData }}
-                              style={{ maxHeight: '100%' }}
-                            />
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            <div className="text-center">
+                              {/* Three Square Loading Animation */}
+                              <div className="flex items-center justify-center space-x-2 mb-4">
+                                <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0s' }}></div>
+                                <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                              </div>
+                              <p className="text-lg font-inter">
+                                Loading {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
+                              </p>
+                              <p className="text-sm text-gray-400 mt-2">Preparing chart data...</p>
+                            </div>
                           </div>
                         )}
                       </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500">
                         <div className="text-center">
-                          <div className="text-6xl mb-4">
-                            {chart.chartType === 'natal' ? '🌟' : chart.chartType === 'horary' ? '❓' : '📅'}
+                          {/* Three Square Loading Animation */}
+                          <div className="flex items-center justify-center space-x-2 mb-4">
+                            <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0s' }}></div>
+                            <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                           </div>
                           <p className="text-lg font-inter">
-                            {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
+                            Loading {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
                           </p>
-                          <p className="text-sm text-gray-400 mt-2">Loading chart data...</p>
+                          <p className="text-sm text-gray-400 mt-2">Please wait...</p>
                         </div>
                       </div>
                     )}
@@ -440,10 +446,20 @@ export default function EmbeddedChartDisplay({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Chart SVG */}
                 <div className="border border-black p-4 bg-gray-50">
-                  <div 
-                    className="w-full h-96 flex items-center justify-center"
-                    dangerouslySetInnerHTML={{ __html: chart.chartData }}
-                  />
+                  <div className="w-full h-96 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      {/* Three Square Loading Animation */}
+                      <div className="flex items-center justify-center space-x-2 mb-4">
+                        <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0s' }}></div>
+                        <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                      <p className="text-lg font-inter">
+                        Loading {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
+                      </p>
+                      <p className="text-sm text-gray-400 mt-2">Preparing detailed view...</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Chart Details */}

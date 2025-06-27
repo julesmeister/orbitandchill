@@ -53,6 +53,12 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useUserStore();
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure this only renders on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const [tooltip, setTooltip] = useState<TooltipData>({
     visible: false,
@@ -85,11 +91,21 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
     }
   }, [chartData]);
 
-  // Return loading state if chart data not ready
-  if (!chartData) {
+  // Return loading state if not on client or chart data not ready
+  if (!isClient || !chartData) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-slate-600">Loading astronomical data...</div>
+        <div className="text-center">
+          {/* Three Square Loading Animation */}
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+          <div className="text-slate-600">
+            {!isClient ? 'Initializing chart...' : 'Loading astronomical data...'}
+          </div>
+        </div>
       </div>
     );
   }
