@@ -163,13 +163,18 @@ export const usePremiumFeatures = (): PremiumFeatureState => {
     try {
       // Try to load from API first
       const response = await fetch('/api/admin/premium-features');
-      const data = await response.json();
       
-      if (data.success) {
-        setFeatures(data.features);
-        // Also save to localStorage as backup
-        localStorage.setItem('premium-features', JSON.stringify(data.features));
-        return;
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success) {
+          setFeatures(data.features);
+          // Also save to localStorage as backup
+          localStorage.setItem('premium-features', JSON.stringify(data.features));
+          return;
+        }
+      } else {
+        console.warn(`Premium features API returned ${response.status}, using fallback`);
       }
     } catch (error) {
       console.error('Error loading features from API:', error);

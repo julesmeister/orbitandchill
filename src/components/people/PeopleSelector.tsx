@@ -86,54 +86,59 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
 
   // Auto-add user to people store if they have birth data and aren't already added
   useEffect(() => {
-    if (user?.birthData && user.username && !isLoading) {
-      // Check if user is already in people store (by checking for a person with relationship 'self' and matching userId)
-      const userExists = people.some(person => 
-        person.relationship === 'self' && person.userId === user.id
-      );
-
-      // Also check localStorage to see if we've already attempted to add this user
-      const storageKey = `user_added_${user.id}`;
-      const alreadyAdded = localStorage.getItem(storageKey) === 'true';
-
-      console.log('Auto-add check:', {
-        userExists,
-        peopleCount: people.length,
-        userId: user.id,
-        userAddedRef: userAddedRef.current,
-        alreadyAdded,
-        hasUserData: !!user?.birthData,
-        peopleDetails: people.map(p => ({ id: p.id, name: p.name, isDefault: p.isDefault, relationship: p.relationship }))
-      });
-
-      if (!userExists && !userAddedRef.current && !alreadyAdded) {
-        userAddedRef.current = true; // Prevent multiple additions
-        localStorage.setItem(storageKey, 'true'); // Mark as attempted
-        console.log('Adding user to people store');
-        
-        // Add user to people store
-        const userPersonData = {
-          name: user.username || 'Me',
-          relationship: 'self' as const,
-          birthData: user.birthData,
-          isDefault: true, // Make user the default person
-          notes: 'Your personal birth data'
-        };
-
-        addPerson(userPersonData).then(() => {
-          console.log('Successfully added user to people store');
-        }).catch(error => {
-          console.error('Failed to add user to people store:', error);
-          userAddedRef.current = false; // Reset on error to allow retry
-          localStorage.removeItem(storageKey); // Remove the flag to allow retry
-        });
-      } else if (userExists) {
-        console.log('User already exists in people store');
-        userAddedRef.current = true; // Mark as added to prevent future attempts
-        localStorage.setItem(storageKey, 'true'); // Mark as added
-      }
+    // Early return if no user data or still loading
+    if (!user?.birthData || !user.username || isLoading) {
+      return;
     }
-  }, [user?.id, user?.birthData, user?.username, people, isLoading, addPerson]);
+
+    // Early return if we already processed this user
+    const storageKey = `user_added_${user.id}`;
+    const alreadyProcessed = localStorage.getItem(storageKey) === 'true' || userAddedRef.current;
+    
+    if (alreadyProcessed) {
+      return;
+    }
+
+    // Check if user is already in people store (by checking for a person with relationship 'self' and matching userId)
+    const userExists = people.some(person => 
+      person.relationship === 'self' && person.userId === user.id
+    );
+
+    console.log('Auto-add check:', {
+      userExists,
+      peopleCount: people.length,
+      userId: user.id,
+      hasUserData: !!user?.birthData,
+      peopleDetails: people.map(p => ({ id: p.id, name: p.name, isDefault: p.isDefault, relationship: p.relationship }))
+    });
+
+    if (!userExists) {
+      userAddedRef.current = true; // Prevent multiple additions
+      localStorage.setItem(storageKey, 'true'); // Mark as attempted
+      console.log('Adding user to people store');
+      
+      // Add user to people store
+      const userPersonData = {
+        name: user.username || 'Me',
+        relationship: 'self' as const,
+        birthData: user.birthData,
+        isDefault: true, // Make user the default person
+        notes: 'Your personal birth data'
+      };
+
+      addPerson(userPersonData).then(() => {
+        console.log('Successfully added user to people store');
+      }).catch(error => {
+        console.error('Failed to add user to people store:', error);
+        userAddedRef.current = false; // Reset on error to allow retry
+        localStorage.removeItem(storageKey); // Remove the flag to allow retry
+      });
+    } else {
+      console.log('User already exists in people store');
+      userAddedRef.current = true; // Mark as added to prevent future attempts
+      localStorage.setItem(storageKey, 'true'); // Mark as added
+    }
+  }, [user?.id, user?.birthData, user?.username, isLoading, addPerson]); // Removed 'people' from dependencies
 
   // Close dropdown when clicking outside (completely disabled when editing)
   useEffect(() => {

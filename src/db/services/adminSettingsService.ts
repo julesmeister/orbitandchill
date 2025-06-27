@@ -290,13 +290,13 @@ export class AdminSettingsService {
       defaultValue: false
     },
 
-    // Newsletter Settings
+    // Newsletter Settings (NOTE: Now controlled by newsletter.config.js in root)
     'newsletter.enabled': {
       key: 'newsletter.enabled',
       value: 'true',
       type: 'boolean',
       category: 'newsletter',
-      description: 'Enable/disable newsletter signup section in footer',
+      description: 'Enable/disable newsletter signup section in footer (controlled by newsletter.config.js)',
       isRequired: true,
       defaultValue: true
     },

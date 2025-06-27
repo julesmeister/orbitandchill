@@ -67,11 +67,6 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
   // Load cached chart on mount if active person has complete data
   useEffect(() => {
     const loadCachedChart = async () => {
-      console.log('useNatalChart: Loading cached chart check:', {
-        user: !!user,
-        activePersonData,
-        activePerson: activePerson?.name
-      });
       
       if (user && activePersonData?.dateOfBirth && activePersonData?.timeOfBirth && activePersonData?.coordinates?.lat && activePersonData?.coordinates?.lon) {
         setIsLoadingCache(true);
@@ -79,18 +74,16 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
         
         const personId = activePerson?.id || user.id;
         const cacheKey = `natal_chart_${personId}_${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${activePersonData.coordinates.lat}_${activePersonData.coordinates.lon}`;
-        console.log('useNatalChart: Cache key:', cacheKey);
         
         try {
           const cached = await db.getCache<NatalChartData>(cacheKey);
-          console.log('useNatalChart: Cached chart found:', !!cached);
           
           if (cached) {
             setCachedChart(cached);
             setIsLoadingCache(false);
           } else {
-            // Clear cached chart if person changed and no cache exists
-            setCachedChart(null);
+            // Don't clear cached chart immediately - prevents chart loss during transitions
+            console.log('useNatalChart: No cache found, but keeping existing chart to prevent loss');
             
             // Try to load from API if no local cache
             console.log('useNatalChart: No local cache, trying to load existing charts from API');
@@ -144,16 +137,15 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
           setIsLoadingCache(false);
         }
       } else {
-        // Clear cached chart if no valid person data
-        console.log('useNatalChart: Clearing cached chart - no valid person data');
-        setCachedChart(null);
+        // Don't clear cached chart to prevent chart loss during data transitions
+        console.log('useNatalChart: Invalid person data, keeping existing chart to prevent loss');
         setHasExistingChart(false);
         setIsLoadingCache(false);
       }
     };
     
     loadCachedChart();
-  }, [user, activePerson, activePersonData, getUserCharts]);
+  }, [user?.id, activePersonData?.dateOfBirth, activePersonData?.timeOfBirth, activePersonData?.coordinates?.lat, activePersonData?.coordinates?.lon]); // Only track essential data changes
 
   const generateChart = useCallback(async (formData?: {
     name: string;
@@ -199,8 +191,6 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
         forceRegenerate
       };
       
-      console.log('Sending chart generation request:', requestData);
-      
       const response = await fetch('/api/charts/generate', {
         method: 'POST',
         headers: {
@@ -230,8 +220,6 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
         console.error('Response text:', responseText);
         throw new Error('Invalid response format from server');
       }
-      
-      console.log('Chart generation API response:', result);
       
       if (!result.success || !result.chart) {
         console.error('Chart generation failed. Response:', result);

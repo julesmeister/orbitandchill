@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
+import { useAdminStore } from '@/store/adminStore';
 
 interface GrowthChartProps {
   data?: Array<{
@@ -10,21 +11,67 @@ interface GrowthChartProps {
   isLoading?: boolean;
 }
 
+interface HistoricalData {
+  date: string;
+  users: number;
+  charts: number;
+}
+
 export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
   const [chartData, setChartData] = useState<Array<{ date: string; users: number; charts: number; }>>([]);
   const [timePeriod, setTimePeriod] = useState<'daily' | 'monthly' | 'yearly'>('daily');
+  const [historicalLoading, setHistoricalLoading] = useState(false);
+  
+  // Access admin store for auth token
+  const { authToken } = useAdminStore();
 
   useEffect(() => {
-    const generateData = () => {
+    const fetchHistoricalData = async () => {
+      // If external data is provided, use it directly
       if (data && data.length > 0) {
-        return data;
+        setChartData(data);
+        return;
       }
 
-      // Generate mock data based on time period
+      setHistoricalLoading(true);
+      
+      try {
+        console.log(`📊 Fetching historical growth data for period: ${timePeriod}`);
+        
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        
+        if (authToken) {
+          headers.Authorization = `Bearer ${authToken}`;
+        }
+        
+        // Fetch historical data from enhanced metrics API with period parameter
+        const response = await fetch(`/api/admin/enhanced-metrics?period=${timePeriod}`, { headers });
+        const data = await response.json();
+        
+        if (data.success && data.historicalData) {
+          console.log(`✅ Historical data fetched: ${data.historicalData.length} records`);
+          setChartData(data.historicalData);
+        } else {
+          throw new Error('API returned no historical data');
+        }
+      } catch (error) {
+        console.warn('Failed to fetch historical growth data, using fallback:', error);
+        
+        // Fallback to generated data based on time period
+        const fallbackData = generateFallbackData(timePeriod);
+        setChartData(fallbackData);
+      } finally {
+        setHistoricalLoading(false);
+      }
+    };
+
+    const generateFallbackData = (period: 'daily' | 'monthly' | 'yearly') => {
       const mockData = [];
       let days, interval;
       
-      switch (timePeriod) {
+      switch (period) {
         case 'daily':
           days = 7; // Last 7 days
           interval = 24 * 60 * 60 * 1000; // 1 day
@@ -41,10 +88,10 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
 
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date(Date.now() - i * interval);
-        const timeValue = timePeriod === 'yearly' ? date.getMonth() : date.getDate();
+        const timeValue = period === 'yearly' ? date.getMonth() : date.getDate();
         
         mockData.push({
-          date: timePeriod === 'yearly' 
+          date: period === 'yearly' 
             ? date.toISOString().slice(0, 7) // YYYY-MM format
             : date.toISOString().split('T')[0], // YYYY-MM-DD format
           users: Math.max(0, 10 + Math.sin(timeValue / 5) * 5 + Math.random() * 8),
@@ -55,10 +102,10 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
       return mockData;
     };
 
-    setChartData(generateData());
-  }, [data, timePeriod]);
+    fetchHistoricalData();
+  }, [data, timePeriod, authToken]);
 
-  if (isLoading) {
+  if (isLoading || historicalLoading) {
     return (
       <div className="w-full">
         {/* Header skeleton */}
@@ -147,15 +194,20 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
               />
             ))}
             
-            {/* Loading text */}
-            <text
-              x="400"
-              y="160"
-              textAnchor="middle"
-              className="font-inter text-sm fill-black/40 animate-pulse"
-            >
-              Loading chart data...
-            </text>
+            {/* Three-dot loading animation */}
+            <g>
+              <circle cx="380" cy="160" r="3" fill="black" className="animate-bounce" style={{ animationDelay: '-0.3s' }} />
+              <circle cx="400" cy="160" r="3" fill="black" className="animate-bounce" style={{ animationDelay: '-0.15s' }} />
+              <circle cx="420" cy="160" r="3" fill="black" className="animate-bounce" />
+              <text
+                x="400"
+                y="180"
+                textAnchor="middle"
+                className="font-inter text-xs fill-black/60"
+              >
+                Loading chart data...
+              </text>
+            </g>
           </svg>
           
           {/* Subtle loading overlay */}

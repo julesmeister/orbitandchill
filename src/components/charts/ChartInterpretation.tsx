@@ -25,7 +25,7 @@ interface ChartInterpretationProps {
 
 const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) => {
   const { user } = useUserStore();
-  const { shouldShowFeature, isFeaturePremium } = usePremiumFeatures();
+  const { shouldShowFeature, isFeaturePremium, features } = usePremiumFeatures();
   const { orderedSections } = useInterpretationSections();
   
   // Sync stelliums to user profile when viewing chart interpretations
@@ -94,8 +94,12 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
     );
   }
 
+  // If premium features haven't loaded yet (0 features), show all visible sections to prevent empty state
+  const filteredSections = features.length === 0 
+    ? orderedSections.filter(section => section.isVisible)
+    : orderedSections.filter(section => section.isVisible && shouldShowFeature(section.id, userIsPremium));
 
-  return (
+  const renderResult = (
     <>
       <div className="mb-6">
         <div className="bg-white border border-black">
@@ -113,9 +117,7 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
 
           {/* Interpretation Content */}
           <div className="p-6 space-y-0">
-            {orderedSections
-              .filter(section => section.isVisible && shouldShowFeature(section.id, userIsPremium))
-              .map((section) => {
+            {filteredSections.map((section) => {
                 const sectionId = `section-${section.id}`;
                 
                 switch (section.id) {
@@ -203,6 +205,8 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
       />
     </>
   );
+  
+  return renderResult;
 };
 
 export default ChartInterpretation;

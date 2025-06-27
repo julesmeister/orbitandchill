@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useUserStore } from '../store/userStore';
 import { detectStelliums } from '../utils/stelliumDetection';
 import { NatalChartData } from '../utils/natalChart';
@@ -12,16 +12,27 @@ export function useStelliumSync(chartData?: NatalChartData) {
   const { user, updateUser } = useUserStore();
   const [isUpdating, setIsUpdating] = useState(false);
   const [hasAttempted, setHasAttempted] = useState(false);
+  
+  // Use refs to store stable function references
+  const updateUserRef = useRef(updateUser);
+  const userRef = useRef(user);
+  
+  // Update refs when values change
+  useEffect(() => {
+    updateUserRef.current = updateUser;
+    userRef.current = user;
+  }, [updateUser, user]);
 
   useEffect(() => {
     // Only run once per component mount
-    if (hasAttempted || !chartData || !user) return;
+    if (hasAttempted || !chartData || !userRef.current) return;
 
     // Check if user already has chart data (stelliums or sun sign)
+    const currentUser = userRef.current;
     const hasChartData = (
-      (user.stelliumSigns && user.stelliumSigns.length > 0) ||
-      (user.stelliumHouses && user.stelliumHouses.length > 0) ||
-      user.sunSign
+      (currentUser.stelliumSigns && currentUser.stelliumSigns.length > 0) ||
+      (currentUser.stelliumHouses && currentUser.stelliumHouses.length > 0) ||
+      currentUser.sunSign
     );
 
     // If user already has chart data, don't need to sync
@@ -69,20 +80,20 @@ export function useStelliumSync(chartData?: NatalChartData) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            userId: user.id,
+            userId: currentUser.id,
             preferences: updateData,
           }),
         });
 
         if (response.ok) {
           // Update local user store
-          await updateUser(updateData);
+          await updateUserRef.current(updateData);
           
           console.log('✅ Chart data synced successfully');
         } else {
           console.warn('⚠️ Failed to sync chart data via API, updating locally only');
           // Update local store even if API fails
-          await updateUser(updateData);
+          await updateUserRef.current(updateData);
         }
       } catch (error) {
         console.error('❌ Error syncing stelliums:', error);
@@ -92,7 +103,7 @@ export function useStelliumSync(chartData?: NatalChartData) {
     };
 
     syncStelliums();
-  }, [chartData, user, updateUser, hasAttempted, isUpdating]);
+  }, [chartData, hasAttempted]); // Removed user dependencies to prevent loops
 
   return {
     isUpdating,

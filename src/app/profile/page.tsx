@@ -59,9 +59,6 @@ export default function ProfilePage() {
     );
   }
 
-  // Debug logging
-  console.log('Profile page - user:', user);
-  console.log('Profile page - user.birthData:', user.birthData);
 
   const handleBirthDataSubmit = async (formData: NatalChartFormData) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

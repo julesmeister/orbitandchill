@@ -12,6 +12,8 @@ class Analytics {
   private userId?: string;
   private sessionStart: number;
   private pageViews: Set<string> = new Set();
+  private cleanupListeners: (() => void)[] = [];
+  private readonly MAX_PAGE_VIEWS = 100; // Limit Set size
 
   constructor() {
     this.sessionId = this.generateSessionId();
@@ -22,16 +24,24 @@ class Analytics {
     
     // Track session end on page unload
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
+      const beforeUnloadHandler = () => {
         this.trackSessionEnd();
-      });
+      };
       
-      // Track page visibility changes
-      document.addEventListener('visibilitychange', () => {
+      const visibilityHandler = () => {
         if (document.visibilityState === 'visible') {
           this.trackPageView();
         }
-      });
+      };
+      
+      window.addEventListener('beforeunload', beforeUnloadHandler);
+      document.addEventListener('visibilitychange', visibilityHandler);
+      
+      // Store cleanup functions
+      this.cleanupListeners.push(
+        () => window.removeEventListener('beforeunload', beforeUnloadHandler),
+        () => document.removeEventListener('visibilitychange', visibilityHandler)
+      );
     }
   }
 
@@ -85,6 +95,15 @@ class Analytics {
     
     // Only track unique page views per session
     if (!this.pageViews.has(currentPage)) {
+      // Limit Set size to prevent memory leaks
+      if (this.pageViews.size >= this.MAX_PAGE_VIEWS) {
+        // Remove oldest entry (first in Set)
+        const firstEntry = this.pageViews.values().next().value;
+        if (firstEntry) {
+          this.pageViews.delete(firstEntry);
+        }
+      }
+      
       this.pageViews.add(currentPage);
       
       this.trackEvent('page_view', {
@@ -153,6 +172,21 @@ class Analytics {
       isNewUser: !this.userId // Simple heuristic - improve with actual user state
     });
   }
+
+  /**
+   * Clean up analytics instance to prevent memory leaks
+   */
+  destroy() {
+    // Clean up event listeners
+    this.cleanupListeners.forEach(cleanup => cleanup());
+    this.cleanupListeners = [];
+    
+    // Clear page views Set
+    this.pageViews.clear();
+    
+    // Track final session end
+    this.trackSessionEnd();
+  }
 }
 
 // Create singleton instance
@@ -199,4 +233,10 @@ export const trackUserAction = (action: string, details?: Record<string, any>) =
 export const setUserId = (userId: string) => {
   if (typeof window === 'undefined') return;
   analytics?.setUserId(userId);
+};
+
+// Cleanup function for app shutdown
+export const destroyAnalytics = () => {
+  if (typeof window === 'undefined') return;
+  analytics?.destroy();
 };

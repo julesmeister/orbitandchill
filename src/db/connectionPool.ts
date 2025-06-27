@@ -370,12 +370,20 @@ let globalPool: TursoConnectionPool | null = null;
  * Initialize the global connection pool (singleton with health check)
  */
 export async function initializeConnectionPool(databaseUrl: string, authToken: string, config?: Partial<PoolConfig>) {
-  // Check if existing pool is healthy
+  // Check if existing pool is healthy and not destroyed
   if (globalPool && !globalPool['isDestroyed']) {
-    return globalPool;
+    try {
+      // Verify pool health with a simple stats check
+      const stats = globalPool.getStats();
+      if (stats && stats.totalConnections >= 0) {
+        return globalPool;
+      }
+    } catch (error) {
+      console.warn('Pool health check failed, recreating:', error);
+    }
   }
   
-  // Destroy unhealthy pool if exists
+  // Destroy unhealthy or existing pool
   if (globalPool) {
     try {
       await globalPool.destroy();
@@ -435,6 +443,28 @@ export async function destroyConnectionPool() {
   if (globalPool) {
     await globalPool.destroy();
     globalPool = null;
+  }
+}
+
+/**
+ * Force cleanup of the global connection pool (for app restart/memory pressure)
+ */
+export async function forcePoolCleanup() {
+  if (globalPool) {
+    try {
+      // Force cleanup of idle connections
+      globalPool['cleanup']();
+      
+      // If pool is unhealthy, destroy and recreate will happen on next use
+      const stats = globalPool.getStats();
+      if (stats.totalConnections > stats.config.maxConnections * 2) {
+        console.warn('Pool has excessive connections, destroying for cleanup');
+        await destroyConnectionPool();
+      }
+    } catch (error) {
+      console.warn('Error during force pool cleanup:', error);
+      await destroyConnectionPool();
+    }
   }
 }
 

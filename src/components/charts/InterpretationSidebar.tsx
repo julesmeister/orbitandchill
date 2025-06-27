@@ -16,7 +16,7 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
   className = ""
 }) => {
   const { user } = useUserStore();
-  const { shouldShowFeature } = usePremiumFeatures();
+  const { shouldShowFeature, features } = usePremiumFeatures();
   const { 
     orderedSections, 
     reorderSections, 
@@ -88,6 +88,10 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
     return orderedSections.filter(section => {
       // Show all sections in reorder mode, otherwise only show accessible ones
       if (isReorderMode) return true;
+      
+      // If premium features haven't loaded yet (0 features), show all visible sections as fallback
+      if (features.length === 0) return section.isVisible;
+      
       return shouldShowFeature(section.id, userIsPremium);
     });
   };
@@ -196,7 +200,7 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
       {/* Sections List */}
       <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
         {getVisibleSections().map((section, index) => {
-          const isAccessible = shouldShowFeature(section.id, userIsPremium);
+          const isAccessible = features.length === 0 ? true : shouldShowFeature(section.id, userIsPremium);
           const isDragging = draggedItem === section.id;
           const isDragOver = dragOverItem === section.id;
 

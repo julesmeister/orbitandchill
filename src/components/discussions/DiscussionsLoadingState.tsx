@@ -145,16 +145,6 @@ export default function DiscussionsLoadingState() {
         </section>
       </div>
 
-      {/* Loading indicator */}
-      <div className="text-center py-12">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-          <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-          <div className="w-3 h-3 bg-black animate-bounce"></div>
-        </div>
-        <h3 className="font-space-grotesk text-lg font-semibold text-black mb-2">Loading discussions...</h3>
-        <p className="font-inter text-black/60">Fetching the latest community posts and insights.</p>
-      </div>
     </div>
   );
 }

@@ -28,22 +28,11 @@ export default function ChartQuickActions({
   const [editingPersonData, setEditingPersonData] = useState<Person | null>(null);
   const { selectedPerson, defaultPerson, loadPeople, people, selectedPersonId, setSelectedPerson } = usePeopleStore();
 
-  // Load people when component mounts
+  // Load people when component mounts (only once)
   React.useEffect(() => {
-    console.log('Loading people...');
     loadPeople();
-  }, [loadPeople]);
+  }, []); // Empty dependency array to run only once
 
-  // Debug selected person
-  React.useEffect(() => {
-    console.log('People store state:', {
-      selectedPersonId,
-      selectedPerson,
-      defaultPerson,
-      peopleCount: people.length,
-      people
-    });
-  }, [selectedPersonId, selectedPerson, defaultPerson, people]);
 
   const handleAddPersonClick = () => {
     setShowAddPersonForm(true);
@@ -62,22 +51,15 @@ export default function ChartQuickActions({
   };
 
   const handleEditDataClick = () => {
-    console.log('Edit Data clicked');
-    console.log('Current state - showEditPersonForm:', showEditPersonForm);
-    console.log('Selected person ID:', selectedPersonId);
-    console.log('People array:', people);
-
     // Manually find the selected person
     let personToEdit = null;
     if (selectedPersonId) {
       personToEdit = people.find(p => p.id === selectedPersonId);
-      console.log('Found person by ID:', personToEdit);
     }
 
     // Fall back to default person if no selected person
     if (!personToEdit) {
       personToEdit = people.find(p => p.isDefault);
-      console.log('Using default person:', personToEdit);
     }
 
     // Fall back to first person if no default

@@ -17,16 +17,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { settings: newsletterSettings, isLoading: newsletterLoading, refresh: refreshNewsletterSettings } = useNewsletterSettings();
   const { user } = useUserStore();
   
-  // Debug logging for newsletter state
-  React.useEffect(() => {
-    console.log('🔍 Layout Newsletter Debug:', {
-      isLoading: newsletterLoading,
-      settings: newsletterSettings,
-      enabled: newsletterSettings.enabled,
-      willRender: !newsletterLoading && newsletterSettings.enabled,
-      timestamp: new Date().toISOString()
-    });
-  }, [newsletterLoading, newsletterSettings]);
+  // Create a stable key for children based on their type and key
+  const childrenKey = React.useMemo(() => {
+    if (!children) return '';
+    const childArray = React.Children.toArray(children);
+    return childArray.map(child => {
+      if (React.isValidElement(child)) {
+        return `${child.type}:${child.key || ''}`;
+      }
+      return typeof child;
+    }).join('|');
+  }, [children]);
+  
+  // Memoize children with stable dependency
+  const memoizedChildren = React.useMemo(() => children, [childrenKey]);
+  
   
   // Automatically track page views
   usePageTracking(user?.id);
@@ -34,7 +39,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Listen for admin settings updates
   React.useEffect(() => {
     const handleSettingsUpdate = () => {
-      console.log('🔔 Admin settings updated event received, refreshing newsletter settings...');
       refreshNewsletterSettings();
     };
 
@@ -50,35 +54,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <Navbar />
       <main className="flex-grow">
-        {children}
+        {memoizedChildren}
       </main>
       <footer className="w-screen bg-white mt-auto">
-        {/* Newsletter Section - Conditionally rendered based on admin settings */}
-        {!newsletterLoading && newsletterSettings.enabled && (
-          <section className="px-[5%] py-16" style={{ backgroundColor: newsletterSettings.backgroundColor }}>
-            <div className="w-full text-center">
-              <h3 className="font-space-grotesk text-3xl font-bold text-black mb-4">
-                {newsletterSettings.title}
-              </h3>
-              <p className="font-inter text-lg text-black/80 mb-8 max-w-2xl mx-auto leading-relaxed">
-                {newsletterSettings.description}
-              </p>
-              <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-0 border border-black">
-                <input
-                  type="email"
-                  placeholder={newsletterSettings.placeholderText}
-                  className="flex-1 px-6 py-4 text-black placeholder-black/50 focus:outline-none border-r border-black bg-white font-inter"
-                />
-                <button className="bg-black text-white px-8 py-4 font-semibold font-inter hover:bg-gray-800 transition-colors">
-                  {newsletterSettings.buttonText}
-                </button>
-              </div>
-              <p className="font-inter text-sm text-black/60 mt-4">
-                {newsletterSettings.privacyText}
-              </p>
-            </div>
-          </section>
-        )}
+        {/* Newsletter Section - Always render container to prevent layout shift */}
+        <NewsletterSection 
+          settings={newsletterSettings} 
+          isLoading={newsletterLoading} 
+        />
 
         {/* Main Footer Content */}
         <section className="px-[5%] py-12">
@@ -234,4 +217,57 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 };
 
-export default Layout;
+// Separate newsletter component to isolate re-renders
+const NewsletterSection: React.FC<{ 
+  settings: { enabled: boolean; backgroundColor: string; title: string; description: string; placeholderText: string; buttonText: string; privacyText: string; }; 
+  isLoading: boolean; 
+}> = React.memo(({ settings, isLoading }) => (
+    <div style={{ minHeight: settings.enabled ? 'auto' : 0, overflow: 'hidden' }}>
+      {!isLoading && settings.enabled && (
+      <section className="px-[5%] py-16" style={{ backgroundColor: settings.backgroundColor }}>
+        <div className="w-full text-center">
+          <h3 className="font-space-grotesk text-3xl font-bold text-black mb-4">
+            {settings.title}
+          </h3>
+          <p className="font-inter text-lg text-black/80 mb-8 max-w-2xl mx-auto leading-relaxed">
+            {settings.description}
+          </p>
+          <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-0 border border-black">
+            <input
+              type="email"
+              placeholder={settings.placeholderText}
+              className="flex-1 px-6 py-4 text-black placeholder-black/50 focus:outline-none border-r border-black bg-white font-inter"
+            />
+            <button className="bg-black text-white px-8 py-4 font-semibold font-inter hover:bg-gray-800 transition-colors">
+              {settings.buttonText}
+            </button>
+          </div>
+          <p className="font-inter text-sm text-black/60 mt-4">
+            {settings.privacyText}
+          </p>
+        </div>
+      </section>
+      )}
+    </div>
+  )
+);
+
+// Memoize Layout component with custom comparison to prevent unnecessary re-renders
+export default React.memo(Layout, (prevProps, nextProps) => {
+  // Only re-render if children structure actually changes
+  const prevChildrenKey = React.Children.toArray(prevProps.children).map(child => {
+    if (React.isValidElement(child)) {
+      return `${child.type}:${child.key || ''}`;
+    }
+    return typeof child;
+  }).join('|');
+  
+  const nextChildrenKey = React.Children.toArray(nextProps.children).map(child => {
+    if (React.isValidElement(child)) {
+      return `${child.type}:${child.key || ''}`;
+    }
+    return typeof child;
+  }).join('|');
+  
+  return prevChildrenKey === nextChildrenKey;
+});

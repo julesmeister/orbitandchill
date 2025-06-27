@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 
+// Import newsletter config from root
+const newsletterConfig = require('../../newsletter.config.js');
+
 export interface NewsletterSettings {
   enabled: boolean;
   title: string;
@@ -12,7 +15,7 @@ export interface NewsletterSettings {
 }
 
 const DEFAULT_NEWSLETTER_SETTINGS: NewsletterSettings = {
-  enabled: false, // Should be FALSE by default - if you see newsletter, it means DB has enabled: true
+  enabled: false, // Default is FALSE - newsletter is disabled by default
   title: 'Stay Connected to the Cosmos',
   description: 'Get weekly astrology insights, new feature updates, and cosmic wisdom delivered to your inbox.',
   placeholderText: 'Enter your email',
@@ -31,8 +34,22 @@ export function useNewsletterSettings() {
     async function fetchNewsletterSettings() {
       try {
         console.log('🚀 Starting newsletter settings fetch, refreshCounter:', refreshCounter);
+        console.log('📋 Newsletter config override:', newsletterConfig);
         setIsLoading(true);
         setError(null);
+
+        // Check config file override first
+        if (newsletterConfig.enabled === true) {
+          console.log('🔒 Config override: Newsletter FORCED ON');
+          // Force enabled, but still fetch content from database
+        } else if (newsletterConfig.enabled === false) {
+          console.log('🔒 Config override: Newsletter FORCED OFF');
+          setSettings({ ...newsletterConfig.fallback, enabled: false });
+          setIsLoading(false);
+          return;
+        } else if (newsletterConfig.enabled === 'auto') {
+          console.log('🔄 Config set to AUTO: Using admin database settings');
+        }
 
         // Fetch newsletter settings from admin API
         const url = '/api/admin/settings?keys=newsletter.enabled,newsletter.title,newsletter.description,newsletter.placeholder_text,newsletter.button_text,newsletter.privacy_text,newsletter.background_color';
@@ -62,7 +79,7 @@ export function useNewsletterSettings() {
             switch (setting.key) {
               case 'newsletter.enabled':
                 acc.enabled = setting.value === 'true';
-                console.log(`✅ Enabled set to: ${acc.enabled} (from "${setting.value}")`);
+                console.log(`✅ Database enabled: ${acc.enabled} (from "${setting.value}")`);
                 break;
               case 'newsletter.title':
                 acc.title = setting.value;
@@ -86,24 +103,44 @@ export function useNewsletterSettings() {
             return acc;
           }, {});
 
-          // Merge with defaults to ensure all properties exist
-          const finalSettings = { ...DEFAULT_NEWSLETTER_SETTINGS, ...fetchedSettings };
+          // Apply config override logic
+          let finalSettings = { ...DEFAULT_NEWSLETTER_SETTINGS, ...fetchedSettings };
+          
+          if (newsletterConfig.enabled === true) {
+            // Force enabled regardless of database
+            finalSettings.enabled = true;
+            console.log('🔒 Config override applied: Forced ON');
+          } else if (newsletterConfig.enabled === false) {
+            // Force disabled regardless of database
+            finalSettings.enabled = false;
+            console.log('🔒 Config override applied: Forced OFF');
+          }
+          // If 'auto', use database value as-is
+          
           console.log('🎯 Final Newsletter Settings:', { 
-            fetchedSettings, 
-            defaults: DEFAULT_NEWSLETTER_SETTINGS, 
-            final: finalSettings,
-            enabled: finalSettings.enabled
+            configOverride: newsletterConfig.enabled,
+            databaseEnabled: fetchedSettings.enabled,
+            finalEnabled: finalSettings.enabled,
+            final: finalSettings
           });
           setSettings(finalSettings);
         } else {
-          // Use defaults if API returns no settings
-          console.log('⚠️ Newsletter API returned no settings, using defaults:', DEFAULT_NEWSLETTER_SETTINGS);
-          setSettings(DEFAULT_NEWSLETTER_SETTINGS);
+          // Use fallback settings if API returns no settings
+          console.log('⚠️ Newsletter API returned no settings, using config fallback:', newsletterConfig.fallback);
+          const fallbackSettings = { 
+            ...newsletterConfig.fallback, 
+            enabled: newsletterConfig.enabled === true ? true : false 
+          };
+          setSettings(fallbackSettings);
         }
       } catch (err) {
-        console.error('❌ Failed to fetch newsletter settings, using defaults:', err);
+        console.error('❌ Failed to fetch newsletter settings, using config fallback:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
-        setSettings(DEFAULT_NEWSLETTER_SETTINGS);
+        const fallbackSettings = { 
+          ...newsletterConfig.fallback, 
+          enabled: newsletterConfig.enabled === true ? true : false 
+        };
+        setSettings(fallbackSettings);
       } finally {
         setIsLoading(false);
         console.log('✅ Newsletter settings fetch complete');

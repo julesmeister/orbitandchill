@@ -56,8 +56,12 @@ export default function SettingsTab({ isLoading: externalLoading = false }: Sett
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
-                <p className="mt-4 font-inter text-black">Loading settings...</p>
+                <div className="flex items-center justify-center space-x-2 mb-4">
+                  <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-3 h-3 bg-black animate-bounce"></div>
+                </div>
+                <p className="font-inter text-black">Loading settings...</p>
               </div>
             </div>
           </div>

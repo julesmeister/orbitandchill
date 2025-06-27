@@ -21,7 +21,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<AdminVerif
     const authResult = await withAdminAuth(request);
     
     if (!authResult.success) {
-      return authResult.response;
+      return authResult.response as NextResponse<AdminVerifyResponse>;
     }
 
     const { sessionId, user } = authResult.context;

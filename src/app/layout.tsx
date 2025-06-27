@@ -8,6 +8,7 @@ import { BRAND } from "@/config/brand";
 import { Toaster } from "sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { startMemoryMonitoring } from "@/utils/memoryMonitor";
+import MemoryCleanup from "@/components/MemoryCleanup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -154,9 +155,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Start memory monitoring in production and development
+  // Start memory monitoring in production and development (singleton prevents duplicates)
   if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
-    startMemoryMonitoring(300000); // Monitor every 5 minutes (reduced from 1 minute)
+    startMemoryMonitoring(600000); // Monitor every 10 minutes (reduced from 5 minutes)
   }
 
   return (
@@ -177,6 +178,7 @@ export default function RootLayout({
           closeButton
           duration={5000}
         />
+        <MemoryCleanup />
       </body>
     </html>
   );

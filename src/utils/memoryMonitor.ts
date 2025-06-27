@@ -30,7 +30,7 @@ class MemoryMonitor {
   private snapshots: MemorySnapshot[] = [];
   private interval: NodeJS.Timeout | null = null;
   private isRunning = false;
-  private maxSnapshots = 100; // Keep last 100 snapshots
+  private maxSnapshots = 20; // Keep last 20 snapshots (reduced from 100)
   private warningThresholds = {
     heapUsage: 0.85, // 85% of max heap
     growthRate: 0.1, // 10% growth per minute
@@ -47,7 +47,7 @@ class MemoryMonitor {
   /**
    * Start memory monitoring
    */
-  start(intervalMs: number = 30000): void { // Default 30 seconds
+  start(intervalMs: number = 180000): void { // Default 3 minutes (reduced from 30 seconds)
     if (this.isRunning) {
       console.warn('Memory monitor is already running');
       return;
@@ -306,6 +306,17 @@ class MemoryMonitor {
   }
 
   private setLastWarningTime(type: string, time: number): void {
+    // Limit Map size to prevent unbounded growth
+    const MAX_WARNING_ENTRIES = 50;
+    
+    if (this.warningTimes.size >= MAX_WARNING_ENTRIES) {
+      // Remove oldest entry
+      const oldestKey = this.warningTimes.keys().next().value;
+      if (oldestKey) {
+        this.warningTimes.delete(oldestKey);
+      }
+    }
+    
     this.warningTimes.set(type, time);
   }
 
@@ -442,9 +453,7 @@ export function useMemoryMonitor() {
   return null; // Placeholder - implement in component
 }
 
-// Auto-start memory monitoring in development with reduced frequency (singleton ensures only one instance)
-if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
-  startMemoryMonitoring(600000); // Monitor every 10 minutes in development
-}
+// Auto-start removed - memory monitoring now controlled from layout.tsx only
+// This prevents duplicate monitoring instances
 
 export default MemoryMonitor;

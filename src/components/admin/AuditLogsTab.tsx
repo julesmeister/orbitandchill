@@ -151,15 +151,33 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
   };
 
   // Format date for display
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(date);
+  const formatDate = (date: Date | string | null | undefined) => {
+    try {
+      // Handle null/undefined
+      if (!date) {
+        return 'N/A';
+      }
+      
+      // Convert to Date if it's a string
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return 'Invalid Date';
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }).format(dateObj);
+    } catch (error) {
+      console.error('Date formatting error:', error, 'Date value:', date);
+      return 'Invalid Date';
+    }
   };
 
   // Get severity badge color
@@ -212,7 +230,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                 disabled={isLoading}
                 className="px-6 py-3 bg-black text-white font-inter font-semibold hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
               >
-                <svg className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Refresh
@@ -445,7 +463,11 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center">
                         <div className="flex justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+                            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+                            <div className="w-3 h-3 bg-black animate-bounce"></div>
+                          </div>
                         </div>
                       </td>
                     </tr>

@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { EmbeddedChart } from '../../types/threads';
 import ChartSummaryCard from './ChartSummaryCard';
-import InteractiveNatalChart from './InteractiveNatalChart.rings';
+import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
 import InteractiveHoraryChart from '../horary/InteractiveHoraryChart';
 import VertexBorderButton from '../reusable/VertexBorderButton';
 import MajorAspectsSection from './sections/MajorAspectsSection';
@@ -246,10 +246,13 @@ export default function EmbeddedChartDisplay({
                   <div className="bg-white rounded-lg p-4 overflow-hidden" style={{ height: '600px' }}>
                     {chart.chartData && chart.metadata ? (
                       <div className="w-full h-full overflow-hidden">
-                        {chart.chartType === 'natal' ? (
-                          <InteractiveNatalChart
-                            svgContent={chart.chartData}
-                            chartData={chart.metadata.natalChartData}
+                        {chart.chartType === 'natal' && (chart.metadata.natalChartData || realChartData) ? (
+                          <UnifiedAstrologicalChart
+                            chartData={realChartData || chart.metadata.natalChartData}
+                            chartType="natal"
+                            showPlanetInfo={true}
+                            showAspects={true}
+                            showAngularMarkers={true}
                             className="w-full h-full [&>svg]:!min-h-0 [&>svg]:!max-h-full"
                           />
                         ) : chart.chartType === 'horary' ? (

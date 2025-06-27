@@ -38,13 +38,28 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
   const { user } = useUserStore();
   const { activeTab, setActiveTab } = useChartTab();
   
-  // In development, ensure interpretation tab is active by default to prevent hot reload issues
+  // Stabilize data references to prevent unnecessary remounts
+  const stableBirthData = React.useMemo(() => birthData, [
+    birthData?.dateOfBirth,
+    birthData?.timeOfBirth, 
+    birthData?.locationOfBirth,
+    birthData?.coordinates?.lat,
+    birthData?.coordinates?.lon
+  ]);
+  
+  const stableChartData = React.useMemo(() => chartData, [
+    chartData?.id,
+    JSON.stringify(chartData?.planets || []),
+    JSON.stringify(chartData?.houses || [])
+  ]);
+  
+
+  // Only set interpretation tab on initial load in development, not on every tab change
   React.useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && activeTab !== 'interpretation') {
-      console.log('Development mode: Setting activeTab to interpretation to prevent hot reload issues');
+    if (process.env.NODE_ENV === 'development' && activeTab === 'chart' && !chartData) {
       setActiveTab('interpretation');
     }
-  }, [activeTab, setActiveTab]);
+  }, [chartData, setActiveTab]);
   const handleDownloadSVG = () => {
     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
@@ -151,47 +166,48 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
       {/* Content Display */}
       <div className="border-t border-black">
         <div className="p-6">
-          {activeTab === 'chart' ? (
-            // Chart View with Unified Astrological Chart
-            <div className="flex justify-center mb-6">
-              <div
-                className="p-2 bg-transparent w-full max-w-none"
-                style={{
-                  maxHeight: '90vh',
-                }}
-              >
-                {chartData ? (
-                  <UnifiedAstrologicalChart
-                    chartData={chartData}
-                    chartType="natal"
-                    showPlanetInfo={true}
-                    showAspects={true}
-                    showAngularMarkers={true}
-                    className="w-full h-full"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-96 text-gray-500">
-                    <p>Chart data not available</p>
+          {(() => {
+            if (activeTab === 'chart') {
+              return (
+                // Chart View with Unified Astrological Chart
+                <div className="flex justify-center mb-6">
+                  <div
+                    className="p-2 bg-transparent w-full max-w-none"
+                    style={{
+                      maxHeight: '90vh',
+                    }}
+                  >
+                    {stableChartData ? (
+                      <UnifiedAstrologicalChart
+                        chartData={stableChartData}
+                        chartType="natal"
+                        showPlanetInfo={true}
+                        showAspects={true}
+                        showAngularMarkers={true}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-96 text-gray-500">
+                        <p>Chart data not available</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            // Interpretation View
-            <ChartInterpretation birthData={birthData} chartData={chartData} />
-          )}
+                </div>
+              );
+            } else {
+              return (
+                // Interpretation View
+                <div>
+                  <ChartInterpretation 
+                    key="interpretation-stable" // Stable key
+                    birthData={stableBirthData} 
+                    chartData={stableChartData} 
+                  />
+                </div>
+              );
+            }
+          })()}
           
-          {/* In development, always show interpretation below chart for debugging */}
-          {process.env.NODE_ENV === 'development' && activeTab === 'chart' && (
-            <div className="mt-8 border-t border-gray-300 pt-6">
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Development Only:</strong> Showing interpretation below for debugging hot reload issues
-                </p>
-              </div>
-              <ChartInterpretation birthData={birthData} chartData={chartData} />
-            </div>
-          )}
 
           <ChartActions
             onDownloadSVG={handleDownloadSVG}

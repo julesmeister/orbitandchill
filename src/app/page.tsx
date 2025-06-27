@@ -1,15 +1,11 @@
-/* eslint-disable react/no-unescaped-entities */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import NatalChartForm, { NatalChartFormData } from '@/components/forms/NatalChartForm';
 import ChartPreview from '@/components/charts/ChartPreview';
 import ClientWorldMap from '@/components/ClientWorldMap';
 import PlanetAlignment from '@/components/PlanetAlignment';
 import ElectionalAstrologyShowcase from '@/components/ElectionalAstrologyShowcase';
-import NatalChartShowcase from '@/components/NatalChartShowcase';
-import ZodiacBackground from '@/components/ZodiacBackground';
 import { BRAND } from '@/config/brand';
 import { useUserStore } from '@/store/userStore';
 import { useNatalChart } from '@/hooks/useNatalChart';
@@ -17,7 +13,6 @@ import { useRouter } from 'next/navigation';
 import { useStatusToast } from '@/hooks/useStatusToast';
 import StatusToast from '@/components/reusable/StatusToast';
 import { useBlogData } from '@/hooks/useBlogData';
-import FeaturedPostCard from '@/components/blog/FeaturedPostCard';
 
 export default function Home() {
   const router = useRouter();
@@ -99,16 +94,13 @@ export default function Home() {
   return (
     <>
       {/* Hero Section with Features - Unified */}
-      <section className="hero-section px-[5%] py-16 flex flex-col justify-center">
-        <div className="max-w-7xl mx-auto">
+      <section className="hero-section px-[5%] flex items-center justify-center" style={{ minHeight: 'calc(100vh - 120px)' }}>
+        <div className="max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Left Side - Compact Hero Content */}
             <div className="space-y-8">
               {/* Hero Content */}
               <div className="text-left relative overflow-hidden">
-                {/* Zodiac Background - only behind text */}
-                <ZodiacBackground className="z-0" />
-                
                 <div className="relative z-10">
                   <h1 className="font-space-grotesk text-3xl lg:text-5xl font-bold text-black mb-4">
                     Welcome to

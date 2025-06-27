@@ -22,14 +22,49 @@ class MemoryCache {
   }
 
   /**
-   * Set cache entry with TTL
+   * Estimate size in bytes of a cache entry
+   */
+  private estimateEntrySize(key: string, data: any): number {
+    try {
+      const keySize = new TextEncoder().encode(key).length;
+      const dataSize = new TextEncoder().encode(JSON.stringify(data)).length;
+      return keySize + dataSize + 64; // Add overhead for metadata
+    } catch {
+      return 1024; // Fallback estimate for unstringifiable objects
+    }
+  }
+
+  /**
+   * Get estimated memory usage in bytes
+   */
+  private getMemoryUsageBytes(): number {
+    let totalBytes = 0;
+    for (const [key, entry] of this.cache.entries()) {
+      totalBytes += this.estimateEntrySize(key, entry.data);
+    }
+    return totalBytes;
+  }
+
+  /**
+   * Set cache entry with TTL and memory limit enforcement
    */
   set<T>(key: string, data: T, ttlMs: number = 300000): void { // Default 5 minutes
-    // Remove oldest entries if cache is full
-    if (this.cache.size >= this.maxSize) {
+    const MAX_MEMORY_BYTES = 50 * 1024 * 1024; // 50MB cache limit
+    const entrySize = this.estimateEntrySize(key, data);
+    
+    // Don't cache extremely large objects (> 5MB each)
+    if (entrySize > 5 * 1024 * 1024) {
+      console.warn(`Cache entry too large (${Math.round(entrySize / 1024 / 1024)}MB), skipping: ${key}`);
+      return;
+    }
+
+    // Remove entries until we have space (size-based + memory-based eviction)
+    while (this.cache.size >= this.maxSize || this.getMemoryUsageBytes() + entrySize > MAX_MEMORY_BYTES) {
       const oldestKey = this.cache.keys().next().value;
       if (oldestKey) {
         this.cache.delete(oldestKey);
+      } else {
+        break; // No more entries to remove
       }
     }
 
@@ -98,12 +133,15 @@ class MemoryCache {
       }
     }
 
+    const memoryBytes = this.getMemoryUsageBytes();
     return {
       totalEntries: this.cache.size,
       validEntries,
       expiredEntries,
       maxSize: this.maxSize,
-      memoryUsage: this.estimateMemoryUsage()
+      memoryUsage: this.estimateMemoryUsage(), // Legacy KB format
+      memoryUsageBytes: memoryBytes,
+      memoryUsageMB: Math.round(memoryBytes / 1024 / 1024 * 100) / 100
     };
   }
 

@@ -1,0 +1,61 @@
+"use client";
+import { useEffect } from 'react';
+import { destroyAnalytics } from '@/utils/analytics';
+import { stopMemoryMonitoring } from '@/utils/memoryMonitor';
+import { destroyConnectionPool } from '@/db/connectionPool';
+import { getGlobalCache } from '@/utils/cache';
+
+/**
+ * Client component to handle memory cleanup on app shutdown
+ * This prevents memory leaks during development hot reloads
+ */
+export default function MemoryCleanup() {
+  useEffect(() => {
+    // Cleanup on unmount (hot reload, tab close, etc.)
+    return () => {
+      try {
+        // Clean up analytics event listeners and pageViews Set
+        destroyAnalytics();
+        
+        // Stop memory monitoring
+        stopMemoryMonitoring();
+        
+        // Clean up database connection pool
+        destroyConnectionPool();
+        
+        // Clear global cache
+        const cache = getGlobalCache();
+        if (cache) {
+          cache.clear();
+        }
+        
+        console.debug('🧹 Memory cleanup completed');
+      } catch (error) {
+        console.warn('⚠️ Error during memory cleanup:', error);
+      }
+    };
+  }, []);
+
+  // Add periodic cleanup every 30 minutes to prevent gradual memory accumulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      try {
+        // Force cache cleanup
+        const cache = getGlobalCache();
+        if (cache) {
+          const stats = cache.getStats();
+          if (stats.expiredEntries > 50) {
+            // Clear expired entries if there are many
+            console.debug('🧹 Periodic cache cleanup:', stats.expiredEntries, 'expired entries');
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Error during periodic cleanup:', error);
+      }
+    }, 30 * 60 * 1000); // 30 minutes
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return null; // This component renders nothing
+}

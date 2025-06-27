@@ -475,24 +475,42 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     
     // Check if current user is the master admin
     if (currentUser.email === MASTER_ADMIN_EMAIL) {
-      // Bypass login for master admin - directly set authenticated state
-      const adminUser: AdminUser = {
-        id: currentUser.id,
-        username: currentUser.username || 'Master Admin',
-        email: currentUser.email,
-        role: 'master_admin',
-        permissions: ['all'] // Master admin has all permissions
-      };
+      try {
+        // Generate a proper JWT token for master admin that will work with admin auth middleware
+        const response = await fetch('/api/admin/auth/master-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser.id, email: currentUser.email }),
+        });
 
-      set({
-        isAuthenticated: true,
-        adminUser: adminUser,
-        authToken: `master_admin_${currentUser.id}`, // Generate token for this session
-        authLoading: false,
-      });
+        const data = await response.json();
 
-      console.log('✅ Master admin automatically authenticated:', adminUser.username);
-      return true;
+        if (data.success && data.token) {
+          const adminUser: AdminUser = {
+            id: currentUser.id,
+            username: currentUser.username || 'Master Admin',
+            email: currentUser.email,
+            role: 'master_admin',
+            permissions: ['all'] // Master admin has all permissions
+          };
+
+          set({
+            isAuthenticated: true,
+            adminUser: adminUser,
+            authToken: data.token, // Use proper JWT token
+            authLoading: false,
+          });
+
+          console.log('✅ Master admin automatically authenticated with JWT token:', adminUser.username);
+          return true;
+        } else {
+          console.error('❌ Failed to generate master admin token:', data.error);
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ Master admin authentication failed:', error);
+        return false;
+      }
     }
 
     // Fallback: Check if current user has admin role (for future admin users)

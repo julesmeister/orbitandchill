@@ -55,15 +55,6 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, refreshMetrics, loadUserAnalytics, loadTrafficData, loadThreads, loadHealthMetrics, loadNotifications]);
 
-  // Debug log the current metrics
-  useEffect(() => {
-    console.log('📊 Current siteMetrics:', siteMetrics);
-    console.log('📈 Traffic data length:', trafficData.length);
-    console.log('👥 User analytics length:', userAnalytics.length);
-    console.log('💬 Threads length:', threads.length);
-    console.log('🏥 Health metrics:', healthMetrics);
-    console.log('🔔 Notifications:', notifications);
-  }, [siteMetrics, trafficData, userAnalytics, threads, healthMetrics, notifications]);
 
   // Comprehensive refresh function
   const handleRefresh = async () => {

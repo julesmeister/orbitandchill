@@ -21,9 +21,13 @@ interface SystemHealthChartProps {
 export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHealthChartProps) {
   if (isLoading) {
     return (
-      <div className="h-48 flex items-center justify-center bg-gray-50 border border-black">
+      <div className="h-48 flex items-center justify-center bg-white border border-black">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-black border-t-transparent animate-spin mx-auto mb-2"></div>
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-3 h-3 bg-black animate-bounce"></div>
+          </div>
           <p className="font-inter text-black/60 text-sm">Loading system status...</p>
         </div>
       </div>

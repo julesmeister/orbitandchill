@@ -2,6 +2,77 @@
 
 Based on the Synapsas Webflow template analysis, here's a comprehensive style guide to modernize your Luckstrology app's design:
 
+## Loading Animation Components
+
+### Three-Element Bounce Loading Animation
+A clean, minimalist loading animation using three bouncing elements with staggered timing:
+
+#### Variant 1: Bouncing Dots (Circles)
+```tsx
+// Three-dot bounce loading animation
+<div className="text-center py-16">
+  <div className="flex items-center justify-center space-x-2 mb-4">
+    <div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+    <div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+    <div className="w-3 h-3 bg-black rounded-full animate-bounce"></div>
+  </div>
+  <h2 className="font-space-grotesk text-2xl font-bold text-black mb-2">
+    Loading discussions...
+  </h2>
+  <p className="text-black/70">
+    Fetching the latest community posts and insights.
+  </p>
+</div>
+```
+
+#### Variant 2: Bouncing Boxes (Preferred)
+```tsx
+// Three-box bounce loading animation - more geometric and modern
+<div className="text-center py-16">
+  <div className="flex items-center justify-center space-x-2 mb-4">
+    <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+    <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+    <div className="w-3 h-3 bg-black animate-bounce"></div>
+  </div>
+  <h2 className="font-space-grotesk text-2xl font-bold text-black mb-2">
+    Loading discussions...
+  </h2>
+  <p className="text-black/70">
+    Fetching the latest community posts and insights.
+  </p>
+</div>
+```
+
+**Animation Details:**
+- **Element Timing**: Three elements with staggered animation delays (`-0.3s`, `-0.15s`, `0s`)
+- **Bounce Effect**: Uses Tailwind's `animate-bounce` utility
+- **Color**: Black (`bg-black`) to match Synapsas design system
+- **Size**: Small elements (`w-3 h-3`) for subtle, non-intrusive loading
+- **Shape**: Boxes (no `rounded-full`) for modern, geometric aesthetic
+
+**Design Benefits:**
+- Provides clear loading state feedback
+- Maintains visual consistency with Synapsas aesthetic
+- Non-distracting animation that doesn't overwhelm content
+- Works well on both light and dark backgrounds
+
+**Used in:**
+- `/src/components/discussions/DiscussionsLoadingState.tsx` (lines 148-157)
+- Discussions page loading states
+- Can be reused across any loading scenarios
+
+**Customization Options:**
+```tsx
+// Larger dots for more prominent loading
+<div className="w-4 h-4 bg-black rounded-full animate-bounce"></div>
+
+// Colored dots for different contexts
+<div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+
+// Custom timing
+<div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:-0.5s]"></div>
+```
+
 ## Z-Index and Dropdown Positioning
 
 ### Dropdown Z-Index Solution
@@ -3139,3 +3210,90 @@ import SynapsasDropdown from '@/components/reusable/SynapsasDropdown';
 
 ## Result
 The SynapsasDropdown component provides a standardized, visually consistent dropdown interface that seamlessly integrates with the Synapsas design system. By replacing basic HTML select elements, it maintains the sharp geometric aesthetic, exact color palette usage, and professional appearance throughout the application while providing enhanced functionality and accessibility features.
+
+## Loading Animation Components
+
+### Three-Dot Bounce Loading Animation
+
+A clean, minimalist loading animation using three bouncing dots, perfect for indicating content loading states. This animation maintains the Synapsas design aesthetic with black dots and smooth transitions.
+
+#### Component Implementation
+```tsx
+{/* Loading indicator */}
+<div className="text-center py-12">
+  <div className="flex items-center justify-center gap-3 mb-4">
+    <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+    <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+    <div className="w-3 h-3 bg-black animate-bounce"></div>
+  </div>
+  <h3 className="font-space-grotesk text-lg font-semibold text-black mb-2">Loading discussions...</h3>
+  <p className="font-inter text-black/60">Fetching the latest community posts and insights.</p>
+</div>
+```
+
+#### Animation Details
+
+##### 1. **Three Bouncing Dots**
+- **Size**: `w-3 h-3` (12px × 12px) for subtle, unobtrusive appearance
+- **Color**: `bg-black` - consistent with Synapsas monochrome design
+- **Spacing**: `gap-3` creates even spacing between dots
+- **Animation**: `animate-bounce` provides smooth vertical bouncing motion
+
+##### 2. **Staggered Animation Timing**
+- **First dot**: `[animation-delay:-0.3s]` - starts earliest
+- **Second dot**: `[animation-delay:-0.15s]` - starts 0.15s after first
+- **Third dot**: No delay - starts last
+- **Effect**: Creates wave-like bouncing pattern for visual appeal
+
+##### 3. **Typography Integration**
+- **Heading**: `font-space-grotesk text-lg font-semibold` - matches design system typography
+- **Description**: `font-inter text-black/60` - provides context with subtle opacity
+- **Vertical Spacing**: `mb-4` and `mb-2` create proper hierarchy
+
+#### Usage Context
+
+This loading animation appears in:
+- **Discussion Loading State**: `/src/components/discussions/DiscussionsLoadingState.tsx`
+- **Full Page Loading**: Used when fetching discussion data from the API
+- **Contextual Messaging**: Includes descriptive text explaining what's loading
+
+#### Design Benefits
+
+##### 1. **Visual Consistency**
+- Uses Synapsas black color (`bg-black`)
+- Maintains design system spacing and typography
+- Clean, geometric appearance aligns with overall aesthetic
+
+##### 2. **User Experience**
+- **Clear Feedback**: Users understand content is loading
+- **Engaging Animation**: Bouncing motion keeps users engaged during wait
+- **Informative Text**: Context about what's being loaded
+
+##### 3. **Technical Implementation**
+- **CSS-Only Animation**: Uses Tailwind's built-in `animate-bounce`
+- **Performance Optimized**: No JavaScript required for animation
+- **Accessibility Friendly**: Respects user motion preferences
+
+#### Implementation Guidelines
+
+##### 1. **Placement**
+- Center the animation container with `text-center`
+- Add adequate padding (`py-12`) to prevent crowding
+- Maintain consistent spacing around descriptive text
+
+##### 2. **Customization Options**
+- **Color**: Change `bg-black` to match different themes
+- **Size**: Adjust `w-3 h-3` for different scales
+- **Speed**: Modify animation delays for different rhythms
+- **Text**: Update loading messages for different contexts
+
+##### 3. **Responsive Considerations**
+- Animation scales well across all device sizes
+- Text remains readable on mobile devices
+- Maintains visual hierarchy on smaller screens
+
+#### Files Using This Pattern
+- `/src/components/discussions/DiscussionsLoadingState.tsx` - Primary implementation
+- Can be extracted as reusable component for other loading states
+
+This loading animation provides an elegant, on-brand way to indicate loading states while maintaining the clean, professional appearance that defines the Synapsas design system.

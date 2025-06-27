@@ -14,7 +14,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AdminLogo
     const authResult = await withAdminAuth(request);
     
     if (!authResult.success) {
-      return authResult.response;
+      return authResult.response as NextResponse<AdminLogoutResponse>;
     }
 
     const { sessionId, user } = authResult.context;

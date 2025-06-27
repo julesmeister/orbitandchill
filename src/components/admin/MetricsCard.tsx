@@ -40,16 +40,13 @@ export default function MetricsCard({
     <div className="bg-white border border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25">
       <div className="p-6">
         {isLoading ? (
-          <div className="animate-pulse">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-black flex items-center justify-center">
-                <div className="w-6 h-6 bg-white"></div>
-              </div>
-              <div className="ml-4 flex-1">
-                <div className="h-4 bg-gray-300 w-3/4 mb-2"></div>
-                <div className="h-6 bg-gray-400 w-1/2"></div>
-              </div>
+          <div className="text-center py-8">
+            <div className="flex items-center justify-center space-x-2 mb-3">
+              <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-black animate-bounce"></div>
             </div>
+            <p className="font-inter text-xs text-black/60">Loading...</p>
           </div>
         ) : (
           <div className="flex items-center">

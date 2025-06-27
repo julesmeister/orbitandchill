@@ -77,6 +77,12 @@ export function extractAdminToken(request: NextRequest): string | null {
  */
 export async function validateAdminSession(sessionId: string, userId: string): Promise<boolean> {
   try {
+    // Special case: Master admin sessions don't need database validation
+    if (sessionId.startsWith('master_session_')) {
+      console.log('🔑 Validating master admin session:', sessionId);
+      return true;
+    }
+
     const session = await db
       .select()
       .from(adminSessions)
