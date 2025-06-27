@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import DiscussionForm from '../../../components/forms/DiscussionForm';
 import { useUserStore } from '../../../store/userStore';
 import StatusToast from '../../../components/reusable/StatusToast';
@@ -19,7 +19,7 @@ interface DiscussionFormData {
   embeddedVideo?: any;
 }
 
-export default function NewDiscussionPage() {
+function NewDiscussionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
@@ -359,5 +359,22 @@ export default function NewDiscussionPage() {
         duration={toast.status === 'success' ? 5000 : 0}
       />
     </div>
+  );
+}
+
+export default function NewDiscussionPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <NewDiscussionContent />
+    </Suspense>
   );
 }
