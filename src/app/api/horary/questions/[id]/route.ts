@@ -9,10 +9,11 @@ import { eq } from 'drizzle-orm';
 // GET - Retrieve specific horary question by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = params.id;
+    const resolvedParams = await params;
+    const questionId = resolvedParams.id;
 
     const [question] = await db
       .select()
@@ -76,10 +77,11 @@ export async function GET(
 // PATCH - Update horary question with analysis results
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = params.id;
+    const resolvedParams = await params;
+    const questionId = resolvedParams.id;
     const body = await request.json();
 
     const {
@@ -192,10 +194,11 @@ export async function PATCH(
 // DELETE - Remove horary question
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const questionId = params.id;
+    const resolvedParams = await params;
+    const questionId = resolvedParams.id;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Validate admin authentication with permission
@@ -16,7 +16,8 @@ export async function POST(
       return authResult.response;
     }
 
-    const userId = params.id;
+    const resolvedParams = await params;
+    const userId = resolvedParams.id;
     const { context: adminContext } = authResult;
 
     // Parse request body for role and permissions

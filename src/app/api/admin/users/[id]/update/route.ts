@@ -11,7 +11,7 @@ if (!databaseUrl || !authToken) {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     if (!databaseUrl || !authToken) {
@@ -26,7 +26,8 @@ export async function PUT(
       authToken: authToken,
     });
 
-    const userId = params.id;
+    const resolvedParams = await params;
+    const userId = resolvedParams.id;
     const body = await request.json();
     const { username, email, role, status, adminUserId } = body;
 
