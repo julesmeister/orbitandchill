@@ -248,7 +248,8 @@ export default function EmbeddedChartDisplay({
                       <div className="w-full h-full overflow-hidden">
                         {chart.chartType === 'natal' && (chart.metadata.natalChartData || realChartData) ? (
                           <UnifiedAstrologicalChart
-                            chartData={realChartData || chart.metadata?.natalChartData!}
+                            // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+                            chartData={realChartData || chart.metadata.natalChartData!}
                             chartType="natal"
                             showPlanetInfo={true}
                             showAspects={true}

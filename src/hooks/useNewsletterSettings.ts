@@ -96,15 +96,16 @@ export function useNewsletterSettings() {
           }, {});
 
           // Apply config override logic
-          let finalSettings = { ...DEFAULT_NEWSLETTER_SETTINGS, ...fetchedSettings };
+          const baseSettings = { ...DEFAULT_NEWSLETTER_SETTINGS, ...fetchedSettings };
           
+          let finalSettings = baseSettings;
           if (typeof newsletterConfig.enabled === 'boolean' && newsletterConfig.enabled === true) {
             // Force enabled regardless of database
-            finalSettings.enabled = true;
+            finalSettings = { ...baseSettings, enabled: true };
             // Config override applied: Forced ON
           } else if (typeof newsletterConfig.enabled === 'boolean' && newsletterConfig.enabled === false) {
             // Force disabled regardless of database
-            finalSettings.enabled = false;
+            finalSettings = { ...baseSettings, enabled: false };
             // Config override applied: Forced OFF
           }
           // If 'auto', use database value as-is
