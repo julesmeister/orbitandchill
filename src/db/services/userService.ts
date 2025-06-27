@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 import * as crypto from 'crypto';
 import { AuditService } from './auditService';
 import { createResilientService } from '@/db/resilience';
-import { executeRawSelectOne, executeRawUpdate, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
+import { executeRawSelectOne, executeRawSelect, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
 
 export interface CreateUserData {
   id?: string; // Optional ID for Google users

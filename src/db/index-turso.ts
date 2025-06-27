@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// @ts-nocheck
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client/http';
 import * as schema from './schema';

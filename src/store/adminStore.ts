@@ -200,7 +200,7 @@ const getAuthHeaders = (token?: string) => {
 // Real data generators using API endpoints
 const calculateSiteMetrics = async (token?: string): Promise<SiteMetrics> => {
   try {
-    console.log('🧮 Fetching real site metrics from API...');
+    // Fetching real site metrics from API
     
     const response = await fetch('/api/admin/metrics', {
       headers: getAuthHeaders(token),
@@ -208,28 +208,28 @@ const calculateSiteMetrics = async (token?: string): Promise<SiteMetrics> => {
     const data = await response.json();
     
     if (data.success && data.metrics) {
-      console.log('✅ Site metrics fetched from API:', data.metrics);
+      // Site metrics fetched from API
       return data.metrics;
     } else {
       throw new Error(data.error || 'API returned no metrics');
     }
   } catch (error) {
     console.warn('Failed to fetch real site metrics from API, using fallback:', error);
-    // Fallback to reasonable defaults
+    // Return zeros instead of mock data
     return {
-      totalUsers: 150,
-      activeUsers: 45,
-      chartsGenerated: 892,
-      forumPosts: 25,
-      dailyVisitors: 320,
-      monthlyGrowth: 8,
+      totalUsers: 0,
+      activeUsers: 0,
+      chartsGenerated: 0,
+      forumPosts: 0,
+      dailyVisitors: 0,
+      monthlyGrowth: 0,
     };
   }
 };
 
 const generateUserAnalytics = async (token?: string): Promise<UserAnalytics[]> => {
   try {
-    console.log('👥 Fetching real user analytics from API...');
+    // Fetching real user analytics from API
     
     const response = await fetch('/api/admin/user-analytics', {
       headers: getAuthHeaders(token),
@@ -237,7 +237,7 @@ const generateUserAnalytics = async (token?: string): Promise<UserAnalytics[]> =
     const data = await response.json();
     
     if (data.success && data.userAnalytics) {
-      console.log(`✅ User analytics fetched from API: ${data.userAnalytics.length} users`);
+      // User analytics fetched from API
       return data.userAnalytics;
     } else {
       throw new Error(data.error || 'API returned no user analytics');
@@ -265,7 +265,7 @@ const generateUserAnalytics = async (token?: string): Promise<UserAnalytics[]> =
 
 const generateTrafficData = async (token?: string): Promise<TrafficData[]> => {
   try {
-    console.log('📈 Fetching real traffic data from API...');
+    // Fetching real traffic data from API
     
     const response = await fetch('/api/admin/traffic-data', {
       headers: getAuthHeaders(token),
@@ -273,7 +273,7 @@ const generateTrafficData = async (token?: string): Promise<TrafficData[]> => {
     const data = await response.json();
     
     if (data.success && data.trafficData) {
-      console.log(`✅ Traffic data fetched from API: ${data.trafficData.length} records`);
+      // Traffic data fetched from API
       return data.trafficData;
     } else {
       throw new Error(data.error || 'API returned no traffic data');
@@ -302,7 +302,7 @@ const generateThreads = (): Thread[] => {
   return [];
 };
 
-export const useAdminStore = create<AdminState>((set, get) => ({
+export const useAdminStore: any = create<AdminState>((set, get) => ({
   // Initial state - NOT authenticated by default
   isAuthenticated: false,
   adminUser: null,
@@ -501,7 +501,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             authLoading: false,
           });
 
-          console.log('✅ Master admin automatically authenticated with JWT token:', adminUser.username);
+          // Master admin automatically authenticated with JWT token
           return true;
         } else {
           console.error('❌ Failed to generate master admin token:', data.error);
@@ -528,7 +528,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
     try {
       const { authToken } = get();
+      // Refreshing metrics with auth token
+      
       const siteMetrics = await calculateSiteMetrics(authToken || undefined);
+      // Metrics received
       
       set({
         siteMetrics,
@@ -827,13 +830,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   loadHealthMetrics: async () => {
     try {
-      console.log('🔍 Loading health metrics...');
+      // Loading health metrics
       
       const response = await fetch('/api/admin/health');
       const data = await response.json();
       
       if (data.success && data.health) {
-        console.log('✅ Health metrics loaded:', data.health);
+        // Health metrics loaded
         set({ healthMetrics: data.health });
       } else {
         console.warn('⚠️ Health metrics API returned no data:', data);
@@ -847,13 +850,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   loadNotifications: async () => {
     try {
-      console.log('🔔 Loading notifications...');
+      // Loading notifications
       
       const response = await fetch('/api/admin/notifications');
       const data = await response.json();
       
       if (data.success && data.notifications) {
-        console.log('✅ Notifications loaded:', data.notifications);
+        // Notifications loaded
         set({ notifications: data.notifications });
       } else {
         console.warn('⚠️ Notifications API returned no data:', data);
@@ -962,8 +965,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   },
 
-  getAdminSetting: (key: string) => {
-    const state = useAdminStore.getState();
-    return state.adminSettings.find(setting => setting.key === key) || null;
+  getAdminSetting: (key: string): any => {
+    const state: any = useAdminStore.getState();
+    return state.adminSettings.find((setting: any) => setting.key === key) || null;
   },
 }));

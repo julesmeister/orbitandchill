@@ -345,7 +345,7 @@ class TursoConnectionPool {
     this.waitingQueue.forEach(waiter => {
       waiter.reject(new Error('Connection pool destroyed'));
     });
-    this.waitingQueue.clear();
+    this.waitingQueue.length = 0;
 
     // Close all connections
     const closePromises = Array.from(this.connections.values()).map(async (connection) => {

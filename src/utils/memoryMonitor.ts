@@ -39,7 +39,7 @@ class MemoryMonitor {
 
   constructor() {
     // Only run in Node.js environment
-    if (typeof process !== 'undefined' && process.memoryUsage) {
+    if (typeof process !== 'undefined' && process.memoryUsage && typeof process.memoryUsage === 'function') {
       this.setupMemoryWarnings();
     }
   }

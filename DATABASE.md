@@ -1,4 +1,4 @@
-# Luckstrology Database Documentation
+# Orbit and Chill Database Documentation
 
 ## 📚 Related Documentation
 - **@ADMIN_DASHBOARD_INTEGRATION.md** - Complete admin dashboard implementation with real database metrics

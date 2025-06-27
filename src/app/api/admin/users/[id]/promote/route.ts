@@ -17,7 +17,7 @@ export async function POST(
     }
 
     const userId = params.id;
-    const { adminContext } = authResult;
+    const { context: adminContext } = authResult;
 
     // Parse request body for role and permissions
     const body = await request.json();

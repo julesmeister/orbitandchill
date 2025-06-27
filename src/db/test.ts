@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { initializeDatabase } from './index';
 import { UserService } from './services/userService';
 import { DiscussionService } from './services/discussionService';

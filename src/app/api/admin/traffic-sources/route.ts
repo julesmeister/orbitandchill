@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     
     for (const activity of pageViewActivities) {
       if (activity.createdAt >= thirtyDaysAgo) {
-        const metadata = activity.metadata ? JSON.parse(activity.metadata) : {};
+        const metadata = activity.metadata ? JSON.parse(activity.metadata as unknown as string) : {};
         const referrer = metadata.referrer || '';
         const source = categorizeTrafficSource(referrer);
         sourceCounts[source] = (sourceCounts[source] || 0) + 1;
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     // Fallback to proportional data based on actual traffic
     console.log('⚠️ API: No referrer data found, using proportional fallback...');
     const trafficSummary = await AnalyticsService.getTrafficSummary(30);
-    const totalPageViews = trafficSummary.totals.pageViews || 100;
+    const totalPageViews = (trafficSummary as any).pageViews || 100;
     
     const fallbackSources = [
       { 

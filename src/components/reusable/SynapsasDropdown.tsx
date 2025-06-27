@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DropdownOption {
   value: string;
@@ -24,20 +25,51 @@ export default function SynapsasDropdown({
   className = "",
   variant = "default"
 }: SynapsasDropdownProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Calculate position when opening
+  const handleToggle = useCallback(() => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4, // Add 4px gap below button
+        left: rect.left,
+        width: rect.width
+      });
+    }
+    setIsOpen(!isOpen);
+  }, [isOpen]);
+
+  // Update position on scroll and handle click outside
   useEffect(() => {
+    const handleScroll = () => {
+      if (buttonRef.current && isOpen) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + 4, // Add 4px gap below button
+          left: rect.left,
+          width: rect.width
+        });
+      }
+    };
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
+      window.addEventListener('scroll', handleScroll, true);
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }
   }, [isOpen]);
 
@@ -50,19 +82,12 @@ export default function SynapsasDropdown({
   const displayLabel = selectedOption ? selectedOption.label : placeholder;
 
   return (
-    <div 
-      className={`relative ${className}`} 
-      ref={dropdownRef}
-      style={{ 
-        zIndex: 15002,
-        isolation: 'isolate',
-        transform: 'translateZ(0)'
-      }}
-    >
+    <div className={`relative ${className}`}>
       <div className={variant === 'thin' ? 'synapsas-input-field' : 'synapsas-sort-field'}>
         <button
+          ref={buttonRef}
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggle}
           className={variant === 'thin' ? 'synapsas-input-select' : 'synapsas-sort-select'}
         >
           <span className="text-black">{displayLabel}</span>
@@ -70,40 +95,40 @@ export default function SynapsasDropdown({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        
-        {isOpen && (
-          <div 
-            className="synapsas-sort-dropdown"
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: '0',
-              right: '0',
-              background: 'white',
-              border: '1px solid #d1d5db',
-              borderRadius: '0',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-              zIndex: 15003,
-              maxHeight: '200px',
-              overflowY: 'auto',
-              marginTop: '0.5rem',
-              transform: 'translateZ(0)',
-              isolation: 'isolate'
-            }}
-          >
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleSelect(option.value)}
-                className={`synapsas-sort-option ${value === option.value ? 'selected' : ''}`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Portal dropdown to bypass z-index issues */}
+      {isOpen && typeof window !== 'undefined' && createPortal(
+        <div 
+          ref={dropdownRef}
+          className="synapsas-sort-dropdown"
+          style={{
+            position: 'fixed',
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+            background: 'white',
+            border: '2px solid #19181a',
+            borderRadius: '0',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+            zIndex: 999999,
+            maxHeight: '200px',
+            overflowY: 'auto'
+          }}
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSelect(option.value)}
+              className={`synapsas-sort-option ${value === option.value ? 'selected' : ''}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
 
       <style jsx>{`
         /* Synapsas Sort Dropdown System */
@@ -216,6 +241,11 @@ export default function SynapsasDropdown({
           background-color: #19181a;
           color: white;
           font-weight: 600;
+        }
+
+        .synapsas-sort-option.selected:hover {
+          background-color: #374151;
+          color: white;
         }
       `}</style>
     </div>

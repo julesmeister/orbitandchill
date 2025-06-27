@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       .groupBy(users.role);
 
     // Transform statistics into a map
-    const statsMap = roleStats.reduce((acc, stat) => {
+    const statsMap = roleStats.reduce((acc: Record<string, { totalUsers: number; activeUsers: number }>, stat: any) => {
       acc[stat.role || 'user'] = {
         totalUsers: stat.count,
         activeUsers: stat.active

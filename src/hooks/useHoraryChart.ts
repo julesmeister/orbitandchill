@@ -10,7 +10,6 @@ interface HoraryChartData {
   id: string;
   svg: string;
   metadata: {
-    [x: string]: number | undefined;
     questionId: string;
     question: string;
     chartTime: Date;

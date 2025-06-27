@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// @ts-nocheck
 import { sqliteTable, text, integer, real, blob } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 

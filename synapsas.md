@@ -4,30 +4,110 @@ Based on the Synapsas Webflow template analysis, here's a comprehensive style gu
 
 ## Loading Animation Components
 
-### Three-Element Bounce Loading Animation
-A clean, minimalist loading animation using three bouncing elements with staggered timing:
+### Chart Loading Animation (Sophisticated)
+A comprehensive chart loading animation with animated grid lines, data points, and SVG elements for admin dashboards and data visualizations:
 
-#### Variant 1: Bouncing Dots (Circles)
+#### ChartLoadingAnimation Component
 ```tsx
-// Three-dot bounce loading animation
-<div className="text-center py-16">
-  <div className="flex items-center justify-center space-x-2 mb-4">
-    <div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-    <div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-    <div className="w-3 h-3 bg-black rounded-full animate-bounce"></div>
-  </div>
-  <h2 className="font-space-grotesk text-2xl font-bold text-black mb-2">
-    Loading discussions...
-  </h2>
-  <p className="text-black/70">
-    Fetching the latest community posts and insights.
-  </p>
-</div>
+// Full-featured chart loading animation with skeleton and SVG elements
+import ChartLoadingAnimation from '@/components/reusable/ChartLoadingAnimation';
+
+// Basic usage
+<ChartLoadingAnimation />
+
+// Customized usage
+<ChartLoadingAnimation 
+  title="Growth Overview"
+  subtitle="Loading chart data..."
+  showHeader={true}
+  showFooter={true}
+  className="w-full"
+/>
 ```
 
-#### Variant 2: Bouncing Boxes (Preferred)
+**Component Features:**
+- **Animated SVG Grid**: Dynamic grid lines with pulse animation
+- **Chart Axes**: Realistic chart structure with X/Y axes
+- **Flowing Data Line**: Smooth curved path with moving dash animation
+- **Animated Data Points**: Bouncing dots with staggered timing delays
+- **Three-Dot Loader**: Center bouncing dots with custom message
+- **Header Skeleton**: Animated placeholders for chart controls
+- **Footer Skeleton**: Grid of stat placeholders
+- **Gradient Overlay**: Subtle shimmer effect across the chart
+
+**Animation Details:**
+- **Grid Lines**: Pulse animation with `animate-pulse` class
+- **Data Line**: SVG path with `stroke-dasharray` and animated `stroke-dashoffset`
+- **Data Points**: Circular elements with individual animation delays
+- **Center Dots**: Three bouncing circles with staggered timing (`-0.3s`, `-0.15s`, `0s`)
+- **Overlay**: Gradient shimmer with `bg-gradient-to-r` and pulse
+
+**Design Benefits:**
+- Provides realistic chart loading experience
+- Maintains user engagement during data fetching
+- Professional appearance for admin dashboards
+- Modular design with configurable sections
+- Consistent with Synapsas design system
+
+**File Location:**
+- `/src/components/reusable/ChartLoadingAnimation.tsx`
+
+**Used in:**
+- `/src/components/admin/charts/GrowthChart.tsx`
+- Admin dashboard chart components
+- Any data visualization loading states
+
+### Chart Data Hook (useChartData)
+A reusable hook for fetching and managing chart data with loading states, error handling, and time period controls:
+
+#### useChartData Hook
 ```tsx
-// Three-box bounce loading animation - more geometric and modern
+// Import the hook
+import { useChartData } from '@/hooks/useChartData';
+
+// Basic usage
+const { chartData, timePeriod, setTimePeriod, isLoading, error } = useChartData();
+
+// Advanced usage with options
+const { 
+  chartData, 
+  timePeriod, 
+  setTimePeriod, 
+  isLoading,
+  error,
+  refetch 
+} = useChartData({
+  data: externalData,        // Optional external data
+  isLoading: parentLoading,  // External loading state
+  autoFetch: true,           // Auto-fetch on mount
+  initialPeriod: 'daily'     // Starting time period
+});
+```
+
+**Hook Features:**
+- **Time Period Management**: Built-in daily/monthly/yearly period switching
+- **Auto-fetching**: Automatically fetches data when dependencies change
+- **Error Handling**: Comprehensive error states with user-friendly messages
+- **External Data Support**: Can use provided data instead of fetching
+- **Loading States**: Manages both external and internal loading states
+- **Auth Integration**: Automatically includes admin auth tokens
+
+**Return Values:**
+- `chartData`: Array of chart data points with date, users, charts
+- `timePeriod`: Current time period ('daily' | 'monthly' | 'yearly')
+- `setTimePeriod`: Function to change the time period
+- `isLoading`: Combined loading state (external + internal)
+- `error`: Error message string or null
+- `refetch`: Function to manually trigger data fetch
+
+**File Location:**
+- `/src/hooks/useChartData.ts`
+
+### Simple Three-Element Bounce Loading (Basic)
+For simple loading states where chart animation is excessive:
+
+```tsx
+// Three-dot bounce loading animation
 <div className="text-center py-16">
   <div className="flex items-center justify-center space-x-2 mb-4">
     <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
@@ -43,35 +123,11 @@ A clean, minimalist loading animation using three bouncing elements with stagger
 </div>
 ```
 
-**Animation Details:**
-- **Element Timing**: Three elements with staggered animation delays (`-0.3s`, `-0.15s`, `0s`)
-- **Bounce Effect**: Uses Tailwind's `animate-bounce` utility
-- **Color**: Black (`bg-black`) to match Synapsas design system
-- **Size**: Small elements (`w-3 h-3`) for subtle, non-intrusive loading
-- **Shape**: Boxes (no `rounded-full`) for modern, geometric aesthetic
-
-**Design Benefits:**
-- Provides clear loading state feedback
-- Maintains visual consistency with Synapsas aesthetic
-- Non-distracting animation that doesn't overwhelm content
-- Works well on both light and dark backgrounds
-
-**Used in:**
-- `/src/components/discussions/DiscussionsLoadingState.tsx` (lines 148-157)
-- Discussions page loading states
-- Can be reused across any loading scenarios
-
-**Customization Options:**
-```tsx
-// Larger dots for more prominent loading
-<div className="w-4 h-4 bg-black rounded-full animate-bounce"></div>
-
-// Colored dots for different contexts
-<div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
-
-// Custom timing
-<div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:-0.5s]"></div>
-```
+**Use Cases:**
+- Simple content loading (discussions, posts)
+- Form submission states
+- Basic page loading states
+- Mobile-optimized loading
 
 ## Z-Index and Dropdown Positioning
 

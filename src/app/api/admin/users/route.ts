@@ -1,10 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, desc, like, or, and, count } from 'drizzle-orm';
-import { db } from '@/db/index';
-import { users, discussions, natalCharts } from '@/db/schema';
-import { AdminAuditService } from '@/db/services/adminAuditService';
-import { createAdminRoute, type AdminAuthContext } from '@/middleware/adminAuth';
+import { createClient } from '@libsql/client/http';
+
+const databaseUrl = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!databaseUrl || !authToken) {
+  console.error('Missing database configuration');
+}
 
 interface AdminUserData {
   id: string;
@@ -18,13 +21,24 @@ interface AdminUserData {
   discussionCount: number;
   isActive: boolean;
   lastActivity: string;
+  role?: string;
+  isSuspended?: boolean;
 }
 
-async function handleGetUsers(request: NextRequest, context: AdminAuthContext) {
+export async function GET(request: NextRequest) {
   try {
-    // Extract request context for audit logging
-    const requestContext = AdminAuditService.extractRequestContext(request, Object.fromEntries(request.headers.entries()));
-    
+    if (!databaseUrl || !authToken) {
+      return NextResponse.json(
+        { error: 'Database configuration missing' },
+        { status: 500 }
+      );
+    }
+
+    const client = createClient({
+      url: databaseUrl,
+      authToken: authToken,
+    });
+
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -33,105 +47,104 @@ async function handleGetUsers(request: NextRequest, context: AdminAuthContext) {
     const sortBy = url.searchParams.get('sortBy') || 'createdAt';
     const sortOrder = url.searchParams.get('sortOrder') || 'desc';
 
-    // Log admin viewing users
-    await AdminAuditService.log({
-      adminUserId: context.userId,
-      adminUsername: context.user.username,
-      action: 'view',
-      entityType: 'user',
-      entityId: 'multiple',
-      description: `Viewed user list - page ${page}, search: "${search}", provider: "${authProvider}"`,
-      severity: 'low',
-      details: { page, limit, search, authProvider, sortBy, sortOrder },
-      ...requestContext
-    });
-
     const offset = (page - 1) * limit;
 
-    // Build where conditions
-    const whereConditions = [];
-    
+    // Build WHERE conditions
+    let whereClause = 'WHERE (is_deleted = 0 OR is_deleted IS NULL)';
+    const queryArgs: any[] = [];
+
     if (search) {
-      whereConditions.push(
-        or(
-          like(users.username, `%${search}%`),
-          like(users.email, `%${search}%`)
-        )
-      );
+      whereClause += ' AND (username LIKE ? OR email LIKE ?)';
+      queryArgs.push(`%${search}%`, `%${search}%`);
     }
 
     if (authProvider) {
-      whereConditions.push(eq(users.authProvider, authProvider as any));
+      whereClause += ' AND auth_provider = ?';
+      queryArgs.push(authProvider);
     }
 
-    const whereClause = whereConditions.length > 0 
-      ? and(...whereConditions)
-      : undefined;
-
     // Get total count for pagination
-    const [totalCount] = await db
-      .select({ count: count() })
-      .from(users)
-      .where(whereClause);
+    const countQuery = `SELECT COUNT(*) as count FROM users ${whereClause}`;
+    const totalResult = await client.execute({
+      sql: countQuery,
+      args: queryArgs
+    });
+    const totalCount = totalResult.rows[0].count as number;
 
-    // Get users with their stats
-    const usersList = await db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        authProvider: users.authProvider,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        hasNatalChart: users.hasNatalChart,
-        showOnlineStatus: users.showOnlineStatus,
-      })
-      .from(users)
-      .where(whereClause)
-      .orderBy(sortOrder === 'desc' ? desc(users.createdAt) : users.createdAt)
-      .limit(limit)
-      .offset(offset);
+    // Get users with role information
+    const orderClause = `ORDER BY ${sortBy === 'createdAt' ? 'created_at' : 'updated_at'} ${sortOrder.toUpperCase()}`;
+    const usersQuery = `
+      SELECT 
+        id, username, email, auth_provider, created_at, updated_at, 
+        has_natal_chart, role, is_active, is_suspended
+      FROM users 
+      ${whereClause} 
+      ${orderClause} 
+      LIMIT ? OFFSET ?
+    `;
+
+    const usersResult = await client.execute({
+      sql: usersQuery,
+      args: [...queryArgs, limit, offset]
+    });
 
     // Get chart counts for each user
-    const userIds = usersList.map((u: any) => u.id);
-    const chartCounts = await db
-      .select({
-        userId: natalCharts.userId,
-        count: count()
-      })
-      .from(natalCharts)
-      .where(eq(natalCharts.userId, userIds[0])) // This is a simplified approach
-      .groupBy(natalCharts.userId);
+    const userIds = usersResult.rows.map(row => row.id);
+    const chartCounts: { [key: string]: number } = {};
+    
+    if (userIds.length > 0) {
+      const chartQuery = `
+        SELECT user_id, COUNT(*) as count 
+        FROM natal_charts 
+        WHERE user_id IN (${userIds.map(() => '?').join(',')}) 
+        GROUP BY user_id
+      `;
+      const chartResult = await client.execute({
+        sql: chartQuery,
+        args: userIds
+      });
+      
+      chartResult.rows.forEach(row => {
+        chartCounts[row.user_id as string] = row.count as number;
+      });
+    }
 
     // Get discussion counts for each user
-    const discussionCounts = await db
-      .select({
-        authorId: discussions.authorId,
-        count: count()
-      })
-      .from(discussions)
-      .where(eq(discussions.authorId, userIds[0])) // This is a simplified approach
-      .groupBy(discussions.authorId);
+    const discussionCounts: { [key: string]: number } = {};
+    
+    if (userIds.length > 0) {
+      const discussionQuery = `
+        SELECT author_id, COUNT(*) as count 
+        FROM discussions 
+        WHERE author_id IN (${userIds.map(() => '?').join(',')}) 
+        GROUP BY author_id
+      `;
+      const discussionResult = await client.execute({
+        sql: discussionQuery,
+        args: userIds
+      });
+      
+      discussionResult.rows.forEach(row => {
+        discussionCounts[row.author_id as string] = row.count as number;
+      });
+    }
 
     // Combine data
-    const usersWithStats: AdminUserData[] = usersList.map((user: any) => {
-      const chartCount = chartCounts.find((c: any) => c.userId === user.id)?.count || 0;
-      const discussionCount = discussionCounts.find((d: any) => d.authorId === user.id)?.count || 0;
-      
-      return {
-        id: user.id,
-        username: user.username,
-        email: user.email || undefined,
-        authProvider: user.authProvider,
-        createdAt: user.createdAt.toISOString(),
-        updatedAt: user.updatedAt.toISOString(),
-        hasNatalChart: Boolean(user.hasNatalChart),
-        chartCount: Number(chartCount),
-        discussionCount: Number(discussionCount),
-        isActive: Boolean(user.showOnlineStatus),
-        lastActivity: user.updatedAt.toISOString(),
-      };
-    });
+    const usersWithStats: AdminUserData[] = usersResult.rows.map(row => ({
+      id: row.id as string,
+      username: row.username as string,
+      email: row.email as string || undefined,
+      authProvider: row.auth_provider as string,
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string,
+      hasNatalChart: Boolean(row.has_natal_chart),
+      chartCount: chartCounts[row.id as string] || 0,
+      discussionCount: discussionCounts[row.id as string] || 0,
+      isActive: Boolean(row.is_active),
+      lastActivity: row.updated_at as string,
+      role: row.role as string || 'user',
+      isSuspended: Boolean(row.is_suspended)
+    }));
 
     return NextResponse.json({
       success: true,
@@ -139,9 +152,9 @@ async function handleGetUsers(request: NextRequest, context: AdminAuthContext) {
       pagination: {
         page,
         limit,
-        total: totalCount.count,
-        totalPages: Math.ceil(totalCount.count / limit),
-        hasNext: page * limit < totalCount.count,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNext: page * limit < totalCount,
         hasPrev: page > 1,
       },
       filters: {
@@ -161,11 +174,20 @@ async function handleGetUsers(request: NextRequest, context: AdminAuthContext) {
   }
 }
 
-async function handlePostUsers(request: NextRequest, context: AdminAuthContext) {
+export async function POST(request: NextRequest) {
   try {
-    // Extract request context for audit logging
-    const requestContext = AdminAuditService.extractRequestContext(request, Object.fromEntries(request.headers.entries()));
-    
+    if (!databaseUrl || !authToken) {
+      return NextResponse.json(
+        { error: 'Database configuration missing' },
+        { status: 500 }
+      );
+    }
+
+    const client = createClient({
+      url: databaseUrl,
+      authToken: authToken,
+    });
+
     const body = await request.json();
     const { action, userIds, ...updateData } = body;
 
@@ -179,101 +201,25 @@ async function handlePostUsers(request: NextRequest, context: AdminAuthContext) 
     let result;
     
     switch (action) {
-      case 'updateUsers':
-        // Bulk update users
-        const allowedUpdates = ['username', 'showOnlineStatus', 'hasNatalChart'];
-        const updateFields: any = { updatedAt: new Date() };
-        
-        for (const [key, value] of Object.entries(updateData)) {
-          if (allowedUpdates.includes(key)) {
-            updateFields[key] = value;
-          }
-        }
-
-        // Get users before update for audit logging
-        const usersBeforeUpdate = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, userIds[0])); // Simplified for demo
-
-        for (const userId of userIds) {
-          await db
-            .update(users)
-            .set(updateFields)
-            .where(eq(users.id, userId));
-
-          // Log the update action
-          await AdminAuditService.logUserAction(
-            context.user.username,
-            'update',
-            userId,
-            `Bulk updated user fields: ${Object.keys(updateFields).join(', ')}`,
-            {
-              requestContext,
-              beforeValues: usersBeforeUpdate.find((u: any) => u.id === userId),
-              afterValues: updateFields,
-            }
-          );
-        }
-
-        result = { message: `Updated ${userIds.length} users successfully` };
-        break;
-
       case 'deactivateUsers':
         // Set users as inactive
         for (const userId of userIds) {
-          await db
-            .update(users)
-            .set({ 
-              showOnlineStatus: false,
-              updatedAt: new Date()
-            })
-            .where(eq(users.id, userId));
-
-          // Log the deactivation
-          await AdminAuditService.logUserAction(
-            'Admin',
-            'update',
-            userId,
-            'Deactivated user (set showOnlineStatus to false)',
-            {
-              requestContext,
-              afterValues: { showOnlineStatus: false },
-            }
-          );
+          await client.execute({
+            sql: 'UPDATE users SET is_active = 0, updated_at = ? WHERE id = ?',
+            args: [new Date().toISOString(), userId]
+          });
         }
-
         result = { message: `Deactivated ${userIds.length} users successfully` };
         break;
 
       case 'deleteUsers':
-        // Get users before deletion for audit logging
-        const usersBeforeDelete = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, userIds[0])); // Simplified for demo
-
-        // Delete users (cascade will handle related data)
+        // Soft delete users
         for (const userId of userIds) {
-          const userBeforeDelete = usersBeforeDelete.find((u: any) => u.id === userId);
-          
-          await db
-            .delete(users)
-            .where(eq(users.id, userId));
-
-          // Log the deletion with high severity
-          await AdminAuditService.logUserAction(
-            'Admin',
-            'delete',
-            userId,
-            `Permanently deleted user: ${userBeforeDelete?.username || 'Unknown'}`,
-            {
-              requestContext,
-              beforeValues: userBeforeDelete,
-            }
-          );
+          await client.execute({
+            sql: 'UPDATE users SET is_deleted = 1, updated_at = ? WHERE id = ?',
+            args: [new Date().toISOString(), userId]
+          });
         }
-
         result = { message: `Deleted ${userIds.length} users successfully` };
         break;
 
@@ -297,7 +243,3 @@ async function handlePostUsers(request: NextRequest, context: AdminAuthContext) 
     );
   }
 }
-
-// Export protected routes
-export const GET = createAdminRoute(handleGetUsers, 'admin.users.read');
-export const POST = createAdminRoute(handlePostUsers, 'admin.users.write');

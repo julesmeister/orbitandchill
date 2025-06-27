@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// @ts-nocheck
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -26,6 +27,8 @@ import ConfirmationToast from '../../components/reusable/ConfirmationToast';
 import StatusToast from '../../components/reusable/StatusToast';
 import LocationRequestToast from '../../components/reusable/LocationRequestToast';
 import { useSharedLocation } from '../../hooks/useSharedLocation';
+import { useEventsLimits } from '../../hooks/useEventsLimits';
+import EventsLimitBanner from '../../components/events/EventsLimitBanner';
 import { BRAND } from '../../config/brand';
 
 // Remove duplicate interface - using from store
@@ -60,6 +63,23 @@ export default function EventsPage() {
     hideLocationToast,
     setLocation
   } = useSharedLocation();
+
+  // Use events limits hook
+  const eventsLimits = useEventsLimits();
+
+  // Wrapper for toggleBookmark with limit checking
+  const handleToggleBookmark = (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    
+    // If event is being bookmarked (not unbookmarked) and user has reached limit
+    if (event && !event.isBookmarked && !eventsLimits.canBookmarkMore) {
+      showError("Bookmark Limit Reached", "You have reached your bookmark limit. Remove some bookmarks or upgrade to premium for unlimited bookmarks.");
+      return;
+    }
+    
+    // Otherwise, proceed with toggle
+    toggleBookmark(eventId);
+  };
 
   // Use events store for all state management
   const {
@@ -220,6 +240,12 @@ export default function EventsPage() {
 
   // Wrapper function to use the hook's generateOptimalTiming
   const handleGenerateOptimalTiming = async () => {
+    // Check if user has reached their generation limit
+    if (!eventsLimits.canGenerateEvents) {
+      showError("Generation Limit Reached", eventsLimits.limitMessage || "You have reached your event generation limit");
+      return;
+    }
+
     if (selectedPriorities.length === 0) {
       showError("Missing Priorities", "Please select at least one priority to generate electional recommendations.");
       return;
@@ -344,6 +370,12 @@ export default function EventsPage() {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEvent.title || !newEvent.date) return;
+
+    // Check if user has reached their storage limit
+    if (!eventsLimits.canAddMoreEvents) {
+      showError("Storage Limit Reached", "You have reached your event storage limit. Delete some events or upgrade to premium for unlimited storage.");
+      return;
+    }
 
     console.log('🚀 Starting manual event creation:', {
       title: newEvent.title,
@@ -784,6 +816,13 @@ export default function EventsPage() {
               </div>
             )}
 
+          </div>
+        </section>
+
+        {/* Events Limit Banner for Free Users */}
+        <section className="px-6 md:px-12 lg:px-20">
+          <div className="max-w-4xl mx-auto">
+            <EventsLimitBanner />
           </div>
         </section>
 

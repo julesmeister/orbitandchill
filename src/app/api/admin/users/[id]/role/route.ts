@@ -17,7 +17,7 @@ export async function PATCH(
     }
 
     const userId = params.id;
-    const { adminContext } = authResult;
+    const { context: adminContext } = authResult;
 
     // Parse request body
     const body = await request.json();

@@ -64,15 +64,15 @@ export async function migrateUserData(options: MigrationOptions = {}): Promise<M
 
     // Migrate localStorage data
     const localStorageResult = await migrateLocalStorage(options);
-    result.migratedKeys.push(...localStorageResult.migratedKeys);
-    result.errors.push(...localStorageResult.errors);
-    result.warnings.push(...localStorageResult.warnings);
+    result.migratedKeys.push(...(localStorageResult.migratedKeys || []));
+    result.errors.push(...(localStorageResult.errors || []));
+    result.warnings.push(...(localStorageResult.warnings || []));
 
     // Migrate IndexedDB data
     const indexedDBResult = await migrateIndexedDB(options);
-    result.migratedKeys.push(...indexedDBResult.migratedKeys);
-    result.errors.push(...indexedDBResult.errors);
-    result.warnings.push(...indexedDBResult.warnings);
+    result.migratedKeys.push(...(indexedDBResult.migratedKeys || []));
+    result.errors.push(...(indexedDBResult.errors || []));
+    result.warnings.push(...(indexedDBResult.warnings || []));
 
     // Clean up legacy data (if specified)
     if (!options.preserveLegacyData && !options.dryRun && result.errors.length === 0) {

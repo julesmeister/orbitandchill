@@ -2,6 +2,7 @@ import React from 'react';
 import NextImage from 'next/image';
 import { useUserStore } from '../../store/userStore';
 import { useChartTab } from '../../store/chartStore';
+import { usePDFGeneration } from '../../hooks/usePDFGeneration';
 import ChartTabs from './ChartTabs';
 import ChartInterpretation from './ChartInterpretation';
 import ChartActions from './ChartActions';
@@ -37,6 +38,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
 }) => {
   const { user } = useUserStore();
   const { activeTab, setActiveTab } = useChartTab();
+  const { generateChartPDF, isGenerating: isPDFGenerating } = usePDFGeneration();
   
   // Stabilize data references to prevent unnecessary remounts
   const stableBirthData = React.useMemo(() => birthData, [
@@ -48,7 +50,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
   ]);
   
   const stableChartData = React.useMemo(() => chartData, [
-    chartData?.id,
+    (chartData as any)?.id,
     JSON.stringify(chartData?.planets || []),
     JSON.stringify(chartData?.houses || [])
   ]);
@@ -111,8 +113,28 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const result = await generateChartPDF(chartName, personName || user?.username);
+      
+      if (!result.success) {
+        console.error('PDF generation failed:', result.error);
+        alert(`Failed to generate PDF: ${result.error}`);
+      }
+      
+      if (onDownload) onDownload();
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
   return (
-    <div className="bg-white border border-black overflow-hidden">
+    <div 
+      id={`natal-chart-display-${Date.now()}`}
+      data-chart-container
+      className="bg-white border border-black overflow-hidden"
+    >
       {/* Header */}
       <div className="relative p-8 overflow-hidden" style={{ backgroundColor: '#ff91e9' }}>
         {/* Content */}
@@ -212,7 +234,9 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
           <ChartActions
             onDownloadSVG={handleDownloadSVG}
             onDownloadPNG={handleDownloadPNG}
+            onDownloadPDF={handleDownloadPDF}
             onShare={onShare}
+            isPDFGenerating={isPDFGenerating}
           />
         </div>
 

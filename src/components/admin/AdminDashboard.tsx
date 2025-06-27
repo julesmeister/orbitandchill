@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Load all admin data when authenticated
     if (isAuthenticated) {
-      console.log('🎯 AdminDashboard loading data for authenticated admin...');
+      // AdminDashboard loading data for authenticated admin
       refreshMetrics();
       loadUserAnalytics();
       loadTrafficData();

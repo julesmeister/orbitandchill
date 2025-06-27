@@ -54,7 +54,7 @@ export default function AdminDropdown({ options, value, onChange, className = ''
               type="button"
               onClick={() => handleSelect(option)}
               className={`w-full text-left px-4 py-3 text-sm font-medium text-black hover:bg-gray-100 hover:pl-5 transition-all duration-200 border-none cursor-pointer font-inter ${
-                value === option ? 'bg-black text-white font-semibold' : ''
+                value === option ? 'bg-black text-white font-semibold hover:!bg-gray-800 hover:!text-white' : ''
               }`}
             >
               {option}

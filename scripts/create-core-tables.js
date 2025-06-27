@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 // Script to create all missing core tables in Turso database using raw SQL
-const { createClient } = require('@libsql/client/http');
-require('dotenv').config({ path: '.env.local' });
+import { createClient } from '@libsql/client/http';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
 
 async function createCoreTables() {
   console.log('🔧 Creating core database tables...');

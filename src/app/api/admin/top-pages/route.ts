@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     
     for (const activity of pageViewActivities) {
       if (activity.createdAt >= thirtyDaysAgo) {
-        const metadata = activity.metadata ? JSON.parse(activity.metadata) : {};
+        const metadata = activity.metadata ? JSON.parse(activity.metadata as unknown as string) : {};
         const page = metadata.page || '/';
         pageViewCounts[page] = (pageViewCounts[page] || 0) + 1;
         totalViews++;
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     // Fallback to proportional data based on actual traffic if no page-level data
     console.log('⚠️ API: No page-level data found, using proportional fallback...');
     const trafficSummary = await AnalyticsService.getTrafficSummary(30);
-    const totalPageViews = trafficSummary.totals.pageViews || 100;
+    const totalPageViews = (trafficSummary as any).pageViews || 100;
     
     const fallbackPages = [
       { page: '/chart', views: Math.round(totalPageViews * 0.34), percentage: 34 },

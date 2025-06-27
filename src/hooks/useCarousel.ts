@@ -10,7 +10,7 @@ interface UseCarouselProps {
 
 interface UseCarouselReturn {
   currentIndex: number;
-  carouselRef: React.RefObject<HTMLDivElement>;
+  carouselRef: React.RefObject<HTMLDivElement | null>;
   goToIndex: (index: number) => void;
 }
 

@@ -185,7 +185,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
           {totalReplies} {totalReplies === 1 ? 'Reply' : 'Replies'}
         </h2>
         <button 
-          onClick={refreshReplies}
+          onClick={() => refreshReplies()}
           className="inline-flex items-center gap-2 px-3 py-2 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
           title="Refresh replies"
         >

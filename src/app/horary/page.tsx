@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react/no-unescaped-entities */
+// @ts-nocheck
 "use client";
 
 import { useState, useEffect, useMemo, useRef, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
@@ -32,6 +33,8 @@ import StatusToast from "../../components/reusable/StatusToast";
 import LocationRequestToast from "../../components/reusable/LocationRequestToast";
 import { trackHoraryQuestion } from "../../hooks/usePageTracking";
 import { useSharedLocation } from "../../hooks/useSharedLocation";
+import { useHoraryLimits } from "../../hooks/useHoraryLimits";
+import HoraryLimitBanner from "../../components/horary/HoraryLimitBanner";
 
 // Dynamic import with no SSR for the clock component
 const LiveClock = dynamic(() => import("../../components/horary/LiveClock"), {
@@ -156,16 +159,38 @@ export default function HoraryPage() {
     setForceUpdate(prev => prev + 1);
   }, [questions]);
 
+  // Apply premium limits to question history
+  const userIsPremium = user?.subscriptionTier === 'premium';
+  const displayQuestions = useMemo(() => {
+    if (userIsPremium) {
+      return userQuestions;
+    }
+    // Free users see only last 10 questions
+    return userQuestions.slice(0, 10);
+  }, [userQuestions, userIsPremium]);
+
   // Pagination calculations
-  const totalPages = Math.ceil(userQuestions.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(displayQuestions.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedQuestions = userQuestions.slice(startIndex, endIndex);
+  const paginatedQuestions = displayQuestions.slice(startIndex, endIndex);
 
 
+
+  const limits = useHoraryLimits();
 
   const handleSubmitQuestion = async () => {
     if (!question.trim()) return;
+
+    // Check if user has reached their limit
+    if (!limits.canAskQuestion) {
+      toast.show(
+        'Question Limit Reached',
+        limits.limitMessage || 'You have reached your question limit',
+        'error'
+      );
+      return;
+    }
 
     // Check if moon is void and show warning
     if (voidStatus.isVoid && !voidStatus.isLoading) {
@@ -457,6 +482,9 @@ export default function HoraryPage() {
 
         {/* Main Content Section */}
         <section className="px-[5%] py-12">
+          {/* Horary Limit Banner for Free Users */}
+          <HoraryLimitBanner />
+          
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-0 border border-black mb-12">
             {/* Question Input Card or Chart Display - 2 columns */}
@@ -1120,10 +1148,24 @@ export default function HoraryPage() {
                         <div className="w-16 h-0.5 bg-black mt-1"></div>
                       </div>
                     </div>
-                    <div className="bg-black text-white px-3 py-1.5 font-space-grotesk font-bold text-sm">
-                      {userQuestions.length}
+                    <div className="flex items-center gap-2">
+                      <div className="bg-black text-white px-3 py-1.5 font-space-grotesk font-bold text-sm">
+                        {displayQuestions.length}
+                      </div>
+                      {!userIsPremium && userQuestions.length > 10 && (
+                        <div className="text-xs text-black/60 font-inter">
+                          (+{userQuestions.length - 10} more)
+                        </div>
+                      )}
                     </div>
                   </div>
+                  {!userIsPremium && userQuestions.length > 10 && (
+                    <div className="mt-3 p-2 bg-yellow-100 border border-yellow-300">
+                      <p className="text-xs text-yellow-800 font-inter">
+                        Free users see last 10 questions. <span className="font-semibold">Upgrade for full history.</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Questions List */}

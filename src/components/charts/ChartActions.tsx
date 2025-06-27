@@ -3,13 +3,17 @@ import React from 'react';
 interface ChartActionsProps {
   onDownloadSVG: () => void;
   onDownloadPNG: () => void;
+  onDownloadPDF?: () => void;
   onShare?: () => void;
+  isPDFGenerating?: boolean;
 }
 
 const ChartActions: React.FC<ChartActionsProps> = ({
   onDownloadSVG,
   onDownloadPNG,
-  onShare
+  onDownloadPDF,
+  onShare,
+  isPDFGenerating = false
 }) => {
   return (
     <div className="bg-white border border-black p-6">
@@ -25,7 +29,7 @@ const ChartActions: React.FC<ChartActionsProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-black">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 border border-black">
         {/* Download SVG */}
         <button
           onClick={onDownloadSVG}
@@ -63,6 +67,36 @@ const ChartActions: React.FC<ChartActionsProps> = ({
             </div>
           </div>
         </button>
+
+        {/* Download PDF */}
+        {onDownloadPDF && (
+          <button
+            onClick={onDownloadPDF}
+            disabled={isPDFGenerating}
+            className="group relative p-6 hover:bg-black transition-all duration-300 border-black lg:border-r disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#f0e3ff' }}
+          >
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-black flex items-center justify-center mr-3">
+                {isPDFGenerating ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
+              </div>
+              <div className="text-left">
+                <div className="font-space-grotesk font-semibold text-sm text-black group-hover:text-white">
+                  {isPDFGenerating ? 'Generating...' : 'PDF Format'}
+                </div>
+                <div className="font-inter text-xs text-black/60 group-hover:text-white/80">
+                  {isPDFGenerating ? 'Please wait' : 'Print-ready document'}
+                </div>
+              </div>
+            </div>
+          </button>
+        )}
 
         {/* Share Button */}
         {onShare && (

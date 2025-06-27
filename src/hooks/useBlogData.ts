@@ -50,7 +50,7 @@ export function useBlogData(): UseBlogDataReturn {
 
   // Load blog data on mount
   useEffect(() => {
-    loadThreads().catch((err) => {
+    loadThreads().catch((err: any) => {
       setError('Failed to load blog posts');
       console.error('Error loading blog posts:', err);
     });
@@ -59,7 +59,7 @@ export function useBlogData(): UseBlogDataReturn {
   // Get published blog posts only
   const allBlogPosts = useMemo(() => {
     return threads
-      .filter(thread => thread.isBlogPost && thread.isPublished)
+      .filter((thread: any) => thread.isBlogPost && thread.isPublished)
       .map(convertThreadToBlogPost);
   }, [threads]);
 
@@ -80,7 +80,7 @@ export function useBlogData(): UseBlogDataReturn {
       filtered = filtered.filter(post => 
         post.title.toLowerCase().includes(query) ||
         post.excerpt.toLowerCase().includes(query) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query))
+        post.tags.some((tag: any) => tag.toLowerCase().includes(query))
       );
     }
 
@@ -110,7 +110,7 @@ export function useBlogData(): UseBlogDataReturn {
 
   // Get featured posts (pinned blog posts)
   const featuredPosts = useMemo(() => {
-    return allBlogPosts.filter(post => post.isFeatured).slice(0, 3);
+    return allBlogPosts.filter((post: any) => post.isFeatured).slice(0, 3);
   }, [allBlogPosts]);
 
   // Calculate pagination
@@ -162,7 +162,7 @@ export function useBlogData(): UseBlogDataReturn {
   const categories = useMemo<BlogCategory[]>(() => {
     const categoryCounts = new Map<string, number>();
     
-    allBlogPosts.forEach(post => {
+    allBlogPosts.forEach((post: any) => {
       const count = categoryCounts.get(post.category) || 0;
       categoryCounts.set(post.category, count + 1);
     });

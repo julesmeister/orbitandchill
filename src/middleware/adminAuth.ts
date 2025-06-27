@@ -130,42 +130,46 @@ export async function validateAdminSession(sessionId: string, userId: string): P
  */
 export async function getAdminUserContext(userId: string): Promise<AdminAuthContext['user'] | null> {
   try {
-    const user = await db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        role: users.role,
-        permissions: users.permissions,
-        isActive: users.isActive,
-      })
-      .from(users)
-      .where(
-        and(
-          eq(users.id, userId),
-          eq(users.isActive, true)
-        )
-      )
-      .limit(1);
-
-    if (user.length === 0) {
+    // Use HTTP client directly following API_DATABASE_PROTOCOL.md
+    const { createClient } = await import('@libsql/client/http');
+    
+    const databaseUrl = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+    
+    if (!databaseUrl || !authToken) {
+      console.warn('⚠️ Database configuration missing for admin auth');
       return null;
     }
 
-    const userData = user[0];
-    
+    const client = createClient({
+      url: databaseUrl,
+      authToken: authToken,
+    });
+
+    const result = await client.execute({
+      sql: 'SELECT id, username, email, role, permissions, is_active FROM users WHERE id = ? AND (is_active = 1 OR is_active IS NULL) LIMIT 1',
+      args: [userId]
+    });
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const userData = result.rows[0];
+
     // Check if user has admin role
     if (userData.role !== 'admin' && userData.role !== 'moderator') {
       return null;
     }
 
+    // Convert database row to AdminAuthContext user format
     return {
-      id: userData.id,
-      username: userData.username,
-      email: userData.email || undefined,
-      role: userData.role || 'user',
-      permissions: userData.permissions ? JSON.parse(userData.permissions) : [],
-      isActive: userData.isActive || false,
+      id: userData.id as string,
+      username: userData.username as string,
+      email: userData.email as string | undefined,
+      role: userData.role as string,
+      permissions: userData.permissions ? JSON.parse(userData.permissions as string) : [],
+      isActive: Boolean(userData.is_active),
     };
   } catch (error) {
     console.error('Failed to get admin user context:', error);

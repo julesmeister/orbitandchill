@@ -158,7 +158,7 @@ export class TagService {
         args: [discussionId]
       });
       
-      return results.rows.map(row => ({
+      return results.rows.map((row: any) => ({
         id: row[0] as string,
         name: row[1] as string, 
         usageCount: row[2] as number

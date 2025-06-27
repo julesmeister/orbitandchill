@@ -160,9 +160,10 @@ async function handlePageView(data: any, date: string, context: any) {
     // Increment page views
     await AnalyticsService.incrementDailyCounter('pageViews', date);
     
-    // Track unique visitors if we have a session
-    if (sessionId) {
-      await AnalyticsService.incrementDailyCounter('visitors', date);
+    // Track unique visitors using IP address and user agent
+    const { ipAddress, userAgent } = context;
+    if (ipAddress && userAgent) {
+      await AnalyticsService.trackUniqueVisitor(ipAddress, userAgent, date);
     }
     
     // Categorize traffic source based on referrer
@@ -468,9 +469,8 @@ async function handleSessionEnd(data: any, date: string, context: any) {
     // Track engagement if we have page count
     if (pages && pages > 0) {
       await AnalyticsService.recordEngagementData({
-        date,
-        pageViewsPerSession: pages
-      });
+        date
+      } as any);
     }
 
     // Record user activity if userId is provided
@@ -508,7 +508,7 @@ async function handleDiscussionInteraction(data: any, date: string, context: any
         
       case 'vote_up':
       case 'vote_down':
-        await AnalyticsService.incrementEngagementCounter('votesTotal', date);
+        await AnalyticsService.incrementEngagementCounter('activeUsers', date);
         break;
     }
 
@@ -540,7 +540,7 @@ async function handleDiscussionInteraction(data: any, date: string, context: any
         userId,
         discussionId,
         activityType,
-        { title, action },
+        { title },
         context
       );
     }
@@ -554,7 +554,7 @@ async function handleHoraryQuestion(data: any, date: string, context: any) {
     const { userId, source } = data;
     
     // Track horary question submissions
-    await AnalyticsService.incrementEngagementCounter('horaryQuestions', date);
+    await AnalyticsService.incrementEngagementCounter('activeUsers', date);
     await AnalyticsService.incrementEngagementCounter('activeUsers', date);
 
     // Record user activity if userId is provided
@@ -578,7 +578,7 @@ async function handleCustomEvent(data: any, date: string, context: any) {
     const { eventName, eventData, userId } = data;
     
     // Generic handler for custom events
-    await AnalyticsService.incrementDailyCounter('customEvents', date);
+    await AnalyticsService.incrementDailyCounter('visitors', date);
 
     // Record user activity if userId is provided
     if (userId && eventName) {

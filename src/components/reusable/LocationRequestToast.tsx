@@ -39,7 +39,7 @@ export default function LocationRequestToast({
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [gpsStatus, setGpsStatus] = useState<'idle' | 'requesting' | 'failed'>('idle');
-  const searchTimeout = useRef<NodeJS.Timeout>();
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isVisible) {

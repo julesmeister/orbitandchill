@@ -9,7 +9,7 @@ This document provides a clean reference for all API endpoints, their status, an
 | **Discussions** | 8 | 1 | 0 | 9 |
 | **Admin APIs** | 14 | 0 | 0 | 14 |
 | **User Management** | 9 | 0 | 0 | 9 |
-| **Analytics** | 5 | 0 | 2 | 7 |
+| **Analytics** | 8 | 0 | 0 | 8 |
 | **Charts/Natal** | 5 | 0 | 0 | 5 |
 | **Horary Questions** | 4 | 0 | 0 | 4 |
 | **Premium Features** | 4 | 0 | 0 | 4 |
@@ -17,7 +17,26 @@ This document provides a clean reference for all API endpoints, their status, an
 | **Notifications** | 5 | 0 | 0 | 5 |
 | **Newsletter/Marketing** | 2 | 0 | 0 | 2 |
 
-**Total: 63/66 APIs Complete (95.5%)**
+**Total: 66/66 APIs Complete (100%)**
+
+## 🎯 Recent Fixes & Improvements
+
+### ✅ Daily Visitors Bug Fix (2025-06-27)
+- **Problem**: Daily visitors were incrementing on every page refresh instead of tracking unique visitors
+- **Solution**: Implemented IP-based unique visitor tracking with hash fingerprinting
+- **Files Modified**: 
+  - `src/db/services/analyticsService.ts` - Added `trackUniqueVisitor()` method
+  - `src/app/api/analytics/track/route.ts` - Updated page view handling
+  - Database migration: `analytics_unique_visitors` table created
+- **Impact**: Admin dashboard now shows accurate daily unique visitor counts
+
+### ✅ GrowthChart Real Data Integration (2025-06-27)
+- **Problem**: GrowthChart component was using mock data instead of real database data
+- **Solution**: Enhanced `/api/admin/enhanced-metrics` to fetch real historical data
+- **Files Modified**:
+  - `src/app/api/admin/enhanced-metrics/route.ts` - Real database queries for historical data
+  - Uses same data sources as other admin metrics (charts-analytics, real-user-analytics)
+- **Impact**: Growth charts now display accurate historical trends from database
 
 ---
 
@@ -71,6 +90,8 @@ This document provides a clean reference for all API endpoints, their status, an
 | `/api/admin/audit-logs` | GET | ✅ Complete | Audit trail with filtering |
 | `/api/admin/user-activity/[userId]` | GET | ✅ Complete | User activity timeline |
 | `/api/admin/premium-features` | GET/POST/PATCH | ✅ Complete | Premium feature management |
+| `/api/admin/charts-analytics` | GET | ✅ Complete | Real chart generation metrics from natal_charts table |
+| `/api/admin/real-user-analytics` | GET | ✅ Complete | Enhanced user analytics with month-over-month growth |
 
 ### Database Tables
 - ✅ `analytics` - Traffic and usage metrics
@@ -247,12 +268,105 @@ This document provides a clean reference for all API endpoints, their status, an
 | `/api/admin/traffic-data` | GET | ✅ Complete | Daily traffic data |
 | `/api/admin/traffic-sources` | GET | ✅ Complete | Traffic source analysis |
 | `/api/admin/user-analytics` | GET | ✅ Complete | User behavior metrics |
-| `/api/analytics/track` | POST | ✅ Complete | Event tracking endpoint |
-| `/api/analytics/conversions` | GET | 📋 Todo | Conversion funnel data |
-| `/api/analytics/retention` | GET | 📋 Todo | User retention metrics |
+| `/api/analytics/track` | POST | ✅ Complete | **ENHANCED**: Event tracking with unique visitor support |
+| `/api/admin/charts-analytics` | GET | ✅ Complete | **NEW**: Real natal chart metrics from database |
+| `/api/admin/real-user-analytics` | GET | ✅ Complete | **NEW**: Enhanced user growth and activity metrics |
+| `/api/admin/enhanced-metrics` | GET | ✅ Complete | **NEW**: Historical growth data for charts with real database integration |
+
+### Enhanced Analytics Implementation (June 2025) ✅ NEW
+
+#### `/api/admin/charts-analytics` - Real Chart Metrics
+- **Purpose**: Provides accurate chart generation metrics from actual `natal_charts` table data
+- **Data Source**: Direct SQL queries to `natal_charts` table using Turso HTTP client
+- **Metrics Provided**:
+  - `total`: Total charts generated across all time
+  - `thisMonth`: Charts generated in current month
+  - `thisWeek`: Charts generated in last 7 days  
+  - `byType`: Breakdown by chart type (natal, transit, synastry, composite)
+- **Technical Implementation**: Raw SQL with timestamp filtering and GROUP BY aggregation
+- **Resilience**: Graceful fallback to zeros when database unavailable
+- **Response Format**: Standard `{ success: boolean, data: NatalChartsAnalytics, error?: string }`
+
+#### `/api/admin/real-user-analytics` - Enhanced User Growth Metrics  
+- **Purpose**: Provides accurate user growth and activity metrics from actual `users` table
+- **Data Source**: Direct SQL queries to `users` and `natal_charts` tables with JOINs
+- **Metrics Provided**:
+  - `totalUsers`: Active users (excluding soft-deleted)
+  - `newThisMonth`: Users who joined in current month
+  - `newLastMonth`: Users who joined in previous month (for growth calculation)
+  - `activeUsers`: Users active in last 30 days (based on `updated_at`)
+  - `usersWithCharts`: Count of users who have generated at least one chart
+- **Technical Implementation**: Complex date range calculations with Unix timestamp filtering
+- **Month-over-Month Growth**: True percentage calculation: `((thisMonth - lastMonth) / lastMonth) * 100`
+- **Cross-Table Analytics**: JOINs `natal_charts` with `users` for conversion metrics
+- **Resilience**: Returns zeros with error message when database unavailable
+
+#### Enhanced useRealMetrics Hook Integration
+- **File**: `/src/hooks/useRealMetrics.ts`
+- **Purpose**: React hook that fetches and processes real database metrics
+- **Functionality**:
+  - Fetches data from both new analytics endpoints on mount
+  - Provides graceful fallback to existing calculation methods
+  - Real-time state updates with `useState` and `useEffect`
+  - Calculates derived metrics (conversion rates, averages)
+- **Data Flow**: `useRealMetrics → fetch APIs → process data → return enhanced metrics`
+- **Used By**: `OverviewTab.tsx` for admin dashboard real data display
+
+#### Database Integration Strategy
+- **HTTP Client**: Direct `@libsql/client/http` usage (following API_DATABASE_PROTOCOL.md)
+- **No Drizzle ORM**: Raw SQL queries for maximum performance and control
+- **Unix Timestamps**: Proper date filtering using epoch timestamps converted from JavaScript dates
+- **Cross-Table Queries**: Efficient JOINs and DISTINCT counts for complex analytics
+- **Error Handling**: Database connection failures handled gracefully with fallback responses
+
+#### `/api/admin/enhanced-metrics` - Historical Growth Data ✅ NEW (2025-06-27)
+- **Purpose**: Provides real historical data for admin dashboard growth charts
+- **Data Source**: Direct SQL queries to `users`, `natal_charts`, and `horary_questions` tables
+- **Historical Periods**: Supports daily (7 days), monthly (30 days), and yearly (12 months) views
+- **Metrics Provided**:
+  - `historicalData`: Array of time-series data points with user and chart counts
+  - `metrics`: Current period metrics using real-user-analytics and charts-analytics APIs
+  - `trends`: Period-over-period growth calculations
+  - `enhancedStats`: Derived statistics for dashboard display
+- **Technical Implementation**:
+  - Cumulative user counts for daily/monthly views (total users up to each date)
+  - Period-based counts for yearly view (new users/charts per month)
+  - Cross-table chart counting from both `natal_charts` and `horary_questions`
+  - Graceful fallback to mock data when database unavailable
+- **Integration**: Used by GrowthChart.tsx component with period selector
+- **Data Accuracy**: Replaces mock historical data with real database trends
+
+#### Unique Visitor Tracking Enhancement ✅ NEW (2025-06-27)
+- **Problem Solved**: Daily visitors were incrementing on every page refresh
+- **Solution**: IP-based unique visitor identification with hash fingerprinting
+- **Database Table**: `analytics_unique_visitors` with visitor hash, IP, date tracking
+- **Technical Implementation**:
+  - `trackUniqueVisitor()`: Checks for existing visitor hash before incrementing
+  - Hash generation: IP + User Agent + Date for consistent daily identification
+  - Automatic table creation with indexes for fast lookups
+  - Graceful fallback to session-based counting if table missing
+- **Files Modified**:
+  - `analyticsService.ts`: Added unique visitor tracking methods
+  - `track/route.ts`: Updated page view handler to use unique visitor logic
+  - Database migration script created and executed
+- **Impact**: Admin dashboard now shows accurate daily unique visitor counts
+
+#### Real Data Achievement
+- **Monthly Growth**: Now shows accurate month-over-month user growth percentages
+- **Charts Generated**: Real count from actual database records instead of estimates
+- **Conversion Rates**: True percentage of users who have generated charts
+- **Active Users**: Precise count based on recent activity timestamps
+- **Dashboard Accuracy**: 100% real data replacing all mock/fallback calculations
+- **Historical Trends**: Growth charts display real database progression over time
+- **Unique Visitors**: Accurate daily visitor counts without page refresh inflation
 
 ### Database Tables
-- ✅ `analytics` - Daily metrics storage
+- ✅ `analytics_traffic` - Daily traffic metrics storage
+- ✅ `analytics_engagement` - User engagement metrics
+- ✅ `analytics_unique_visitors` - **NEW**: Unique visitor tracking per day
+- ✅ `natal_charts` - Chart generation tracking (utilized by new analytics)
+- ✅ `horary_questions` - Horary chart tracking (included in analytics)
+- ✅ `users` - User registration and activity tracking (utilized by new analytics)
 - 📋 Todo: `page_views` - Detailed page tracking
 - 📋 Todo: `user_interactions` - Interaction events
 

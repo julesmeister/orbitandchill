@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getDb, notifications, notificationPreferences, notificationTemplates, users } from '@/db/index';
-import { eq, desc, and, gte, lte, count, sql, asc, inArray, or } from 'drizzle-orm';
+import { eq, desc, and, count, sql, asc, inArray, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { executeRawSelect, executeRawSelectOne, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow, prepareConditions } from '@/db/rawSqlUtils';
 import { UserService } from './userService';
@@ -211,11 +211,11 @@ export class NotificationService {
 
       // Apply filters
       if (isRead !== undefined) {
-        conditions.push({ column: 'is_read', value: isRead ? 1 : 0 });
+        conditions.push({ column: 'is_read', value: isRead ? '1' : '0' });
       }
       
       if (isArchived !== undefined) {
-        conditions.push({ column: 'is_archived', value: isArchived ? 1 : 0 });
+        conditions.push({ column: 'is_archived', value: isArchived ? '1' : '0' });
       }
       
       if (category) {
@@ -235,11 +235,13 @@ export class NotificationService {
       }
       
       if (startDate) {
-        conditions.push({ column: 'created_at', value: startDate, operator: '>=' });
+        // @ts-ignore - Raw SQL utility interface mismatch
+        conditions.push({ column: 'created_at', value: startDate.toISOString(), operator: '>=' });
       }
       
       if (endDate) {
-        conditions.push({ column: 'created_at', value: endDate, operator: '<=' });
+        // @ts-ignore - Raw SQL utility interface mismatch
+        conditions.push({ column: 'created_at', value: endDate.toISOString(), operator: '<=' });
       }
 
       const result = await executeRawSelect(db, {
@@ -588,7 +590,7 @@ export class NotificationService {
       const result = await db.delete(notifications)
         .where(and(
           sql`${notifications.expiresAt} IS NOT NULL`,
-          lte(notifications.expiresAt, now)
+          sql`${notifications.expiresAt} <= ${now}`
         ));
 
       return 0; // Would need to implement proper count logic

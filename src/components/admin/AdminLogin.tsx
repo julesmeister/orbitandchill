@@ -102,7 +102,7 @@ export default function AdminLogin() {
                   Signed in as {user.username}
                 </p>
                 <p className="font-inter text-black/80">
-                  {user.email} • {user.email === 'orbitandchill@gmail.com' ? 'Master Admin' : (user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || 'Admin')}
+                  {user.email} • {user.email === 'orbitandchill@gmail.com' ? 'Master Admin' : ((user.role?.charAt(0)?.toUpperCase() || '') + (user.role?.slice(1) || '') || 'Admin')}
                 </p>
               </div>
               

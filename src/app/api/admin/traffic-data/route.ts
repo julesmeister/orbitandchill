@@ -18,37 +18,15 @@ export async function GET(request: NextRequest) {
     console.log(`📊 API: Retrieved ${trafficData.length} traffic records from analytics service`);
     
     // Transform to match expected interface
-    const formattedData = trafficData.map((record: { date: any; visitors: any; pageViews: any; chartsGenerated: any; }) => ({
+    const formattedData = trafficData.map((record: any) => ({
       date: record.date,
       visitors: record.visitors || 0,
       pageViews: record.pageViews || 0,
       chartsGenerated: record.chartsGenerated || 0,
     }));
     
-    // If we don't have enough data, fill in with deterministic data
-    if (formattedData.length < 30) {
-      console.log(`⚠️ API: Only ${formattedData.length}/30 traffic records found, filling missing dates`);
-      const existingDates = new Set(formattedData.map((d: { date: any; }) => d.date));
-      
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        
-        if (!existingDates.has(date)) {
-          // Use deterministic values based on date
-          const dayOfYear = Math.floor((Date.now() - i * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000)) % 365;
-          const visitors = 50 + (dayOfYear % 200);
-          const pageViews = 150 + (dayOfYear % 500);
-          const chartsGenerated = 5 + (dayOfYear % 50);
-          
-          formattedData.push({
-            date,
-            visitors,
-            pageViews,
-            chartsGenerated,
-          });
-        }
-      }
-    }
+    // DO NOT add fake data - only return real data from database
+    console.log(`📊 API: Found ${formattedData.length} real traffic records (no fake data added)`);
     
     const sortedData = formattedData.sort((a: { date: string; }, b: { date: any; }) => a.date.localeCompare(b.date));
     console.log(`✅ API: Traffic data processed: ${sortedData.length} total records`);

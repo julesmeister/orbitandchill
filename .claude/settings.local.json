@@ -43,7 +43,9 @@
       "Bash(timeout:*)",
       "Bash(npx ts-node:*)",
       "Bash(git config:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(source:*)",
+      "Bash(npx next lint:*)"
     ],
     "deny": []
   }

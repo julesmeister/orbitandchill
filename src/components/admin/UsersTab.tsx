@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import AdminDropdown from '@/components/reusable/AdminDropdown';
+import SynapsasDropdown from '@/components/reusable/SynapsasDropdown';
 import TablePagination from '@/components/reusable/TablePagination';
 import UserActivityTimeline from './UserActivityTimeline';
 import { toast } from 'sonner';
@@ -28,6 +29,8 @@ interface AdminUserData {
   discussionCount: number;
   isActive: boolean;
   lastActivity: string;
+  role?: string;
+  isSuspended?: boolean;
 }
 
 interface UsersTabProps {
@@ -49,6 +52,19 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
   const [activityTimelineUserId, setActivityTimelineUserId] = useState<string | null>(null);
   const [deletionModalUser, setDeletionModalUser] = useState<AdminUserData | null>(null);
   const [isDeletionLoading, setIsDeletionLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState<AdminUserData | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    username: string;
+    email: string;
+    role: string;
+    status: string;
+  }>({
+    username: '',
+    email: '',
+    role: 'user',
+    status: 'active'
+  });
+  const [isEditLoading, setIsEditLoading] = useState(false);
 
   // Convert UserAnalytics to AdminUserData format
   const convertUserAnalytics = (analytics: UserAnalytics[]): AdminUserData[] => {
@@ -252,6 +268,52 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
     setSelectedUsers([]);
   };
 
+  // Handle user edit save
+  const handleUserEdit = async () => {
+    if (!editingUser) return;
+
+    setIsEditLoading(true);
+    try {
+      const response = await fetch(`/api/admin/users/${editingUser.id}/update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: editFormData.username,
+          email: editFormData.email,
+          role: editFormData.role,
+          status: editFormData.status,
+          adminUserId: 'admin' // TODO: Get actual admin user ID
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success('User updated successfully');
+        setEditingUser(null);
+        fetchUsers(); // Refresh data
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to update user');
+      }
+    } catch (error) {
+      console.error('User update error:', error);
+      toast.error('Failed to update user');
+    } finally {
+      setIsEditLoading(false);
+    }
+  };
+
+  // Initialize edit form when editing user changes
+  const handleEditUser = (user: AdminUserData) => {
+    setEditingUser(user);
+    setEditFormData({
+      username: user.username,
+      email: user.email || '',
+      role: user.role || 'user',
+      status: user.isSuspended ? 'suspended' : (user.isActive ? 'active' : 'inactive')
+    });
+  };
+
   // Filter users when using props data
   const getFilteredUsers = () => {
     if (useApiData) return users; // API handles filtering
@@ -315,12 +377,31 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
 
   return (
     <div className="space-y-6">
-      {/* User Activity Timeline Modal */}
-      <UserActivityTimeline
-        userId={activityTimelineUserId || ''}
-        isOpen={!!activityTimelineUserId}
-        onClose={() => setActivityTimelineUserId(null)}
-      />
+      {/* User Activity Timeline Modal - Bottom Right */}
+      {activityTimelineUserId && (
+        <div className="fixed bottom-4 right-4 z-50 w-[600px] max-h-[80vh] bg-white border-4 border-black shadow-xl flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-black bg-blue-100">
+            <h3 className="font-space-grotesk text-lg font-bold text-black">
+              Activity Timeline
+            </h3>
+            <button
+              onClick={() => setActivityTimelineUserId(null)}
+              className="p-1 text-black hover:bg-black hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto border-b border-black">
+            <UserActivityTimeline
+              userId={activityTimelineUserId}
+              isOpen={true}
+              onClose={() => setActivityTimelineUserId(null)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Account Deletion Confirmation Modal */}
       {deletionModalUser && (
@@ -372,6 +453,94 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                 className="px-4 py-2 font-inter text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 disabled:opacity-50 transition-colors"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Edit Modal - Bottom Right */}
+      {editingUser && (
+        <div className="fixed bottom-4 right-4 z-50 w-96 max-h-[80vh] bg-white border-4 border-black shadow-xl">
+          <div className="flex items-center justify-between p-4 border-b border-black bg-green-100">
+            <h3 className="font-space-grotesk text-lg font-bold text-black">
+              Edit User: {editingUser.username}
+            </h3>
+            <button
+              onClick={() => setEditingUser(null)}
+              className="p-1 text-black hover:bg-black hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <div className="p-6 overflow-y-auto max-h-[calc(80vh-64px)]">
+            <div className="space-y-4">
+              <div>
+                <label className="block font-inter text-sm font-medium text-black mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.username}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
+                  className="w-full px-3 py-2 font-inter text-sm bg-white border-2 border-black focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              {editingUser.email && (
+                <div>
+                  <label className="block font-inter text-sm font-medium text-black mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 font-inter text-sm bg-white border-2 border-black focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block font-inter text-sm font-medium text-black mb-1">
+                  Role
+                </label>
+                <SynapsasDropdown
+                  options={[
+                    { value: 'user', label: 'User' },
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'moderator', label: 'Moderator' }
+                  ]}
+                  value={editFormData.role}
+                  onChange={(value) => setEditFormData(prev => ({ ...prev, role: value }))}
+                  placeholder="Select role"
+                  variant="default"
+                />
+              </div>
+              <div>
+                <label className="block font-inter text-sm font-medium text-black mb-1">
+                  Account Status
+                </label>
+                <SynapsasDropdown
+                  options={[
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                    { value: 'suspended', label: 'Suspended' }
+                  ]}
+                  value={editFormData.status}
+                  onChange={(value) => setEditFormData(prev => ({ ...prev, status: value }))}
+                  placeholder="Select status"
+                  variant="default"
+                />
+              </div>
+            </div>
+            <div className="flex items-center mt-6">
+              <button
+                onClick={handleUserEdit}
+                disabled={isEditLoading}
+                className="w-full px-4 py-2 font-inter text-sm font-medium text-white bg-green-600 border border-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >
+                {isEditLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -568,12 +737,12 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                         </svg>
                       </button>
                       <button 
-                        onClick={() => window.open(`/admin/users/${user.id}`, '_blank')}
-                        className="p-2 text-black hover:bg-black hover:text-white transition-colors border border-black"
-                        title="View User Details"
+                        onClick={() => handleEditUser(user)}
+                        className="p-2 text-black hover:bg-green-600 hover:text-white transition-colors border border-black"
+                        title="Edit User"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                         </svg>
                       </button>
                       {/* Only show delete button for API data (admin can delete) */}

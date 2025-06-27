@@ -207,21 +207,6 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   const publishedCount = threads.filter((t: Thread) => t.isPublished).length;
   const featuredCount = threads.filter((t: Thread) => t.isPinned).length;
 
-  // Debug logging
-  console.log('🔍 Admin PostsTab - All threads:', threads.length);
-  threads.forEach((thread: Thread, index: number) => {
-    console.log(`🔍 Thread ${index + 1}:`, {
-      id: thread.id,
-      title: thread.title,
-      isBlogPost: thread.isBlogPost,
-      isPublished: thread.isPublished,
-      isPinned: thread.isPinned,
-      author: thread.authorName || thread.authorId
-    });
-  });
-  console.log('🔍 Admin PostsTab - Blog posts:', blogPosts.length);
-  console.log('🔍 Admin PostsTab - Forum threads:', forumThreads.length);
-  console.log('🔍 Admin PostsTab - Published count:', publishedCount);
 
   return (
     <div className="space-y-6">
@@ -314,7 +299,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             <div className="bg-white border border-black">
               <DiscussionForm
                 initialData={editingPost ? (() => {
-                  const thread = threads.find(t => t.id === editingPost);
+                  const thread = threads.find((t: any) => t.id === editingPost);
                   if (!thread) return {};
                   
                   return {
@@ -362,7 +347,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               <button
                 onClick={() => {
                   // Handle save as draft - preserve current form state
-                  const currentThread = threads.find(t => t.id === editingPost);
+                  const currentThread = threads.find((t: any) => t.id === editingPost);
                   const draftData = {
                     title: currentThread?.title || '',
                     content: currentThread?.content || '',
@@ -385,7 +370,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               <button
                 onClick={() => {
                   // Handle publish - preserve current form state
-                  const currentThread = threads.find(t => t.id === editingPost);
+                  const currentThread = threads.find((t: any) => t.id === editingPost);
                   const publishData = {
                     title: currentThread?.title || '',
                     content: currentThread?.content || '',
@@ -473,7 +458,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               <p className="font-inter">No posts found matching the current filter.</p>
             </div>
           ) : (
-            currentPosts.map((thread) => (
+            currentPosts.map((thread: any) => (
               <div key={thread.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">

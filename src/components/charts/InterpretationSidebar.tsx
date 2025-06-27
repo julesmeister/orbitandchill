@@ -240,12 +240,12 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
                       <h4 className="font-space-grotesk text-sm font-semibold text-black">
                         {section.name}
                       </h4>
-                      {section.isPremium && (
+                      {section.isPremium && features.length > 0 && !shouldShowFeature(section.id, userIsPremium) && (
                         <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 border border-yellow-300">
                           PRO
                         </span>
                       )}
-                      {!isAccessible && (
+                      {!isAccessible && features.length > 0 && (
                         <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                         </svg>
@@ -303,7 +303,12 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
       {!isReorderMode && (
         <div className="p-4 border-t border-gray-200">
           <p className="text-xs text-gray-500 mb-2">
-            {orderedSections.filter(s => s.isVisible).length} of {orderedSections.length} sections visible
+            {getVisibleSections().length} of {orderedSections.length} sections visible
+            {!userIsPremium && features.length > 0 && orderedSections.filter(s => s.isPremium && s.isVisible && !shouldShowFeature(s.id, userIsPremium)).length > 0 && (
+              <span className="text-yellow-600">
+                {' '}({orderedSections.filter(s => s.isPremium && s.isVisible && !shouldShowFeature(s.id, userIsPremium)).length} premium)
+              </span>
+            )}
           </p>
           <button
             onClick={() => setIsReorderMode(true)}

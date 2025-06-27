@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { db, discussions, discussionReplies, votes } from '@/db/index';
-import { eq, desc, asc, and, sql } from 'drizzle-orm';
+import { eq, desc, asc, and, or, like, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 export interface CreateDiscussionData {
@@ -363,7 +363,8 @@ export class DiscussionService {
 
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
     try {
-      await executeRawUpdate(db, 'discussions', filteredUpdateData, [
+      // TODO: Fix missing raw SQL utilities
+      /* await executeRawUpdate(db, 'discussions', filteredUpdateData, [
         { column: 'id', value: id }
       ]);
       
@@ -373,7 +374,17 @@ export class DiscussionService {
       });
       
       if (!discussion) return null;
-      const result = transformDatabaseRow(discussion);
+      const result = transformDatabaseRow(discussion); */
+      
+      // Temporary fallback - use drizzle directly  
+      const [updatedDiscussion] = await db
+        .update(discussions)
+        .set(filteredUpdateData as any)
+        .where(eq(discussions.id, id))
+        .returning();
+      
+      if (!updatedDiscussion) return null;
+      const result = updatedDiscussion;
       
       return {
         ...result,
@@ -453,7 +464,7 @@ export class DiscussionService {
     
     try {
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      const existing = await executeRawSelectOne(db, {
+      /* const existing = await executeRawSelectOne(db, {
         table: 'discussions',
         conditions: [{ column: 'id', value: id }]
       });
@@ -461,7 +472,22 @@ export class DiscussionService {
       if (!existing) return null;
       
       await executeRawDelete(db, 'discussions', [{ column: 'id', value: id }]);
-      return transformDatabaseRow(existing);
+      return transformDatabaseRow(existing); */
+      
+      // Temporary fallback - use drizzle directly
+      const [existingDiscussion] = await db
+        .select()
+        .from(discussions)
+        .where(eq(discussions.id, id))
+        .limit(1);
+      
+      if (!existingDiscussion) return null;
+      
+      await db
+        .delete(discussions)
+        .where(eq(discussions.id, id));
+        
+      return existingDiscussion;
     } catch (error) {
       console.warn('Standard delete failed, trying raw SQL:', error);
       
@@ -894,14 +920,27 @@ export class DiscussionService {
     };
     
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-    const results = await executeRawSelect(db, {
+    /* const results = await executeRawSelect(db, {
       table: 'discussions',
       conditions: [{ column: 'is_published', value: 1 }],
       orderBy: [{ column: 'upvotes', direction: 'DESC' }],
       limit
     });
     
-    return results.map(transformDatabaseRow);
+    return results.map(transformDatabaseRow); */
+    
+    // Temporary fallback - use drizzle directly
+    const results = await db
+      .select()
+      .from(discussions)
+      .where(eq(discussions.isPublished, true))
+      .orderBy(desc(discussions.upvotes))
+      .limit(limit);
+    
+    return results.map((discussion: any) => ({
+      ...discussion,
+      tags: discussion.tags ? JSON.parse(discussion.tags) : [],
+    }));
   }
 
   static async searchDiscussions(query: string, limit: number = 20, dbInstance?: any) {
@@ -912,14 +951,28 @@ export class DiscussionService {
     };
     
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-    const results = await executeRawSelect(db, {
+    /* const results = await executeRawSelect(db, {
       table: 'discussions',
       customWhere: `is_published = 1 AND (title LIKE '%${query}%' OR content LIKE '%${query}%')`,
       orderBy: [{ column: 'last_activity', direction: 'DESC' }],
       limit
-    });
+    }); */
+    
+    // Temporary fallback - use drizzle directly
+    const results = await db
+      .select()
+      .from(discussions)
+      .where(and(
+        eq(discussions.isPublished, true),
+        or(
+          like(discussions.title, `%${query}%`),
+          like(discussions.content, `%${query}%`)
+        )
+      ))
+      .orderBy(desc(discussions.lastActivity))
+      .limit(limit);
 
-    return results.map((discussion: { tags: string; }) => ({
+    return results.map((discussion: any) => ({
       ...discussion,
       tags: discussion.tags ? JSON.parse(discussion.tags) : [],
     }));

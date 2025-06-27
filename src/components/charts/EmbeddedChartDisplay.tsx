@@ -248,7 +248,7 @@ export default function EmbeddedChartDisplay({
                       <div className="w-full h-full overflow-hidden">
                         {chart.chartType === 'natal' && (chart.metadata.natalChartData || realChartData) ? (
                           <UnifiedAstrologicalChart
-                            chartData={realChartData || chart.metadata.natalChartData}
+                            chartData={realChartData || chart.metadata?.natalChartData!}
                             chartType="natal"
                             showPlanetInfo={true}
                             showAspects={true}
