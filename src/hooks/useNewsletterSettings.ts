@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
-
-// Import newsletter config from root
-const newsletterConfig = require('../../newsletter.config.js');
+import { newsletterConfig } from '../config/newsletter';
 
 export interface NewsletterSettings {
   enabled: boolean;
@@ -100,11 +98,11 @@ export function useNewsletterSettings() {
           // Apply config override logic
           let finalSettings = { ...DEFAULT_NEWSLETTER_SETTINGS, ...fetchedSettings };
           
-          if (newsletterConfig.enabled === true) {
+          if (typeof newsletterConfig.enabled === 'boolean' && newsletterConfig.enabled === true) {
             // Force enabled regardless of database
             finalSettings.enabled = true;
             // Config override applied: Forced ON
-          } else if (newsletterConfig.enabled === false) {
+          } else if (typeof newsletterConfig.enabled === 'boolean' && newsletterConfig.enabled === false) {
             // Force disabled regardless of database
             finalSettings.enabled = false;
             // Config override applied: Forced OFF
@@ -118,7 +116,7 @@ export function useNewsletterSettings() {
           // Newsletter API returned no settings, using config fallback
           const fallbackSettings = { 
             ...newsletterConfig.fallback, 
-            enabled: newsletterConfig.enabled === true ? true : false 
+            enabled: typeof newsletterConfig.enabled === 'boolean' && newsletterConfig.enabled === true ? true : false 
           };
           setSettings(fallbackSettings);
         }
@@ -127,7 +125,7 @@ export function useNewsletterSettings() {
         setError(err instanceof Error ? err.message : 'Unknown error');
         const fallbackSettings = { 
           ...newsletterConfig.fallback, 
-          enabled: newsletterConfig.enabled === true ? true : false 
+          enabled: typeof newsletterConfig.enabled === 'boolean' && newsletterConfig.enabled === true ? true : false 
         };
         setSettings(fallbackSettings);
       } finally {
