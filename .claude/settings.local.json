@@ -51,7 +51,8 @@
       "Bash(npm --version)",
       "Bash(npm start)",
       "Bash(npm test)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": []
   }

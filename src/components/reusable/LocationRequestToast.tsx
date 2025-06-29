@@ -76,7 +76,7 @@ export default function LocationRequestToast({
         setShowResults(true);
       }
     } catch (error) {
-      console.error('Location search failed:', error);
+      // console.error('Location search failed:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -122,13 +122,13 @@ export default function LocationRequestToast({
         const result = await response.json();
         
         if (result.success) {
-          console.log('✅ Location saved to database:', result.location);
-          console.log('✅ User ID:', user.id, 'Location name:', locationData.name);
+          // console.log('✅ Location saved to database:', result.location);
+          // console.log('✅ User ID:', user.id, 'Location name:', locationData.name);
         } else {
-          console.warn('⚠️ Failed to save location to database:', result.error);
+          // console.warn('⚠️ Failed to save location to database:', result.error);
         }
       } catch (error) {
-        console.error('❌ Failed to save location:', error);
+        // console.error('❌ Failed to save location:', error);
       }
     }
 
@@ -173,7 +173,7 @@ export default function LocationRequestToast({
 
     } catch (error) {
       // GPS failed, show the failure status and keep toast open
-      console.log('GPS location failed:', error);
+      // console.log('GPS location failed:', error);
       setGpsStatus('failed');
       
       // Also call the original onRequestPermission if provided (for hook integration)

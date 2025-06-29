@@ -27,6 +27,7 @@ import {
   SectionHeader,
   TabConfig,
 } from "@/components/horary/common/HoraryComponents";
+import SynapsasDropdown from "@/components/reusable/SynapsasDropdown";
 
 interface EssentialDignityTabProps {
   chartData: any;
@@ -540,17 +541,16 @@ export default function EssentialDignityTab({
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm font-bold mb-2">Sign:</label>
-              <select
+              <SynapsasDropdown
+                options={ESSENTIAL_DIGNITY_TABLE.map((sign) => ({
+                  value: sign.sign,
+                  label: sign.sign,
+                }))}
                 value={almutenSign}
-                onChange={(e) => setAlmutenSign(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-black"
-              >
-                {ESSENTIAL_DIGNITY_TABLE.map((sign) => (
-                  <option key={sign.sign} value={sign.sign}>
-                    {sign.sign}
-                  </option>
-                ))}
-              </select>
+                onChange={setAlmutenSign}
+                placeholder="Select a sign"
+                variant="thin"
+              />
             </div>
 
             <div>
@@ -564,7 +564,8 @@ export default function EssentialDignityTab({
                 onChange={(e) =>
                   setAlmutenDegree(parseFloat(e.target.value) || 0)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-black"
+                className="w-full px-3 py-3 border border-gray-300 focus:outline-none focus:border-gray-500 font-medium text-base"
+                style={{ borderRadius: 0 }}
               />
             </div>
           </div>

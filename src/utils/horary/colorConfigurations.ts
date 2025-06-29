@@ -16,7 +16,7 @@ export const RELEVANCE_COLORS = {
 export const OUTCOME_COLORS = {
   favorable: { bg: '#51bd94', text: 'white' },
   challenging: { bg: '#e74c3c', text: 'white' },
-  neutral: { bg: '#29c9ff', text: 'white' }
+  neutral: { bg: '#29c9ff', text: 'black' }
 } as const;
 
 // Overall tone colors
@@ -38,7 +38,7 @@ export const ASPECT_COLORS_DARK = {
 // Strength indicators (Synapsas-style)
 export const STRENGTH_STYLES = {
   green: { backgroundColor: '#51bd94', color: 'white' },
-  lightgreen: { backgroundColor: '#34ccff', color: 'white' },
+  lightgreen: { backgroundColor: '#34ccff', color: 'black' },
   yellow: { backgroundColor: '#f2e356', color: 'black' },
   orange: { backgroundColor: '#ff91e9', color: 'white' },
   red: { backgroundColor: '#e74c3c', color: 'white' },
@@ -47,14 +47,14 @@ export const STRENGTH_STYLES = {
 
 // Dignity colors
 export const DIGNITY_COLORS = {
-  ruler: '#51bd94',
-  exaltation: '#1ac6ff',
-  triplicity: '#f2e356',
-  term: '#ff91e9',
-  face: '#ddd',
-  detriment: '#ff91e9',
-  fall: '#e74c3c',
-  peregrine: '#19181a'
+  ruler: "#51bd94",
+  exaltation: "#04baf7",
+  triplicity: "#f2e356",
+  term: "#ff91e9",
+  face: "#ddd",
+  detriment: "#ff91e9",
+  fall: "#e74c3c",
+  peregrine: "#19181a",
 } as const;
 
 // Confidence levels

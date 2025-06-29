@@ -28,7 +28,8 @@ export function checkDatabaseAvailability<T>(
   db: any, 
   options: ResilienceOptions<T>
 ): { isAvailable: boolean; fallback: () => T } {
-  const isAvailable = !!db;
+  // Check if db exists AND has a properly initialized client
+  const isAvailable = !!db && (!!db.client || !!process.env.TURSO_DATABASE_URL);
   
   const fallback = () => {
     const serviceName = options.serviceName || 'Unknown Service';

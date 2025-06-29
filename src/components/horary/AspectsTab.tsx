@@ -38,7 +38,7 @@ interface AspectsTabProps {
 
 export default function AspectsTab({ chartData, analysisData, question }: AspectsTabProps) {
   const [selectedAspect, setSelectedAspect] = useState<AspectAnalysis | null>(null);
-  const [activeSection, setActiveSection] = useState<'overview' | 'major' | 'patterns' | 'timing' | 'context'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'major' | 'patterns' | 'context'>('overview');
   
   // Extract actual planetary positions from chart data
   const getPlanetaryPositions = (): PlanetaryPosition[] => {
@@ -235,7 +235,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
               title={`Relevance: ${interpretation.questionRelevance}`}
               content={<div className="text-xs">How important this aspect is for your question</div>}
               backgroundColor="#33ccff"
-              textColor="white"
+              textColor="black"
             />
             
             <InfoBox
@@ -256,7 +256,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
 
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h4 className="font-space-grotesk font-bold mb-3">Detailed Interpretation</h4>
-        <ColoredBox backgroundColor="#51bd94" className="p-4">
+        <ColoredBox backgroundColor="#05b773" className="p-4">
           <div className="text-sm">{interpretation.contextualMeaning}</div>
         </ColoredBox>
         
@@ -305,7 +305,6 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
           { id: 'overview', label: 'Overview', icon: '📋' },
           { id: 'major', label: 'Major Aspects', icon: '⚹' },
           { id: 'patterns', label: 'Advanced Patterns', icon: '🔗' },
-          { id: 'timing', label: 'Timing', icon: '⏰' },
           { id: 'context', label: 'Context', icon: '🎯' }
         ] as TabConfig[]).map((tab) => (
           <button
@@ -338,7 +337,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
         <div className="space-y-6">
           {/* Summary stats */}
           <div className="grid md:grid-cols-4 gap-4">
-            <StatCard value={aspectAnalysis.summary.totalAspects} label="Total Aspects" backgroundColor="#29c9ff" />
+            <StatCard value={aspectAnalysis.summary.totalAspects} label="Total Aspects" backgroundColor="#29c9ff" textColor='black' />
             <StatCard value={aspectAnalysis.summary.applyingAspects} label="Applying" backgroundColor="#51bd94" />
             <StatCard value={aspectAnalysis.summary.separatingAspects} label="Separating" backgroundColor="#f2e356" textColor="black" />
             <StatCard value={aspectAnalysis.summary.majorPatterns} label="Advanced Patterns" backgroundColor="#e74c3c" />
@@ -469,7 +468,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
                   <ColoredBox backgroundColor="#51bd94" className="p-2">
                     <span className="font-bold">High relevance:</span> Aspects involving significators
                   </ColoredBox>
-                  <ColoredBox backgroundColor="#c6b307" textColor="black" className="p-2">
+                  <ColoredBox backgroundColor="#ffe609" textColor="black" className="p-2">
                     <span className="font-bold">Medium relevance:</span> General planetary aspects
                   </ColoredBox>
                   <ColoredBox backgroundColor="#6b7280" className="p-2">

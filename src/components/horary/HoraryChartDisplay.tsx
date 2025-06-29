@@ -119,20 +119,30 @@ export default function HoraryChartDisplay({
               </div>
               <div>
                 <h2 className="font-space-grotesk text-3xl font-bold text-black mb-2">Horary Oracle</h2>
-                <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
-                  <span className="text-black">⏰</span>
-                  <span>
-                    Cast on {questionDate.toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })} at {questionDate.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit'
-                    })}
-                  </span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
+                    <span className="text-black">⏰</span>
+                    <span>
+                      Cast on {questionDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })} at {questionDate.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
+                    <span className="text-black">📍</span>
+                    <span>
+                      {question?.customLocation?.name || 
+                       user?.birthData?.locationOfBirth || 
+                       'Location not recorded'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -35,12 +35,29 @@ export async function executeRawSelect(
   db: any,
   options: RawSqlQueryOptions
 ): Promise<any[]> {
-  const dbObj = db as any;
-  const client = dbObj?.client;
+  // Try to get client from db object, or create a direct connection if needed
+  let client = db?.client;
   
   if (!client) {
-    console.error('❌ Database client not available for raw SQL execution');
-    return [];
+    try {
+      // Fallback: create direct connection using environment variables
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+      } else {
+        console.error('❌ Database client not available and missing environment variables');
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Failed to create fallback database client:', error);
+      return [];
+    }
   }
 
   try {
@@ -130,12 +147,29 @@ export async function executeRawUpdate(
   updates: Record<string, any>,
   conditions: RawSqlCondition[]
 ): Promise<number> {
-  const dbObj = db as any;
-  const client = dbObj?.client;
+  // Try to get client from db object, or create a direct connection if needed
+  let client = db?.client;
   
   if (!client) {
-    console.error('❌ Database client not available for raw SQL execution');
-    return 0;
+    try {
+      // Fallback: create direct connection using environment variables
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+      } else {
+        console.error('❌ Database client not available and missing environment variables');
+        return 0;
+      }
+    } catch (error) {
+      console.error('❌ Failed to create fallback database client:', error);
+      return 0;
+    }
   }
 
   try {
@@ -182,12 +216,29 @@ export async function executeRawDelete(
   table: string,
   conditions: RawSqlCondition[]
 ): Promise<number> {
-  const dbObj = db as any;
-  const client = dbObj?.client;
+  // Try to get client from db object, or create a direct connection if needed
+  let client = db?.client;
   
   if (!client) {
-    console.error('❌ Database client not available for raw SQL execution');
-    return 0;
+    try {
+      // Fallback: create direct connection using environment variables
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+      } else {
+        console.error('❌ Database client not available and missing environment variables');
+        return 0;
+      }
+    } catch (error) {
+      console.error('❌ Failed to create fallback database client:', error);
+      return 0;
+    }
   }
 
   try {

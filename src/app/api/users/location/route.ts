@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Location update error:', error);
+    // console.error('Location update error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -71,6 +71,8 @@ export async function GET(request: NextRequest) {
     const user = await UserService.getUserById(userId);
 
     if (!user) {
+      // Log for debugging without exposing sensitive info
+      console.warn(`[Location API] User not found: ${userId.substring(0, 10)}...`);
       return NextResponse.json(
         { success: false, error: 'User not found' },
         { status: 404 }
@@ -114,7 +116,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Location fetch error:', error);
+    // console.error('Location fetch error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

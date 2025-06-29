@@ -180,10 +180,7 @@ export default function HoraryPage() {
     // Add delay for Google auth users to ensure user is fully persisted
     const loadWithDelay = async () => {
       if (user?.id) {
-        console.log('🔍 Loading questions for user:', {
-          userId: user.id,
-          authProvider: user.authProvider
-        });
+        // console.log('🔍 Loading questions for user:', user.id);
 
         // If Google user, add small delay to ensure database persistence completed
         if (user.authProvider === 'google') {
@@ -201,11 +198,7 @@ export default function HoraryPage() {
 
   // Force update when questions change
   useEffect(() => {
-    console.log('Questions updated:', questions.map(q => ({
-      id: q.id,
-      answer: q.answer,
-      hasChartData: !!q.chartData
-    })));
+    // console.log('Questions updated:', questions.length);
     setForceUpdate(prev => prev + 1);
   }, [questions]);
 
@@ -259,6 +252,10 @@ export default function HoraryPage() {
       question: question.trim(),
       date: questionDate,
       userId: user?.id,
+      customLocation: {
+        name: sharedLocationDisplay.name,
+        coordinates: sharedLocationDisplay.coordinates
+      }
     };
 
     // Add debug logging for question submission
@@ -268,7 +265,12 @@ export default function HoraryPage() {
       userExists: !!user,
       questionLength: question.trim().length,
       useCustomTime,
-      customTimeData
+      customTimeData,
+      location: {
+        name: sharedLocationDisplay.name,
+        source: sharedLocationDisplay.source,
+        coordinates: sharedLocationDisplay.coordinates
+      }
     });
 
     try {
@@ -440,6 +442,10 @@ export default function HoraryPage() {
       question: question.trim(),
       date: questionDate,
       userId: user?.id,
+      customLocation: {
+        name: sharedLocationDisplay.name,
+        coordinates: sharedLocationDisplay.coordinates
+      }
     };
 
     try {
@@ -735,12 +741,12 @@ export default function HoraryPage() {
                 </div>
               ) : (
                 /* Chart Display Section */
-                <div className="space-y-8">
+                <div>
                   {/* Ask Another Question Button */}
-                  <div className="flex justify-center">
+                  <div className="w-full">
                     <button
                       onClick={handleAskAnotherQuestion}
-                      className="inline-flex items-center px-8 py-4 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-space-grotesk font-bold"
+                      className="w-full flex items-center justify-center px-8 py-8 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-space-grotesk font-bold text-lg"
                     >
                       <span className="mr-3">❓</span>
                       Ask Another Question

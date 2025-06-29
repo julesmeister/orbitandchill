@@ -65,25 +65,21 @@ export const useHoraryStore = create<HoraryState>()(
       loadQuestions: async (userId) => {
         set({ isLoading: true });
         try {
-          // Add debug logging for user ID tracking
-          console.log('🔍 Loading horary questions for user:', {
-            userId,
-            userIdType: typeof userId,
-            userIdExists: !!userId
-          });
+          // Debug logging disabled for production
+          // console.log('🔍 Loading horary questions for user:', userId);
 
           // Verify user exists in database before loading questions (for Google users)
           if (userId && userId.startsWith('google_')) {
             try {
               const userCheck = await fetch(`/api/users/profile?userId=${userId}`);
               if (!userCheck.ok) {
-                console.warn('⚠️ Google user not found in database, using local storage only');
+                // console.warn('⚠️ Google user not found in database, using local storage only');
                 set({ isLoading: false });
                 return;
               }
-              console.log('✅ Google user verified in database');
+              // console.log('✅ Google user verified in database');
             } catch (error) {
-              console.warn('⚠️ User verification failed, continuing with local storage:', error);
+              // console.warn('⚠️ User verification failed, continuing with local storage:', error);
             }
           }
 
@@ -110,7 +106,7 @@ export const useHoraryStore = create<HoraryState>()(
                   
                   // Validate the date
                   if (isNaN(questionDate.getTime()) || questionDate.getFullYear() < 1990) {
-                    console.warn('Invalid date in question from database:', q.date, 'Using current time instead');
+                    // console.warn('Invalid date in question from database:', q.date, 'Using current time instead');
                     questionDate = new Date();
                   }
                 }
@@ -124,15 +120,15 @@ export const useHoraryStore = create<HoraryState>()(
               });
               
               set({ questions, isLoading: false });
-              console.log(`✅ Loaded ${questions.length} horary questions from database for user:`, userId);
+              // console.log(`✅ Loaded ${questions.length} horary questions from database for user:`, userId);
               return;
             }
           }
           
-          console.warn('⚠️ Failed to load questions from database, using local storage');
+          // console.warn('⚠️ Failed to load questions from database, using local storage');
           set({ isLoading: false });
         } catch (error) {
-          console.error('❌ Error loading questions from database:', error);
+          // console.error('❌ Error loading questions from database:', error);
           set({ isLoading: false });
         }
       },

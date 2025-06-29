@@ -126,11 +126,11 @@ export class UserService {
       const userData = await RawSqlPatterns.findById(db, 'users', id);
       
       if (!userData) {
-        console.log('🔍 No user found with ID:', id);
+        // console.log('🔍 No user found with ID:', id);
         return null;
       }
       
-      console.log('🔍 User found:', userData.username);
+      // console.log('🔍 User found:', userData.username);
       
       // Transform snake_case to camelCase and parse JSON fields
       const transformedUser = transformDatabaseRow(userData);

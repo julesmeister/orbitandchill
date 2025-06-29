@@ -131,10 +131,10 @@ export const useSharedLocation = () => {
               currentLocation: savedLocation
             }));
             
-            console.log('✅ Loaded saved location from database:', savedLocation.name);
+            // console.log('✅ Loaded saved location from database:', savedLocation.name);
           }
         } catch (error) {
-          console.warn('Failed to load saved location from database:', error);
+          // console.warn('Failed to load saved location from database:', error);
         }
       } else {
         // Clear current location when user logs out
@@ -147,6 +147,25 @@ export const useSharedLocation = () => {
 
     loadSavedLocation();
   }, [user?.id]);
+
+  // Auto-show location toast if user has no location set and is on horary page
+  useEffect(() => {
+    // Only show if we have a user, no current location, no birth location, and aren't already showing the toast
+    if (user?.id && 
+        !locationState.currentLocation && 
+        !user.birthData?.coordinates &&
+        !locationState.showLocationToast &&
+        typeof window !== 'undefined' && 
+        window.location.pathname === '/horary') {
+      
+      // Add a small delay to ensure the page has loaded
+      const timer = setTimeout(() => {
+        setLocationState(prev => ({ ...prev, showLocationToast: true }));
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [user?.id, user?.birthData?.coordinates, locationState.currentLocation, locationState.showLocationToast]);
 
   // Get the best available location following the hierarchy
   const getBestLocation = useCallback((): {
@@ -227,12 +246,12 @@ export const useSharedLocation = () => {
           });
 
           if (!response.ok) {
-            console.warn('Failed to save GPS location to database:', response.statusText);
+            // console.warn('Failed to save GPS location to database:', response.statusText);
           } else {
-            console.log('✅ GPS location saved to database successfully');
+            // console.log('✅ GPS location saved to database successfully');
           }
         } catch (error) {
-          console.warn('Failed to save GPS location to database:', error);
+          // console.warn('Failed to save GPS location to database:', error);
         }
       }
       

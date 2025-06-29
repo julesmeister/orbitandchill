@@ -53,13 +53,13 @@ export interface PlanetaryPosition {
   retrograde: boolean;
 }
 
-// Traditional aspect definitions - EXACT ONLY (no orbs in horary)
+// Traditional aspect definitions with reasonable orbs for chart analysis
 export const MAJOR_ASPECTS = {
-  conjunction: { degrees: 0, tolerance: 1, nature: 'union' },
-  trine: { degrees: 120, tolerance: 1, nature: 'harmony' },
-  square: { degrees: 90, tolerance: 1, nature: 'tension' },
-  sextile: { degrees: 60, tolerance: 1, nature: 'opportunity' },
-  opposition: { degrees: 180, tolerance: 1, nature: 'separation' }
+  conjunction: { degrees: 0, tolerance: 8, nature: 'union' },
+  trine: { degrees: 120, tolerance: 8, nature: 'harmony' },
+  square: { degrees: 90, tolerance: 8, nature: 'tension' },
+  sextile: { degrees: 60, tolerance: 6, nature: 'opportunity' },
+  opposition: { degrees: 180, tolerance: 8, nature: 'separation' }
 } as const;
 
 // Aspect nature descriptions
@@ -451,11 +451,11 @@ export function getAspectSymbol(aspect: string): string {
 // Helper function to get aspect color
 export function getAspectColor(aspect: string): string {
   const colors = {
-    conjunction: "#33ccff", // Blue - neutral union
-    trine: "#51bd94", // Green - harmonious
-    square: "#e74c3c", // Red - challenging
-    sextile: "#f2e356", // Yellow - opportunity
-    opposition: "#ff91e9", // Pink - confrontation
+    conjunction: "#1976d2", // Dark blue - neutral union
+    trine: "#388e3c", // Dark green - harmonious
+    square: "#d32f2f", // Dark red - challenging
+    sextile: "#f57c00", // Dark orange - opportunity
+    opposition: "#c2185b", // Dark pink - confrontation
   };
   return colors[aspect as keyof typeof colors] || '#19181a';
 }

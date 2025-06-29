@@ -22,6 +22,16 @@
         <button class="button" onclick="testHoraryCreation()">🧪 Test Horary Creation (Debug)</button>
     </div>
     
+    <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border: 1px solid #dee2e6;">
+        <h3>🔍 User Lookup Debug</h3>
+        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+            Debug why user <code>113425479876942125321</code> returns 404 when the user is clearly logged in
+        </p>
+        <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., 113425479876942125321)" style="width: 300px; padding: 8px; margin-right: 10px;" value="113425479876942125321">
+        <button class="button" onclick="debugUserLookup()">🔍 Debug User Lookup</button>
+        <button class="button" onclick="testLocationAPI()">📍 Test Location API</button>
+    </div>
+    
     <div id="results"></div>
 
     <script>
@@ -112,6 +122,48 @@
                 addResult('🧪 Debug Horary Creation Test', data, !response.ok);
             } catch (error) {
                 addResult('❌ Debug Creation Test Error', { error: error.message }, true);
+            }
+        }
+
+        async function debugUserLookup() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ User Lookup Error', { error: 'Please enter a user ID' }, true);
+                    return;
+                }
+                
+                const response = await fetch(`/api/debug/user-lookup?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                addResult(`🔍 User Lookup Debug for: ${userId}`, data, !response.ok);
+            } catch (error) {
+                addResult('❌ User Lookup Error', { error: error.message }, true);
+            }
+        }
+
+        async function testLocationAPI() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ Location API Test Error', { error: 'Please enter a user ID' }, true);
+                    return;
+                }
+                
+                // Test the exact same API call that's failing in the app
+                const response = await fetch(`/api/users/location?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                const result = {
+                    statusCode: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    responseData: data,
+                    isSuccess: response.ok
+                };
+                
+                addResult(`📍 Location API Test for: ${userId}`, result, !response.ok);
+            } catch (error) {
+                addResult('❌ Location API Test Error', { error: error.message }, true);
             }
         }
     </script>
