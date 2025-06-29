@@ -10,29 +10,47 @@ const resilient = createResilientService('EventService');
 
 // Helper function to ensure database is initialized
 async function ensureDatabase() {
+  console.log('🔍 ensureDatabase() called, db status:', {
+    hasDb: !!db,
+    dbType: db ? typeof db : 'undefined'
+  });
+  
   if (!db) {
-    console.log('Database not initialized, attempting to initialize...');
+    console.log('🚀 Database not initialized, attempting to initialize...');
     try {
       const result = await initializeDatabase();
+      console.log('📋 initializeDatabase() result:', {
+        hasResult: !!result,
+        hasClient: !!result?.client,
+        hasDb: !!result?.db,
+        clientType: result?.client ? typeof result.client : 'undefined',
+        dbType: result?.db ? typeof result.db : 'undefined'
+      });
+      
       if (result?.db) {
         console.log('✅ Database initialized successfully in ensureDatabase()');
+        // Update the global db variable
+        if (!db) {
+          console.log('🔄 Updating global db variable');
+        }
         return result.db;
       } else {
         console.log('⚠️ Database initialization returned null/undefined');
         return null;
       }
     } catch (error) {
-      console.error('Database initialization failed:', error);
+      console.error('❌ Database initialization failed:', error);
       // Continue without throwing - we'll handle this gracefully
       return null;
     }
   }
   
   if (!db) {
-    console.log('Database not available - using fallback mode');
+    console.log('⚠️ Database not available - using fallback mode');
     return null;
   }
   
+  console.log('✅ Using existing database connection');
   return db;
 }
 
@@ -44,6 +62,13 @@ interface EventFilters {
   dateFrom?: string;
   dateTo?: string;
   searchTerm?: string;
+  // Location-based filtering
+  nearLocation?: {
+    latitude: number;
+    longitude: number;
+    radiusKm?: number; // Default 50km radius
+  };
+  timezone?: string;
 }
 
 interface CreateEventData {
@@ -71,6 +96,11 @@ interface CreateEventData {
     endTime: string;
     duration: string;
   };
+  // Location data for location-specific events
+  locationName?: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
   // TODO: Re-enable after database migration
   // electionalData?: {
   //   mercuryStatus: 'direct' | 'retrograde';
@@ -128,6 +158,11 @@ function dbRowToEvent(row: any): AstrologicalEvent {
     chartData: row.chartData || row.chart_data ? JSON.parse(row.chartData || row.chart_data) : undefined,
     isBookmarked: Boolean(row.isBookmarked || row.is_bookmarked), // Handle both camelCase and snake_case
     timeWindow: row.timeWindow || row.time_window ? JSON.parse(row.timeWindow || row.time_window) : undefined,
+    // Location data
+    locationName: row.locationName || row.location_name || undefined,
+    latitude: row.latitude || undefined,
+    longitude: row.longitude || undefined,
+    timezone: row.timezone || undefined,
     // timingMethod: row.timingMethod || undefined, // TODO: Re-enable after migration
     // electionalData: row.electionalData ? JSON.parse(row.electionalData) : undefined, // TODO: Re-enable after migration
     createdAt: row.createdAt || row.created_at ? (typeof (row.createdAt || row.created_at) === 'number' ? new Date((row.createdAt || row.created_at) * 1000).toISOString() : (row.createdAt || row.created_at).toISOString()) : new Date().toISOString(),
@@ -151,6 +186,11 @@ function eventToDbRow(eventData: CreateEventData) {
     priorities: eventData.priorities ? JSON.stringify(eventData.priorities) : null,
     chartData: eventData.chartData ? JSON.stringify(eventData.chartData) : null,
     timeWindow: eventData.timeWindow ? JSON.stringify(eventData.timeWindow) : null,
+    // Location data - ensure proper type conversion
+    locationName: eventData.locationName || null,
+    latitude: eventData.latitude !== undefined ? Number(eventData.latitude) : null,
+    longitude: eventData.longitude !== undefined ? Number(eventData.longitude) : null,
+    timezone: eventData.timezone || null,
     // timingMethod: eventData.timingMethod || null, // TODO: Re-enable after migration
     // electionalData: eventData.electionalData ? JSON.stringify(eventData.electionalData) : null, // TODO: Re-enable after migration
     isBookmarked: 0, // Explicitly convert to integer for SQLite
@@ -230,16 +270,114 @@ export class EventService {
 
   // Create a new event
   static async createEvent(eventData: CreateEventData): Promise<AstrologicalEvent | null> {
-    return resilient.operation(db, 'createEvent', async () => {
-      const dbData = eventToDbRow(eventData);
-      
-      const [insertedRow] = await db
-        .insert(astrologicalEvents)
-        .values(dbData)
-        .returning();
+    console.log('🚀 EventService.createEvent called with data:', {
+      userId: eventData.userId,
+      title: eventData.title,
+      date: eventData.date,
+      type: eventData.type,
+      hasLocationData: !!(eventData.locationName || eventData.latitude || eventData.longitude)
+    });
 
-      return dbRowToEvent(insertedRow);
-    }, null);
+    // Ensure database is available before proceeding
+    const database = await ensureDatabase();
+    if (!database) {
+      console.error('❌ Database not available in createEvent');
+      return null;
+    }
+
+    try {
+      const dbData = eventToDbRow(eventData);
+      console.log('📝 Converted to database format:', {
+        id: dbData.id,
+        userId: dbData.userId,
+        title: dbData.title,
+        locationName: dbData.locationName,
+        latitude: dbData.latitude,
+        longitude: dbData.longitude,
+        timezone: dbData.timezone
+      });
+      
+      // BYPASS DRIZZLE ORM - Use raw SQL for INSERT to avoid Turso HTTP client issues
+      const client = (database as any).client;
+      if (!client) {
+        console.error('❌ Database client not available');
+        throw new Error('Database client not available');
+      }
+        
+        const insertSql = `
+          INSERT INTO astrological_events (
+            id, user_id, title, date, time, type, description, 
+            aspects, planetary_positions, score, is_generated, 
+            priorities, chart_data, is_bookmarked, time_window,
+            location_name, latitude, longitude, timezone,
+            created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        
+        const insertResult = await client.execute({
+          sql: insertSql,
+          args: [
+            dbData.id,
+            dbData.userId,
+            dbData.title,
+            dbData.date,
+            dbData.time,
+            dbData.type,
+            dbData.description,
+            dbData.aspects,
+            dbData.planetaryPositions,
+            dbData.score,
+            dbData.isGenerated,
+            dbData.priorities,
+            dbData.chartData,
+            dbData.isBookmarked,
+            dbData.timeWindow,
+            // Location fields
+            dbData.locationName,
+            dbData.latitude,
+            dbData.longitude,
+            dbData.timezone,
+            // Timestamps (convert to Unix timestamp for SQLite)
+            Math.floor(dbData.createdAt.getTime() / 1000),
+            Math.floor(dbData.updatedAt.getTime() / 1000)
+          ]
+        });
+        
+        console.log('💾 Raw SQL insert result:', {
+          rowsAffected: insertResult.rowsAffected,
+          lastInsertRowid: insertResult.lastInsertRowid
+        });
+        
+        if (insertResult.rowsAffected !== 1) {
+          console.error('❌ Insert affected', insertResult.rowsAffected, 'rows, expected 1');
+          throw new Error(`Insert affected ${insertResult.rowsAffected} rows, expected 1`);
+        }
+        
+        // Retrieve the inserted row to return it
+        const selectResult = await client.execute({
+          sql: 'SELECT * FROM astrological_events WHERE id = ?',
+          args: [dbData.id]
+        });
+        
+        if (!selectResult.rows || selectResult.rows.length === 0) {
+          console.error('❌ Could not retrieve inserted event');
+          throw new Error('Could not retrieve inserted event');
+        }
+        
+        const insertedRow = selectResult.rows[0];
+        const convertedEvent = dbRowToEvent(transformDatabaseRow(insertedRow));
+        
+        console.log('✅ Event created successfully:', {
+          id: convertedEvent.id,
+          title: convertedEvent.title,
+          locationName: convertedEvent.locationName
+        });
+        
+        return convertedEvent;
+    } catch (error) {
+      console.error('❌ Database insert failed:', error);
+      return null;
+    }
   }
 
   // Update an existing event
@@ -343,8 +481,22 @@ export class EventService {
   }
 
   // Delete an event
-  static async deleteEvent(id: string): Promise<boolean> {
-      console.log('🗑️ Deleting event with ID:', id);
+  static async deleteEvent(id: string, userId?: string): Promise<boolean> {
+      console.log('🗑️ Deleting event with ID:', id, 'by user:', userId);
+      
+      // Security check: if userId provided, verify ownership first
+      if (userId) {
+        const existingEvent = await this.getEventById(id);
+        if (!existingEvent) {
+          console.log('❌ Event not found:', id);
+          return false;
+        }
+        
+        if (existingEvent.userId !== userId) {
+          console.log('❌ User not authorized to delete this event:', { eventUserId: existingEvent.userId, requestUserId: userId });
+          throw new Error('Not authorized to delete this event');
+        }
+      }
       
       // Use raw SQL for delete to avoid Drizzle ORM WHERE clause issues
       const client = (db as any).client;
@@ -367,12 +519,21 @@ export class EventService {
   }
 
   // Toggle bookmark status
-  static async toggleBookmark(id: string): Promise<AstrologicalEvent | null> {
+  static async toggleBookmark(id: string, userId?: string): Promise<AstrologicalEvent | null> {
     return resilient.item(db, 'toggleBookmark', async () => {
+      console.log('🔄 Toggling bookmark for event:', id, 'by user:', userId);
+      
       // Get current event
       const currentEvent = await this.getEventById(id);
       if (!currentEvent) {
+        console.log('❌ Event not found:', id);
         return null;
+      }
+      
+      // Security check: if userId provided, ensure it matches the event owner
+      if (userId && currentEvent.userId !== userId) {
+        console.log('❌ User not authorized to bookmark this event:', { eventUserId: currentEvent.userId, requestUserId: userId });
+        throw new Error('Not authorized to bookmark this event');
       }
       
       console.log('🔄 Toggling bookmark for event:', id, 'from', currentEvent.isBookmarked, 'to', !currentEvent.isBookmarked);
@@ -387,7 +548,7 @@ export class EventService {
       const newBookmarkStatus = !currentEvent.isBookmarked;
       const updateResult = await client.execute({
         sql: 'UPDATE astrological_events SET is_bookmarked = ?, updated_at = ? WHERE id = ? RETURNING *',
-        args: [newBookmarkStatus ? 1 : 0, new Date().toISOString(), id]
+        args: [newBookmarkStatus ? 1 : 0, Math.floor(Date.now() / 1000), id]
       });
       
       console.log('✅ Bookmark toggle result:', {
@@ -396,7 +557,7 @@ export class EventService {
       });
       
       if (updateResult.rows.length > 0) {
-        return dbRowToEvent(updateResult.rows[0]);
+        return dbRowToEvent(transformDatabaseRow(updateResult.rows[0]));
       }
       
       return null;

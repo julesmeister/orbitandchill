@@ -3,10 +3,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { stripHtmlTags } from '@/utils/textUtils';
+import { generateSEOSlug } from '@/utils/slugify';
 
 interface Discussion {
   id: string;
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
   authorId: string | null;
@@ -105,6 +107,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
           
           return {
             ...d,
+            slug: d.slug || generateSEOSlug(d.title),
             createdAt: convertTimestamp(d.createdAt),
             updatedAt: convertTimestamp(d.updatedAt),
             lastActivity: convertTimestamp(d.lastActivity),

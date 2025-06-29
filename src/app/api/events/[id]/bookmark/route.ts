@@ -19,7 +19,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
     
-    const updatedEvent = await EventService.toggleBookmark(id);
+    const updatedEvent = await EventService.toggleBookmark(id, userId);
 
     if (!updatedEvent) {
       return NextResponse.json(

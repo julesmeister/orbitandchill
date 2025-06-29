@@ -71,6 +71,13 @@
       "when": 1750922160589,
       "tag": "0009_redundant_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1751189103109,
+      "tag": "0010_left_onslaught",
+      "breakpoints": true
     }
   ]
 }

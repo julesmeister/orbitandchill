@@ -227,6 +227,86 @@ export class DiscussionService {
   }
 
   /**
+   * Get discussion by slug (generated from title)
+   */
+  static async getDiscussionBySlug(slug: string, dbInstance?: any) {
+    const db = dbInstance || (await import('../index')).db;
+    if (!db) {
+      return null;
+    }
+    
+    // Import slugify utility
+    const { generateSlug } = await import('@/utils/slugify');
+    
+    // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+    const dbObj = db as any;
+    const client = dbObj.client;
+    
+    if (!client) {
+      console.error('❌ Database client not available');
+      return null;
+    }
+    
+    try {
+      // Get all published discussions and find the one with matching slug
+      const rawResult = await client.execute({
+        sql: 'SELECT * FROM discussions WHERE is_published = 1',
+        args: []
+      });
+      
+      console.log('🔍 Searching for slug:', slug);
+      console.log('🔍 Raw SQL result rows:', rawResult.rows?.length || 0);
+      
+      if (rawResult.rows && rawResult.rows.length > 0) {
+        // Find discussion where generated slug matches the requested slug
+        for (const row of rawResult.rows) {
+          const generatedSlug = generateSlug(row.title);
+          console.log('🔍 Checking title:', row.title, 'Generated slug:', generatedSlug);
+          
+          if (generatedSlug === slug) {
+            console.log('🔍 Found matching discussion:', { 
+              id: row.id, 
+              title: row.title,
+              slug: generatedSlug
+            });
+            
+            return {
+              id: row.id,
+              title: row.title,
+              excerpt: row.excerpt,
+              content: row.content,
+              authorId: row.author_id,
+              authorName: row.author_name,
+              category: row.category,
+              tags: row.tags ? JSON.parse(row.tags) : [],
+              embeddedChart: row.embedded_chart ? JSON.parse(row.embedded_chart) : null,
+              embeddedVideo: row.embedded_video ? JSON.parse(row.embedded_video) : null,
+              replies: row.replies,
+              views: row.views,
+              upvotes: row.upvotes,
+              downvotes: row.downvotes,
+              isLocked: Boolean(row.is_locked),
+              isPinned: Boolean(row.is_pinned),
+              isBlogPost: Boolean(row.is_blog_post),
+              isPublished: Boolean(row.is_published),
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
+              lastActivity: row.last_activity,
+              slug: generatedSlug, // Add the generated slug to the response
+            };
+          }
+        }
+      }
+      
+      console.log('🔍 No discussion found with slug:', slug);
+      return null;
+    } catch (rawError) {
+      console.error('❌ Raw SQL query failed:', rawError);
+      return null;
+    }
+  }
+
+  /**
    * PERFORMANCE: Optimized getDiscussionById with connection pooling
    */
   static async getDiscussionById(id: string, dbInstance?: any) {

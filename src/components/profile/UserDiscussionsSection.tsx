@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 interface Discussion {
   id: string;
   title: string;
+  slug?: string;
   excerpt: string;
   category: string;
   createdAt: string;
@@ -17,6 +18,7 @@ interface Discussion {
 interface Reply {
   id: string;
   discussionId: string;
+  discussionSlug?: string;
   discussionTitle: string;
   content: string;
   createdAt: string;
@@ -129,7 +131,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
               discussions.map((discussion) => (
                 <Link
                   key={discussion.id}
-                  href={`/discussions/${discussion.id}`}
+                  href={`/discussions/${discussion.slug || discussion.id}`}
                   className="block border border-black p-4 hover:bg-gray-50 transition-colors group"
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -169,7 +171,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
               replies.map((reply) => (
                 <Link
                   key={reply.id}
-                  href={`/discussions/${reply.discussionId}`}
+                  href={`/discussions/${reply.discussionSlug || reply.discussionId}`}
                   className="block border border-black p-4 hover:bg-gray-50 transition-colors group"
                 >
                   <div className="mb-2">

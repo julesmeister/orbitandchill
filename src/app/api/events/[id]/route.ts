@@ -62,12 +62,21 @@ export async function PUT(request: Request, { params }: RouteParams) {
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
 
-    const success = await EventService.deleteEvent(id);
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const success = await EventService.deleteEvent(id, userId);
 
     if (!success) {
       return NextResponse.json(
-        { success: false, error: 'Event not found' },
+        { success: false, error: 'Event not found or not authorized' },
         { status: 404 }
       );
     }
@@ -78,6 +87,15 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('Error deleting event:', error);
+    
+    // Handle authorization errors
+    if (error instanceof Error && error.message.includes('Not authorized')) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to delete this event' },
+        { status: 403 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Failed to delete event' },
       { status: 500 }

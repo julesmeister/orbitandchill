@@ -8,6 +8,7 @@ import { createCleanExcerpt } from '@/utils/textUtils';
 interface Discussion {
   id: string;
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
   authorId: string | null;
@@ -75,7 +76,7 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                 <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z"/>
               </svg>
             )}
-            <Link href={`/discussions/${discussion.id}`} className="flex-1">
+            <Link href={`/discussions/${discussion.slug}`} className="flex-1">
               <h3 className="font-space-grotesk text-base md:text-lg font-bold text-black hover:text-gray-700 transition-colors leading-tight">
                 {discussion.title}
               </h3>
@@ -162,7 +163,7 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z"/>
                   </svg>
                 )}
-                <Link href={`/discussions/${discussion.id}`}>
+                <Link href={`/discussions/${discussion.slug}`}>
                   <h3 className="font-space-grotesk text-lg font-bold text-black hover:text-gray-700 transition-colors">
                     {discussion.title}
                   </h3>

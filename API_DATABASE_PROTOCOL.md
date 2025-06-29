@@ -409,6 +409,59 @@ export const createEventWithFallback = async (eventData: EventData) => {
 };
 ```
 
+### TypeScript Error Handling for Catch Blocks
+
+**Critical Pattern**: Always handle `unknown` type errors in catch blocks properly to avoid TypeScript compilation errors.
+
+#### ❌ Broken Pattern
+```typescript
+} catch (error) {
+  // TS Error: 'error' is of type 'unknown'
+  debugInfo.directDatabaseError = error.message;
+  return { error: error.message, stack: error.stack };
+}
+```
+
+#### ✅ Working Pattern
+```typescript
+} catch (error) {
+  // Properly type-guard the error before accessing properties
+  debugInfo.directDatabaseError = error instanceof Error ? error.message : String(error);
+  return { 
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined 
+  };
+}
+```
+
+#### Reusable Error Utility
+```typescript
+// /utils/errorHandler.ts
+export const formatError = (error: unknown): { message: string; stack?: string } => {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      stack: error.stack
+    };
+  }
+  return {
+    message: String(error),
+    stack: undefined
+  };
+};
+
+// Usage in catch blocks
+} catch (error) {
+  const formattedError = formatError(error);
+  console.error('Operation failed:', formattedError.message);
+  return NextResponse.json({
+    success: false,
+    error: formattedError.message,
+    stack: formattedError.stack
+  }, { status: 500 });
+}
+```
+
 ### API Error Categories
 
 ```typescript

@@ -30,6 +30,11 @@ export interface AstrologicalEvent {
     endTime: string;   // Format: "HH:MM"
     duration: string;  // Human readable: "2 hours 30 minutes"
   };
+  // Location data for location-specific filtering
+  locationName?: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
   // Enhanced electional astrology metadata for advanced filtering
   electionalData?: {
     mercuryStatus: 'direct' | 'retrograde';

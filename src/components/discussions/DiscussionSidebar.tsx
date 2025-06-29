@@ -162,7 +162,7 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
           {relatedDiscussions.slice(0, 3).map((related, index) => (
             <Link
               key={related.id}
-              href={`/discussions/${related.id}`}
+              href={`/discussions/${related.slug || related.id}`}
               className="group block p-4 border border-black border-b-0 last:border-b hover:bg-black hover:text-white transition-all duration-300"
             >
               <div className="flex items-start space-x-4">

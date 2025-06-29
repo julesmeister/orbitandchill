@@ -95,25 +95,25 @@ export default function Home() {
     <>
       {/* Hero Section with Features - Unified */}
       <section className="hero-section w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex items-center justify-center px-6 py-8 xl:px-8 xl:py-4 2xl:px-20 2xl:py-20" style={{ minHeight: 'calc(100vh - 120px)' }}>
-        <div className="w-full max-w-[1600px]">
+        <div className="w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-14 2xl:gap-20">
             {/* Left Side - Compact Hero Content */}
             <div className="space-y-8 xl:space-y-6 2xl:space-y-16">
               {/* Hero Content */}
               <div className="text-left relative overflow-hidden">
                 <div className="relative z-10">
-                  <h1 className="font-space-grotesk text-3xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-bold text-black mb-4 xl:mb-3">
+                  <h1 className="font-space-grotesk text-4xl lg:text-6xl xl:text-6xl 2xl:text-7xl font-bold text-black mb-4 xl:mb-3">
                     Welcome to
                     <span className="block text-blue-600">{BRAND.name}</span>
                   </h1>
-                  <p className="font-inter text-base lg:text-lg xl:text-lg 2xl:text-xl text-black/80 leading-relaxed mb-6 xl:mb-4">
+                  <p className="font-inter text-lg lg:text-xl xl:text-xl 2xl:text-2xl text-black/80 leading-relaxed mb-6 xl:mb-4">
                     {BRAND.tagline} {BRAND.description}
                   </p>
 
-                  <h2 className="font-space-grotesk text-xl lg:text-2xl xl:text-2xl 2xl:text-3xl font-bold text-black mb-3 xl:mb-2">
+                  <h2 className="font-space-grotesk text-2xl lg:text-3xl xl:text-3xl 2xl:text-4xl font-bold text-black mb-3 xl:mb-2">
                     Explore Your Cosmic Journey
                   </h2>
-                  <p className="font-inter text-sm lg:text-base xl:text-base 2xl:text-lg text-black/80 leading-relaxed">
+                  <p className="font-inter text-base lg:text-lg xl:text-lg 2xl:text-xl text-black/80 leading-relaxed">
                     Dive deeper into astrology with our comprehensive tools and insights
                   </p>
                 </div>

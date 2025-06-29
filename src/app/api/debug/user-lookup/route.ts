@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         hasCurrentLocation: user.hasCurrentLocation
       } : null;
     } catch (error) {
-      debugInfo.directDatabaseError = error.message;
+      debugInfo.directDatabaseError = error instanceof Error ? error.message : String(error);
     }
 
     // Try raw database query
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         }))
       };
     } catch (error) {
-      debugInfo.rawQueryError = error.message;
+      debugInfo.rawQueryError = error instanceof Error ? error.message : String(error);
     }
 
     // Try searching for similar IDs (in case of slight differences)
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
         matches: row.id === userId
       }));
     } catch (error) {
-      debugInfo.similarUsersError = error.message;
+      debugInfo.similarUsersError = error instanceof Error ? error.message : String(error);
     }
 
     // Check if there are any Google users at all
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       
       debugInfo.totalGoogleUsers = googleUsersResult.rows[0].count;
     } catch (error) {
-      debugInfo.googleUsersCountError = error.message;
+      debugInfo.googleUsersCountError = error instanceof Error ? error.message : String(error);
     }
 
     return NextResponse.json({
@@ -137,8 +137,8 @@ export async function GET(request: NextRequest) {
     console.error('User lookup debug error:', error);
     return NextResponse.json({
       success: false,
-      error: error.message,
-      stack: error.stack
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 }

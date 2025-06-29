@@ -256,6 +256,13 @@ export const astrologicalEvents = sqliteTable('astrological_events', {
   chartData: text('chart_data'), // JSON chart calculation data
   isBookmarked: integer('is_bookmarked', { mode: 'boolean' }).notNull().default(false),
   timeWindow: text('time_window'), // JSON object with startTime, endTime, duration
+  
+  // Location data for location-specific filtering
+  locationName: text('location_name'), // Human-readable location name
+  latitude: real('latitude'), // Decimal latitude for precise calculations
+  longitude: real('longitude'), // Decimal longitude for precise calculations
+  timezone: text('timezone'), // IANA timezone identifier (e.g., 'America/New_York')
+  
   // TODO: Add these columns after proper migration
   // timingMethod: text('timing_method'), // Which analysis method generated this event: houses, aspects, or electional
   // electionalData: text('electional_data'), // JSON object with electional astrology metadata for filtering

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Electional Astrology Debug (Fixed)</title>
+    <style>
+        body { font-family: monospace; margin: 0; display: flex; min-height: 100vh; }
+        .left-panel { width: 50%; padding: 20px; overflow-y: auto; border-right: 2px solid #007acc; }
+        .right-panel { width: 50%; padding: 20px; overflow-y: auto; background: #f8f9fa; }
+        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        .button:hover { background: #0056b3; }
+        .clear-button { background: #dc3545; }
+        .clear-button:hover { background: #c82333; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; border-radius: 3px; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .location-section { margin: 20px 0; padding: 15px; background: #e8f4fd; border: 1px solid #bee5eb; border-radius: 5px; }
+        .event-section { margin: 20px 0; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; }
+        .timing-section { margin: 20px 0; padding: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; }
+        .user-section { margin: 20px 0; padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
+        input[type="text"], input[type="date"], input[type="time"], select { 
+            width: 250px; padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; 
+        }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #007acc; }
+        .results-title { font-size: 18px; font-weight: bold; color: #007acc; }
+        pre { white-space: pre-wrap; word-wrap: break-word; max-width: 100%; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <h1>🌟 Electional Astrology Debug Tool (Fixed APIs v2.2 - CACHE BUSTED)</h1>
+        <div style="background: #4caf50; color: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; text-align: center; font-size: 16px;">
+            ✅ LOCATION FIX LOADED - v2.2 (Build: Dec 29, 2025 10:15 AM)
+        </div>
+        <div style="background: #ffeb3b; padding: 10px; margin: 10px 0; border-radius: 5px; color: #333;">
+            <strong>🔄 If location tests still fail:</strong> Hard refresh (Ctrl+F5), clear cache, or try incognito mode!
+        </div>
+        
+        <div class="user-section">
+            <h3>👤 User Profile & Location Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Debug user profile vs location API inconsistency
+            </p>
+            <input type="text" id="userIdInput" placeholder="Enter User ID" style="width: 300px;" value="113425479876942125321">
+            <button class="button" onclick="debugUserProfile()">🔍 Debug User Profile</button>
+            <button class="button" onclick="testUserCreation()">👤 Test User Creation</button>
+        </div>
+        
+        <div class="location-section">
+            <h3>📍 Location Management Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test location APIs and coordinate handling
+            </p>
+            <div style="margin-bottom: 15px;">
+                <h4>Test Locations:</h4>
+                <select id="locationSelect" onchange="updateLocationInputs()">
+                    <option value="new-york">New York, NY, USA</option>
+                    <option value="london">London, UK</option>
+                    <option value="tokyo">Tokyo, Japan</option>
+                    <option value="zamboanga">Zamboanga City, Philippines</option>
+                    <option value="custom">Custom Location</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <input type="text" id="locationNameInput" placeholder="Location Name" value="New York, NY, USA">
+                <input type="text" id="latitudeInput" placeholder="Latitude" value="40.7128">
+                <input type="text" id="longitudeInput" placeholder="Longitude" value="-74.0060">
+            </div>
+            <button class="button" onclick="testLocationAPI()">📍 Test Location API</button>
+            <button class="button" onclick="validateLocationData()">✅ Validate Location</button>
+        </div>
+
+        <div class="event-section">
+            <h3>🎯 Event System Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Debug the actual events API endpoints
+            </p>
+            <div style="margin-bottom: 15px;">
+                <h4>Event Parameters:</h4>
+                <input type="date" id="eventDateInput" value="">
+                <input type="time" id="eventTimeInput" value="12:00">
+                <input type="text" id="eventTitleInput" placeholder="Event Title" value="Debug Test Event">
+            </div>
+            <button class="button" onclick="testEventCreation()">📅 Test Event Creation</button>
+            <button class="button" onclick="testEventRetrieval()">📋 Test Event Retrieval</button>
+            <button class="button" onclick="testEventFiltering()">🔍 Test Event Filtering</button>
+            <button class="button" onclick="testLocationSpecificEvents()">🌍 Test Location Events</button>
+        </div>
+
+        <div class="timing-section">
+            <h3>⏰ API Endpoint Testing</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test all available API endpoints for debugging
+            </p>
+            <button class="button" onclick="testAllEventEndpoints()">🔗 Test All Event APIs</button>
+            <button class="button" onclick="testUserEndpoints()">👤 Test User APIs</button>
+            <button class="button" onclick="testDatabaseConnection()">💾 Test Database</button>
+        </div>
+
+        <div>
+            <h3>🔧 Database & Cleanup</h3>
+            <button class="button" onclick="testEventsDatabase()">💾 Test Events Database</button>
+            <button class="button" onclick="clearTestEvents()">🗑️ Clear Test Events</button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="results-header">
+            <div class="results-title">📊 Debug Results</div>
+            <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Initialize date inputs to today
+        document.getElementById('eventDateInput').value = new Date().toISOString().split('T')[0];
+
+        function addResult(title, data, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function updateLocationInputs() {
+            const select = document.getElementById('locationSelect');
+            const nameInput = document.getElementById('locationNameInput');
+            const latInput = document.getElementById('latitudeInput');
+            const lonInput = document.getElementById('longitudeInput');
+
+            const locations = {
+                'new-york': { name: 'New York, NY, USA', lat: '40.7128', lon: '-74.0060' },
+                'london': { name: 'London, UK', lat: '51.5074', lon: '-0.1278' },
+                'tokyo': { name: 'Tokyo, Japan', lat: '35.6762', lon: '139.6503' },
+                'zamboanga': { name: 'Zamboanga City, Philippines', lat: '6.9046876', lon: '122.0764868' },
+                'custom': { name: '', lat: '', lon: '' }
+            };
+
+            const location = locations[select.value];
+            if (location) {
+                nameInput.value = location.name;
+                latInput.value = location.lat;
+                lonInput.value = location.lon;
+            }
+        }
+
+        async function debugUserProfile() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ User Profile Error', { error: 'Please enter a user ID' }, 'error');
+                    return;
+                }
+                
+                // Test user profile API
+                const profileResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const profileData = await profileResponse.json();
+                
+                // Test user location API
+                const locationResponse = await fetch(`/api/users/location?userId=${encodeURIComponent(userId)}`);
+                const locationData = await locationResponse.json();
+                
+                const result = {
+                    userId: userId,
+                    profile: {
+                        statusCode: profileResponse.status,
+                        data: profileData
+                    },
+                    location: {
+                        statusCode: locationResponse.status,
+                        data: locationData
+                    },
+                    analysis: {
+                        hasProfile: profileResponse.ok,
+                        hasLocation: locationResponse.ok && locationData.success,
+                        canGenerateEvents: profileResponse.ok && (locationResponse.ok && locationData.success),
+                        locationSource: locationData.success ? locationData.source : 'none',
+                        issue: !profileResponse.ok && locationResponse.ok ? 'Profile API failing but Location API working' : 'unknown'
+                    }
+                };
+                
+                addResult(`👤 User Profile Debug: ${userId}`, result, 
+                    profileResponse.ok && locationResponse.ok ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ User Profile Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testUserCreation() {
+            try {
+                const testUserId = `debug_test_${Date.now()}`;
+                
+                // Try to create a user via profile API
+                const response = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: testUserId,
+                        username: 'Debug Test User',
+                        email: 'debug@test.com',
+                        authProvider: 'anonymous',
+                        showZodiacPublicly: true,
+                        allowDirectMessages: true,
+                        emailNotifications: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('👤 User Creation Test', {
+                    testUserId: testUserId,
+                    statusCode: response.status,
+                    success: response.ok,
+                    data: data,
+                    analysis: {
+                        userCreated: response.ok,
+                        canFixProfileIssue: response.ok
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ User Creation Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testLocationAPI() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const locationName = document.getElementById('locationNameInput').value;
+                const latitude = document.getElementById('latitudeInput').value;
+                const longitude = document.getElementById('longitudeInput').value;
+
+                // Test setting location
+                const setResponse = await fetch('/api/users/location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        location: {
+                            name: locationName,
+                            coordinates: { lat: latitude, lon: longitude }
+                        }
+                    })
+                });
+                
+                const setData = await setResponse.json();
+                
+                // Test getting location
+                const getResponse = await fetch(`/api/users/location?userId=${encodeURIComponent(userId)}`);
+                const getData = await getResponse.json();
+                
+                addResult('📍 Location API Test', {
+                    setLocation: {
+                        statusCode: setResponse.status,
+                        success: setResponse.ok,
+                        data: setData
+                    },
+                    getLocation: {
+                        statusCode: getResponse.status,
+                        success: getResponse.ok,
+                        data: getData
+                    },
+                    validation: {
+                        locationSaved: setResponse.ok,
+                        locationRetrieved: getResponse.ok && getData.success,
+                        coordinatesMatch: getData.location && 
+                            getData.location.coordinates.lat === latitude &&
+                            getData.location.coordinates.lon === longitude
+                    }
+                }, setResponse.ok && getResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Location API Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function validateLocationData() {
+            try {
+                const locationName = document.getElementById('locationNameInput').value;
+                const latitude = parseFloat(document.getElementById('latitudeInput').value);
+                const longitude = parseFloat(document.getElementById('longitudeInput').value);
+
+                const validation = {
+                    name: {
+                        provided: !!locationName,
+                        length: locationName.length,
+                        valid: locationName.length > 0
+                    },
+                    coordinates: {
+                        latitude: {
+                            provided: !isNaN(latitude),
+                            value: latitude,
+                            valid: !isNaN(latitude) && latitude >= -90 && latitude <= 90
+                        },
+                        longitude: {
+                            provided: !isNaN(longitude),
+                            value: longitude,
+                            valid: !isNaN(longitude) && longitude >= -180 && longitude <= 180
+                        }
+                    },
+                    overall: {
+                        valid: !!locationName && 
+                               !isNaN(latitude) && latitude >= -90 && latitude <= 90 &&
+                               !isNaN(longitude) && longitude >= -180 && longitude <= 180
+                    }
+                };
+
+                addResult('✅ Location Validation', validation, validation.overall.valid ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Location Validation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testEventCreation() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const date = document.getElementById('eventDateInput').value;
+                const time = document.getElementById('eventTimeInput').value;
+                const title = document.getElementById('eventTitleInput').value;
+                const latitude = parseFloat(document.getElementById('latitudeInput').value);
+                const longitude = parseFloat(document.getElementById('longitudeInput').value);
+
+                const testEvent = {
+                    userId: userId,
+                    title: title,
+                    date: date,
+                    time: time,
+                    type: 'neutral',
+                    description: 'Debug test event creation',
+                    isGenerated: false
+                };
+
+                const response = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testEvent)
+                });
+                
+                const data = await response.json();
+                
+                addResult('📅 Event Creation Test', {
+                    request: testEvent,
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        data: data
+                    },
+                    analysis: {
+                        eventCreated: response.ok,
+                        eventId: data.id || data.event?.id || 'unknown'
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Event Creation Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testEventRetrieval() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                const response = await fetch(`/api/events?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                addResult('📋 Event Retrieval Test', {
+                    userId: userId,
+                    statusCode: response.status,
+                    success: response.ok,
+                    eventsCount: data.events ? data.events.length : 0,
+                    events: data.events ? data.events.slice(0, 3).map(e => ({
+                        id: e.id,
+                        title: e.title,
+                        date: e.date,
+                        type: e.type,
+                        isGenerated: e.isGenerated
+                    })) : []
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Event Retrieval Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testEventFiltering() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Test different filter combinations
+                const filters = [
+                    { name: 'All Events', params: '' },
+                    { name: 'Generated Events', params: '&isGenerated=true' },
+                    { name: 'Manual Events', params: '&isGenerated=false' },
+                    { name: 'Bookmarked Events', params: '&isBookmarked=true' }
+                ];
+
+                const results = {};
+                
+                for (const filter of filters) {
+                    const response = await fetch(`/api/events?userId=${encodeURIComponent(userId)}${filter.params}`);
+                    const data = await response.json();
+                    
+                    results[filter.name] = {
+                        count: data.events ? data.events.length : 0,
+                        success: response.ok
+                    };
+                }
+                
+                addResult('🔍 Event Filtering Test', {
+                    userId: userId,
+                    filterResults: results,
+                    analysis: {
+                        allFiltersWorking: Object.values(results).every(r => r.success),
+                        hasEvents: Object.values(results).some(r => r.count > 0)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Event Filtering Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testLocationSpecificEvents() {
+            try {
+                const testLocations = [
+                    { name: 'New York', lat: 40.7128, lon: -74.0060 },
+                    { name: 'Zamboanga', lat: 6.9046876, lon: 122.0764868 }
+                ];
+
+                const results = {};
+                
+                for (const location of testLocations) {
+                    // Create a test event for each location WITH LOCATION DATA
+                    const testEvent = {
+                        userId: document.getElementById('userIdInput').value, // Use real user ID instead of fake ID
+                        title: `${location.name} Location Test Event`,
+                        date: document.getElementById('eventDateInput').value,
+                        time: '12:00',
+                        type: 'neutral',
+                        description: `Test event for ${location.name}`,
+                        isGenerated: false,
+                        // ADD LOCATION DATA
+                        locationName: `${location.name}, Test Location`,
+                        latitude: location.lat,
+                        longitude: location.lon,
+                        timezone: location.name === 'New York' ? 'America/New_York' : 'Asia/Manila'
+                    };
+                    
+                    // DEBUG: Log the test event to verify location data is included
+                    console.log(`🌍 Creating ${location.name} event with data:`, testEvent);
+
+                    const response = await fetch(`/api/events?_cb=${Date.now()}`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        },
+                        body: JSON.stringify(testEvent)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    results[location.name] = {
+                        statusCode: response.status,
+                        success: response.ok,
+                        eventCreated: !!data.id || !!data.event?.id,
+                        coordinates: { lat: location.lat, lon: location.lon }
+                    };
+                }
+
+                addResult('🌍 Location-Specific Events Test', {
+                    testLocations: testLocations,
+                    results: results,
+                    analysis: {
+                        differentLocations: testLocations.length > 1,
+                        allSuccessful: Object.values(results).every(r => r.success)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Location-Specific Events Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testAllEventEndpoints() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const testEventId = 'test_event_123';
+                
+                const endpoints = [
+                    { method: 'GET', url: `/api/events?userId=${encodeURIComponent(userId)}`, name: 'Get Events' },
+                    { method: 'POST', url: '/api/events', name: 'Create Event', 
+                      body: { userId, title: 'Test Event', date: '2025-01-01', type: 'neutral' } },
+                    { method: 'GET', url: `/api/events/${testEventId}`, name: 'Get Single Event' },
+                    { method: 'POST', url: `/api/events/${testEventId}/bookmark?userId=${userId}`, name: 'Toggle Bookmark' }
+                ];
+
+                const results = {};
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const options = {
+                            method: endpoint.method,
+                            headers: { 'Content-Type': 'application/json' }
+                        };
+                        
+                        if (endpoint.body) {
+                            options.body = JSON.stringify(endpoint.body);
+                        }
+                        
+                        const response = await fetch(endpoint.url, options);
+                        const data = await response.json();
+                        
+                        results[endpoint.name] = {
+                            statusCode: response.status,
+                            method: endpoint.method,
+                            url: endpoint.url,
+                            success: response.ok,
+                            hasData: !!data
+                        };
+                    } catch (error) {
+                        results[endpoint.name] = {
+                            error: error.message,
+                            method: endpoint.method,
+                            url: endpoint.url,
+                            success: false
+                        };
+                    }
+                }
+                
+                addResult('🔗 All Event Endpoints Test', {
+                    testedEndpoints: endpoints.length,
+                    results: results,
+                    analysis: {
+                        workingEndpoints: Object.values(results).filter(r => r.success).length,
+                        failingEndpoints: Object.values(results).filter(r => !r.success).length
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Event Endpoints Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testUserEndpoints() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                const endpoints = [
+                    { url: `/api/users/profile?userId=${encodeURIComponent(userId)}`, name: 'User Profile' },
+                    { url: `/api/users/location?userId=${encodeURIComponent(userId)}`, name: 'User Location' },
+                    { url: `/api/users/charts?userId=${encodeURIComponent(userId)}`, name: 'User Charts' }
+                ];
+
+                const results = {};
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(endpoint.url);
+                        const data = await response.json();
+                        
+                        results[endpoint.name] = {
+                            statusCode: response.status,
+                            url: endpoint.url,
+                            success: response.ok,
+                            data: data
+                        };
+                    } catch (error) {
+                        results[endpoint.name] = {
+                            error: error.message,
+                            url: endpoint.url,
+                            success: false
+                        };
+                    }
+                }
+                
+                addResult('👤 User Endpoints Test', {
+                    userId: userId,
+                    results: results,
+                    analysis: {
+                        profileWorks: results['User Profile']?.success || false,
+                        locationWorks: results['User Location']?.success || false,
+                        chartsWorks: results['User Charts']?.success || false,
+                        inconsistency: results['User Location']?.success && !results['User Profile']?.success
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ User Endpoints Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testDatabaseConnection() {
+            try {
+                // Test various endpoints that depend on database
+                const tests = [
+                    { name: 'Events API', url: '/api/events?userId=test' },
+                    { name: 'Users API', url: '/api/users/profile?userId=test' },
+                    { name: 'Location API', url: '/api/users/location?userId=test' }
+                ];
+
+                const results = {};
+                
+                for (const test of tests) {
+                    try {
+                        const response = await fetch(test.url);
+                        const data = await response.json();
+                        
+                        results[test.name] = {
+                            statusCode: response.status,
+                            success: response.ok,
+                            responseTime: Date.now(), // Rough timing
+                            hasData: !!data
+                        };
+                    } catch (error) {
+                        results[test.name] = {
+                            error: error.message,
+                            success: false
+                        };
+                    }
+                }
+                
+                addResult('💾 Database Connection Test', {
+                    results: results,
+                    analysis: {
+                        workingAPIs: Object.values(results).filter(r => r.success).length,
+                        totalAPIs: Object.keys(results).length,
+                        databaseAvailable: Object.values(results).some(r => r.success)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Database Connection Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testEventsDatabase() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Get events first
+                const getResponse = await fetch(`/api/events?userId=${encodeURIComponent(userId)}`);
+                const getData = await getResponse.json();
+                
+                addResult('💾 Events Database Test', {
+                    userId: userId,
+                    get: {
+                        statusCode: getResponse.status,
+                        success: getResponse.ok,
+                        eventsCount: getData.events ? getData.events.length : 0,
+                        data: getData
+                    },
+                    analysis: {
+                        databaseWorking: getResponse.ok,
+                        hasEvents: getData.events && getData.events.length > 0,
+                        canReadEvents: getResponse.ok
+                    }
+                }, getResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Events Database Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function clearTestEvents() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Get test events first
+                const getResponse = await fetch(`/api/events?userId=${encodeURIComponent(userId)}`);
+                const getData = await getResponse.json();
+                
+                if (!getResponse.ok || !getData.events) {
+                    addResult('🗑️ Clear Test Events', {
+                        message: 'No events found to clear or API error',
+                        status: 'nothing_to_clear'
+                    }, 'warning');
+                    return;
+                }
+                
+                // Delete each test event
+                let deletedCount = 0;
+                const deleteResults = [];
+                
+                for (const event of getData.events) {
+                    if (event.title && event.title.includes('Debug') || event.title.includes('Test')) {
+                        try {
+                            const deleteResponse = await fetch(`/api/events?id=${event.id}&userId=${encodeURIComponent(userId)}`, {
+                                method: 'DELETE'
+                            });
+                            
+                            if (deleteResponse.ok) {
+                                deletedCount++;
+                                deleteResults.push({ id: event.id, title: event.title, success: true });
+                            } else {
+                                deleteResults.push({ id: event.id, title: event.title, success: false, error: 'Delete failed' });
+                            }
+                        } catch (error) {
+                            deleteResults.push({ id: event.id, title: event.title, success: false, error: error.message });
+                        }
+                    }
+                }
+                
+                addResult('🗑️ Clear Test Events', {
+                    totalEvents: getData.events.length,
+                    testEvents: deleteResults.length,
+                    deletedCount: deletedCount,
+                    deleteResults: deleteResults
+                }, deletedCount > 0 ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ Clear Test Events Error', { error: error.message }, 'error');
+            }
+        }
+        
+        // MANUAL LOCATION TEST - Call from browser console if cache issues persist
+        window.testLocationEventManual = async function() {
+            console.log('🌍 Manual Location Event Test Started...');
+            
+            // Test New York
+            const nyEvent = {
+                userId: "113425479876942125321",
+                title: "Manual New York Test",
+                date: "2025-06-30",
+                time: "15:00",
+                type: "benefic",
+                description: "Manual test for New York location",
+                isGenerated: true,
+                locationName: "New York, NY, USA",
+                latitude: 40.7128,
+                longitude: -74.0060,
+                timezone: "America/New_York",
+                aspects: ["Jupiter trine Moon"],
+                planetaryPositions: ["Jupiter 15° Gemini"],
+                score: 8
+            };
+            
+            console.log('📍 Testing New York event with data:', nyEvent);
+            
+            try {
+                const response = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nyEvent)
+                });
+                
+                const data = await response.json();
+                console.log('✅ New York Result:', {
+                    status: response.status,
+                    success: response.ok,
+                    event: data.event,
+                    hasLocationData: !!(data.event?.locationName || data.event?.latitude)
+                });
+                
+                // Test Zamboanga
+                const zamboangaEvent = {
+                    userId: "113425479876942125321",
+                    title: "Manual Zamboanga Test", 
+                    date: "2025-06-30",
+                    time: "16:00",
+                    type: "benefic",
+                    description: "Manual test for Zamboanga location",
+                    isGenerated: true,
+                    locationName: "Zamboanga City, Philippines",
+                    latitude: 6.9046876,
+                    longitude: 122.0764868,
+                    timezone: "Asia/Manila",
+                    aspects: ["Venus conjunct Sun"],
+                    planetaryPositions: ["Venus 20° Cancer"],
+                    score: 9
+                };
+                
+                console.log('📍 Testing Zamboanga event with data:', zamboangaEvent);
+                
+                const zamboangaResponse = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(zamboangaEvent)
+                });
+                
+                const zamboangaData = await zamboangaResponse.json();
+                console.log('✅ Zamboanga Result:', {
+                    status: zamboangaResponse.status,
+                    success: zamboangaResponse.ok,
+                    event: zamboangaData.event,
+                    hasLocationData: !!(zamboangaData.event?.locationName || zamboangaData.event?.latitude)
+                });
+                
+                console.log('🎉 Manual location test completed! Check the results above.');
+                return { success: true, message: 'Location tests completed' };
+                
+            } catch (error) {
+                console.error('❌ Manual test error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+        
+        console.log('🔧 Manual location test function loaded. Run testLocationEventManual() in console to bypass cache issues.');
+    </script>
+</body>
+</html>

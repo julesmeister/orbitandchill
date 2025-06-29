@@ -8,11 +8,13 @@ export interface DailyAspect {
   planets: string;
   type: 'harmonious' | 'challenging' | 'neutral';
   interpretation: string;
-  startTime?: string;    // When aspect comes within orb
-  exactTime?: string;    // When aspect is exact
-  endTime?: string;      // When aspect leaves orb
-  isAllDay?: boolean;    // True if aspect lasts most of the day
-  strength?: number;     // 0-100 indicating how close to exact
+  exactTime: string;     // When aspect is exact (required for traditional horary)
+  applying: boolean;     // True if aspect is forming (future event)
+  separating: boolean;   // True if aspect is separating (past event)
+  exactDegree: number;   // Exact degree of aspect
+  strength: 'exact' | 'close' | 'wide';
+  significance: 'major' | 'minor';
+  pattern?: 'translation' | 'collection' | 'prohibition' | 'frustration' | 'refranation';
 }
 
 // Define which planets to calculate aspects for
@@ -26,13 +28,13 @@ const PLANETS = [
   { body: Body.Saturn, name: 'Saturn' }
 ];
 
-// Aspect definitions with orbs (degrees)
+// Traditional horary aspects - NO ORBS (exact aspects only)
 const ASPECTS = {
-  conjunction: { angle: 0, orb: 8, type: 'neutral' as const },
-  sextile: { angle: 60, orb: 6, type: 'harmonious' as const },
-  square: { angle: 90, orb: 8, type: 'challenging' as const },
-  trine: { angle: 120, orb: 8, type: 'harmonious' as const },
-  opposition: { angle: 180, orb: 8, type: 'challenging' as const }
+  conjunction: { angle: 0, exactTolerance: 1, type: 'neutral' as const },
+  sextile: { angle: 60, exactTolerance: 1, type: 'harmonious' as const },
+  square: { angle: 90, exactTolerance: 1, type: 'challenging' as const },
+  trine: { angle: 120, exactTolerance: 1, type: 'harmonious' as const },
+  opposition: { angle: 180, exactTolerance: 1, type: 'challenging' as const }
 };
 
 // Aspect interpretations
@@ -74,7 +76,7 @@ const ASPECT_INTERPRETATIONS: Record<string, Record<string, string>> = {
   }
 };
 
-// Helper to get planetary speed (degrees per day)
+// Helper to get planetary speed (degrees per day) and direction
 const getPlanetarySpeed = (body: Body): number => {
   // Average daily motion in degrees
   const speeds: Record<string, number> = {
@@ -93,6 +95,62 @@ const getPlanetarySpeed = (body: Body): number => {
   }).find(([, b]) => b === body)?.[0];
   
   return speeds[planetName || 'Sun'] || 1;
+};
+
+// Helper to determine if aspect is applying or separating
+const isAspectApplying = (planet1Pos: number, planet2Pos: number, planet1Speed: number, planet2Speed: number, aspectAngle: number): boolean => {
+  // Calculate current angular separation
+  let currentSeparation = Math.abs(planet1Pos - planet2Pos);
+  if (currentSeparation > 180) {
+    currentSeparation = 360 - currentSeparation;
+  }
+  
+  // Calculate future positions (1 hour ahead)
+  const futurePos1 = planet1Pos + (planet1Speed / 24);
+  const futurePos2 = planet2Pos + (planet2Speed / 24);
+  
+  let futureSeparation = Math.abs(futurePos1 - futurePos2);
+  if (futureSeparation > 180) {
+    futureSeparation = 360 - futureSeparation;
+  }
+  
+  // If future separation is closer to the aspect angle, it's applying
+  const currentDiff = Math.abs(currentSeparation - aspectAngle);
+  const futureDiff = Math.abs(futureSeparation - aspectAngle);
+  
+  return futureDiff < currentDiff;
+};
+
+// Helper to calculate exact time of aspect
+const calculateExactAspectTime = (date: Date, planet1Pos: number, planet2Pos: number, planet1Speed: number, planet2Speed: number, aspectAngle: number): string => {
+  // Calculate current angular difference from exact aspect
+  let currentSeparation = Math.abs(planet1Pos - planet2Pos);
+  if (currentSeparation > 180) {
+    currentSeparation = 360 - currentSeparation;
+  }
+  
+  const differenceFromAspect = Math.abs(currentSeparation - aspectAngle);
+  
+  // If already very close to exact (within 1 degree), consider it current time
+  if (differenceFromAspect <= 1) {
+    const hour = date.getHours();
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:00 ${period}`;
+  }
+  
+  // Calculate relative speed of approach
+  const relativeSpeed = Math.abs(planet1Speed - planet2Speed);
+  
+  // Estimate hours until exact aspect (simplified calculation)
+  const hoursUntilExact = relativeSpeed > 0 ? (differenceFromAspect / relativeSpeed) * 24 : 0;
+  
+  const exactDate = new Date(date.getTime() + hoursUntilExact * 60 * 60 * 1000);
+  const hour = exactDate.getHours();
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  
+  return `${displayHour}:00 ${period}`;
 };
 
 export const useDailyAspects = () => {
@@ -151,69 +209,66 @@ export const useDailyAspects = () => {
               angleDiff = 360 - angleDiff;
             }
             
-            // Check for aspects
+            // Check for traditional horary aspects (exact only, no orbs)
             for (const [aspectName, aspectData] of Object.entries(ASPECTS)) {
               const diff = Math.abs(angleDiff - aspectData.angle);
-              if (diff <= aspectData.orb) {
+              
+              // Traditional horary: exact aspects only (within 1 degree tolerance)
+              if (diff <= aspectData.exactTolerance) {
                 const planetPair = `${planet1.name}-${planet2.name}`;
                 const reversePair = `${planet2.name}-${planet1.name}`;
                 
-                // Calculate how long the aspect lasts based on combined planetary speeds
-                const combinedSpeed = planet1.speed + planet2.speed;
-                const hoursInOrb = (aspectData.orb * 2) / combinedSpeed * 24;
-                const isAllDay = hoursInOrb >= 20; // Aspect lasts at least 20 hours
+                // Determine if applying or separating
+                const applying = isAspectApplying(planet1.longitude, planet2.longitude, planet1.speed, planet2.speed, aspectData.angle);
+                const separating = !applying;
                 
-                // Calculate strength (0-100, where 100 is exact)
-                const strength = Math.round((1 - diff / aspectData.orb) * 100);
+                // Calculate exact time of aspect
+                const exactTime = calculateExactAspectTime(calculationDate, planet1.longitude, planet2.longitude, planet1.speed, planet2.speed, aspectData.angle);
                 
-                // Estimate time windows (simplified - in production would calculate exact times)
-                const exactOffsetHours = diff / combinedSpeed * 24;
-                const orbHours = aspectData.orb / combinedSpeed * 24;
-                
-                let startTime: string | undefined;
-                let exactTime: string | undefined;
-                let endTime: string | undefined;
-                
-                if (!isAllDay) {
-                  const baseHour = calculationDate.getHours();
-                  const exactHour = baseHour - exactOffsetHours;
-                  const startHour = exactHour - orbHours;
-                  const endHour = exactHour + orbHours;
-                  
-                  const formatHour = (hour: number) => {
-                    const h = Math.floor((hour + 24) % 24);
-                    const period = h >= 12 ? 'PM' : 'AM';
-                    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                    return `${displayHour}:00 ${period}`;
-                  };
-                  
-                  if (startHour >= 0 && startHour < 24) startTime = formatHour(startHour);
-                  if (exactHour >= 0 && exactHour < 24) exactTime = formatHour(exactHour);
-                  if (endHour >= 0 && endHour < 24) endTime = formatHour(endHour);
+                // Determine strength based on exactness
+                let strength: 'exact' | 'close' | 'wide';
+                if (diff <= 0.25) {
+                  strength = 'exact';
+                } else if (diff <= 0.5) {
+                  strength = 'close';
+                } else {
+                  strength = 'wide';
                 }
                 
-                // Get interpretation
-                const specificInterpretation = 
+                // Determine significance (major aspects vs minor)
+                const significance: 'major' | 'minor' = ['conjunction', 'trine', 'square', 'opposition'].includes(aspectName) ? 'major' : 'minor';
+                
+                // Get interpretation with applying/separating context
+                let baseInterpretation = 
                   ASPECT_INTERPRETATIONS[aspectName]?.[planetPair] ||
                   ASPECT_INTERPRETATIONS[aspectName]?.[reversePair] ||
                   ASPECT_INTERPRETATIONS[aspectName]?.default ||
                   `${planet1.name} and ${planet2.name} in ${aspectName} aspect`;
                 
+                // Add applying/separating context per traditional horary
+                if (applying) {
+                  baseInterpretation = `${baseInterpretation} (Applying - future influence forming)`;
+                } else {
+                  baseInterpretation = `${baseInterpretation} (Separating - past influence)`;
+                }
+                
                 const aspect: DailyAspect = {
                   aspect: aspectName,
                   planets: planetPair,
                   type: aspectData.type,
-                  interpretation: specificInterpretation,
+                  interpretation: baseInterpretation,
+                  exactTime,
+                  applying,
+                  separating,
+                  exactDegree: aspectData.angle,
                   strength,
-                  isAllDay,
-                  ...(startTime && { startTime }),
-                  ...(exactTime && { exactTime }),
-                  ...(endTime && { endTime })
+                  significance
                 };
                 
-                // Skip if only showing all-day aspects and this isn't one
-                if (options?.showOnlyAllDay && !isAllDay) {
-                  continue;
+                // Traditional horary: Only applying aspects are relevant for future events
+                // But include separating for completeness with clear indication
+                if (options?.showOnlyAllDay && separating) {
+                  continue; // Skip separating aspects if only showing relevant timing
                 }
                 
                 aspects.push(aspect);
@@ -222,44 +277,69 @@ export const useDailyAspects = () => {
           }
         }
         
-        // Sort by strength (stronger aspects first)
-        aspects.sort((a, b) => (b.strength || 0) - (a.strength || 0));
+        // Sort by traditional horary priority:
+        // 1. Applying aspects first (future events)
+        // 2. Exact aspects first, then close, then wide
+        // 3. Major aspects before minor
+        aspects.sort((a, b) => {
+          // Applying aspects have priority
+          if (a.applying && !b.applying) return -1;
+          if (!a.applying && b.applying) return 1;
+          
+          // Then by strength (exact > close > wide)
+          const strengthOrder = { 'exact': 3, 'close': 2, 'wide': 1 };
+          const strengthDiff = strengthOrder[b.strength] - strengthOrder[a.strength];
+          if (strengthDiff !== 0) return strengthDiff;
+          
+          // Then by significance (major > minor)
+          const sigOrder = { 'major': 2, 'minor': 1 };
+          return sigOrder[b.significance] - sigOrder[a.significance];
+        });
         
-        // Limit to 5 strongest aspects per day (increased from 3)
+        // Limit to 5 strongest traditional aspects per day
         return aspects.slice(0, 5);
         
       } catch (error) {
         console.error('Error calculating real aspects, falling back to mock data:', error);
         
-        // Enhanced fallback mock data
+        // Traditional horary fallback mock data
         const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
         const mockAspects: DailyAspect[] = [
           { 
             aspect: 'trine', 
             planets: 'Sun-Jupiter', 
             type: 'harmonious', 
-            interpretation: 'Optimistic energy and growth opportunities',
-            isAllDay: true,
-            strength: 85
+            interpretation: 'Optimistic energy and growth opportunities (Applying - future influence forming)',
+            exactTime: '2:00 PM',
+            applying: true,
+            separating: false,
+            exactDegree: 120,
+            strength: 'exact',
+            significance: 'major'
           },
           { 
             aspect: 'square', 
             planets: 'Mars-Saturn', 
             type: 'challenging', 
-            interpretation: 'Tension between action and structure requires patience',
-            startTime: '8:00 AM',
-            exactTime: '2:00 PM',
-            endTime: '8:00 PM',
-            isAllDay: false,
-            strength: 70
+            interpretation: 'Tension between action and structure requires patience (Separating - past influence)',
+            exactTime: '10:00 AM',
+            applying: false,
+            separating: true,
+            exactDegree: 90,
+            strength: 'close',
+            significance: 'major'
           },
           { 
             aspect: 'conjunction', 
             planets: 'Venus-Mercury', 
             type: 'neutral', 
-            interpretation: 'Communication enhanced by charm and diplomacy',
-            isAllDay: true,
-            strength: 95
+            interpretation: 'Communication enhanced by charm and diplomacy (Applying - future influence forming)',
+            exactTime: '6:00 PM',
+            applying: true,
+            separating: false,
+            exactDegree: 0,
+            strength: 'exact',
+            significance: 'major'
           }
         ];
         

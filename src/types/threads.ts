@@ -1,6 +1,7 @@
 export interface Thread {
   id: string;
   title: string;
+  slug: string; // URL-friendly slug for SEO
   excerpt: string;
   content: string; // Full content for the discussion page
   author: string;
@@ -60,6 +61,7 @@ export interface ThreadVote {
 export interface ThreadTemp {
   id: string;
   title: string;
+  slug?: string; // URL-friendly slug for SEO
   excerpt: string;
   author: string;
   avatar: string;

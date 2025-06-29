@@ -197,7 +197,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const event = await EventService.createEvent(body);
+    console.log('📝 Creating event via API with data:', {
+      userId: body.userId,
+      title: body.title,
+      hasLocationData: !!(body.locationName || body.latitude || body.longitude),
+      locationData: {
+        locationName: body.locationName,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        timezone: body.timezone,
+        latitudeType: typeof body.latitude,
+        longitudeType: typeof body.longitude
+      }
+    });
+
+    let event;
+    try {
+      event = await EventService.createEvent(body);
+      
+      console.log('💾 EventService.createEvent returned:', {
+        hasEvent: !!event,
+        eventId: event?.id,
+        eventTitle: event?.title,
+        eventLocationName: event?.locationName
+      });
+    } catch (serviceError) {
+      console.error('❌ EventService.createEvent threw an error:', serviceError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to create event - service error',
+        details: serviceError instanceof Error ? serviceError.message : 'Unknown service error'
+      }, { status: 500 });
+    }
+
+    if (!event) {
+      console.error('❌ EventService.createEvent returned null');
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to create event - service returned null',
+      }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
