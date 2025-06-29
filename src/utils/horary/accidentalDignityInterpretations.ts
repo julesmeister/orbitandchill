@@ -219,7 +219,7 @@ export function analyzeFixedStars(planetLon: number, planetSign: string): {
   };
 }
 
-export function analyzeBesiegement(planetLon: number, allPlanets: Array<{planet: string, longitude: number, sign: string}>): {
+export function analyzeBesiegement(planetName: string, planetLon: number, allPlanets: Array<{planet: string, longitude: number, sign: string}>): {
   besieged: boolean;
   besiegedByRays: boolean;
   besiegers: string[];
@@ -230,7 +230,7 @@ export function analyzeBesiegement(planetLon: number, allPlanets: Array<{planet:
   
   // Find planets on either side
   const sorted = allPlanets
-    .filter(p => p.planet !== planetLon)
+    .filter(p => p.planet !== planetName)
     .sort((a, b) => a.longitude - b.longitude);
     
   // Simplified besiegement check - would need more sophisticated logic

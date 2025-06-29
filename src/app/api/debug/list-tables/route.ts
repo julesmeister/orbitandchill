@@ -26,15 +26,15 @@ export async function GET(request: NextRequest) {
     );
     
     const tables = tablesResult.rows || [];
-    console.log('📊 Found tables:', tables.map(t => t.name));
+    console.log('📊 Found tables:', tables.map((t: any) => t.name));
 
     // Check specifically for horary_questions
-    const horaryTableExists = tables.some(t => t.name === 'horary_questions');
+    const horaryTableExists = tables.some((t: any) => t.name === 'horary_questions');
     console.log('🔍 horary_questions table exists:', horaryTableExists);
 
     return NextResponse.json({
       success: true,
-      tables: tables.map(table => ({
+      tables: tables.map((table: any) => ({
         name: table.name,
         type: table.type,
         sql: table.sql

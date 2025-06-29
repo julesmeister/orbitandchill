@@ -104,7 +104,7 @@ export default function SignificatorsTab({ chartData, analysisData, question }: 
     const quesitedRuler = getHouseRuler(quesitedInfo.house);
 
     // Get other significant planets
-    const otherPlanets = [];
+    const otherPlanets: any[] = [];
     const significantHouses = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]; // Exclude 1st and quesited house
     
     for (const houseNum of significantHouses) {

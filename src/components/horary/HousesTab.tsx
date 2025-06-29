@@ -124,9 +124,9 @@ export default function HousesTab({ chartData, analysisData, question }: HousesT
       }`}
       onClick={onClick}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-start justify-between mb-2">
         <span className="font-space-grotesk font-bold text-lg">{house.houseNumber}</span>
-        <span className="text-xs text-gray-600">{house.physicalBody}</span>
+        <span className="text-xs text-gray-600 text-right ml-2 flex-shrink-0 max-w-[50%]">{house.physicalBody}</span>
       </div>
       <div className="font-space-grotesk font-bold text-sm mb-2">{house.name}</div>
       <div className="text-xs text-gray-700 mb-3">{house.primaryMeaning}</div>

@@ -31,14 +31,17 @@ export function useGoogleAuth() {
   const [error, setError] = useState<string | null>(null);
   const { updateUser } = useUserStore();
 
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithGoogle = useCallback(async (): Promise<GoogleUser | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Check if Google OAuth is ready
+      // Check if Google OAuth is ready - use graceful degradation instead of throwing
       if (!isGoogleOAuthReady()) {
-        throw new Error('Google OAuth is not configured properly');
+        const errorMessage = 'Google OAuth is not configured properly';
+        setError(errorMessage);
+        console.warn('⚠️ Google OAuth not available:', errorMessage);
+        return null; // Return null instead of throwing to allow graceful degradation
       }
 
       let googleUser: GoogleUser;
@@ -231,7 +234,8 @@ export function useGoogleAuth() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign in with Google';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      console.warn('⚠️ Google sign-in failed:', errorMessage);
+      return null; // Return null instead of throwing to allow graceful degradation
     } finally {
       setIsLoading(false);
     }

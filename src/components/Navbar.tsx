@@ -82,18 +82,16 @@ export default function Navbar() {
 
   // Authentication handlers
   const handleGoogleSignIn = async () => {
-    try {
-      showToast('Signing In', 'Connecting to Google...', 'loading');
-      const googleUser = await signInWithGoogle();
+    showToast('Signing In', 'Connecting to Google...', 'loading');
+    const googleUser = await signInWithGoogle();
+    
+    if (googleUser) {
       showToast('Welcome!', `Successfully signed in as ${googleUser.name}`, 'success');
-      
       // Auto-hide success message after 3 seconds
       setTimeout(() => hideToast(), 3000);
-    } catch (err) {
-      console.error("Google Sign-In failed:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in with Google';
-      showToast('Sign-In Failed', errorMessage, 'error');
-      
+    } else {
+      // Graceful degradation - show error but don't crash
+      showToast('Sign-In Unavailable', 'Google sign-in is not available. You can continue using the site anonymously.', 'error');
       // Auto-hide error message after 5 seconds
       setTimeout(() => hideToast(), 5000);
     }
