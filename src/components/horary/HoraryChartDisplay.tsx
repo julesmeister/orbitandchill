@@ -2,36 +2,97 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShare, faDownload, faClock, faQuestion } from "@fortawesome/free-solid-svg-icons";
 import { HoraryQuestion } from "../../store/horaryStore";
+import { useUserStore } from "../../store/userStore";
+import { convertToNatalFormat } from "../../utils/horaryCalculations";
+import { NatalChartData } from "../../utils/natalChart";
 import InteractiveHoraryChart from "./InteractiveHoraryChart";
 
 interface HoraryChartDisplayProps {
   svgContent: string;
   question: HoraryQuestion;
   onShare?: () => void;
+  onRealChartDataReady?: (realChartData: NatalChartData) => void;
 }
 
 export default function HoraryChartDisplay({
   svgContent,
   question,
   onShare,
+  onRealChartDataReady,
 }: HoraryChartDisplayProps) {
   const [showFullQuestion, setShowFullQuestion] = useState(false);
+  const { user } = useUserStore();
   
   // Debug: Log question structure
-  console.log('HoraryChartDisplay question:', {
-    id: question.id,
-    hasChartData: !!question.chartData,
-    chartDataKeys: question.chartData ? Object.keys(question.chartData) : 'none',
-    chartDataStructure: question.chartData,
-    metadataKeys: question.chartData?.metadata ? Object.keys(question.chartData.metadata) : 'none'
-  });
+  // console.log('HoraryChartDisplay question:', {
+  //   id: question.id,
+  //   hasChartData: !!question.chartData,
+  //   chartDataKeys: question.chartData ? Object.keys(question.chartData) : 'none',
+  //   chartDataStructure: question.chartData,
+  //   metadataKeys: question.chartData?.metadata ? Object.keys(question.chartData.metadata) : 'none'
+  // });
 
   // Convert to Date object if it's a string (from persistence)
-  const questionDate = question.date instanceof Date ? question.date : new Date(question.date);
+  const questionDate = (() => {
+    if (question.date instanceof Date) {
+      return question.date;
+    }
+    
+    // Handle string dates carefully
+    const dateValue = new Date(question.date);
+    
+    // Check if the date is valid
+    if (isNaN(dateValue.getTime())) {
+      console.warn('Invalid date in question:', question.date, 'Using current time instead');
+      return new Date();
+    }
+    
+    // Check if the date is suspiciously old (like 1970)
+    if (dateValue.getFullYear() < 1990) {
+      console.warn('Suspiciously old date in question:', dateValue, 'Using current time instead');
+      return new Date();
+    }
+    
+    return dateValue;
+  })();
+
+  // Generate real chart data and pass it to parent component
+  useEffect(() => {
+    const generateRealChartData = async () => {
+      if (!onRealChartDataReady) return;
+
+      try {
+        // Extract location with same priority logic as InteractiveHoraryChart
+        let coordinates: { lat: number; lng: number } | undefined;
+
+        if (question?.customLocation) {
+          // Priority 1: Use custom location from question
+          coordinates = {
+            lat: parseFloat(question.customLocation.coordinates.lat),
+            lng: parseFloat(question.customLocation.coordinates.lon)
+          };
+        } else if (user?.birthData?.coordinates) {
+          // Priority 2: Use user's birth data coordinates
+          coordinates = {
+            lat: parseFloat(user.birthData.coordinates.lat),
+            lng: parseFloat(user.birthData.coordinates.lon)
+          };
+        }
+        // Priority 3: convertToNatalFormat will fallback to London if no coordinates
+
+        const realChartData = await convertToNatalFormat(questionDate, coordinates);
+        onRealChartDataReady(realChartData);
+      } catch (error) {
+        console.error('Error generating real chart data:', error);
+      }
+    };
+
+    generateRealChartData();
+  }, [question?.id, question?.customLocation, user?.birthData?.coordinates, questionDate.getTime()]); // Use stable dependencies
 
   const handleDownload = () => {
     const blob = new Blob([svgContent], { type: "image/svg+xml" });
@@ -48,7 +109,7 @@ export default function HoraryChartDisplay({
   return (
     <div className="space-y-8">
       {/* Header Section with Question and Answer */}
-      <div className="border border-black bg-white p-8">
+      <div className="border-t border-black bg-white p-8">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
             {/* Header */}
@@ -173,7 +234,7 @@ export default function HoraryChartDisplay({
       </div>
 
       {/* Chart Display */}
-      <div className="border border-black bg-white p-6">
+      <div className="border-t border-black bg-white p-6">
         <div className="w-full flex justify-center">
           <InteractiveHoraryChart
             svgContent={svgContent}

@@ -53,12 +53,14 @@ export default function DiscussionDetailPage({
   useEffect(() => {
     const initUser = async () => {
       await loadProfile();
-      if (!user) {
+      // Check user state after loading
+      const currentUser = useUserStore.getState().user;
+      if (!currentUser) {
         await ensureAnonymousUser();
       }
     };
     initUser();
-  }, [loadProfile, ensureAnonymousUser, user]);
+  }, []); // Remove dependencies to prevent infinite loop
 
   // Note: Voting is handled by VoteButtons component in DiscussionSidebar
 

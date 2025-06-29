@@ -372,6 +372,44 @@ export class AdminSettingsService {
       description: 'Mailchimp audience/list ID for subscriptions',
       isRequired: false,
       defaultValue: ''
+    },
+
+    // Premium Settings
+    'premium.enabled': {
+      key: 'premium.enabled',
+      value: 'false',
+      type: 'boolean',
+      category: 'premium',
+      description: 'Enable premium features globally',
+      isRequired: true,
+      defaultValue: false
+    },
+    'premium.horary_limits_enabled': {
+      key: 'premium.horary_limits_enabled',
+      value: 'false',
+      type: 'boolean',
+      category: 'premium',
+      description: 'Enable horary question limits for free users',
+      isRequired: true,
+      defaultValue: false
+    },
+    'premium.free_daily_limit': {
+      key: 'premium.free_daily_limit',
+      value: '999',
+      type: 'number',
+      category: 'premium',
+      description: 'Daily horary question limit for free users (999 = unlimited)',
+      isRequired: true,
+      defaultValue: 999
+    },
+    'premium.free_monthly_limit': {
+      key: 'premium.free_monthly_limit',
+      value: '999',
+      type: 'number',
+      category: 'premium',
+      description: 'Monthly horary question limit for free users (999 = unlimited)',
+      isRequired: true,
+      defaultValue: 999
     }
   };
 

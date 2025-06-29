@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, getDbAsync } from '@/db';
 import { horaryQuestions } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -80,6 +80,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Ensure database is initialized
+    const dbInstance = db || await getDbAsync();
+    console.log('🔍 Database instance in PATCH:', !!dbInstance);
+    
     const resolvedParams = await params;
     const questionId = resolvedParams.id;
     const body = await request.json();
@@ -129,12 +133,42 @@ export async function PATCH(
     if (isShared !== undefined) updateData.isShared = isShared;
     if (shareToken !== undefined) updateData.shareToken = shareToken;
 
-    // Update the question
-    const [updatedQuestion] = await db
-      .update(horaryQuestions)
-      .set(updateData)
-      .where(eq(horaryQuestions.id, questionId))
-      .returning();
+    // Update the question with explicit error handling
+    console.log('🔍 Attempting to update horary question:', {
+      questionId,
+      updateFields: Object.keys(updateData),
+      hasChartData: !!updateData.chartData,
+      hasAnswer: !!updateData.answer
+    });
+    
+    let updatedQuestion = null;
+    try {
+      console.log('🔍 Database instance available for update:', !!dbInstance);
+      
+      if (!dbInstance) {
+        console.error('❌ Database instance is null/undefined for update');
+        throw new Error('Database not available for update');
+      }
+      
+      const [result] = await dbInstance
+        .update(horaryQuestions)
+        .set(updateData)
+        .where(eq(horaryQuestions.id, questionId))
+        .returning();
+        
+      console.log('✅ Database update successful:', { questionId, hasResult: !!result });
+      updatedQuestion = result;
+    } catch (dbError) {
+      console.error('❌ Database update error details:', {
+        error: dbError instanceof Error ? dbError.message : String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : undefined,
+        questionId,
+        updateData: Object.keys(updateData)
+      });
+      
+      // Don't throw, just set to null to trigger error response
+      updatedQuestion = null;
+    }
 
     if (!updatedQuestion) {
       return NextResponse.json(

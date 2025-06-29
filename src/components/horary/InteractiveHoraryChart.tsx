@@ -137,8 +137,18 @@ const InteractiveHoraryChart: React.FC<InteractiveHoraryChartProps> = ({
   // Return loading state if chart data not ready
   if (!chartDataToUse) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-slate-600">Loading astronomical data...</div>
+      <div className="text-center py-16">
+        <div className="flex items-center justify-center space-x-2 mb-4">
+          <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-3 h-3 bg-black animate-bounce"></div>
+        </div>
+        <h2 className="font-space-grotesk text-2xl font-bold text-black mb-2">
+          Loading astronomical data...
+        </h2>
+        <p className="text-black/70">
+          Calculating planetary positions and chart structure.
+        </p>
       </div>
     );
   }

@@ -47,13 +47,13 @@ export interface TimeZoneLookupResult {
  * Enhanced with regional specificity for better accuracy
  */
 function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneLookupResult {
-  console.log(`🧭 TIMEZONE LOOKUP: Coordinates ${lat}, ${lng}`);
+  // console.log(`🧭 TIMEZONE LOOKUP: Coordinates ${lat}, ${lng}`);
   
   // Regional boundary checks for better accuracy
   
   // Philippines: 5°N to 21°N, 116°E to 127°E
   if (lat >= 5 && lat <= 21 && lng >= 116 && lng <= 127) {
-    console.log('🧭 TIMEZONE: Detected Philippines region');
+    // console.log('🧭 TIMEZONE: Detected Philippines region');
     return {
       timeZone: 'Asia/Manila',
       confidence: 'high',
@@ -63,7 +63,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Singapore/Malaysia: 1°N to 7°N, 100°E to 120°E
   if (lat >= 1 && lat <= 7 && lng >= 100 && lng <= 120) {
-    console.log('🧭 TIMEZONE: Detected Singapore/Malaysia region');
+    // console.log('🧭 TIMEZONE: Detected Singapore/Malaysia region');
     return {
       timeZone: 'Asia/Singapore',
       confidence: 'high',
@@ -73,7 +73,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Indonesia (western): -10°S to 6°N, 95°E to 120°E
   if (lat >= -10 && lat <= 6 && lng >= 95 && lng <= 120) {
-    console.log('🧭 TIMEZONE: Detected Indonesia (western) region');
+    // console.log('🧭 TIMEZONE: Detected Indonesia (western) region');
     return {
       timeZone: 'Asia/Jakarta',
       confidence: 'high',
@@ -83,7 +83,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Thailand: 5°N to 21°N, 97°E to 106°E
   if (lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106) {
-    console.log('🧭 TIMEZONE: Detected Thailand region');
+    // console.log('🧭 TIMEZONE: Detected Thailand region');
     return {
       timeZone: 'Asia/Bangkok',
       confidence: 'high',
@@ -93,7 +93,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Vietnam: 8°N to 24°N, 102°E to 110°E
   if (lat >= 8 && lat <= 24 && lng >= 102 && lng <= 110) {
-    console.log('🧭 TIMEZONE: Detected Vietnam region');
+    // console.log('🧭 TIMEZONE: Detected Vietnam region');
     return {
       timeZone: 'Asia/Ho_Chi_Minh',
       confidence: 'high',
@@ -103,7 +103,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Japan: 30°N to 46°N, 129°E to 146°E
   if (lat >= 30 && lat <= 46 && lng >= 129 && lng <= 146) {
-    console.log('🧭 TIMEZONE: Detected Japan region');
+    // console.log('🧭 TIMEZONE: Detected Japan region');
     return {
       timeZone: 'Asia/Tokyo',
       confidence: 'high',
@@ -113,7 +113,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // China: 18°N to 54°N, 73°E to 135°E
   if (lat >= 18 && lat <= 54 && lng >= 73 && lng <= 135) {
-    console.log('🧭 TIMEZONE: Detected China region');
+    // console.log('🧭 TIMEZONE: Detected China region');
     return {
       timeZone: 'Asia/Shanghai',
       confidence: 'medium',
@@ -123,7 +123,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // India: 6°N to 37°N, 68°E to 97°E
   if (lat >= 6 && lat <= 37 && lng >= 68 && lng <= 97) {
-    console.log('🧭 TIMEZONE: Detected India region');
+    // console.log('🧭 TIMEZONE: Detected India region');
     return {
       timeZone: 'Asia/Kolkata',
       confidence: 'high',
@@ -133,7 +133,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Australia (eastern): -44°S to -10°S, 140°E to 154°E
   if (lat >= -44 && lat <= -10 && lng >= 140 && lng <= 154) {
-    console.log('🧭 TIMEZONE: Detected Australia (eastern) region');
+    // console.log('🧭 TIMEZONE: Detected Australia (eastern) region');
     return {
       timeZone: 'Australia/Sydney',
       confidence: 'high',
@@ -143,7 +143,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // United States (eastern): 25°N to 49°N, -85°W to -67°W
   if (lat >= 25 && lat <= 49 && lng >= -85 && lng <= -67) {
-    console.log('🧭 TIMEZONE: Detected US Eastern region');
+    // console.log('🧭 TIMEZONE: Detected US Eastern region');
     return {
       timeZone: 'America/New_York',
       confidence: 'high',
@@ -153,7 +153,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // United States (central): 25°N to 49°N, -106°W to -85°W
   if (lat >= 25 && lat <= 49 && lng >= -106 && lng <= -85) {
-    console.log('🧭 TIMEZONE: Detected US Central region');
+    // console.log('🧭 TIMEZONE: Detected US Central region');
     return {
       timeZone: 'America/Chicago',
       confidence: 'high',
@@ -163,7 +163,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // United States (mountain): 25°N to 49°N, -125°W to -106°W
   if (lat >= 25 && lat <= 49 && lng >= -125 && lng <= -106) {
-    console.log('🧭 TIMEZONE: Detected US Mountain region');
+    // console.log('🧭 TIMEZONE: Detected US Mountain region');
     return {
       timeZone: 'America/Denver',
       confidence: 'high',
@@ -173,7 +173,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // United States (pacific): 25°N to 49°N, -170°W to -125°W
   if (lat >= 25 && lat <= 49 && lng >= -170 && lng <= -125) {
-    console.log('🧭 TIMEZONE: Detected US Pacific region');
+    // console.log('🧭 TIMEZONE: Detected US Pacific region');
     return {
       timeZone: 'America/Los_Angeles',
       confidence: 'high',
@@ -183,7 +183,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Europe (western): 35°N to 72°N, -10°W to 20°E
   if (lat >= 35 && lat <= 72 && lng >= -10 && lng <= 20) {
-    console.log('🧭 TIMEZONE: Detected Western Europe region');
+    // console.log('🧭 TIMEZONE: Detected Western Europe region');
     return {
       timeZone: 'Europe/Paris',
       confidence: 'medium',
@@ -193,7 +193,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // United Kingdom: 49°N to 61°N, -11°W to 2°E
   if (lat >= 49 && lat <= 61 && lng >= -11 && lng <= 2) {
-    console.log('🧭 TIMEZONE: Detected UK region');
+    // console.log('🧭 TIMEZONE: Detected UK region');
     return {
       timeZone: 'Europe/London',
       confidence: 'high',
@@ -202,7 +202,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   }
   
   // Fallback to longitude-based approximation
-  console.log('🧭 TIMEZONE: Using fallback longitude-based approximation');
+  // console.log('🧭 TIMEZONE: Using fallback longitude-based approximation');
   const timeZoneOffset = Math.round(lng / 15);
   
   // Major timezone mappings (simplified fallback)
@@ -233,7 +233,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   const approximateZone = timezoneMap[timeZoneOffset.toString()];
   
   if (approximateZone) {
-    console.log(`🧭 TIMEZONE: Using fallback ${approximateZone} for offset ${timeZoneOffset}`);
+    // console.log(`🧭 TIMEZONE: Using fallback ${approximateZone} for offset ${timeZoneOffset}`);
     return {
       timeZone: approximateZone,
       confidence: 'medium',
@@ -243,7 +243,7 @@ function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneL
   
   // Last resort: UTC offset
   const offsetHours = timeZoneOffset >= 0 ? `+${timeZoneOffset.toString().padStart(2, '0')}` : timeZoneOffset.toString().padStart(3, '0');
-  console.log(`🧭 TIMEZONE: Last resort UTC offset ${offsetHours}`);
+  // console.log(`🧭 TIMEZONE: Last resort UTC offset ${offsetHours}`);
   return {
     timeZone: `Etc/GMT${offsetHours}`,
     confidence: 'low',
@@ -329,8 +329,8 @@ export function processBirthTime(birthData: BirthTimeData): ProcessedBirthTime {
     // Calculate UTC offset in hours (positive for east of UTC)
     const utcOffset = timeZoneOffsetMinutes / 60;
     
-    console.log(`🧭 TIMEZONE RESULT: ${tzLookup.timeZone}, UTC offset: ${utcOffset.toFixed(2)} hours`);
-    console.log(`🧭 LOCAL TIME: ${localTime}, DST: ${isDST}`);
+    // console.log(`🧭 TIMEZONE RESULT: ${tzLookup.timeZone}, UTC offset: ${utcOffset.toFixed(2)} hours`);
+    // console.log(`🧭 LOCAL TIME: ${localTime}, DST: ${isDST}`);
     
     return {
       utcDate,

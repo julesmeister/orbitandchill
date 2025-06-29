@@ -13,6 +13,11 @@ export default function HoraryLimitBanner() {
     return null; // Don't show banner for premium users
   }
   
+  // Don't show banner if limits are effectively unlimited (999)
+  if (limits.dailyLimit >= 999 && limits.monthlyLimit >= 999) {
+    return null;
+  }
+  
   const dailyRemaining = Math.max(0, limits.dailyLimit - limits.dailyUsed);
   const monthlyRemaining = Math.max(0, limits.monthlyLimit - limits.monthlyUsed);
   const dailyPercentage = (limits.dailyUsed / limits.dailyLimit) * 100;

@@ -119,11 +119,14 @@ export class LuckstrologyDatabase extends Dexie {
   }
 
   async getCurrentUserProfile(): Promise<UserProfile | null> {
+    console.log("🔍 [getCurrentUserProfile] Fetching current user profile from IndexedDB");
     try {
       // Get the most recently updated profile
       const profiles = await this.userProfiles.toArray();
+      console.log("🔍 [getCurrentUserProfile] Found profiles in database:", profiles.length);
       
       if (profiles.length === 0) {
+        console.log("🔍 [getCurrentUserProfile] No profiles found in database");
         return null;
       }
 
@@ -133,15 +136,25 @@ export class LuckstrologyDatabase extends Dexie {
           new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
       
-      return profiles[0];
+      const mostRecentProfile = profiles[0];
+      console.log("🔍 [getCurrentUserProfile] Most recent profile:", mostRecentProfile);
+      return mostRecentProfile;
     } catch (error) {
-      console.error('getCurrentUserProfile error:', error);
+      console.error('🔍 [getCurrentUserProfile] Error fetching profile:', error);
       return null;
     }
   }
 
   // Utility method to convert UserProfile to User type
   userProfileToUser(profile: UserProfile): import("../types/user").User {
+    console.log("🔍 [userProfileToUser] Converting profile to user:", profile);
+    console.log("🔍 [userProfileToUser] Profile date fields:", {
+      createdAt: profile.createdAt,
+      createdAtType: typeof profile.createdAt,
+      updatedAt: profile.updatedAt,
+      updatedAtType: typeof profile.updatedAt
+    });
+    
     const user = {
       id: profile.id,
       username: profile.username,
@@ -179,19 +192,37 @@ export class LuckstrologyDatabase extends Dexie {
       }
     };
     
+    console.log("🔍 [userProfileToUser] Final user object:", user);
+    console.log("🔍 [userProfileToUser] User date field types after conversion:", {
+      createdAtType: typeof user.createdAt,
+      createdAtIsDate: user.createdAt instanceof Date,
+      updatedAtType: typeof user.updatedAt,
+      updatedAtIsDate: user.updatedAt instanceof Date
+    });
+    
     return user;
   }
 
   // Utility method to convert User type to UserProfile for storage
   userToUserProfile(user: import("../types/user").User): UserProfile {
-    return {
+    console.log("🔍 [userToUserProfile] Converting user to profile:", user);
+    console.log("🔍 [userToUserProfile] Date field types:", {
+      createdAt: user.createdAt,
+      createdAtType: typeof user.createdAt,
+      createdAtIsDate: user.createdAt instanceof Date,
+      updatedAt: user.updatedAt,
+      updatedAtType: typeof user.updatedAt,
+      updatedAtIsDate: user.updatedAt instanceof Date
+    });
+    
+    const profile = {
       id: user.id,
       username: user.username,
       email: user.email,
       profilePictureUrl: user.profilePictureUrl,
       authProvider: user.authProvider,
-      createdAt: user.createdAt.toISOString(),
-      updatedAt: user.updatedAt.toISOString(),
+      createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
+      updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
       
       // Flatten birth data
       dateOfBirth: user.birthData?.dateOfBirth,
@@ -214,6 +245,9 @@ export class LuckstrologyDatabase extends Dexie {
       allowDirectMessages: user.privacy.allowDirectMessages,
       showOnlineStatus: user.privacy.showOnlineStatus,
     };
+    
+    console.log("🔍 [userToUserProfile] Final profile object:", profile);
+    return profile;
   }
 
   // Chart methods

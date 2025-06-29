@@ -914,6 +914,226 @@ export const withTiming = (handler: Function) => {
 
 ---
 
+## Turso HTTP Client Database Issues & Solutions
+
+### Issue: Drizzle ORM $defaultFn() Not Working with Turso HTTP Client
+
+**Problem**: When using Turso's HTTP client with Drizzle ORM, the `$defaultFn(() => new Date())` functions for `createdAt` and `updatedAt` timestamps don't execute, causing NOT NULL constraint failures.
+
+**Root Cause**: The Turso HTTP client doesn't execute client-side default functions from Drizzle ORM schemas.
+
+**Solution**: Explicitly provide timestamp values in database insert operations.
+
+#### ❌ Broken Pattern
+```typescript
+// This fails with Turso HTTP client
+const [result] = await dbInstance.insert(horaryQuestions).values({
+  id: questionId,
+  question: questionText,
+  // createdAt and updatedAt not provided - relies on $defaultFn()
+}).returning();
+```
+
+#### ✅ Working Pattern
+```typescript
+// This works with Turso HTTP client
+const now = new Date();
+const [result] = await dbInstance.insert(horaryQuestions).values({
+  id: questionId,
+  question: questionText,
+  // Explicitly provide timestamps since Turso HTTP client doesn't execute $defaultFn
+  createdAt: now,
+  updatedAt: now,
+}).returning();
+```
+
+### Issue: Foreign Key Constraint Errors in Testing
+
+**Problem**: Test data creation fails with foreign key constraint errors when referencing non-existent users.
+
+**Solution**: Either create valid test users first or use `null` for anonymous operations.
+
+#### ❌ Broken Pattern
+```typescript
+// Fails if 'debug_test_user' doesn't exist in users table
+const testData = {
+  userId: 'debug_test_user', // Foreign key constraint violation
+  question: 'Test question'
+};
+```
+
+#### ✅ Working Pattern
+```typescript
+// Option 1: Create test user first
+const testUserId = `debug_user_${Date.now()}`;
+const now = new Date();
+
+await dbInstance.insert(users).values({
+  id: testUserId,
+  username: 'Debug Test User',
+  authProvider: 'anonymous',
+  createdAt: now,
+  updatedAt: now,
+});
+
+// Then use the test user
+const testData = {
+  userId: testUserId,
+  question: 'Test question',
+  createdAt: now,
+  updatedAt: now,
+};
+
+// Option 2: Use null for anonymous operations
+const testData = {
+  userId: null, // No foreign key constraint
+  question: 'Test question',
+  createdAt: now,
+  updatedAt: now,
+};
+```
+
+### Issue: Browser vs Server-Side Database Initialization
+
+**Problem**: Database initialization code runs in browser context, causing errors when trying to use Node.js modules like `fs`.
+
+**Solution**: Add environment detection to prevent database initialization in browser contexts.
+
+#### ❌ Broken Pattern
+```typescript
+// This tries to run in browser and fails
+import fs from 'fs';
+startupInitialization(); // Runs everywhere
+```
+
+#### ✅ Working Pattern
+```typescript
+// Only initialize database on server-side (Node.js environment)
+if (typeof window === 'undefined') {
+  startupInitialization();
+}
+
+// And in initialization code
+if (typeof window === 'undefined' && typeof process !== 'undefined' && process.cwd) {
+  try {
+    const fs = await import('fs');
+    // Safe to use Node.js modules here
+  } catch (loadError) {
+    console.warn('⚠️ Could not load Node.js modules:', loadError);
+  }
+} else {
+  console.log('🌐 Running in browser environment, skipping server-only operations');
+}
+```
+
+### Debug Testing Pattern for Database Operations
+
+```typescript
+// Complete debug test implementation
+export async function POST(request: NextRequest) {
+  try {
+    const dbInstance = db || await getDbAsync();
+    
+    if (!dbInstance) {
+      return NextResponse.json({
+        success: false,
+        error: 'Database instance not available'
+      }, { status: 500 });
+    }
+
+    // Test simple query first
+    const testQuery = await dbInstance.client.execute('SELECT 1 as test');
+    
+    // Create test user to avoid foreign key constraints
+    const testUserId = `debug_user_${Date.now()}`;
+    const now = new Date();
+    
+    const testUser = await dbInstance.insert(users).values({
+      id: testUserId,
+      username: 'Debug Test User',
+      authProvider: 'anonymous',
+      createdAt: now,
+      updatedAt: now,
+    }).returning();
+
+    // Create test data with explicit timestamps
+    const questionId = `horary_debug_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const testData = {
+      id: questionId,
+      userId: testUserId,
+      question: 'Debug test question - database integration test',
+      date: now,
+      location: 'Test Location',
+      latitude: 40.7128,
+      longitude: -74.0060,
+      timezone: 'America/New_York',
+      category: 'test',
+      tags: JSON.stringify(['debug', 'test']),
+      // Required fields with null values
+      answer: null,
+      timing: null,
+      interpretation: null,
+      chartData: null,
+      chartSvg: null,
+      isRadical: null,
+      moonVoidOfCourse: null,
+      // Explicitly provide timestamps for Turso HTTP client
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Insert test data
+    const [result] = await dbInstance.insert(horaryQuestions).values(testData).returning();
+    
+    // Verify data was saved
+    const [savedQuestion] = await dbInstance
+      .select()
+      .from(horaryQuestions)
+      .where(eq(horaryQuestions.id, questionId))
+      .limit(1);
+
+    // Cleanup test data
+    await dbInstance.delete(horaryQuestions).where(eq(horaryQuestions.id, questionId));
+    await dbInstance.delete(users).where(eq(users.id, testUserId));
+
+    return NextResponse.json({
+      success: true,
+      message: 'Database operation test successful',
+      debug: {
+        questionId,
+        testUserId,
+        wasCreated: !!result,
+        wasSaved: !!savedQuestion,
+        testDataFields: Object.keys(testData),
+        resultFields: result ? Object.keys(result) : []
+      }
+    });
+
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      error: 'Database operation test failed',
+      debug: {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined
+      }
+    }, { status: 500 });
+  }
+}
+```
+
+### Key Takeaways
+
+1. **Always provide timestamps explicitly** when using Turso HTTP client with Drizzle ORM
+2. **Handle foreign key constraints** by creating test users or using null for anonymous operations
+3. **Add environment detection** to prevent server-side code from running in browser contexts
+4. **Implement comprehensive test patterns** with proper cleanup and detailed error reporting
+5. **Use proper error handling** that provides actionable debugging information
+
+These solutions resolve common issues when integrating Drizzle ORM with Turso's HTTP client in Next.js applications.
+
+---
+
 ## Conclusion
 
 This protocol document captures the proven patterns for building resilient, user-friendly APIs and database integrations. Key principles:
@@ -924,10 +1144,11 @@ This protocol document captures the proven patterns for building resilient, user
 4. **Comprehensive error handling** - Plan for all failure modes
 5. **Type safety** - Use TypeScript throughout the stack
 6. **Performance consciousness** - Optimize queries and use caching appropriately
+7. **Turso HTTP client compatibility** - Handle timestamp defaults and environment detection properly
 
-These patterns have been successfully implemented in features like location persistence, chart generation, discussion forums, and user management systems.
+These patterns have been successfully implemented in features like location persistence, chart generation, discussion forums, user management systems, and horary question creation.
 
 ---
 
-*Last Updated: June 26, 2025*  
-*Based on successful implementations in the Luckstrology application*
+*Last Updated: June 28, 2025*  
+*Based on successful implementations in the Luckstrology application, including Turso HTTP client integration solutions*

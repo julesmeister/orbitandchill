@@ -65,6 +65,28 @@ export const useHoraryStore = create<HoraryState>()(
       loadQuestions: async (userId) => {
         set({ isLoading: true });
         try {
+          // Add debug logging for user ID tracking
+          console.log('🔍 Loading horary questions for user:', {
+            userId,
+            userIdType: typeof userId,
+            userIdExists: !!userId
+          });
+
+          // Verify user exists in database before loading questions (for Google users)
+          if (userId && userId.startsWith('google_')) {
+            try {
+              const userCheck = await fetch(`/api/users/profile?userId=${userId}`);
+              if (!userCheck.ok) {
+                console.warn('⚠️ Google user not found in database, using local storage only');
+                set({ isLoading: false });
+                return;
+              }
+              console.log('✅ Google user verified in database');
+            } catch (error) {
+              console.warn('⚠️ User verification failed, continuing with local storage:', error);
+            }
+          }
+
           const params = new URLSearchParams();
           if (userId) params.append('userId', userId);
           params.append('includeAnonymous', 'true');
@@ -74,15 +96,35 @@ export const useHoraryStore = create<HoraryState>()(
           if (response.ok) {
             const data = await response.json();
             if (data.success) {
-              const questions = data.questions.map((q: any) => ({
-                ...q,
-                date: new Date(q.date),
-                createdAt: q.createdAt ? new Date(q.createdAt) : undefined,
-                updatedAt: q.updatedAt ? new Date(q.updatedAt) : undefined,
-              }));
+              const questions = data.questions.map((q: any) => {
+                // Handle date conversion more carefully
+                let questionDate = new Date();
+                if (q.date) {
+                  if (typeof q.date === 'number') {
+                    // If it's a number, check if it's in seconds (Unix timestamp) or milliseconds
+                    // Unix timestamps in seconds would be < 10^12, in milliseconds would be >= 10^12
+                    questionDate = q.date < 10000000000 ? new Date(q.date * 1000) : new Date(q.date);
+                  } else {
+                    questionDate = new Date(q.date);
+                  }
+                  
+                  // Validate the date
+                  if (isNaN(questionDate.getTime()) || questionDate.getFullYear() < 1990) {
+                    console.warn('Invalid date in question from database:', q.date, 'Using current time instead');
+                    questionDate = new Date();
+                  }
+                }
+                
+                return {
+                  ...q,
+                  date: questionDate,
+                  createdAt: q.createdAt ? new Date(q.createdAt) : undefined,
+                  updatedAt: q.updatedAt ? new Date(q.updatedAt) : undefined,
+                };
+              });
               
               set({ questions, isLoading: false });
-              console.log(`✅ Loaded ${questions.length} horary questions from database`);
+              console.log(`✅ Loaded ${questions.length} horary questions from database for user:`, userId);
               return;
             }
           }
@@ -98,6 +140,14 @@ export const useHoraryStore = create<HoraryState>()(
       // Add question with database persistence
       addQuestion: async (questionData) => {
         try {
+          // Add debug logging for question submission
+          console.log('🔍 Adding horary question:', {
+            userId: questionData.userId,
+            userIdType: typeof questionData.userId,
+            userIdExists: !!questionData.userId,
+            question: questionData.question.substring(0, 50) + '...'
+          });
+
           // Prepare data for API
           const apiData = {
             question: questionData.question,
@@ -129,7 +179,11 @@ export const useHoraryStore = create<HoraryState>()(
                 ),
               }));
               
-              console.log(`✅ Saved horary question to database: ${newQuestion.id}`);
+              console.log(`✅ Saved horary question to database:`, {
+                id: newQuestion.id,
+                userId: newQuestion.userId,
+                question: newQuestion.question.substring(0, 50) + '...'
+              });
               return newQuestion;
             }
           }

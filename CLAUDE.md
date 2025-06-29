@@ -367,6 +367,7 @@ interface NatalChartStorage {
 3. **Chart Caching**: Generated charts cached for 24 hours to avoid regeneration
 4. **Offline Resilience**: IndexedDB works offline, localStorage provides fallback
 5. **Data Consistency**: Conversion utilities ensure type safety between layers
+6. **Session Persistence**: Google OAuth users maintain their session across browser refreshes (fixed race condition in initialization)
 
 ### Privacy Architecture
 

@@ -21,6 +21,19 @@ This document provides a clean reference for all API endpoints, their status, an
 
 ## 🎯 Recent Fixes & Improvements
 
+### ✅ Google OAuth Session Persistence Fix (2025-06-28)
+- **Problem**: Google OAuth users were logged out after page refresh due to race condition in initialization
+- **Root Cause**: `ensureAnonymousUser` was being called before `loadProfile` completed rehydration, overwriting Google user with anonymous user
+- **Solution**: Fixed initialization order in Navbar to ensure proper rehydration sequence
+- **Files Modified**: 
+  - `src/components/Navbar.tsx` - Improved initialization to wait for rehydration before user creation
+  - `src/store/userStore.ts` - Optimized loadProfile to avoid duplicate rehydration calls
+- **Technical Details**: 
+  - Added explicit `useUserStore.persist.rehydrate()` call before user checks
+  - Separated localStorage rehydration from server sync for better control
+  - Prevented race condition where anonymous user creation interrupted Google user session
+- **Impact**: Google OAuth users now maintain their session across browser refreshes
+
 ### ✅ Daily Visitors Bug Fix (2025-06-27)
 - **Problem**: Daily visitors were incrementing on every page refresh instead of tracking unique visitors
 - **Solution**: Implemented IP-based unique visitor tracking with hash fingerprinting

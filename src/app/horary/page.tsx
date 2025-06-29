@@ -35,6 +35,7 @@ import { trackHoraryQuestion } from "../../hooks/usePageTracking";
 import { useSharedLocation } from "../../hooks/useSharedLocation";
 import { useHoraryLimits } from "../../hooks/useHoraryLimits";
 import HoraryLimitBanner from "../../components/horary/HoraryLimitBanner";
+import HoraryInterpretationTabs from "../../components/horary/HoraryInterpretationTabs";
 
 // Dynamic import with no SSR for the clock component
 const LiveClock = dynamic(() => import("../../components/horary/LiveClock"), {
@@ -138,16 +139,65 @@ export default function HoraryPage() {
   const [showVoidMoonWarning, setShowVoidMoonWarning] = useState(false);
   const [useCustomTime, setUseCustomTime] = useState(false);
   const [customTimeData, setCustomTimeData] = useState<any>(null);
+  const [realChartData, setRealChartData] = useState<any>(null);
 
-  // Filter questions for current user
+  // Filter questions for current user with improved logic
   const userQuestions = useMemo(() => {
-    return questions.filter(q => q.userId === user?.id || !q.userId);
-  }, [questions, user?.id]);
+    // Add debug logging for filtering
+    console.log('🔍 Filtering horary questions:', {
+      totalQuestions: questions.length,
+      userId: user?.id,
+      userIdType: typeof user?.id,
+      userExists: !!user,
+      userAuthProvider: user?.authProvider
+    });
 
-  // Load questions from database on mount
+    // If no user or user ID, return empty array to prevent showing wrong questions
+    if (!user?.id) {
+      console.log('⚠️ No user ID available, showing no questions');
+      return [];
+    }
+
+    // Filter questions for the current authenticated user only
+    const filtered = questions.filter(q => {
+      const matches = q.userId === user.id;
+      if (!matches && q.userId) {
+        console.log('🔍 Question userId mismatch:', {
+          questionUserId: q.userId,
+          currentUserId: user.id,
+          questionId: q.id
+        });
+      }
+      return matches;
+    });
+
+    console.log(`✅ Filtered ${filtered.length} questions for user ${user.id}`);
+    return filtered;
+  }, [questions, user?.id, user?.authProvider]);
+
+  // Load questions from database on mount with improved timing
   useEffect(() => {
-    loadQuestions(user?.id);
-  }, [user?.id, loadQuestions]);
+    // Add delay for Google auth users to ensure user is fully persisted
+    const loadWithDelay = async () => {
+      if (user?.id) {
+        console.log('🔍 Loading questions for user:', {
+          userId: user.id,
+          authProvider: user.authProvider
+        });
+
+        // If Google user, add small delay to ensure database persistence completed
+        if (user.authProvider === 'google') {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        loadQuestions(user.id);
+      } else {
+        console.log('⚠️ No user available, skipping question load');
+      }
+    };
+
+    loadWithDelay();
+  }, [user?.id, user?.authProvider]); // Removed loadQuestions to prevent infinite loop
 
   // Force update when questions change
   useEffect(() => {
@@ -210,6 +260,16 @@ export default function HoraryPage() {
       date: questionDate,
       userId: user?.id,
     };
+
+    // Add debug logging for question submission
+    console.log('🔍 Submitting horary question:', {
+      userId: user?.id,
+      userAuthProvider: user?.authProvider,
+      userExists: !!user,
+      questionLength: question.trim().length,
+      useCustomTime,
+      customTimeData
+    });
 
     try {
       // Add to store (now saves to database)
@@ -326,6 +386,7 @@ export default function HoraryPage() {
     }
 
     setCurrentChartData(null); // Clear any temporary chart data
+    setRealChartData(null); // Clear real chart data so new one is generated
     setShowQuestionForm(false); // Hide the form and show the chart
   };
 
@@ -333,6 +394,7 @@ export default function HoraryPage() {
     setShowQuestionForm(true);
     setSelectedQuestion(null);
     setCurrentChartData(null);
+    setRealChartData(null);
     setQuestion('');
   };
 
@@ -351,6 +413,7 @@ export default function HoraryPage() {
         setShowQuestionForm(true);
         setSelectedQuestion(null);
         setCurrentChartData(null);
+        setRealChartData(null);
       }
 
       // Close confirmation modal
@@ -697,407 +760,16 @@ export default function HoraryPage() {
                             url: window.location.href,
                           });
                         }}
+                        onRealChartDataReady={(realData) => {
+                          setRealChartData(realData);
+                        }}
                       />
 
-                      {/* Traditional Horary Analysis Section */}
-                      {(() => {
-                        const analysisData = getChartAnalysis(
-                          (currentChartData || selectedQuestion!.chartData)?.metadata?.chartData,
-                          selectedQuestion
-                        );
-
-                        if (!analysisData) return null;
-
-                        return (
-                          <div className="border border-black bg-white p-8">
-
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-black">
-                              {/* Chart Radicality */}
-                              <div className="border-r border-b border-black p-6" style={{ backgroundColor: analysisData.chartValidation.radical && analysisData.chartValidation.moonNotVoid && analysisData.chartValidation.saturnNotInSeventhOrFirst ? '#4ade80' : '#ff91e9' }}>
-                                <div className="flex items-center mb-6">
-                                  <div className="w-16 h-16 bg-black flex items-center justify-center mr-4">
-                                    <span className="text-white text-2xl">{analysisData.chartValidation.radical &&
-                                      analysisData.chartValidation.moonNotVoid &&
-                                      analysisData.chartValidation.saturnNotInSeventhOrFirst
-                                      ? '✓' : '⚠'}</span>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-space-grotesk font-bold text-black text-xl">Chart Radicality</h4>
-                                    <div className="w-16 h-0.5 bg-black mt-1"></div>
-                                  </div>
-                                </div>
-                                <div className="space-y-4">
-                                  <div className="bg-white border border-black p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-black font-space-grotesk font-bold text-sm">Ascendant</span>
-                                      <span className="text-black font-inter font-bold text-sm">
-                                        {analysisData.ascendant.degreeInSign.toFixed(1)}°
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-black font-inter">
-                                      {analysisData.ascendant.tooEarly ? 'Too Early (Impulsive)' :
-                                        analysisData.ascendant.tooLate ? 'Too Late (Predetermined)' : 'Radical Degree (Valid)'}
-                                    </div>
-                                  </div>
-
-                                  {analysisData.moon && (
-                                    <div className="bg-white border border-black p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-black font-space-grotesk font-bold text-sm">Moon</span>
-                                        <span className="text-black font-inter font-bold text-sm">
-                                          {analysisData.moon.voidOfCourse ? 'Void' : 'Active'}
-                                        </span>
-                                      </div>
-                                      <div className="text-xs text-black font-inter">
-                                        {analysisData.moon.voidOfCourse ? 'No more aspects before sign change' : 'Normal progression'}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {analysisData.saturn && (
-                                    <div className="bg-white border border-black p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-black font-space-grotesk font-bold text-sm">Saturn</span>
-                                        <span className="text-black font-inter font-bold text-sm">
-                                          {analysisData.saturn.inSeventhHouse ? '7th House' : 'Clear'}
-                                        </span>
-                                      </div>
-                                      <div className="text-xs text-black font-inter">
-                                        {analysisData.saturn.inSeventhHouse ? 'Complications in partnerships' : 'No obstructions'}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Lunar Conditions */}
-                              {analysisData.moon && (
-                                <div className="border-r border-b border-black p-6" style={{ backgroundColor: '#6bdbff' }}>
-                                  <div className="flex items-center mb-6">
-                                    <div className="w-16 h-16 bg-black flex items-center justify-center mr-4">
-                                      <span className="text-white text-2xl">☽</span>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-space-grotesk font-bold text-black text-xl">Lunar Conditions</h4>
-                                      <div className="w-16 h-0.5 bg-black mt-1"></div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-4">
-                                    <div className="bg-white border border-black p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-black font-space-grotesk font-bold text-sm">Phase</span>
-                                        <span className="text-black font-inter font-bold text-sm">{analysisData.moon.phase}</span>
-                                      </div>
-                                      <div className="text-xs text-black font-inter">Current lunar energy</div>
-                                    </div>
-
-                                    <div className="bg-white border border-black p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-black font-space-grotesk font-bold text-sm">Sign</span>
-                                        <span className="text-black font-inter font-bold text-sm capitalize">{analysisData.moon.sign}</span>
-                                      </div>
-                                      <div className="text-xs text-black font-inter">Moon's zodiacal position</div>
-                                    </div>
-
-                                    <div className="bg-white border border-black p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-black font-space-grotesk font-bold text-sm">House</span>
-                                        <span className="text-black font-inter font-bold text-sm">{analysisData.moon.house}</span>
-                                      </div>
-                                      <div className="text-xs text-black font-inter">Life area of focus</div>
-                                    </div>
-
-                                    {(analysisData.moon.viaCombusta || analysisData.moon.voidOfCourse) && (
-                                      <div className="bg-black text-white p-4">
-                                        {analysisData.moon.viaCombusta && (
-                                          <div className="mb-2">
-                                            <div className="font-space-grotesk font-bold text-sm mb-1">⚠ Via Combusta</div>
-                                            <div className="text-xs">15° Libra - 15° Scorpio: Volatile outcomes</div>
-                                          </div>
-                                        )}
-                                        {analysisData.moon.voidOfCourse && (
-                                          <div>
-                                            <div className="font-space-grotesk font-bold text-sm mb-1">☽ Void of Course</div>
-                                            <div className="text-xs">"Nothing will come of the matter"</div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Timing Factors */}
-                              <div className="border-b border-black p-6" style={{ backgroundColor: '#f2e356' }}>
-                                <div className="flex items-center mb-6">
-                                  <div className="w-16 h-16 bg-black flex items-center justify-center mr-4">
-                                    <span className="text-white text-2xl">⏰</span>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-space-grotesk font-bold text-black text-xl">Timing Factors</h4>
-                                    <div className="w-16 h-0.5 bg-black mt-1"></div>
-                                  </div>
-                                </div>
-                                <div className="space-y-4">
-                                  {analysisData.planetaryHour && (
-                                    <div className="bg-white border border-black p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="text-black font-space-grotesk font-bold text-sm">Hour Ruler</span>
-                                        <span className="text-black font-inter font-bold text-sm capitalize">{analysisData.planetaryHour}</span>
-                                      </div>
-                                      <div className="text-xs text-black font-inter">Planetary influence</div>
-                                    </div>
-                                  )}
-
-                                  <div className="bg-white border border-black p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-black font-space-grotesk font-bold text-sm">Chart Time</span>
-                                      <span className="text-black font-inter font-bold text-sm">
-                                        {selectedQuestion && new Date(selectedQuestion.date).toLocaleTimeString('en-US', {
-                                          hour: 'numeric',
-                                          minute: '2-digit',
-                                          second: '2-digit'
-                                        })}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-black font-inter">Moment of question</div>
-                                  </div>
-
-                                  <div className="bg-black text-white p-4">
-                                    <div className="font-space-grotesk font-bold text-sm mb-2">✨ Cosmic Influence</div>
-                                    <div className="text-xs">
-                                      The planetary hour ruler influences the question's energy and timing of manifestation.
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Planetary Aspects */}
-                              <div className="border-r border-black p-6 lg:col-span-3" style={{ backgroundColor: '#ff91e9' }}>
-                                <div className="flex items-center mb-6">
-                                  <div className="w-16 h-16 bg-black flex items-center justify-center mr-4">
-                                    <span className="text-white text-2xl">⚹</span>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-space-grotesk font-bold text-black text-xl">Planetary Aspects</h4>
-                                    <div className="w-16 h-0.5 bg-black mt-1"></div>
-                                  </div>
-                                </div>
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  <div className="bg-white border border-black p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-black font-space-grotesk font-bold text-sm">Total Aspects</span>
-                                      <span className="text-black font-inter font-bold text-lg">{analysisData.aspects.length}</span>
-                                    </div>
-                                    <div className="text-xs text-black font-inter">Active planetary connections</div>
-                                  </div>
-
-                                  <div className="bg-white border border-black p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-black font-space-grotesk font-bold text-sm">Retrograde</span>
-                                      <span className="text-black font-inter font-bold text-lg">{analysisData.retrogradeCount}</span>
-                                    </div>
-                                    <div className="text-xs text-black font-inter">Planets in reverse motion</div>
-                                  </div>
-
-                                  <div className="bg-white border border-black p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-black font-space-grotesk font-bold text-sm">Applying</span>
-                                      <span className="text-black font-inter font-bold text-lg">
-                                        {analysisData.aspects.filter((aspect: any) => aspect.applying).length}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-black font-inter">Future connections forming</div>
-                                  </div>
-                                </div>
-
-                                {analysisData.aspects.length > 0 && (
-                                  <div className="mt-6">
-                                    <div className="font-space-grotesk font-bold text-black mb-4">Major Aspects</div>
-                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                      {analysisData.aspects.slice(0, 6).map((aspect: { planet1: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; aspect: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; planet2: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; applying: any; }, i: Key | null | undefined) => (
-                                        <div key={i} className="bg-black text-white p-3">
-                                          <div className="font-space-grotesk font-bold text-sm mb-1 capitalize">
-                                            {aspect.planet1} {aspect.aspect} {aspect.planet2}
-                                          </div>
-                                          <div className="text-xs">
-                                            {aspect.applying ? '→ Applying (forming)' : '← Separating (waning)'}
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Astrological Interpretation */}
-                              <div className="border border-black bg-white p-6 md:col-span-2 lg:col-span-3">
-                                <div className="flex items-center mb-6">
-                                  <div className="w-12 h-12 bg-black flex items-center justify-center mr-4">
-                                    <span className="text-white text-lg">📖</span>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-space-grotesk font-bold text-black text-xl">Astrological Interpretation</h4>
-                                    <div className="w-24 h-0.5 bg-black mt-1"></div>
-                                  </div>
-                                </div>
-
-                                {/* Oracle's Interpretation if available */}
-                                {selectedQuestion?.interpretation && (
-                                  <div className="mb-6 p-6 border border-black" style={{ backgroundColor: '#6bdbff' }}>
-                                    <div className="flex items-start space-x-4">
-                                      <div className="w-12 h-12 bg-black flex items-center justify-center flex-shrink-0">
-                                        <span className="text-white text-lg">🔮</span>
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="font-space-grotesk font-bold text-black text-lg mb-3">Oracle's Interpretation</div>
-                                        <p className="text-black leading-relaxed text-base font-inter">
-                                          {selectedQuestion.interpretation}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                                <div className="space-y-4">
-                                  {!analysisData.chartValidation.radical && (
-                                    <div className="border border-black p-4" style={{ backgroundColor: '#ff91e9' }}>
-                                      <div className="flex items-start space-x-4">
-                                        <div className="w-12 h-12 bg-black flex items-center justify-center flex-shrink-0">
-                                          <span className="text-white text-lg">⚠</span>
-                                        </div>
-                                        <div>
-                                          <div className="font-space-grotesk font-bold text-black text-lg mb-2">Non-Radical Chart</div>
-                                          <div className="text-black font-inter text-sm">
-                                            This chart may not be suitable for judgment. The ascendant degree suggests the question is either too early (impulsive) or too late (outcome already determined).
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {analysisData.moon?.voidOfCourse && (
-                                    <div className="border border-black p-4" style={{ backgroundColor: '#f2e356' }}>
-                                      <div className="flex items-start space-x-4">
-                                        <div className="w-12 h-12 bg-black flex items-center justify-center flex-shrink-0">
-                                          <span className="text-white text-lg">☽</span>
-                                        </div>
-                                        <div>
-                                          <div className="font-space-grotesk font-bold text-black text-lg mb-2">Void of Course Moon</div>
-                                          <div className="text-black font-inter text-sm">
-                                            Traditional horary teaches that when the Moon is void of course, "nothing will come of the matter." This suggests the situation may not develop or may fizzle out.
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {analysisData.moon?.viaCombusta && (
-                                    <div className="border border-black p-4" style={{ backgroundColor: '#6bdbff' }}>
-                                      <div className="flex items-start space-x-4">
-                                        <div className="w-12 h-12 bg-black flex items-center justify-center flex-shrink-0">
-                                          <span className="text-white text-lg">🔥</span>
-                                        </div>
-                                        <div>
-                                          <div className="font-space-grotesk font-bold text-black text-lg mb-2">Via Combusta</div>
-                                          <div className="text-black font-inter text-sm">
-                                            The Moon in the "Fiery Way" (15° Libra to 15° Scorpio) traditionally indicates unpredictable, volatile, or dangerous outcomes. Proceed with extreme caution.
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {analysisData.saturn?.inSeventhHouse && (
-                                    <div className="border border-black p-4" style={{ backgroundColor: '#f0e3ff' }}>
-                                      <div className="flex items-start space-x-4">
-                                        <div className="w-12 h-12 bg-black flex items-center justify-center flex-shrink-0">
-                                          <span className="text-white text-lg">♄</span>
-                                        </div>
-                                        <div>
-                                          <div className="font-space-grotesk font-bold text-black text-lg mb-2">Saturn in 7th House</div>
-                                          <div className="text-black font-inter text-sm">
-                                            Traditional horary warns against judgment when Saturn occupies the 7th house, as it may indicate complications, delays, or obstacles in relationships and partnerships.
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {analysisData.chartValidation.radical &&
-                                    !analysisData.moon?.voidOfCourse &&
-                                    !analysisData.moon?.viaCombusta && (
-                                      <div className="border border-black p-4" style={{ backgroundColor: '#4ade80' }}>
-                                        <div className="flex items-start space-x-4">
-                                          <div className="w-12 h-12 bg-black flex items-center justify-center flex-shrink-0">
-                                            <span className="text-white text-lg">✓</span>
-                                          </div>
-                                          <div>
-                                            <div className="font-space-grotesk font-bold text-black text-lg mb-2">Radical Chart</div>
-                                            <div className="text-black font-inter text-sm">
-                                              This chart meets traditional criteria for reliable horary judgment. The ascendant degree, Moon condition, and overall chart structure support astrological interpretation.
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )}
-
-                                  <div className="border-t border-black pt-6 mt-6">
-                                    <div className="flex items-center mb-4">
-                                      <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
-                                        <span className="text-white text-sm">⚹</span>
-                                      </div>
-                                      <div className="font-space-grotesk font-bold text-black text-sm">Aspect Significance</div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                      <div className="border border-black bg-white p-3">
-                                        <div className="flex items-center space-x-2">
-                                          <div className="w-3 h-3 bg-green-500 flex items-center justify-center">
-                                            <span className="text-white text-xs">→</span>
-                                          </div>
-                                          <span className="text-black font-inter text-xs"><span className="font-bold">Applying:</span> Events developing</span>
-                                        </div>
-                                      </div>
-                                      <div className="border border-black bg-white p-3">
-                                        <div className="flex items-center space-x-2">
-                                          <div className="w-3 h-3 bg-gray-500 flex items-center justify-center">
-                                            <span className="text-white text-xs">←</span>
-                                          </div>
-                                          <span className="text-black font-inter text-xs"><span className="font-bold">Separating:</span> Past influences</span>
-                                        </div>
-                                      </div>
-                                      <div className="border border-black bg-white p-3">
-                                        <div className="flex items-center space-x-2">
-                                          <div className="w-3 h-3 bg-blue-500 flex items-center justify-center">
-                                            <span className="text-white text-xs">●</span>
-                                          </div>
-                                          <span className="text-black font-inter text-xs"><span className="font-bold">Conjunctions:</span> Strong connections</span>
-                                        </div>
-                                      </div>
-                                      <div className="border border-black bg-white p-3">
-                                        <div className="flex items-center space-x-2">
-                                          <div className="w-3 h-3 bg-green-500 flex items-center justify-center">
-                                            <span className="text-white text-xs">△</span>
-                                          </div>
-                                          <span className="text-black font-inter text-xs"><span className="font-bold">Trines/Sextiles:</span> Harmonious outcomes</span>
-                                        </div>
-                                      </div>
-                                      <div className="border border-black bg-white p-3 md:col-span-2">
-                                        <div className="flex items-center space-x-2">
-                                          <div className="w-3 h-3 bg-red-500 flex items-center justify-center">
-                                            <span className="text-white text-xs">□</span>
-                                          </div>
-                                          <span className="text-black font-inter text-xs"><span className="font-bold">Squares/Oppositions:</span> Challenges and obstacles</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                          </div>
-                        );
-                      })()}
+                      {/* Horary Interpretation Tabs */}
+                      <HoraryInterpretationTabs 
+                        chartData={realChartData || currentChartData || selectedQuestion!.chartData}
+                        question={selectedQuestion!}
+                      />
                     </div>
                   ) : (
                     <div className="text-center py-12 bg-white/60 backdrop-blur-sm border border-slate-200 rounded-2xl">

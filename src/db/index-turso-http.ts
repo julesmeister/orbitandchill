@@ -10,11 +10,61 @@ let db: any = null;
 // Initialize Turso connection with HTTP-only client
 async function initializeTurso() {
   try {
-    const databaseUrl = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
+    // Try to load environment variables, with fallback loading
+    let databaseUrl = process.env.TURSO_DATABASE_URL;
+    let authToken = process.env.TURSO_AUTH_TOKEN;
+    
+    // If environment variables are missing, try to load them manually from .env.local
+    // Only attempt this on server-side (Node.js environment)
+    if (!databaseUrl || !authToken) {
+      console.log('🔍 Environment variables missing, attempting manual load...');
+      
+      // Check if we're in a server environment (Node.js)
+      if (typeof window === 'undefined' && typeof process !== 'undefined' && process.cwd) {
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
+          const envPath = path.join(process.cwd(), '.env.local');
+          
+          if (fs.existsSync(envPath)) {
+            const envContent = fs.readFileSync(envPath, 'utf8');
+            const envLines = envContent.split('\n');
+            
+            for (const line of envLines) {
+              const [key, ...valueParts] = line.split('=');
+              if (key && valueParts.length > 0) {
+                const value = valueParts.join('=').trim();
+                if (key.trim() === 'TURSO_DATABASE_URL' && !databaseUrl) {
+                  databaseUrl = value;
+                  console.log('✅ Loaded TURSO_DATABASE_URL from .env.local');
+                }
+                if (key.trim() === 'TURSO_AUTH_TOKEN' && !authToken) {
+                  authToken = value;
+                  console.log('✅ Loaded TURSO_AUTH_TOKEN from .env.local');
+                }
+              }
+            }
+          }
+        } catch (loadError) {
+          console.warn('⚠️ Could not manually load .env.local:', loadError);
+        }
+      } else {
+        console.log('🌐 Running in browser environment, skipping .env.local file loading');
+      }
+    }
     
     if (!databaseUrl || !authToken) {
       console.warn('⚠️  Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN environment variables');
+      console.warn('⚠️  Environment check:', {
+        hasDatabaseUrl: !!databaseUrl,
+        hasAuthToken: !!authToken,
+        databaseUrlLength: databaseUrl ? databaseUrl.length : 0,
+        authTokenLength: authToken ? authToken.length : 0,
+        databaseUrlValue: databaseUrl ? databaseUrl.substring(0, 20) + '...' : 'UNDEFINED',
+        authTokenValue: authToken ? authToken.substring(0, 10) + '...' : 'UNDEFINED',
+        nodeEnv: process.env.NODE_ENV,
+        allEnvVars: Object.keys(process.env).filter(key => key.startsWith('TURSO'))
+      });
       console.warn('⚠️  Database will not be available - using fallback mode');
       return null;
     }
@@ -241,6 +291,7 @@ const createMockDb = () => ({
       else if (table === schema.notificationPreferences) tableName = 'notification_preferences';
       else if (table === schema.notificationTemplates) tableName = 'notification_templates';
       else if (table === schema.adminSettings) tableName = 'admin_settings';
+      else if (table === schema.horaryQuestions) tableName = 'horary_questions';
       else tableName = 'unknown';
       
       // Query builder state
@@ -524,6 +575,7 @@ const createMockDb = () => ({
     else if (table === schema.notificationPreferences) tableName = 'notification_preferences';
     else if (table === schema.notificationTemplates) tableName = 'notification_templates';
     else if (table === schema.adminSettings) tableName = 'admin_settings';
+    else if (table === schema.horaryQuestions) tableName = 'horary_questions';
     
     return {
       set: (data: any) => {
@@ -668,6 +720,7 @@ const createMockDb = () => ({
     else if (table === schema.notifications) tableName = 'notifications';
     else if (table === schema.notificationPreferences) tableName = 'notification_preferences';
     else if (table === schema.notificationTemplates) tableName = 'notification_templates';
+    else if (table === schema.horaryQuestions) tableName = 'horary_questions';
     
     return {
       where: (condition: any) => {
@@ -745,11 +798,15 @@ const ensureInitialized = async () => {
   if (!initializationPromise) {
     initializationPromise = (async () => {
       try {
+        console.log('🔄 Initializing Turso database connection...');
         client = await initializeTurso();
         if (client) {
+          console.log('✅ Turso client created successfully');
           db = createMockDb();
+          console.log('✅ Database wrapper created successfully');
           return db;
         } else {
+          console.warn('⚠️ Turso client creation returned null');
           db = null;
           return null;
         }
@@ -804,8 +861,10 @@ const startupInitialization = async () => {
   }
 };
 
-// Start initialization immediately but don't block module loading
-startupInitialization();
+// Only start initialization on server-side (Node.js environment)
+if (typeof window === 'undefined') {
+  startupInitialization();
+}
 
 // Export a getter function that ensures initialization
 export function getDb() {
@@ -865,8 +924,9 @@ async function createTablesIfNeeded() {
     const discussionsResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="discussions"');
     const repliesResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="discussion_replies"');
     const eventsResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="astrological_events"');
+    const horaryResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="horary_questions"');
     
-    if (discussionsResult.rows.length === 0 || repliesResult.rows.length === 0 || eventsResult.rows.length === 0) {
+    if (discussionsResult.rows.length === 0 || repliesResult.rows.length === 0 || eventsResult.rows.length === 0 || horaryResult.rows.length === 0) {
       console.log('📋 Creating/recreating database schema...');
       
       // Create basic tables for now
@@ -1127,7 +1187,41 @@ async function createTablesIfNeeded() {
         )
       `);
       
-      console.log('✅ All tables (including analytics, charts, premium features, astrological events, audit logs, and account deletion) created successfully');
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS horary_questions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT,
+          question TEXT NOT NULL,
+          date INTEGER NOT NULL,
+          location TEXT,
+          latitude REAL,
+          longitude REAL,
+          timezone TEXT,
+          answer TEXT,
+          timing TEXT,
+          interpretation TEXT,
+          chart_data TEXT,
+          chart_svg TEXT,
+          ascendant_degree REAL,
+          moon_sign TEXT,
+          moon_void_of_course INTEGER,
+          planetary_hour TEXT,
+          is_radical INTEGER,
+          chart_warnings TEXT,
+          category TEXT,
+          tags TEXT,
+          is_shared INTEGER DEFAULT 0,
+          share_token TEXT,
+          aspect_count INTEGER,
+          retrograde_count INTEGER,
+          significator_planet TEXT,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      
+      console.log('✅ All tables (including analytics, charts, premium features, astrological events, audit logs, account deletion, and horary questions) created successfully');
     } else {
       // Some tables exist, checking astrological_events specifically
       
@@ -1159,6 +1253,47 @@ async function createTablesIfNeeded() {
         // astrological_events table created successfully
       } else {
         // astrological_events table already exists
+      }
+      
+      // Force create horary_questions table if it doesn't exist
+      if (horaryResult.rows.length === 0) {
+        console.log('🔧 Creating missing horary_questions table...');
+        await client.execute(`
+          CREATE TABLE IF NOT EXISTS horary_questions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            question TEXT NOT NULL,
+            date INTEGER NOT NULL,
+            location TEXT,
+            latitude REAL,
+            longitude REAL,
+            timezone TEXT,
+            answer TEXT,
+            timing TEXT,
+            interpretation TEXT,
+            chart_data TEXT,
+            chart_svg TEXT,
+            ascendant_degree REAL,
+            moon_sign TEXT,
+            moon_void_of_course INTEGER,
+            planetary_hour TEXT,
+            is_radical INTEGER,
+            chart_warnings TEXT,
+            category TEXT,
+            tags TEXT,
+            is_shared INTEGER DEFAULT 0,
+            share_token TEXT,
+            aspect_count INTEGER,
+            retrograde_count INTEGER,
+            significator_planet TEXT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+        console.log('✅ horary_questions table created successfully');
+      } else {
+        console.log('✅ horary_questions table already exists');
       }
     }
   } catch (error) {

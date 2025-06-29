@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, getDbAsync } from '@/db';
 import { horaryQuestions, users } from '@/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -11,6 +11,10 @@ import { withDatabaseResilience } from '@/db/resilience';
 // POST - Create new horary question
 export async function POST(request: NextRequest) {
   try {
+    // Ensure database is initialized
+    const dbInstance = db || await getDbAsync();
+    console.log('🔍 Database instance in POST:', !!dbInstance);
+    
     const body = await request.json();
     const {
       question,
@@ -33,6 +37,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify user exists in database if userId is provided
+    if (userId) {
+      try {
+        const userExists = await withDatabaseResilience(
+          db,
+          async () => {
+            const result = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
+            return result.length > 0;
+          },
+          {
+            fallbackValue: true, // Allow creation if database check fails
+            serviceName: 'HoraryAPI',
+            methodName: 'verifyUser'
+          }
+        );
+
+        if (!userExists) {
+          console.warn(`⚠️ User ${userId} not found in database, but allowing question creation`);
+          // Log the issue but don't fail - allow question creation for better UX
+        } else {
+          console.log(`✅ User ${userId} verified in database`);
+        }
+      } catch (error) {
+        console.warn(`⚠️ User verification failed for ${userId}:`, error);
+        // Continue with question creation even if verification fails
+      }
+    }
+
     // Generate unique ID for question
     const questionId = `horary_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
@@ -42,37 +74,62 @@ export async function POST(request: NextRequest) {
     const questionLongitude = customLocation?.coordinates?.lon || longitude;
 
     // Create horary question record with resilience
-    const newQuestion = await withDatabaseResilience(
-      db,
-      async () => {
-        const [result] = await db.insert(horaryQuestions).values({
-          id: questionId,
-          userId: userId || null, // Allow anonymous questions
-          question: question.trim(),
-          date: new Date(date),
-          location: questionLocation,
-          latitude: questionLatitude,
-          longitude: questionLongitude,
-          timezone: timezone || 'UTC',
-          category: category || null,
-          tags: tags ? JSON.stringify(tags) : null,
-          // Initial values - will be updated when chart analysis completes
-          answer: null,
-          timing: null,
-          interpretation: null,
-          chartData: null,
-          chartSvg: null,
-          isRadical: null,
-          moonVoidOfCourse: null,
-        }).returning();
-        return result;
-      },
-      {
-        fallbackValue: null,
-        serviceName: 'HoraryAPI',
-        methodName: 'createQuestion'
+    console.log('🔍 Attempting to insert horary question into database:', {
+      questionId,
+      userId: userId || 'anonymous',
+      question: question.substring(0, 50) + '...',
+      location: questionLocation
+    });
+    
+    // Try database insert with explicit error handling
+    let newQuestion = null;
+    try {
+      console.log('📝 Database insert operation starting...');
+      console.log('🔍 Database instance available:', !!dbInstance);
+      
+      if (!dbInstance) {
+        console.error('❌ Database instance is null/undefined');
+        throw new Error('Database not available');
       }
-    );
+      
+      const now = new Date();
+      const [result] = await dbInstance.insert(horaryQuestions).values({
+        id: questionId,
+        userId: userId || null, // Allow anonymous questions
+        question: question.trim(),
+        date: new Date(date),
+        location: questionLocation,
+        latitude: questionLatitude,
+        longitude: questionLongitude,
+        timezone: timezone || 'UTC',
+        category: category || null,
+        tags: tags ? JSON.stringify(tags) : null,
+        // Initial values - will be updated when chart analysis completes
+        answer: null,
+        timing: null,
+        interpretation: null,
+        chartData: null,
+        chartSvg: null,
+        isRadical: null,
+        moonVoidOfCourse: null,
+        // Explicitly provide timestamps since Turso HTTP client doesn't execute $defaultFn
+        createdAt: now,
+        updatedAt: now,
+      }).returning();
+      
+      console.log('✅ Database insert successful:', { questionId: result.id });
+      newQuestion = result;
+    } catch (dbError) {
+      console.error('❌ Database insert error details:', {
+        error: dbError instanceof Error ? dbError.message : String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : undefined,
+        questionId,
+        userId
+      });
+      
+      // Don't throw, just set newQuestion to null to trigger fallback
+      newQuestion = null;
+    }
 
     if (!newQuestion) {
       return NextResponse.json(
@@ -117,6 +174,10 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve user's horary questions
 export async function GET(request: NextRequest) {
   try {
+    // Ensure database is initialized
+    const dbInstance = db || await getDbAsync();
+    console.log('🔍 Database instance in GET:', !!dbInstance);
+    
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -156,9 +217,9 @@ export async function GET(request: NextRequest) {
 
     // Execute query with resilience
     const questions = await withDatabaseResilience(
-      db,
+      dbInstance,
       async () => {
-        return await db
+        return await dbInstance
           .select()
           .from(horaryQuestions)
           .where(conditions.length > 0 ? and(...conditions) : undefined)

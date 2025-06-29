@@ -42,9 +42,22 @@ export default function Navbar() {
   // Initialize user on mount - run only once
   useEffect(() => {
     const initializeUser = async () => {
-      await loadProfile();
-      const currentUser = useUserStore.getState().user;
+      // First, wait for Zustand to rehydrate from localStorage
+      await useUserStore.persist.rehydrate();
       
+      // Check if we have a user from localStorage rehydration
+      let currentUser = useUserStore.getState().user;
+      
+      // If we have a user from rehydration, try to sync with server
+      if (currentUser) {
+        await loadProfile();
+        currentUser = useUserStore.getState().user; // Get updated user after loadProfile
+      } else {
+        await loadProfile();
+        currentUser = useUserStore.getState().user;
+      }
+      
+      // Only create anonymous user if no user exists after all attempts
       if (!currentUser) {
         const anonymousName = generateAnonymousName();
         await ensureAnonymousUser(anonymousName);

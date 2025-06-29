@@ -117,19 +117,7 @@ export function useGoogleAuth() {
         googleUser = response;
       }
 
-      // Update user store with Google auth data and default preferences
-      await updateUser({
-        id: googleUser.id,
-        username: googleUser.name,
-        email: googleUser.email,
-        profilePictureUrl: googleUser.picture,
-        authProvider: 'google',
-        privacy: DEFAULT_USER_PREFERENCES.privacy,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-
-      // Persist user to server database
+      // Persist user to server database first, then update store
       try {
         const response = await fetch('/api/users/profile', {
           method: 'POST',
@@ -153,13 +141,74 @@ export function useGoogleAuth() {
 
         if (response.ok) {
           const result = await response.json();
-          console.log(`✅ User persisted to server database:`, result.action);
+          console.log(`✅ User persisted to server database:`, {
+            action: result.action,
+            userId: googleUser.id,
+            userType: 'google'
+          });
+          
+          // Update local store with the user data from server response
+          if (result.user) {
+            // Use the user data returned from the server, ensuring proper data types
+            const serverUser = {
+              ...result.user,
+              // Ensure dates are Date objects for local store
+              createdAt: result.user.createdAt ? new Date(result.user.createdAt) : new Date(),
+              updatedAt: result.user.updatedAt ? new Date(result.user.updatedAt) : new Date(),
+            };
+            await updateUser(serverUser);
+            
+            // Force Zustand to persist to localStorage immediately
+            setTimeout(() => {
+              const currentState = useUserStore.getState();
+              if (currentState.user) {
+                console.log('✅ Local store updated with server user data, user persisted to localStorage');
+              }
+            }, 100);
+            console.log('✅ Local store updated with server user data');
+          } else {
+            // Fallback to local user data if server doesn't return user
+            await updateUser({
+              id: googleUser.id,
+              username: googleUser.name,
+              email: googleUser.email,
+              profilePictureUrl: googleUser.picture,
+              authProvider: 'google',
+              privacy: DEFAULT_USER_PREFERENCES.privacy,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            console.log('✅ Local store updated with fallback user data');
+          }
         } else {
           console.warn('⚠️ Failed to persist user to server database:', response.status);
+          
+          // Still update local store even if server fails
+          await updateUser({
+            id: googleUser.id,
+            username: googleUser.name,
+            email: googleUser.email,
+            profilePictureUrl: googleUser.picture,
+            authProvider: 'google',
+            privacy: DEFAULT_USER_PREFERENCES.privacy,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
         }
       } catch (dbError) {
         console.warn('⚠️ Could not persist user to server database:', dbError);
-        // Don't fail the authentication if database persistence fails
+        
+        // Update local store even if database persistence fails
+        await updateUser({
+          id: googleUser.id,
+          username: googleUser.name,
+          email: googleUser.email,
+          profilePictureUrl: googleUser.picture,
+          authProvider: 'google',
+          privacy: DEFAULT_USER_PREFERENCES.privacy,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
       }
 
       // Log user activity

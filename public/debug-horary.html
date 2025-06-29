@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Horary Database Debug</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Horary Database Debug Tool</h1>
+    
+    <div>
+        <button class="button" onclick="checkEnv()">🔍 Check Environment Variables</button>
+        <button class="button" onclick="testConnection()">🔌 Test Database Connection</button>
+        <button class="button" onclick="listTables()">📊 List Database Tables</button>
+        <button class="button" onclick="createHoraryTable()">🔧 Create Horary Table</button>
+        <button class="button" onclick="testQuestionCreation()">✨ Test Question Creation</button>
+        <button class="button" onclick="testHoraryCreation()">🧪 Test Horary Creation (Debug)</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(title, data, isError = false) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${isError ? 'error' : 'success'}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            results.appendChild(div);
+        }
+
+        async function checkEnv() {
+            try {
+                const response = await fetch('/api/debug/env-check');
+                const data = await response.json();
+                addResult('🔍 Environment Variables', data, !response.ok);
+            } catch (error) {
+                addResult('❌ Environment Check Error', { error: error.message }, true);
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch('/api/debug/db-connection');
+                const data = await response.json();
+                addResult('🔌 Database Connection Test', data, !response.ok);
+            } catch (error) {
+                addResult('❌ Connection Test Error', { error: error.message }, true);
+            }
+        }
+
+        async function listTables() {
+            try {
+                const response = await fetch('/api/debug/list-tables');
+                const data = await response.json();
+                addResult('📊 Database Tables', data, !response.ok);
+            } catch (error) {
+                addResult('❌ List Tables Error', { error: error.message }, true);
+            }
+        }
+
+        async function createHoraryTable() {
+            try {
+                const response = await fetch('/api/debug/create-horary-table', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                addResult('🔧 Create Horary Table', data, !response.ok);
+            } catch (error) {
+                addResult('❌ Create Table Error', { error: error.message }, true);
+            }
+        }
+
+        async function testQuestionCreation() {
+            try {
+                const response = await fetch('/api/horary/questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: 'Debug test question - will this work?',
+                        date: new Date().toISOString(),
+                        userId: null, // Use null for anonymous questions to avoid foreign key constraint
+                        location: 'Test Location',
+                        latitude: 40.7128,
+                        longitude: -74.0060,
+                        timezone: 'America/New_York',
+                        category: 'test'
+                    })
+                });
+                const data = await response.json();
+                addResult('✨ Test Question Creation', data, !response.ok);
+            } catch (error) {
+                addResult('❌ Question Creation Error', { error: error.message }, true);
+            }
+        }
+
+        async function testHoraryCreation() {
+            try {
+                const response = await fetch('/api/debug/test-horary-creation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                addResult('🧪 Debug Horary Creation Test', data, !response.ok);
+            } catch (error) {
+                addResult('❌ Debug Creation Test Error', { error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

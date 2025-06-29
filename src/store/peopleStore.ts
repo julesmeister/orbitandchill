@@ -43,12 +43,14 @@ export const usePeopleStore = create<PeopleState>()(
 
       // Computed values
       get selectedPerson() {
-        const { people, selectedPersonId } = get();
+        const state = get();
+        const { people = [], selectedPersonId } = state || {};
         return selectedPersonId ? people.find(p => p.id === selectedPersonId) || null : null;
       },
 
       get defaultPerson() {
-        const { people } = get();
+        const state = get();
+        const { people = [] } = state || {};
         return people.find(p => p.isDefault) || null;
       },
 

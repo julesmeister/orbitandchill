@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { db } from "@/store/database";
 import { User, BirthData, UserPrivacySettings } from "@/types/user";
 
 interface UserState {
@@ -28,10 +27,12 @@ const generateAnonymousId = (): string => {
   );
 };
 
-const createInitialUser = (): User => {
+const createInitialUser = (persistentId?: string): User => {
   const now = new Date();
+  const userId = persistentId || generateAnonymousId();
+  
   return {
-    id: generateAnonymousId(),
+    id: userId,
     username: "Anonymous", // Will be updated with creative name in Navbar
     authProvider: "anonymous",
     createdAt: now,
@@ -82,26 +83,14 @@ export const useUserStore = create<UserState>()(
               updatedAt: new Date(),
             }
           : {
-              ...createInitialUser(),
+              ...createInitialUser(localStorage.getItem('luckstrology-anonymous-id') || undefined),
               ...data,
             };
 
         set({ user: updatedUser });
 
-        // Convert to storage format and save
-        try {
-          const profileForStorage = db.userToUserProfile(updatedUser);
-          await db.saveUserProfile(profileForStorage);
-
-          // Also cache the profile with a TTL for quick access
-          await db.setCache(
-            `user_profile_${updatedUser.id}`,
-            profileForStorage,
-            1440
-          ); // 24 hours
-        } catch (error) {
-          console.error("Error saving user to database:", error);
-        }
+        // Note: For Google auth users, database persistence is handled by the auth hook
+        // For other updates, we could add database sync here if needed
       },
 
       updateBirthData: async (data) => {
@@ -139,35 +128,79 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true });
 
         try {
-          // First try to get from IndexedDB
-          const profile = await db.getCurrentUserProfile();
-
-          if (profile) {
-            // Convert storage format to User type
-            const user = db.userProfileToUser(profile);
-            set({ user });
-
-            // Update cache
-            await db.setCache(`user_profile_${profile.id}`, profile, 1440);
-          } else {
-            // Try to rehydrate from localStorage
-            await useUserStore.persist.rehydrate();
+          // Get the current user (should already be rehydrated by Navbar)
+          let localUser = get().user;
+          
+          // If no user in store, try manual localStorage parsing as fallback
+          if (!localUser) {
+            const storedData = localStorage.getItem('luckstrology-user-storage');
             
-            // Check if rehydration loaded a user
-            const rehydratedUser = get().user;
-            
-            if (rehydratedUser) {
-              // Save the rehydrated user to IndexedDB to ensure persistence
-              const profileForStorage = db.userToUserProfile(rehydratedUser);
-              await db.saveUserProfile(profileForStorage);
-              await db.setCache(`user_profile_${rehydratedUser.id}`, profileForStorage, 1440);
+            if (storedData) {
+              try {
+                const parsedData = JSON.parse(storedData);
+                
+                if (parsedData.state && parsedData.state.user) {
+                  // Convert date strings back to Date objects for consistency
+                  const userData = {
+                    ...parsedData.state.user,
+                    createdAt: new Date(parsedData.state.user.createdAt),
+                    updatedAt: new Date(parsedData.state.user.updatedAt)
+                  };
+                  set({ user: userData });
+                  localUser = userData; // Update the local reference
+                }
+              } catch (parseError) {
+                console.error('Failed to manually parse localStorage:', parseError);
+              }
             }
-            // Note: Removed automatic user creation here - let components handle it explicitly
+          }
+          
+          if (localUser?.id) {
+            // Fetch from Turso database via API
+            const response = await fetch(`/api/users/profile?userId=${localUser.id}`);
+            
+            if (response.ok) {
+              const result = await response.json();
+              if (result.user) {
+                set({ user: result.user });
+              } else {
+                // Create user in Turso
+                const createResponse = await fetch('/api/users/profile', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    id: localUser.id,
+                    username: localUser.username,
+                    email: localUser.email,
+                    profilePictureUrl: localUser.profilePictureUrl,
+                    authProvider: localUser.authProvider,
+                    dateOfBirth: localUser.birthData?.dateOfBirth,
+                    timeOfBirth: localUser.birthData?.timeOfBirth,
+                    locationOfBirth: localUser.birthData?.locationOfBirth,
+                    latitude: localUser.birthData?.coordinates?.lat,
+                    longitude: localUser.birthData?.coordinates?.lon,
+                    sunSign: localUser.sunSign,
+                    stelliumSigns: localUser.stelliumSigns,
+                    stelliumHouses: localUser.stelliumHouses,
+                    hasNatalChart: localUser.hasNatalChart,
+                    showZodiacPublicly: localUser.privacy?.showZodiacPublicly,
+                    showStelliumsPublicly: localUser.privacy?.showStelliumsPublicly,
+                    showBirthInfoPublicly: localUser.privacy?.showBirthInfoPublicly,
+                    allowDirectMessages: localUser.privacy?.allowDirectMessages,
+                    showOnlineStatus: localUser.privacy?.showOnlineStatus
+                  })
+                });
+                
+                if (createResponse.ok) {
+                  const createResult = await createResponse.json();
+                  set({ user: createResult.user });
+                }
+              }
+            }
           }
         } catch (error) {
-          console.error("Error loading user profile from database:", error);
-          // Try localStorage fallback
-          await useUserStore.persist.rehydrate();
+          console.error("Error loading user from Turso:", error);
+          // Keep local user if API fails
         } finally {
           set({ isLoading: false });
         }
@@ -175,41 +208,62 @@ export const useUserStore = create<UserState>()(
 
       ensureAnonymousUser: async (customName?: string) => {
         const currentUser = get().user;
+        
         if (!currentUser) {
-          const initialUser = createInitialUser();
+          // Check if we have a persistent anonymous ID in localStorage
+          let persistentId = localStorage.getItem('luckstrology-anonymous-id');
+          
+          if (!persistentId) {
+            persistentId = generateAnonymousId();
+            localStorage.setItem('luckstrology-anonymous-id', persistentId);
+          }
+          
+          const initialUser = createInitialUser(persistentId);
+          
           const newUser = {
             ...initialUser,
-            username: customName || initialUser.username // Use the generated username if no custom name
+            username: customName || initialUser.username
           };
+          
           set({ user: newUser });
           
-          // Save the new user to database
+          // Save the new user to Turso database via API
           try {
-            const profileForStorage = db.userToUserProfile(newUser);
-            await db.saveUserProfile(profileForStorage);
-            await db.setCache(`user_profile_${newUser.id}`, profileForStorage, 1440);
+            const response = await fetch('/api/users/profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: newUser.id,
+                username: newUser.username,
+                email: newUser.email,
+                profilePictureUrl: newUser.profilePictureUrl,
+                authProvider: newUser.authProvider,
+                showZodiacPublicly: newUser.privacy.showZodiacPublicly,
+                showStelliumsPublicly: newUser.privacy.showStelliumsPublicly,
+                showBirthInfoPublicly: newUser.privacy.showBirthInfoPublicly,
+                allowDirectMessages: newUser.privacy.allowDirectMessages,
+                showOnlineStatus: newUser.privacy.showOnlineStatus
+              })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              // Update local state with server response
+              if (result.user) {
+                set({ user: result.user });
+              }
+            }
           } catch (error) {
-            console.error("Error saving new anonymous user:", error);
+            console.error("Error saving new anonymous user to Turso:", error);
           }
         }
       },
 
       clearProfile: async () => {
-        const currentUser = get().user;
-
         set({ user: null });
-
-        if (currentUser) {
-          try {
-            // Remove from IndexedDB
-            await db.userProfiles.delete(currentUser.id);
-
-            // Clear from cache
-            await db.cache.delete(`user_profile_${currentUser.id}`);
-          } catch (error) {
-            console.error("Error clearing user profile from database:", error);
-          }
-        }
+        
+        // Note: For now, we keep the user in Turso database for data persistence
+        // In the future, we could add a DELETE endpoint if needed
       },
 
       generateAnonymousId,

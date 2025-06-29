@@ -195,10 +195,24 @@ export class UserStoreDBIntegration {
   }
 
   /**
-   * Generate anonymous user ID
+   * Generate anonymous user ID with persistence support
    */
   static generateAnonymousId(): string {
-    return `anon_${Math.random().toString(36).substring(2, 11)}${Date.now().toString(36)}`;
+    // Check for existing persistent ID first
+    if (typeof localStorage !== 'undefined') {
+      const persistentId = localStorage.getItem('luckstrology-anonymous-id');
+      if (persistentId) {
+        return persistentId;
+      }
+    }
+    
+    // Generate new ID and store it
+    const newId = `anon_${Math.random().toString(36).substring(2, 11)}${Date.now().toString(36)}`;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('luckstrology-anonymous-id', newId);
+    }
+    
+    return newId;
   }
 }
 

@@ -106,14 +106,14 @@ export const PlanetMarker: React.FC<PlanetMarkerProps> = ({
   const planetColor = planetColors[planet.name] || "#666666";
   const planetSymbol = planetSymbols[planet.name] || planet.name.charAt(0).toUpperCase();
   
-  // Debug log for special planets
-  if (['northNode', 'southNode', 'partOfFortune'].includes(planet.name)) {
-    console.log(`🔍 Special planet ${planet.name}:`, { 
-      symbol: planetSymbol, 
-      expected: planetSymbols[planet.name],
-      color: planetColor 
-    });
-  }
+  // Debug log for special planets - commented out to reduce noise
+  // if (['northNode', 'southNode', 'partOfFortune'].includes(planet.name)) {
+  //   console.log(`🔍 Special planet ${planet.name}:`, { 
+  //     symbol: planetSymbol, 
+  //     expected: planetSymbols[planet.name],
+  //     color: planetColor 
+  //   });
+  // }
 
   return (
     <g>

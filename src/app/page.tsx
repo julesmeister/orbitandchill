@@ -94,8 +94,8 @@ export default function Home() {
   return (
     <>
       {/* Hero Section with Features - Unified */}
-      <section className="hero-section px-[5%] flex items-center justify-center" style={{ minHeight: 'calc(100vh - 120px)' }}>
-        <div className="max-w-7xl mx-auto w-full">
+      <section className="hero-section w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex items-center justify-center px-6 py-8" style={{ minHeight: 'calc(100vh - 120px)' }}>
+        <div className="w-full max-w-[1600px]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Left Side - Compact Hero Content */}
             <div className="space-y-8">

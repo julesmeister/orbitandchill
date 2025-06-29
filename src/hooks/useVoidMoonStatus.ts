@@ -122,10 +122,10 @@ export const useVoidMoonStatus = () => {
             const result = await response.json();
             if (result.success && result.location) {
               savedLocation = result.location;
-              console.log('Found saved location:', savedLocation);
+              // console.log('Found saved location:', savedLocation);
             }
           } catch (error) {
-            console.log('Could not fetch saved location:', error);
+            // console.log('Could not fetch saved location:', error);
           }
         }
 
@@ -189,7 +189,7 @@ export const useVoidMoonStatus = () => {
             setVoidStatus(prev => ({ ...prev, locationError: undefined, showLocationToast: false }));
             
           } catch (geoError) {
-            console.log('Could not get current location, showing location toast:', geoError);
+            // console.log('Could not get current location, showing location toast:', geoError);
             
             // Set location error for UI to handle
             const locationError = getLocationError(geoError);
