@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService } from '@/db/services/userService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,15 +20,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user's current location in database
-    const updatedUser = await UserService.updateUser(userId, {
-      currentLocationName: location.name,
-      currentLatitude: parseFloat(location.coordinates.lat),
-      currentLongitude: parseFloat(location.coordinates.lon),
-      currentLocationUpdatedAt: new Date()
-    });
-
-    if (!updatedUser) {
+    // Update user's current location in database (direct connection)
+    try {
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        const client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+        
+        const result = await client.execute({
+          sql: 'UPDATE users SET current_location_name = ?, current_latitude = ?, current_longitude = ?, current_location_updated_at = ? WHERE id = ?',
+          args: [
+            location.name,
+            parseFloat(location.coordinates.lat),
+            parseFloat(location.coordinates.lon),
+            new Date().toISOString(),
+            userId
+          ]
+        });
+        
+        if (!result.rowsAffected || result.rowsAffected === 0) {
+          return NextResponse.json(
+            { success: false, error: 'Failed to update user location - user may not exist' },
+            { status: 500 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'Database connection not available' },
+          { status: 500 }
+        );
+      }
+    } catch (dbError) {
+      console.error('[Location API] Database update error:', dbError);
       return NextResponse.json(
         { success: false, error: 'Failed to update user location' },
         { status: 500 }
@@ -68,7 +95,43 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await UserService.getUserById(userId);
+    // Direct database connection (bypassing UserService issues)
+    let user = null;
+    try {
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        const client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+        
+        const result = await client.execute({
+          sql: 'SELECT * FROM users WHERE id = ?',
+          args: [userId]
+        });
+        
+        if (result.rows && result.rows.length > 0) {
+          const userData = result.rows[0] as any;
+          user = {
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            currentLocationName: userData.current_location_name,
+            currentLatitude: userData.current_latitude,
+            currentLongitude: userData.current_longitude,
+            currentLocationUpdatedAt: userData.current_location_updated_at,
+            locationOfBirth: userData.location_of_birth,
+            latitude: userData.latitude,
+            longitude: userData.longitude
+          };
+        }
+      }
+    } catch (dbError) {
+      console.error('[Location API] Database error:', dbError);
+    }
 
     if (!user) {
       // Log for debugging without exposing sensitive info

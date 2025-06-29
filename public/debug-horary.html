@@ -19,6 +19,7 @@
         <button class="button" onclick="listTables()">📊 List Database Tables</button>
         <button class="button" onclick="createHoraryTable()">🔧 Create Horary Table</button>
         <button class="button" onclick="testQuestionCreation()">✨ Test Question Creation</button>
+        <button class="button" onclick="testRealLocationQuestion()">📍 Test with Real User Location</button>
         <button class="button" onclick="testHoraryCreation()">🧪 Test Horary Creation (Debug)</button>
     </div>
     
@@ -91,24 +92,142 @@
 
         async function testQuestionCreation() {
             try {
+                // Get user's actual location from the Location API first
+                const userId = document.getElementById('userIdInput').value;
+                let userLocation = null;
+                
+                if (userId) {
+                    try {
+                        const locationResponse = await fetch(`/api/users/location?userId=${encodeURIComponent(userId)}`);
+                        const locationData = await locationResponse.json();
+                        if (locationData.success && locationData.location) {
+                            userLocation = locationData.location;
+                        }
+                    } catch (error) {
+                        console.warn('Could not fetch user location for test:', error);
+                    }
+                }
+
+                // Test payloads with both hardcoded and real location data
+                const testPayloads = [
+                    {
+                        name: 'Old Format (Direct Fields) - Test Data',
+                        payload: {
+                            question: 'Debug test question - old format location',
+                            date: new Date().toISOString(),
+                            userId: null,
+                            location: 'New York, NY, USA',
+                            latitude: 40.7128,
+                            longitude: -74.0060,
+                            timezone: 'America/New_York',
+                            category: 'test'
+                        }
+                    },
+                    {
+                        name: 'New Format (customLocation) - Test Data',
+                        payload: {
+                            question: 'Debug test question - new format location',
+                            date: new Date().toISOString(),
+                            userId: null,
+                            category: 'test',
+                            customLocation: {
+                                name: 'San Francisco, CA, USA',
+                                coordinates: { lat: '37.7749', lon: '-122.4194' }
+                            }
+                        }
+                    }
+                ];
+
+                // Add test with user's real location if available
+                if (userLocation) {
+                    testPayloads.push({
+                        name: 'Real User Location (customLocation format)',
+                        payload: {
+                            question: `Debug test question - using real location: ${userLocation.name}`,
+                            date: new Date().toISOString(),
+                            userId: userId,
+                            category: 'test',
+                            customLocation: {
+                                name: userLocation.name,
+                                coordinates: { 
+                                    lat: userLocation.coordinates.lat, 
+                                    lon: userLocation.coordinates.lon 
+                                }
+                            }
+                        }
+                    });
+                }
+
+                for (const test of testPayloads) {
+                    const response = await fetch('/api/horary/questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(test.payload)
+                    });
+                    const data = await response.json();
+                    addResult(`✨ Test Question Creation - ${test.name}`, {
+                        ...data,
+                        requestPayload: test.payload,
+                        statusCode: response.status
+                    }, !response.ok);
+                }
+            } catch (error) {
+                addResult('❌ Question Creation Error', { error: error.message }, true);
+            }
+        }
+
+        async function testRealLocationQuestion() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ Real Location Test Error', { error: 'Please enter a user ID first' }, true);
+                    return;
+                }
+
+                // Get user's actual location
+                const locationResponse = await fetch(`/api/users/location?userId=${encodeURIComponent(userId)}`);
+                const locationData = await locationResponse.json();
+                
+                if (!locationData.success || !locationData.location) {
+                    addResult('❌ Real Location Test Error', { 
+                        error: 'Could not fetch user location', 
+                        locationResponse: locationData 
+                    }, true);
+                    return;
+                }
+
+                const userLocation = locationData.location;
+
+                // Create question with user's real location
+                const testPayload = {
+                    question: `Real location test - ${new Date().toLocaleString()}`,
+                    date: new Date().toISOString(),
+                    userId: userId,
+                    category: 'test',
+                    customLocation: {
+                        name: userLocation.name,
+                        coordinates: { 
+                            lat: userLocation.coordinates.lat, 
+                            lon: userLocation.coordinates.lon 
+                        }
+                    }
+                };
+
                 const response = await fetch('/api/horary/questions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        question: 'Debug test question - will this work?',
-                        date: new Date().toISOString(),
-                        userId: null, // Use null for anonymous questions to avoid foreign key constraint
-                        location: 'Test Location',
-                        latitude: 40.7128,
-                        longitude: -74.0060,
-                        timezone: 'America/New_York',
-                        category: 'test'
-                    })
+                    body: JSON.stringify(testPayload)
                 });
+                
                 const data = await response.json();
-                addResult('✨ Test Question Creation', data, !response.ok);
+                addResult('📍 Real User Location Test', {
+                    ...data,
+                    requestPayload: testPayload,
+                    statusCode: response.status,
+                    userLocationUsed: userLocation
+                }, !response.ok);
             } catch (error) {
-                addResult('❌ Question Creation Error', { error: error.message }, true);
+                addResult('❌ Real Location Test Error', { error: error.message }, true);
             }
         }
 

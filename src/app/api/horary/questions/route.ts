@@ -70,25 +70,18 @@ export async function POST(request: NextRequest) {
 
     // Use custom location if provided, otherwise use system location
     const questionLocation = customLocation?.name || location;
-    const questionLatitude = customLocation?.coordinates?.lat || latitude;
-    const questionLongitude = customLocation?.coordinates?.lon || longitude;
+    const questionLatitude = customLocation?.coordinates?.lat 
+      ? parseFloat(customLocation.coordinates.lat) 
+      : latitude;
+    const questionLongitude = customLocation?.coordinates?.lon 
+      ? parseFloat(customLocation.coordinates.lon) 
+      : longitude;
 
-    // Create horary question record with resilience
-    console.log('🔍 Attempting to insert horary question into database:', {
-      questionId,
-      userId: userId || 'anonymous',
-      question: question.substring(0, 50) + '...',
-      location: questionLocation
-    });
-    
     // Try database insert with explicit error handling
     let newQuestion = null;
     try {
-      console.log('📝 Database insert operation starting...');
-      console.log('🔍 Database instance available:', !!dbInstance);
       
       if (!dbInstance) {
-        console.error('❌ Database instance is null/undefined');
         throw new Error('Database not available');
       }
       
@@ -117,16 +110,8 @@ export async function POST(request: NextRequest) {
         updatedAt: now,
       }).returning();
       
-      console.log('✅ Database insert successful:', { questionId: result.id });
       newQuestion = result;
     } catch (dbError) {
-      console.error('❌ Database insert error details:', {
-        error: dbError instanceof Error ? dbError.message : String(dbError),
-        stack: dbError instanceof Error ? dbError.stack : undefined,
-        questionId,
-        userId
-      });
-      
       // Don't throw, just set newQuestion to null to trigger fallback
       newQuestion = null;
     }
@@ -137,8 +122,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    console.log(`✨ Created horary question: ${questionId} - "${question.substring(0, 50)}..."`);
 
     return NextResponse.json({
       success: true,

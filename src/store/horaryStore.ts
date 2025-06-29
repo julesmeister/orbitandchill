@@ -136,13 +136,6 @@ export const useHoraryStore = create<HoraryState>()(
       // Add question with database persistence
       addQuestion: async (questionData) => {
         try {
-          // Add debug logging for question submission
-          console.log('🔍 Adding horary question:', {
-            userId: questionData.userId,
-            userIdType: typeof questionData.userId,
-            userIdExists: !!questionData.userId,
-            question: questionData.question.substring(0, 50) + '...'
-          });
 
           // Prepare data for API
           const apiData = {
@@ -175,20 +168,13 @@ export const useHoraryStore = create<HoraryState>()(
                 ),
               }));
               
-              console.log(`✅ Saved horary question to database:`, {
-                id: newQuestion.id,
-                userId: newQuestion.userId,
-                question: newQuestion.question.substring(0, 50) + '...'
-              });
               return newQuestion;
             }
           }
           
-          console.warn('⚠️ Failed to save to database, falling back to local storage');
           get().addQuestionLocal(questionData);
           return null;
         } catch (error) {
-          console.error('❌ Error saving question to database:', error);
           get().addQuestionLocal(questionData);
           return null;
         }
@@ -196,7 +182,6 @@ export const useHoraryStore = create<HoraryState>()(
 
       // Update question with database persistence
       updateQuestion: async (id, updates) => {
-        console.log('Updating question:', { id, updatesKeys: Object.keys(updates) });
         
         try {
           const response = await fetch(`/api/horary/questions/${id}`, {
@@ -225,15 +210,12 @@ export const useHoraryStore = create<HoraryState>()(
                 return { questions: newQuestions };
               });
               
-              console.log(`✅ Updated horary question in database: ${id}`);
               return;
             }
           }
           
-          console.warn('⚠️ Failed to update in database, falling back to local storage');
           get().updateQuestionLocal(id, updates);
         } catch (error) {
-          console.error('❌ Error updating question in database:', error);
           get().updateQuestionLocal(id, updates);
         }
       },
@@ -252,17 +234,14 @@ export const useHoraryStore = create<HoraryState>()(
                 questions: state.questions.filter((q) => q.id !== id),
               }));
               
-              console.log(`✅ Deleted horary question from database: ${id}`);
               return;
             }
           }
           
-          console.warn('⚠️ Failed to delete from database, removing from local storage only');
           set((state) => ({
             questions: state.questions.filter((q) => q.id !== id),
           }));
         } catch (error) {
-          console.error('❌ Error deleting question from database:', error);
           set((state) => ({
             questions: state.questions.filter((q) => q.id !== id),
           }));

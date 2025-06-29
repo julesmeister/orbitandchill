@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShare, faDownload, faClock, faQuestion } from "@fortawesome/free-solid-svg-icons";
 import { HoraryQuestion } from "../../store/horaryStore";
 import { useUserStore } from "../../store/userStore";
+import { useSharedLocation } from "../../hooks/useSharedLocation";
 import { convertToNatalFormat } from "../../utils/horaryCalculations";
 import { NatalChartData } from "../../utils/natalChart";
 import InteractiveHoraryChart from "./InteractiveHoraryChart";
@@ -26,6 +27,7 @@ export default function HoraryChartDisplay({
 }: HoraryChartDisplayProps) {
   const [showFullQuestion, setShowFullQuestion] = useState(false);
   const { user } = useUserStore();
+  const { locationDisplay } = useSharedLocation();
   
   // Debug: Log question structure
   // console.log('HoraryChartDisplay question:', {
@@ -138,8 +140,10 @@ export default function HoraryChartDisplay({
                   <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
                     <span className="text-black">📍</span>
                     <span>
-                      {question?.customLocation?.name || 
-                       user?.birthData?.locationOfBirth || 
+                      {question?.location || 
+                       question?.customLocation?.name || 
+                       user?.birthData?.locationOfBirth ||
+                       (locationDisplay?.name ? `${locationDisplay.name} (current)` : null) ||
                        'Location not recorded'}
                     </span>
                   </div>

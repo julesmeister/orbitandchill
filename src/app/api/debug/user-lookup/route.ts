@@ -24,21 +24,48 @@ export async function GET(request: NextRequest) {
       isNumericOnly: /^\d+$/.test(userId)
     };
 
-    // Try to find user with UserService
+    // Try to find user with direct database connection (bypassing UserService)
     let user = null;
     try {
-      user = await UserService.getUserById(userId);
-      debugInfo.userServiceResult = user ? 'Found' : 'Not found';
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        const client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+        
+        const result = await client.execute({
+          sql: 'SELECT * FROM users WHERE id = ?',
+          args: [userId]
+        });
+        
+        if (result.rows && result.rows.length > 0) {
+          const userData = result.rows[0] as any;
+          user = {
+            id: userData.id,
+            username: userData.username,
+            authProvider: userData.auth_provider,
+            email: userData.email,
+            createdAt: userData.created_at,
+            hasCurrentLocation: !!(userData.current_location_name)
+          };
+        }
+      }
+      
+      debugInfo.directDatabaseResult = user ? 'Found' : 'Not found';
       debugInfo.foundUser = user ? {
         id: user.id,
         username: user.username,
         authProvider: user.authProvider,
         email: user.email ? user.email.substring(0, 5) + '...' : null,
         createdAt: user.createdAt,
-        hasCurrentLocation: !!(user.currentLocationName)
+        hasCurrentLocation: user.hasCurrentLocation
       } : null;
     } catch (error) {
-      debugInfo.userServiceError = error.message;
+      debugInfo.directDatabaseError = error.message;
     }
 
     // Try raw database query

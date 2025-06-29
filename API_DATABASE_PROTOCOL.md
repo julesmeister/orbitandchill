@@ -914,6 +914,180 @@ export const withTiming = (handler: Function) => {
 
 ---
 
+## Service Layer Bypass Pattern (Critical for Turso HTTP Client)
+
+### Issue: Resilient Service Layer Database Availability Detection
+
+**Problem**: The resilient service wrapper incorrectly determines database availability by checking `!!db` instead of `!!db.client`, causing API failures even when the database is accessible.
+
+**Root Cause**: The database object exists but `db.client` is null due to initialization timing issues, causing the resilient service to think the database is available when it's not properly connected.
+
+**Solution**: Bypass the service layer entirely and use direct database connections in API routes.
+
+#### ❌ Broken Pattern (Using Service Layer)
+```typescript
+// /api/users/location/route.ts - This fails intermittently
+import { UserService } from '@/db/services/userService';
+
+export async function GET(request: NextRequest) {
+  const userId = searchParams.get('userId');
+  
+  // Fails with "Cannot read properties of null (reading 'client')"
+  const user = await UserService.getUserById(userId);
+  
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+  }
+  // ...
+}
+```
+
+#### ✅ Working Pattern (Direct Database Connection)
+```typescript
+// /api/users/location/route.ts - This always works
+export async function GET(request: NextRequest) {
+  const userId = searchParams.get('userId');
+  
+  // Direct database connection (bypassing service layer issues)
+  let user = null;
+  try {
+    const databaseUrl = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+    
+    if (databaseUrl && authToken) {
+      const { createClient } = await import('@libsql/client/http');
+      const client = createClient({
+        url: databaseUrl,
+        authToken: authToken,
+      });
+      
+      const result = await client.execute({
+        sql: 'SELECT * FROM users WHERE id = ?',
+        args: [userId]
+      });
+      
+      if (result.rows && result.rows.length > 0) {
+        const userData = result.rows[0] as any;
+        user = {
+          id: userData.id,
+          username: userData.username,
+          currentLocationName: userData.current_location_name,
+          currentLatitude: userData.current_latitude,
+          currentLongitude: userData.current_longitude,
+          // ... other fields
+        };
+      }
+    }
+  } catch (dbError) {
+    console.error('[API] Database error:', dbError);
+  }
+
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+  }
+  // ...
+}
+```
+
+### When to Use Direct Connection Pattern
+
+Use direct database connections in API routes when:
+
+1. **Service layer is unreliable** - UserService or other services fail with client null errors
+2. **Critical functionality** - User authentication, location services, payment processing
+3. **Simple operations** - Single table queries that don't need complex business logic
+4. **Debug/admin endpoints** - Where reliability is more important than abstraction
+
+### When to Keep Service Layer
+
+Keep using service layers for:
+
+1. **Complex business logic** - Multi-table operations, calculations, validations
+2. **Non-critical features** - Where graceful degradation is acceptable
+3. **Background operations** - Cron jobs, analytics, non-user-facing processes
+
+### Direct Connection Utility Pattern
+
+```typescript
+// /utils/directDatabase.ts - Reusable direct connection utility
+export const createDirectConnection = async () => {
+  const databaseUrl = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  
+  if (!databaseUrl || !authToken) {
+    throw new Error('Database environment variables not configured');
+  }
+  
+  const { createClient } = await import('@libsql/client/http');
+  return createClient({
+    url: databaseUrl,
+    authToken: authToken,
+  });
+};
+
+export const withDirectConnection = async <T>(
+  operation: (client: any) => Promise<T>
+): Promise<T> => {
+  const client = await createDirectConnection();
+  return await operation(client);
+};
+
+// Usage in API routes
+export async function GET(request: NextRequest) {
+  try {
+    const result = await withDirectConnection(async (client) => {
+      return await client.execute({
+        sql: 'SELECT * FROM users WHERE id = ?',
+        args: [userId]
+      });
+    });
+    
+    // Handle result...
+  } catch (error) {
+    console.error('Database operation failed:', error);
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}
+```
+
+### Raw SQL Utils Fallback Pattern
+
+For cases where you must use the service layer, implement fallback connections in raw SQL utilities:
+
+```typescript
+// /db/rawSqlUtils.ts - Enhanced with fallback connection
+export async function executeRawSelect(db: any, options: RawSqlQueryOptions): Promise<any[]> {
+  // Try to get client from db object, or create a direct connection if needed
+  let client = db?.client;
+  
+  if (!client) {
+    try {
+      // Fallback: create direct connection using environment variables
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+      } else {
+        console.error('❌ Database client not available and missing environment variables');
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Failed to create fallback database client:', error);
+      return [];
+    }
+  }
+
+  // Continue with normal operation...
+}
+```
+
+---
+
 ## Turso HTTP Client Database Issues & Solutions
 
 ### Issue: Drizzle ORM $defaultFn() Not Working with Turso HTTP Client
@@ -1131,6 +1305,128 @@ export async function POST(request: NextRequest) {
 5. **Use proper error handling** that provides actionable debugging information
 
 These solutions resolve common issues when integrating Drizzle ORM with Turso's HTTP client in Next.js applications.
+
+---
+
+## Service Layer Bypass Pattern
+
+### When to Use Direct Database Connections
+
+During development, we discovered that the resilient service wrapper can sometimes incorrectly report database availability when `db.client` is null. This can cause API endpoints to return 404 errors even when the database is actually accessible via environment variables.
+
+#### Problem Symptoms
+- Service layer methods return "database unavailable" fallbacks
+- API endpoints return 404 "User not found" errors  
+- `!!db` returns true but `db.client` is null
+- Environment variables `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` are properly set
+
+#### Solution: Direct Database Connection Pattern
+
+For critical API endpoints (especially user authentication and core functionality), bypass the service layer and connect directly to the database:
+
+```typescript
+// /api/users/location/route.ts - Direct connection pattern
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
+
+    // Direct database connection (bypassing UserService issues)
+    let user = null;
+    try {
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      
+      if (databaseUrl && authToken) {
+        const { createClient } = await import('@libsql/client/http');
+        const client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
+        
+        const result = await client.execute({
+          sql: 'SELECT * FROM users WHERE id = ?',
+          args: [userId]
+        });
+        
+        if (result.rows && result.rows.length > 0) {
+          const userData = result.rows[0] as any;
+          user = {
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            // ... map other fields as needed
+          };
+        }
+      }
+    } catch (dbError) {
+      console.error('[API] Database error:', dbError);
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: user
+    });
+
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### When to Use This Pattern
+
+**Use direct connections for:**
+- User authentication endpoints (`/api/users/location`, `/api/users/profile`)
+- Critical functionality that must work reliably
+- API endpoints experiencing 404 errors despite valid data
+- When service layer resilience checks are failing incorrectly
+
+**Continue using service layers for:**
+- Non-critical features that can gracefully degrade
+- Admin functionality where fallbacks are acceptable
+- Features that benefit from resilience abstractions
+
+#### Alternative: Enhanced Resilience Check
+
+If you prefer to fix the resilience layer instead of bypassing it, update the database availability check:
+
+```typescript
+// Enhanced resilience check in /src/db/resilience.ts
+export function checkDatabaseAvailability<T>(
+  db: any, 
+  options: ResilienceOptions<T>
+): { isAvailable: boolean; fallback: () => T } {
+  // Check if db exists AND has a properly initialized client
+  // OR if environment variables are available for direct connection
+  const isAvailable = !!db && (
+    !!db.client || 
+    (!!process.env.TURSO_DATABASE_URL && !!process.env.TURSO_AUTH_TOKEN)
+  );
+  
+  // ... rest of implementation
+}
+```
+
+#### Testing Direct Database Connections
+
+Use the debug tool at `/public/debug-horary.html` to test database connectivity:
+
+1. **Test User Lookup**: Verify that direct database queries work for user data
+2. **Test Location API**: Confirm location endpoints return proper data
+3. **Compare Results**: Check consistency between service layer and direct connections
+
+This pattern ensures critical functionality remains operational even when service layer abstractions encounter initialization issues.
 
 ---
 

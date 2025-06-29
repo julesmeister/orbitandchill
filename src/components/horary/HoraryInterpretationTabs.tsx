@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getChartAnalysis } from './InteractiveHoraryChart';
 import { HoraryQuestion } from '@/store/horaryStore';
 import HousesTab from './HousesTab';
@@ -14,8 +14,107 @@ interface HoraryInterpretationTabsProps {
   question: HoraryQuestion;
 }
 
+// Scroll Navigation Button Component
+const ScrollButton = ({ direction, onClick, visible }: { direction: 'left' | 'right'; onClick: () => void; visible: boolean }) => {
+  if (!visible) return null;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`absolute ${direction}-0 top-0 z-10 h-10 w-8 bg-white ${direction === 'right' ? 'border-l border-black' : 'border-r border-black'} flex items-center justify-center hover:bg-black hover:text-white transition-all duration-200`}
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={direction === 'left' ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
+      </svg>
+    </button>
+  );
+};
+
+// Tab Button Component
+const TabButton = ({ tab, isActive, onClick }: {
+  tab: { id: string; label: string; icon: string };
+  isActive: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`flex-shrink-0 flex items-center gap-2 px-4 md:px-6 py-3 h-10 font-space-grotesk font-bold text-sm transition-all duration-300 relative whitespace-nowrap border-r border-black ${
+      isActive 
+        ? 'bg-white text-black hover:bg-gray-200' 
+        : 'bg-gray-100 text-black hover:bg-gray-200'
+    }`}
+  >
+    <span>{tab.icon}</span>
+    <span className="hidden md:inline">{tab.label}</span>
+  </button>
+);
+
+// Tabs Container Component
+const TabsContainer = ({ tabs, activeTab, onTabChange, canScrollLeft, canScrollRight, tabsContainerRef, onScroll }: {
+  tabs: { id: string; label: string; icon: string }[];
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+  canScrollLeft: boolean;
+  canScrollRight: boolean;
+  tabsContainerRef: React.RefObject<HTMLDivElement | null>;
+  onScroll: () => void;
+}) => (
+  <div 
+    ref={tabsContainerRef}
+    className="flex gap-0 overflow-x-hidden"
+    style={{ paddingLeft: canScrollLeft ? '32px' : '0', paddingRight: canScrollRight ? '32px' : '0' }}
+    onScroll={onScroll}
+  >
+    {tabs.map((tab, index) => (
+      <TabButton
+        key={tab.id}
+        tab={tab}
+        isActive={activeTab === tab.id}
+        onClick={() => onTabChange(tab.id)}
+      />
+    ))}
+  </div>
+);
+
 export default function HoraryInterpretationTabs({ chartData, question }: HoraryInterpretationTabsProps) {
   const [activeTab, setActiveTab] = useState('traditional');
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Check scroll position and update navigation buttons
+  const checkScrollPosition = () => {
+    if (tabsContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tabsContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+      setScrollPosition(scrollLeft);
+    }
+  };
+  
+  // Scroll tabs left/right
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabsContainerRef.current) {
+      const scrollAmount = 200;
+      const newScrollLeft = direction === 'left' 
+        ? Math.max(0, scrollPosition - scrollAmount)
+        : scrollPosition + scrollAmount;
+      
+      tabsContainerRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  };
+  
+  // Check scroll position on mount and resize
+  useEffect(() => {
+    checkScrollPosition();
+    const handleResize = () => checkScrollPosition();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Handle both old stored chart data and new real chart data
   const analysisData = chartData?.planets ? 
@@ -88,17 +187,23 @@ export default function HoraryInterpretationTabs({ chartData, question }: Horary
   return (
     <div className="bg-white">
       {/* Tab Navigation */}
-      <div className="flex items-stretch border-t border-black">
-        {tabs.map((tab, index) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 h-10 font-space-grotesk font-bold text-sm transition-all duration-300 relative ${activeTab === tab.id ? 'bg-white text-black hover:bg-gray-200' : 'bg-gray-100 text-black hover:bg-gray-200 border-b border-black'} ${index === 0 ? 'border-r border-black' : 'border-l border-r border-black'} ${activeTab === tab.id ? '-mb-px' : ''}`}>
-            <span>{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
-        <div className="flex-1 border-b border-black bg-gray-100 h-10"></div>
+      <div className="border-t border-black">
+        <div className="relative border-b">
+          <ScrollButton direction="left" onClick={() => scrollTabs('left')} visible={canScrollLeft} />
+          <TabsContainer
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            canScrollLeft={canScrollLeft}
+            canScrollRight={canScrollRight}
+            tabsContainerRef={tabsContainerRef}
+            onScroll={checkScrollPosition}
+          />
+          <ScrollButton direction="right" onClick={() => scrollTabs('right')} visible={canScrollRight} />
+        </div>
       </div>
       
-      <div className="p-8 border-black">
+      <div className="p-8">
         {activeTab === 'traditional' && (
           <div className="space-y-8">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 border-1 gap-0">

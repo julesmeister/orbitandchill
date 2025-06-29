@@ -14,6 +14,113 @@ interface AdminNavigationProps {
 
 import { useState, useRef, useEffect } from 'react';
 
+// Scroll Navigation Button Component
+const ScrollButton = ({ direction, onClick, visible }: { direction: 'left' | 'right'; onClick: () => void; visible: boolean }) => {
+  if (!visible) return null;
+  
+  return (
+    <button
+      onClick={onClick}
+      className={`absolute ${direction}-0 top-0 z-10 h-12 w-8 bg-white border border-black ${direction === 'left' ? 'border-r-0' : 'border-l-0'} flex items-center justify-center hover:bg-black hover:text-white transition-all duration-200`}
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={direction === 'left' ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
+      </svg>
+    </button>
+  );
+};
+
+// Tab Button Component
+const TabButton = ({ tab, index, isActive, onClick, colors, isMobile }: {
+  tab: Tab;
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+  colors: string[];
+  isMobile?: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    className={`
+      flex-shrink-0 relative flex items-center ${isMobile ? 'justify-center' : ''} ${!isMobile ? 'whitespace-nowrap' : ''} h-12 font-space-grotesk font-semibold text-sm transition-all duration-300 border-r border-black last:border-r-0
+      ${isMobile ? 'px-4' : 'px-2 md:px-3 lg:px-4 xl:px-6'}
+      ${isActive ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}
+    `}
+    style={!isActive ? { backgroundColor: colors[index % colors.length] } : {}}
+    title={tab.label}
+  >
+    <div className="flex items-center justify-center">
+      {tab.icon}
+    </div>
+    
+    {/* Label - Progressive reveal on desktop */}
+    {!isMobile && <span className="hidden lg:block lg:ml-3">{tab.label}</span>}
+    
+    {/* Count Badge */}
+    {(tab.count !== undefined && tab.count > 0) && (
+      <div className={`
+        ${isMobile ? 'absolute -top-1 -right-1' : 'ml-2 lg:ml-3'} flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold border border-black
+        ${isActive ? 'bg-white text-black' : 'bg-black text-white'}
+      `}>
+        {tab.count > 99 ? '99+' : tab.count}
+      </div>
+    )}
+    
+    {/* Alert Indicator */}
+    {tab.alert && (
+      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border border-white"></div>
+    )}
+  </button>
+);
+
+// Search Input Component
+const SearchInput = ({ placeholder, className }: { placeholder: string; className?: string }) => (
+  <div className="relative">
+    <input
+      type="text"
+      placeholder={placeholder}
+      className={`h-12 pl-10 pr-3 text-sm bg-white border border-black focus:outline-none focus:border-black transition-colors font-inter ${className || ''}`}
+    />
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    </div>
+  </div>
+);
+
+// Tabs Container Component
+const TabsContainer = ({ tabs, activeTab, onTabChange, colors, canScrollLeft, canScrollRight, tabsContainerRef, onScroll, isMobile }: {
+  tabs: Tab[];
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+  colors: string[];
+  canScrollLeft: boolean;
+  canScrollRight: boolean;
+  tabsContainerRef: React.RefObject<HTMLDivElement | null>;
+  onScroll: () => void;
+  isMobile?: boolean;
+}) => (
+  <div 
+    ref={tabsContainerRef}
+    className="flex gap-0 border border-black overflow-x-hidden"
+    style={{ paddingLeft: canScrollLeft ? '32px' : '0', paddingRight: canScrollRight ? '32px' : '0' }}
+    onScroll={onScroll}
+  >
+    {tabs.map((tab, index) => (
+      <TabButton
+        key={tab.id}
+        tab={tab}
+        index={index}
+        isActive={activeTab === tab.id}
+        onClick={() => onTabChange(tab.id)}
+        colors={colors}
+        isMobile={isMobile}
+      />
+    ))}
+  </div>
+);
+
 export default function AdminNavigation({ activeTab, onTabChange, tabs }: AdminNavigationProps) {
   const colors = ['#f2e356', '#51bd94', '#ff91e9', '#6bdbff'];
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -61,187 +168,48 @@ export default function AdminNavigation({ activeTab, onTabChange, tabs }: AdminN
           <div className="md:hidden">
             {/* Mobile Tab Scroll with Navigation */}
             <div className="relative mb-3">
-              {/* Left Navigation Button */}
-              {canScrollLeft && (
-                <button
-                  onClick={() => scrollTabs('left')}
-                  className="absolute left-0 top-0 z-10 h-12 w-8 bg-white border border-black border-r-0 flex items-center justify-center hover:bg-black hover:text-white transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Tabs Container */}
-              <div 
-                ref={tabsContainerRef}
-                className="flex gap-0 border border-black overflow-x-hidden"
-                style={{ paddingLeft: canScrollLeft ? '32px' : '0', paddingRight: canScrollRight ? '32px' : '0' }}
+              <ScrollButton direction="left" onClick={() => scrollTabs('left')} visible={canScrollLeft} />
+              <TabsContainer
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+                colors={colors}
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                tabsContainerRef={tabsContainerRef}
                 onScroll={checkScrollPosition}
-              >
-                {tabs.map((tab, index) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => onTabChange(tab.id)}
-                    className={`
-                      flex-shrink-0 relative flex items-center justify-center h-12 px-4 font-space-grotesk font-semibold text-sm transition-all duration-300 border-r border-black last:border-r-0
-                      ${activeTab === tab.id
-                        ? 'bg-black text-white'
-                        : 'bg-white text-black hover:bg-black hover:text-white'
-                      }
-                    `}
-                    style={activeTab !== tab.id ? { backgroundColor: colors[index % colors.length] } : {}}
-                    title={tab.label}
-                  >
-                    <div className="flex items-center justify-center">
-                      {tab.icon}
-                    </div>
-                    
-                    {/* Mobile Count Badge */}
-                    {(tab.count !== undefined && tab.count > 0) && (
-                      <div className={`
-                        absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold border border-black
-                        ${activeTab === tab.id 
-                          ? 'bg-white text-black' 
-                          : 'bg-black text-white'
-                        }
-                      `}>
-                        {tab.count > 99 ? '99+' : tab.count}
-                      </div>
-                    )}
-                    
-                    {/* Mobile Alert Indicator */}
-                    {tab.alert && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border border-white"></div>
-                    )}
-                  </button>
-                ))}
-              </div>
-              
-              {/* Right Navigation Button */}
-              {canScrollRight && (
-                <button
-                  onClick={() => scrollTabs('right')}
-                  className="absolute right-0 top-0 z-10 h-12 w-8 bg-white border border-black border-l-0 flex items-center justify-center hover:bg-black hover:text-white transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )}
+                isMobile={true}
+              />
+              <ScrollButton direction="right" onClick={() => scrollTabs('right')} visible={canScrollRight} />
             </div>
             
             {/* Mobile Search */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search admin..."
-                className="w-full h-12 pl-12 pr-4 text-sm bg-white border border-black focus:outline-none focus:border-black transition-colors font-inter"
-              />
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
+            <SearchInput placeholder="Search admin..." className="w-full pl-12 pr-4" />
           </div>
           
           {/* Tablet+ Navigation */}
           <div className="hidden md:flex items-center justify-between gap-2 lg:gap-4">
             {/* Tab Navigation with Scroll Controls */}
             <div className="relative flex-shrink min-w-0">
-              {/* Left Navigation Button */}
-              {canScrollLeft && (
-                <button
-                  onClick={() => scrollTabs('left')}
-                  className="absolute left-0 top-0 z-10 h-12 w-8 bg-white border border-black border-r-0 flex items-center justify-center hover:bg-black hover:text-white transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Tabs Container */}
-              <div 
-                ref={tabsContainerRef}
-                className="flex gap-0 border border-black overflow-x-hidden"
-                style={{ paddingLeft: canScrollLeft ? '32px' : '0', paddingRight: canScrollRight ? '32px' : '0' }}
+              <ScrollButton direction="left" onClick={() => scrollTabs('left')} visible={canScrollLeft} />
+              <TabsContainer
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+                colors={colors}
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                tabsContainerRef={tabsContainerRef}
                 onScroll={checkScrollPosition}
-              >
-                {tabs.map((tab, index) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => onTabChange(tab.id)}
-                    className={`
-                      flex-shrink-0 flex items-center relative whitespace-nowrap h-12 font-space-grotesk font-semibold text-sm transition-all duration-300 border-r border-black last:border-r-0
-                      px-2 md:px-3 lg:px-4 xl:px-6
-                      ${activeTab === tab.id
-                        ? 'bg-black text-white'
-                        : 'bg-white text-black hover:bg-black hover:text-white'
-                      }
-                    `}
-                    style={activeTab !== tab.id ? { backgroundColor: colors[index % colors.length] } : {}}
-                    title={tab.label}
-                  >
-                    {/* Icon */}
-                    <div className="flex items-center justify-center">
-                      {tab.icon}
-                    </div>
-
-                    {/* Label - Progressive reveal */}
-                    <span className="hidden lg:block lg:ml-3">{tab.label}</span>
-                    
-                    {/* Count Badge */}
-                    {(tab.count !== undefined && tab.count > 0) && (
-                      <div className={`
-                        ml-2 lg:ml-3 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-xs font-bold border border-black
-                        ${activeTab === tab.id 
-                          ? 'bg-white text-black' 
-                          : 'bg-black text-white'
-                        }
-                      `}>
-                        {tab.count > 99 ? '99+' : tab.count}
-                      </div>
-                    )}
-                    
-                    {/* Alert Indicator */}
-                    {tab.alert && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border border-white"></div>
-                    )}
-                  </button>
-                ))}
-              </div>
-              
-              {/* Right Navigation Button */}
-              {canScrollRight && (
-                <button
-                  onClick={() => scrollTabs('right')}
-                  className="absolute right-0 top-0 z-10 h-12 w-8 bg-white border border-black border-l-0 flex items-center justify-center hover:bg-black hover:text-white transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )}
+                isMobile={false}
+              />
+              <ScrollButton direction="right" onClick={() => scrollTabs('right')} visible={canScrollRight} />
             </div>
 
             {/* Action Controls */}
             <div className="flex items-center space-x-2 flex-shrink-0">
               {/* Search - Responsive width */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="h-12 pl-10 pr-3 text-sm bg-white border border-black focus:outline-none focus:border-black transition-colors w-32 md:w-40 lg:w-48 xl:w-64 font-inter"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
+              <SearchInput placeholder="Search..." className="w-32 md:w-40 lg:w-48 xl:w-64" />
 
               {/* View Toggle - Show on larger tablets */}
               <div className="hidden lg:flex items-center bg-white border border-black">
