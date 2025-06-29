@@ -794,6 +794,163 @@
         };
         
         console.log('🔧 Manual location test function loaded. Run testLocationEventManual() in console to bypass cache issues.');
+        
+        // COMPREHENSIVE ENDPOINT TESTER - Uses real event IDs
+        window.testAllEndpointsWithRealData = async function() {
+            console.log('🔗 Comprehensive Event Endpoints Test Started...');
+            const userId = "113425479876942125321";
+            
+            try {
+                // Step 1: Get existing events to get real IDs
+                console.log('📋 Step 1: Getting existing events...');
+                const eventsResponse = await fetch(`/api/events?userId=${userId}`);
+                const eventsData = await eventsResponse.json();
+                
+                if (!eventsData.success || eventsData.events.length === 0) {
+                    console.log('⚠️ No existing events found, creating a test event first...');
+                    
+                    // Create a test event
+                    const testEvent = {
+                        userId: userId,
+                        title: "Endpoint Test Event",
+                        date: "2025-06-30",
+                        time: "14:00",
+                        type: "neutral",
+                        description: "Test event for endpoint validation",
+                        isGenerated: false,
+                        aspects: ["Test aspect"],
+                        planetaryPositions: ["Test position"],
+                        score: 7
+                    };
+                    
+                    const createResponse = await fetch('/api/events', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testEvent)
+                    });
+                    
+                    const createData = await createResponse.json();
+                    if (!createData.success) {
+                        console.error('❌ Failed to create test event:', createData);
+                        return { success: false, error: 'Could not create test event' };
+                    }
+                    
+                    console.log('✅ Created test event:', createData.event.id);
+                    var realEventId = createData.event.id;
+                } else {
+                    var realEventId = eventsData.events[0].id;
+                    console.log('✅ Using existing event ID:', realEventId);
+                }
+                
+                // Step 2: Test GET single event
+                console.log('📋 Step 2: Testing GET single event...');
+                const singleResponse = await fetch(`/api/events/${realEventId}`);
+                const singleData = await singleResponse.json();
+                console.log('✅ Single Event Result:', {
+                    status: singleResponse.status,
+                    success: singleResponse.ok,
+                    hasEventData: !!singleData.event
+                });
+                
+                // Step 3: Test bookmark toggle
+                console.log('📋 Step 3: Testing bookmark toggle...');
+                const bookmarkResponse = await fetch(`/api/events/${realEventId}/bookmark?userId=${userId}`, {
+                    method: 'POST'
+                });
+                const bookmarkData = await bookmarkResponse.json();
+                console.log('✅ Bookmark Toggle Result:', {
+                    status: bookmarkResponse.status,
+                    success: bookmarkResponse.ok,
+                    newBookmarkStatus: bookmarkData.event?.isBookmarked
+                });
+                
+                // Step 4: Test event update
+                console.log('📋 Step 4: Testing event update...');
+                const updateResponse = await fetch(`/api/events/${realEventId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: realEventId,
+                        userId: userId,
+                        description: "Updated description for endpoint test"
+                    })
+                });
+                const updateData = await updateResponse.json();
+                console.log('✅ Update Event Result:', {
+                    status: updateResponse.status,
+                    success: updateResponse.ok,
+                    updatedDescription: updateData.event?.description
+                });
+                
+                console.log('🎉 Comprehensive endpoint test completed!');
+                return {
+                    success: true,
+                    results: {
+                        getEvents: eventsResponse.ok,
+                        getSingleEvent: singleResponse.ok,
+                        toggleBookmark: bookmarkResponse.ok,
+                        updateEvent: updateResponse.ok
+                    },
+                    testedEventId: realEventId
+                };
+                
+            } catch (error) {
+                console.error('❌ Comprehensive test error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+        
+        console.log('🔧 Comprehensive endpoint tester loaded. Run testAllEndpointsWithRealData() to test all endpoints with real data.');
+        
+        // USER PROFILE FIX - Create missing user profile
+        window.createMissingUserProfile = async function() {
+            console.log('👤 Creating missing user profile...');
+            const userId = "113425479876942125321";
+            
+            try {
+                // Check if user already exists
+                const checkResponse = await fetch(`/api/users/profile?userId=${userId}`);
+                if (checkResponse.ok) {
+                    console.log('✅ User profile already exists');
+                    return { success: true, message: 'User profile already exists' };
+                }
+                
+                // Create the user profile
+                const userData = {
+                    id: userId,
+                    username: "Test User",
+                    email: "test@example.com",
+                    authProvider: "anonymous",
+                    showZodiacPublicly: true,
+                    allowDirectMessages: true,
+                    emailNotifications: false
+                };
+                
+                console.log('📝 Creating user profile with data:', userData);
+                
+                const createResponse = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const createData = await createResponse.json();
+                
+                if (createResponse.ok) {
+                    console.log('✅ User profile created successfully:', createData);
+                    return { success: true, user: createData.user };
+                } else {
+                    console.error('❌ Failed to create user profile:', createData);
+                    return { success: false, error: createData.error };
+                }
+                
+            } catch (error) {
+                console.error('❌ Error creating user profile:', error);
+                return { success: false, error: error.message };
+            }
+        };
+        
+        console.log('🔧 User profile fix function loaded. Run createMissingUserProfile() to create the missing user profile.');
     </script>
 </body>
 </html>

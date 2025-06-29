@@ -30,8 +30,8 @@ export default function ReplyForm({
   if (isLocked) return null;
 
   return (
-    <section id="reply-form" className="bg-white p-8">
-      <div className="flex items-center justify-between mb-6">
+    <section id="reply-form" className="bg-white p-4">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="font-space-grotesk text-xl font-bold text-black">
           {replyingTo ? `Reply to ${replyingToAuthor}` : 'Add Your Reply'}
         </h3>
@@ -48,7 +48,7 @@ export default function ReplyForm({
       </div>
 
       {replyingTo && (
-        <div className="mb-6 p-4 border border-black" style={{ backgroundColor: '#6bdbff' }}>
+        <div className="mb-4 p-3 border border-black" style={{ backgroundColor: '#6bdbff' }}>
           <div className="flex items-center space-x-3">
             <div className="w-6 h-6 bg-black flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ export default function ReplyForm({
       )}
 
       <form onSubmit={onSubmit}>
-        <div className="flex space-x-6">
+        <div className="flex space-x-4">
           <div className="w-12 h-12 border border-black overflow-hidden flex-shrink-0">
             <Image
               src={avatarUrl}
@@ -79,7 +79,7 @@ export default function ReplyForm({
               rows={6}
               placeholder={replyingTo ? `Reply to ${replyingToAuthor}...` : "Share your thoughts and insights..."}
             />
-            <div className="flex justify-between items-center mt-6">
+            <div className="flex justify-between items-center mt-4">
               <span className="text-sm text-black/60 font-inter">
                 Posting as: <span className="font-medium text-black">{displayName}</span>
               </span>

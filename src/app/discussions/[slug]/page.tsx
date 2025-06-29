@@ -25,11 +25,19 @@ const getCategoryColor = (category: string) => {
     case 'Natal Chart Analysis': return '#6bdbff';     // blue
     case 'Transits & Predictions': return '#f2e356';   // yellow
     case 'Chart Reading Help': return '#51bd94';       // green
-    case 'Synastry & Compatibility': return '#ff91e9'; // purple
+    case 'Synapsas & Compatibility': return '#ff91e9'; // purple
     case 'Mundane Astrology': return '#19181a';        // black
     case 'Learning Resources': return '#6bdbff';       // blue
     case 'General Discussion': return '#51bd94';       // green
     default: return '#6bdbff';                          // default blue
+  }
+};
+
+// Get appropriate text color for category badges
+const getCategoryTextColor = (category: string) => {
+  switch (category) {
+    case 'Mundane Astrology': return '#ffffff';        // white text for black background
+    default: return '#000000';                          // black text for other backgrounds
   }
 };
 
@@ -243,20 +251,20 @@ export default function DiscussionDetailPage({
     return (
       <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-white">
         {/* Header Skeleton */}
-        <section className="px-6 md:px-12 lg:px-20 py-8">
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-36 h-10 bg-gray-200 animate-pulse border border-black"></div>
+        <section className="px-4 md:px-8 lg:px-12 py-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-32 h-8 bg-gray-200 animate-pulse border border-black"></div>
             </div>
             <div className="text-right">
-              <div className="w-20 h-6 bg-gray-200 animate-pulse mb-2 ml-auto"></div>
-              <div className="w-96 h-10 bg-gray-200 animate-pulse"></div>
+              <div className="w-20 h-5 bg-gray-200 animate-pulse mb-1 ml-auto"></div>
+              <div className="w-80 h-8 bg-gray-200 animate-pulse"></div>
             </div>
           </div>
         </section>
 
         {/* Content Skeleton */}
-        <section className="px-6 md:px-12 lg:px-20 py-8">
+        <section className="px-4 md:px-8 lg:px-12 py-0">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-0">
             {/* Main Content Skeleton */}
             <div className="lg:col-span-3 border border-black bg-white">
@@ -430,12 +438,12 @@ export default function DiscussionDetailPage({
         <meta itemProp="url" content={canonicalUrl} />
 
         {/* Header Section */}
-        <section className="px-6 md:px-12 lg:px-20 py-8">
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex items-center gap-3">
+        <section className="px-4 md:px-8 lg:px-12 py-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
               <Link
                 href="/discussions"
-                className="inline-flex items-center px-6 py-3 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
+                className="inline-flex items-center px-4 py-2 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -448,7 +456,7 @@ export default function DiscussionDetailPage({
                 <>
                   <Link
                     href={`/discussions/new?edit=${discussion.id}`}
-                    className="inline-flex items-center px-6 py-3 text-sm text-black border border-black hover:bg-blue-500 hover:text-white transition-all duration-300 font-inter"
+                    className="inline-flex items-center px-4 py-2 text-sm text-black border border-black hover:bg-blue-500 hover:text-white transition-all duration-300 font-inter"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -459,7 +467,7 @@ export default function DiscussionDetailPage({
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     disabled={isDeleting}
-                    className="inline-flex items-center px-6 py-3 text-sm text-white bg-red-600 border border-red-600 hover:bg-red-700 hover:border-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-inter"
+                    className="inline-flex items-center px-4 py-2 text-sm text-white bg-red-600 border border-red-600 hover:bg-red-700 hover:border-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-inter"
                   >
                     {isDeleting ? (
                       <>
@@ -480,7 +488,7 @@ export default function DiscussionDetailPage({
             </div>
             
             <div className="text-right">
-              <div className="flex items-center gap-2 mb-2 justify-end">
+              <div className="flex items-center gap-2 mb-1 justify-end">
                 {Boolean(discussion.isPinned) && (
                   <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M16 12V4a1 1 0 00-1-1H9a1 1 0 00-1 1v8H5.5a1 1 0 00-.8 1.6l6.5 8.67 6.5-8.67A1 1 0 0016.5 12H16z"/>
@@ -492,13 +500,16 @@ export default function DiscussionDetailPage({
                   </svg>
                 )}
                 <span 
-                  className="px-3 py-1 text-xs font-medium text-black border border-black font-inter"
-                  style={{ backgroundColor: getCategoryColor(discussion.category) }}
+                  className="px-3 py-1 text-xs font-medium border border-black font-inter"
+                  style={{ 
+                    backgroundColor: getCategoryColor(discussion.category),
+                    color: getCategoryTextColor(discussion.category)
+                  }}
                 >
                   {discussion.category}
                 </span>
               </div>
-              <h1 className="font-space-grotesk text-3xl md:text-4xl font-bold text-black mb-3 text-right">
+              <h1 className="font-space-grotesk text-2xl md:text-3xl font-bold text-black mb-2 text-right">
                 {discussion.title}
               </h1>
              
@@ -507,7 +518,7 @@ export default function DiscussionDetailPage({
         </section>
 
         {/* Content Section */}
-        <section className="px-6 md:px-12 lg:px-20 py-8">
+        <section className="px-4 md:px-8 lg:px-12 py-0">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-0">
             {/* Main Content */}
             <div className="lg:col-span-3 border border-black bg-white">

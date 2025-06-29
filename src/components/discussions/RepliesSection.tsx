@@ -76,18 +76,18 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
   // Loading state
   if (loading) {
     return (
-      <section className="bg-white p-8">
-        <header className="mb-8">
+      <section className="bg-white p-4">
+        <header className="mb-4">
           <h2 className="font-space-grotesk text-xl font-bold text-black">
             Replies
           </h2>
         </header>
         
         {/* Beautiful loading skeleton */}
-        <div className="space-y-8">
+        <div className="space-y-4">
           {/* Loading skeleton for replies */}
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white border border-black p-6 animate-pulse">
+            <div key={i} className="bg-white border border-black p-4 animate-pulse">
               <div className="flex space-x-4">
                 {/* Avatar skeleton */}
                 <div className="w-12 h-12 border border-black bg-gray-200 flex items-center justify-center">
@@ -141,8 +141,8 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
   // Error state
   if (error) {
     return (
-      <section className="bg-white p-8">
-        <header className="mb-8">
+      <section className="bg-white p-4">
+        <header className="mb-4">
           <h2 className="font-space-grotesk text-xl font-bold text-black">
             Replies
           </h2>
@@ -163,8 +163,8 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
   // Empty state
   if (totalReplies === 0) {
     return (
-      <section className="bg-white p-8">
-        <header className="mb-8">
+      <section className="bg-white p-4">
+        <header className="mb-4">
           <h2 className="font-space-grotesk text-xl font-bold text-black">
             0 Replies
           </h2>
@@ -231,8 +231,8 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
   }
 
   return (
-    <section className="bg-white p-8">
-      <header className="mb-8 flex items-center justify-between">
+    <section className="bg-white p-4">
+      <header className="mb-4 flex items-center justify-between">
         <h2 className="font-space-grotesk text-xl font-bold text-black">
           {totalReplies} {totalReplies === 1 ? 'Reply' : 'Replies'}
         </h2>
@@ -248,11 +248,11 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
         </button>
       </header>
 
-      <div className="space-y-8">
+      <div className="space-y-4">
         {replies.map((reply) => (
-          <div key={reply.id} className="space-y-6">
+          <div key={reply.id} className="space-y-4">
             {/* Main Reply */}
-            <article className="bg-white border border-black p-6" itemScope itemType="https://schema.org/Comment">
+            <article className="bg-white border border-black p-4" itemScope itemType="https://schema.org/Comment">
               <div className="flex space-x-4">
                 <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100">
                   <span className="text-black font-bold text-lg font-space-grotesk">
@@ -300,13 +300,13 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
             {reply.children && reply.children.length > 0 && (
               <div className="ml-16 relative">
                 {reply.children.map((childReply, childIndex) => (
-                  <div key={childReply.id} className="relative mb-6">
+                  <div key={childReply.id} className="relative mb-4">
                     <ThreadingLines
                       isNested={true}
                       isLastChild={childIndex === (reply.children?.length ?? 0) - 1}
                       hasMoreSiblings={childIndex < (reply.children?.length ?? 0) - 1}
                     />
-                    <article className="bg-white border border-black p-4 ml-4">
+                    <article className="bg-white border border-black p-3 ml-4">
                       <div className="flex space-x-3">
                         <div className="w-10 h-10 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100">
                           <span className="text-black font-bold text-sm font-space-grotesk">

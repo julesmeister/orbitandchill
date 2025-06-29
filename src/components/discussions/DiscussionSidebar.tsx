@@ -46,8 +46,8 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
   return (
     <div className="sticky top-6 space-y-0">
       {/* Author Info Card */}
-      <div className="bg-white border-b border-black p-8">
-        <div className="flex items-center space-x-4 mb-6">
+      <div className="bg-white border-b border-black p-4">
+        <div className="flex items-center space-x-3 mb-4">
           <div className="w-16 h-16 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100">
             <span className="text-black font-bold text-lg font-space-grotesk">
               {discussion.avatar}
@@ -58,12 +58,12 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
             <p className="text-sm text-black/60 font-inter">Discussion Author</p>
           </div>
         </div>
-        <div className="space-y-4 text-sm">
-          <div className="flex items-start justify-between border-b border-black pb-3 gap-4">
+        <div className="space-y-3 text-sm">
+          <div className="flex items-start justify-between border-b border-black pb-2 gap-4">
             <span className="text-black/60 font-inter flex-shrink-0">Created</span>
             <span className="text-black font-medium font-inter text-right leading-relaxed">{formatDate(discussion.createdAt || discussion.lastActivity)}</span>
           </div>
-          <div className="flex items-start justify-between border-b border-black pb-3 gap-4">
+          <div className="flex items-start justify-between border-b border-black pb-2 gap-4">
             <span className="text-black/60 font-inter flex-shrink-0">Reading time</span>
             <span className="text-black font-medium font-inter text-right">{estimateReadingTime(discussion.content || discussion.excerpt)}</span>
           </div>
@@ -75,12 +75,12 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
       </div>
 
       {/* Discussion Metrics */}
-      <div className="bg-white border-b border-black p-8">
-        <h4 className="font-space-grotesk font-bold text-black mb-6 text-lg">
+      <div className="bg-white border-b border-black p-4">
+        <h4 className="font-space-grotesk font-bold text-black mb-4 text-lg">
           Discussion Metrics
         </h4>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {/* Views */}
           <div className="text-center p-4 border border-black bg-white">
             <div className="w-8 h-8 bg-black mx-auto mb-3 flex items-center justify-center">
@@ -130,8 +130,8 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
       </div>
 
       {/* Vote on Discussion */}
-      <div className="bg-white border-b border-black p-8">
-        <h4 className="font-space-grotesk font-bold text-black mb-4 text-lg">Rate this Discussion</h4>
+      <div className="bg-white border-b border-black p-4">
+        <h4 className="font-space-grotesk font-bold text-black mb-3 text-lg">Rate this Discussion</h4>
         <div className="flex items-center justify-center">
           <VoteButtons
             type="discussion"
@@ -156,16 +156,16 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
       </div>
 
       {/* Related Discussions */}
-      <div className="bg-white p-8">
-        <h4 className="font-space-grotesk font-bold text-black mb-6 text-lg">Related Discussions</h4>
+      <div className="bg-white p-4">
+        <h4 className="font-space-grotesk font-bold text-black mb-4 text-lg">Related Discussions</h4>
         <div className="space-y-0">
           {relatedDiscussions.slice(0, 3).map((related, index) => (
             <Link
               key={related.id}
               href={`/discussions/${related.slug || related.id}`}
-              className="group block p-4 border border-black border-b-0 last:border-b hover:bg-black hover:text-white transition-all duration-300"
+              className="group block p-3 border border-black border-b-0 last:border-b hover:bg-black hover:text-white transition-all duration-300"
             >
-              <div className="flex items-start space-x-4">
+              <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 w-8 h-8 bg-black group-hover:bg-white flex items-center justify-center transition-colors">
                   <svg className="w-4 h-4 text-white group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

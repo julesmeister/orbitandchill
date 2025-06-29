@@ -6,6 +6,7 @@ import { useState, useEffect, Suspense } from 'react';
 import DiscussionForm from '../../../components/forms/DiscussionForm';
 import { useUserStore } from '../../../store/userStore';
 import StatusToast from '../../../components/reusable/StatusToast';
+import { generateSEOSlug } from '../../../utils/slugify';
 
 interface DiscussionFormData {
   title: string;
@@ -135,6 +136,7 @@ function NewDiscussionContent() {
     try {
       const discussionData = {
         ...formData,
+        slug: generateSEOSlug(formData.title), // Generate SEO-friendly slug
         excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
         isBlogPost: false, // Public discussions are forum threads
         isPublished: !isDraft, // Drafts are not published
@@ -172,7 +174,14 @@ function NewDiscussionContent() {
         // Use different toast title for fallback mode
         const toastTitle = result.fallbackMode ? 'Created (Offline Mode)' : 'Success!';
         showToast(toastTitle, message, 'success');
-        setTimeout(() => router.push('/discussions'), 2000);
+        
+        // Redirect to the new discussion using its slug
+        if (!isDraft && result.discussion) {
+          const discussionSlug = generateSEOSlug(result.discussion.title || formData.title);
+          setTimeout(() => router.push(`/discussions/${discussionSlug}`), 2000);
+        } else {
+          setTimeout(() => router.push('/discussions'), 2000);
+        }
       } else {
         throw new Error(result.error || `Failed to ${isEditMode ? 'update' : 'create'} discussion`);
       }

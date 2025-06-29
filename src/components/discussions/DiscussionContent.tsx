@@ -34,11 +34,11 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
   
   return (
     <article 
-      className="bg-white p-4 sm:p-8 lg:p-12"
+      className="bg-white p-3 sm:p-4"
       itemScope 
       itemType="https://schema.org/DiscussionForumPosting"
     >
-      <header className="mb-8">
+      <header className="mb-4">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-black/60 mb-4 font-inter">
           <time 
             dateTime={formattedDate}
@@ -226,7 +226,7 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
       
       {/* Tags section for better SEO */}
       {discussion.tags.length > 0 && (
-        <footer className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-black">
+        <footer className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-black">
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-start sm:items-center">
             <span className="font-space-grotesk text-sm font-bold text-black">Related Topics:</span>
             <div className="flex flex-wrap gap-2">
