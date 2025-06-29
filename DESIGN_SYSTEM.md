@@ -1,4 +1,4 @@
-# Luckstrology Design System
+# Orbit and Chill Design System
 ## Visual Hierarchy & Component Library for Guide Pages
 
 This document outlines the complete design system used in the Luckstrology guide pages, providing consistent visual patterns, color schemes, and component structures for maintaining design cohesion across all educational content.

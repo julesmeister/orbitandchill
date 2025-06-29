@@ -1,4 +1,4 @@
-# Luckstrology Admin Dashboard Documentation
+# Orbit and Chill Admin Dashboard Documentation
 
 ## Overview
 

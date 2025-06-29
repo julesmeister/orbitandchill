@@ -1,7 +1,7 @@
 # Blog UI Documentation
 
 ## Overview
-This document provides comprehensive documentation for the blog system UI implementation in Luckstrology, featuring a modern carousel-based design with Synapsas aesthetic principles, animated zodiac cards, and responsive layouts.
+This document provides comprehensive documentation for the blog system UI implementation in Orbit and Chill, featuring a modern carousel-based design with Synapsas aesthetic principles, animated zodiac cards, and responsive layouts.
 
 ## Table of Contents
 - [Page Structure](#page-structure)

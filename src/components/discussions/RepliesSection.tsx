@@ -169,10 +169,62 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
             0 Replies
           </h2>
         </header>
-        <div className="text-center py-12">
-          <p className="text-black/60 font-inter mb-4">
-            No replies yet. Be the first to join the discussion!
-          </p>
+        
+        {/* Enhanced empty state with visual elements */}
+        <div className="text-center py-16 px-8">
+          {/* Animated icon container */}
+          <div className="relative mb-8">
+            <div className="w-24 h-24 mx-auto border-2 border-black bg-white flex items-center justify-center relative overflow-hidden group">
+              {/* Background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              
+              {/* Chat bubble icon */}
+              <svg className="w-12 h-12 text-black relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              
+              {/* Floating dots animation */}
+              <div className="absolute -top-2 -right-2 w-3 h-3 bg-black rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="absolute -top-1 -right-4 w-2 h-2 bg-black/60 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+              <div className="absolute -top-3 -right-6 w-1.5 h-1.5 bg-black/40 rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
+            </div>
+          </div>
+          
+          {/* Main message */}
+          <div className="max-w-md mx-auto mb-8">
+            <h3 className="font-space-grotesk text-2xl font-bold text-black mb-4">
+              Start the Conversation
+            </h3>
+            <p className="text-black/70 font-inter text-lg leading-relaxed mb-2">
+              No replies yet. Be the first to share your thoughts and join the discussion!
+            </p>
+            <p className="text-black/50 font-inter text-sm">
+              Your insights could spark an amazing conversation about astrology.
+            </p>
+          </div>
+          
+          {/* Call to action hints */}
+          <div className="flex items-center justify-center space-x-8 text-sm text-black/40">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-black/40 rounded-full"></div>
+              <span className="font-inter">Share your experience</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-black/40 rounded-full"></div>
+              <span className="font-inter">Ask questions</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-black/40 rounded-full"></div>
+              <span className="font-inter">Connect with others</span>
+            </div>
+          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-black/5 rounded-full"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-24 h-24 border border-black/5 rounded-full"></div>
+            <div className="absolute top-1/3 right-1/3 w-16 h-16 border border-black/5 rounded-full"></div>
+          </div>
         </div>
       </section>
     );

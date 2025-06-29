@@ -105,7 +105,7 @@ NODE_ENV="development"  # Enables mock mode
    - Production: `https://your-domain.com`
 
 3. **Set OAuth Consent Screen**
-   - App name: "Luckstrology"
+   - App name: "Orbit and Chill"
    - User support email
    - Developer contact information
 

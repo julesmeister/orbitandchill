@@ -1,7 +1,7 @@
 # Orbit and Chill
 
 ## Project Migration
-This project was migrated from the original luckstrology codebase on 2025-06-25.
+This project was migrated from the original Orbit and Chill codebase on 2025-06-25.
 
 ### Original Features Preserved:
 - ✅ Complete astrological chart generation system

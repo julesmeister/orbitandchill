@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Luckstrology application features a comprehensive voting system that allows users to upvote and downvote discussions and replies. The system supports anonymous users through automatic user creation and provides real-time vote count updates.
+The Orbit and Chill application features a comprehensive voting system that allows users to upvote and downvote discussions and replies. The system supports anonymous users through automatic user creation and provides real-time vote count updates.
 
 ## Architecture
 

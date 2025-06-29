@@ -1,6 +1,6 @@
 # API Database Protocol & Integration Patterns
 
-This document captures the established patterns and protocols for API and database integration in the Luckstrology application, based on successful implementations like the location persistence system and other core features.
+This document captures the established patterns and protocols for API and database integration in the Orbit and Chill application, based on successful implementations like the location persistence system and other core features.
 
 ## 📋 Table of Contents
 

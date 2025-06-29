@@ -1,6 +1,6 @@
 # Electional Astrology - Events System File Structure
 
-This document outlines the file structure and architecture of the events system used for electional astrology (timing selection) in the Luckstrology application.
+This document outlines the file structure and architecture of the events system used for electional astrology (timing selection) in the Orbit and Chill application.
 
 ## File Structure Tree
 

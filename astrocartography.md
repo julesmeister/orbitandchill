@@ -1,4 +1,4 @@
-# Luckstrology Astrocartography System Analysis
+# Orbit and Chill Astrocartography System Analysis
 
 ## Current Implementation Overview
 

@@ -58,18 +58,18 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
             <p className="text-sm text-black/60 font-inter">Discussion Author</p>
           </div>
         </div>
-        <div className="space-y-3 text-sm">
-          <div className="flex items-center justify-between border-b border-black pb-2">
-            <span className="text-black/60 font-inter">Created</span>
-            <span className="text-black font-medium font-inter">{formatDate(discussion.createdAt || discussion.lastActivity)}</span>
+        <div className="space-y-4 text-sm">
+          <div className="flex items-start justify-between border-b border-black pb-3 gap-4">
+            <span className="text-black/60 font-inter flex-shrink-0">Created</span>
+            <span className="text-black font-medium font-inter text-right leading-relaxed">{formatDate(discussion.createdAt || discussion.lastActivity)}</span>
           </div>
-          <div className="flex items-center justify-between border-b border-black pb-2">
-            <span className="text-black/60 font-inter">Reading time</span>
-            <span className="text-black font-medium font-inter">{estimateReadingTime(discussion.content || discussion.excerpt)}</span>
+          <div className="flex items-start justify-between border-b border-black pb-3 gap-4">
+            <span className="text-black/60 font-inter flex-shrink-0">Reading time</span>
+            <span className="text-black font-medium font-inter text-right">{estimateReadingTime(discussion.content || discussion.excerpt)}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-black/60 font-inter">Last activity</span>
-            <span className="text-black font-medium font-inter">{formatDate(discussion.lastActivity)}</span>
+          <div className="flex items-start justify-between gap-4">
+            <span className="text-black/60 font-inter flex-shrink-0">Last activity</span>
+            <span className="text-black font-medium font-inter text-right leading-relaxed">{formatDate(discussion.lastActivity)}</span>
           </div>
         </div>
       </div>
