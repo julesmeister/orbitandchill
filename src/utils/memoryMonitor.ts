@@ -488,7 +488,7 @@ export function clearAllSnapshots(): void {
   const monitor = getGlobalMemoryMonitor();
   if (monitor) {
     monitor['snapshots'] = [];
-    monitor['warningTimestamps'] = [];
+    monitor['warningTimes'] = new Map<string, number>();
     console.error('🧹 All memory snapshots cleared');
   }
 }

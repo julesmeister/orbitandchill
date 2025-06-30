@@ -141,10 +141,10 @@ class MemoryPressureManager {
         // Clear any Next.js compilation caches that might be holding memory
         if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
           // In development, we can be more aggressive with clearing caches
-          if (global && global.__webpack_require__ && global.__webpack_require__.cache) {
-            Object.keys(global.__webpack_require__.cache).forEach(key => {
+          if ((global as any)?.__webpack_require__?.cache) {
+            Object.keys((global as any).__webpack_require__.cache).forEach(key => {
               if (key.includes('node_modules') && !key.includes('essential')) {
-                try { delete global.__webpack_require__.cache[key]; } catch(e) {}
+                try { delete (global as any).__webpack_require__.cache[key]; } catch(e) {}
               }
             });
           }

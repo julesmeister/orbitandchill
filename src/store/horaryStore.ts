@@ -230,7 +230,7 @@ export const useHoraryStore = create<HoraryState>()(
       },
 
       // Delete question with database persistence
-      deleteQuestion: async (id, userId) => {
+      deleteQuestion: async (id, userId): Promise<void> => {
         try {
           const response = await fetch(`/api/horary/questions/${id}`, {
             method: 'DELETE',
@@ -245,7 +245,7 @@ export const useHoraryStore = create<HoraryState>()(
                 questions: state.questions.filter((q) => q.id !== id),
               }));
               
-              return { success: true };
+              return;
             } else {
               // Server returned non-success response
               throw new Error(data.error || 'Delete failed');

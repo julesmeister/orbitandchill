@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { executePooledQueryDirect } from '@/db/connectionPool';
+import { executePooledQuery } from '@/db/connectionPool';
 
 /**
  * Debug cleanup endpoint to remove test horary questions
@@ -35,7 +35,7 @@ export async function DELETE(request: NextRequest) {
           WHERE id LIKE ? OR question LIKE ?
         `;
         
-        const result = await executePooledQueryDirect(deleteByQuestionSql, [pattern, pattern]);
+        const result = await executePooledQuery(deleteByQuestionSql, [pattern, pattern]);
         const rowsAffected = result.rowsAffected || 0;
         deletedCount += rowsAffected;
         
@@ -51,7 +51,7 @@ export async function DELETE(request: NextRequest) {
           WHERE user_id LIKE ? OR user_id IS NULL
         `;
         
-        const result = await executePooledQueryDirect(deleteByUserSql, [userPattern]);
+        const result = await executePooledQuery(deleteByUserSql, [userPattern]);
         const rowsAffected = result.rowsAffected || 0;
         deletedCount += rowsAffected;
         
@@ -111,7 +111,7 @@ export async function DELETE(request: NextRequest) {
           user_id LIKE 'debug_user_%'
       `;
       
-      const countResult = await executePooledQueryDirect(countSql, []);
+      const countResult = await executePooledQuery(countSql, []);
       remainingCount = countResult.rows?.[0]?.count || 0;
     } catch (countError) {
       console.warn('⚠️ Could not verify remaining debug questions:', countError);

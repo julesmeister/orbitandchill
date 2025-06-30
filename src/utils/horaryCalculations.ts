@@ -4,7 +4,36 @@
  * Extracted from InteractiveHoraryChart.tsx for better separation of concerns
  */
 
-import { NatalChartData, HousePosition } from "./natalChart";
+import { NatalChartData, HousePosition, SIGNS } from "./natalChart";
+
+// Function to convert longitude to zodiac sign name
+const getZodiacSignFromLongitude = (longitude: number): string => {
+  return SIGNS[Math.floor(longitude / 30)];
+};
+
+// Import the determineHouse function to properly calculate house positions
+const determineHouse = (planetLongitude: number, houses: HousePosition[]): number => {
+  for (let i = 0; i < 12; i++) {
+    const currentHouse = houses[i];
+    const nextHouse = houses[(i + 1) % 12];
+    
+    const houseStart = currentHouse.cusp;
+    const houseEnd = nextHouse.cusp;
+    
+    // Handle house that crosses 0 degrees
+    if (houseEnd < houseStart) {
+      if (planetLongitude >= houseStart || planetLongitude < houseEnd) {
+        return currentHouse.number;
+      }
+    } else {
+      if (planetLongitude >= houseStart && planetLongitude < houseEnd) {
+        return currentHouse.number;
+      }
+    }
+  }
+  
+  return 1; // Default to first house if not found
+};
 
 // Extended house interface for chart rendering
 export interface HouseWithAngle extends HousePosition {
@@ -78,27 +107,32 @@ export const convertToNatalFormat = async (
     isDayChart
   );
   
+  // Calculate proper house positions for North Node, South Node, and Part of Fortune
+  const northNodeHouse = determineHouse(northNodeLongitude, realChartData.houses);
+  const southNodeHouse = determineHouse(southNodeLongitude, realChartData.houses);
+  const partOfFortuneHouse = determineHouse(partOfFortune, realChartData.houses);
+
   const enhancedPlanets = [
     ...realChartData.planets,
     {
       name: 'northNode',
       longitude: northNodeLongitude,
-      sign: '',
-      house: 1,
+      sign: getZodiacSignFromLongitude(northNodeLongitude),
+      house: northNodeHouse,
       retrograde: true
     },
     {
       name: 'southNode', 
       longitude: southNodeLongitude,
-      sign: '',
-      house: 1,
+      sign: getZodiacSignFromLongitude(southNodeLongitude),
+      house: southNodeHouse,
       retrograde: true
     },
     {
       name: 'partOfFortune',
       longitude: partOfFortune,
-      sign: '',
-      house: 1,
+      sign: getZodiacSignFromLongitude(partOfFortune),
+      house: partOfFortuneHouse,
       retrograde: false
     }
   ];

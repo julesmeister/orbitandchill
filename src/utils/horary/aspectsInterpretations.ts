@@ -319,12 +319,16 @@ export function analyzeAspectRelevance(
     aspect.strength === 'close' ? 'short-term' : 'long-term';
   
   // Get comprehensive aspect interpretation from our detailed dictionary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const detailedAspectInfo = getFullAspectInfo({
     planet1: aspect.planet1.toLowerCase(),
     planet2: aspect.planet2.toLowerCase(),
     aspect: aspect.aspect,
-    orb: aspect.orb
-  });
+    orb: aspect.orb,
+    color: '',
+    applying: false,
+    angle: 0
+  } as any);
   
   let outcome: 'favorable' | 'challenging' | 'neutral';
   

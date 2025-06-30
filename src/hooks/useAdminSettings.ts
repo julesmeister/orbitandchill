@@ -40,7 +40,7 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
 
       if (data.success) {
         // Create a Set with all category names to expand all categories by default
-        const allCategories = new Set((data.categories || []).map((cat: any) => cat.category));
+        const allCategories = new Set((data.categories || []).map((cat: any) => cat.category) as string[]);
         
         setState(prev => ({
           ...prev,
