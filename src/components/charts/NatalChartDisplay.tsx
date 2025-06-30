@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
 import NextImage from 'next/image';
 import { useUserStore } from '../../store/userStore';
@@ -133,7 +134,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
     <div 
       id={`natal-chart-display-${Date.now()}`}
       data-chart-container
-      className="bg-white border border-black overflow-hidden"
+      className="bg-white overflow-hidden"
     >
       {/* Header */}
       <div className="relative p-8 overflow-hidden" style={{ backgroundColor: '#ff91e9' }}>

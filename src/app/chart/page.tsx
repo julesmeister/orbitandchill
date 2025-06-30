@@ -215,6 +215,40 @@ export default function ChartPage() {
       <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
         <div className="px-6 py-8">
           {(() => {
+          // Show loading state first if any of these conditions are true:
+          // 1. User data is loading
+          // 2. Chart cache is loading and we know there's an existing chart
+          // 3. Chart is being generated
+          // 4. No user data loaded yet (initial mount)
+          if (isUserLoading || (isLoadingCache && hasExistingChart) || isGenerating || !user) {
+            return (
+          <div className="border border-black bg-white min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              {/* Three-Element Bounce Loading */}
+              <div className="flex items-center justify-center space-x-2 mb-8">
+                <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-3 h-3 bg-black animate-bounce"></div>
+              </div>
+
+              {/* Heading */}
+              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
+                {isUserLoading ? 'Loading Your Profile' : 
+                 isGenerating ? 'Generating Your Chart' : 
+                 'Loading Your Chart'}
+              </h1>
+              
+              {/* Description */}
+              <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+                {isUserLoading ? 'Retrieving your birth data and preferences...' :
+                 isGenerating ? 'Creating your cosmic blueprint from the stars...' :
+                 'We\'re retrieving your cosmic blueprint. This should only take a moment...'}
+              </p>
+            </div>
+          </div>
+            );
+          }
+          
           if (cachedChart) {
             return (
               <div className="grid grid-cols-1 lg:grid-cols-6 gap-0 border border-black bg-white">
@@ -322,37 +356,6 @@ export default function ChartPage() {
               )}
             </div>
               </div>
-            );
-          }
-          
-          // Show loading state if any of these conditions are true:
-          // 1. User data is loading
-          // 2. Chart cache is loading and we know there's an existing chart
-          // 3. Chart is being generated
-          if (isUserLoading || (isLoadingCache && hasExistingChart) || isGenerating) {
-            return (
-          <div className="border border-black bg-white">
-            <div className="p-12 text-center">
-              {/* Loading Icon */}
-              <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-8">
-                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              </div>
-
-              {/* Heading */}
-              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
-                {isUserLoading ? 'Loading Your Profile' : 
-                 isGenerating ? 'Generating Your Chart' : 
-                 'Loading Your Chart'}
-              </h1>
-              
-              {/* Description */}
-              <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto mb-12">
-                {isUserLoading ? 'Retrieving your birth data and preferences...' :
-                 isGenerating ? 'Creating your cosmic blueprint from the stars...' :
-                 'We\'re retrieving your cosmic blueprint. This should only take a moment...'}
-              </p>
-            </div>
-          </div>
             );
           }
           

@@ -9,7 +9,7 @@ interface BirthDataSummaryProps {
 
 export default function BirthDataSummary({ birthData, personName }: BirthDataSummaryProps) {
   return (
-    <div className="bg-white border-black border-t">
+    <div className="bg-white">
       <div className="p-6 border-b border-black">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">

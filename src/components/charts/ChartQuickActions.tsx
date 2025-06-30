@@ -115,7 +115,7 @@ export default function ChartQuickActions({
   };
 
   return (
-    <div className="bg-white border-black border-t overflow-visible">
+    <div className="bg-white overflow-visible">
       {/* Header */}
       <div className="p-6 border-b border-black">
         <div className="flex items-center">
@@ -217,7 +217,7 @@ export default function ChartQuickActions({
           />
         </div>
       ) : (
-        <div className=" border-r border-b border-black bg-white">
+        <div className="border-b border-black bg-white">
           {/* Primary Action - Regenerate Chart */}
           <button
             onClick={onRegenerateChart}
