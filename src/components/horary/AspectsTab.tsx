@@ -15,6 +15,7 @@ import {
   AspectPattern,
   AspectInterpretation
 } from '@/utils/horary/aspectsInterpretations';
+import { ASPECT_COLORS } from '@/utils/horary/aspectConstants';
 import {
   RELEVANCE_COLORS,
   OUTCOME_COLORS,
@@ -46,7 +47,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRelevance, setSelectedRelevance] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [selectedOutcome, setSelectedOutcome] = useState<'all' | 'harmonious' | 'challenging' | 'neutral'>('all');
-  const [selectedAspectType, setSelectedAspectType] = useState<'all' | 'conjunction' | 'trine' | 'square' | 'sextile' | 'opposition'>('all');
+  const [selectedAspectType, setSelectedAspectType] = useState<'all' | 'conjunction' | 'trine' | 'square' | 'sextile' | 'opposition' | 'quincunx'>('all');
   
   // Extract actual planetary positions from chart data
   const getPlanetaryPositions = (): PlanetaryPosition[] => {
@@ -297,12 +298,23 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
 
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h4 className="font-space-grotesk font-bold mb-3">Detailed Interpretation</h4>
-        <ColoredBox backgroundColor="#05b773" className="p-4">
-          <div className="text-sm">{interpretation.contextualMeaning}</div>
+        
+        {/* Main interpretation with aspect-specific color */}
+        <ColoredBox 
+          backgroundColor={ASPECT_COLORS[aspect.aspect as keyof typeof ASPECT_COLORS] || '#2563eb'} 
+          textColor="white" 
+          className="p-4"
+        >
+          <div className="text-sm font-medium">{interpretation.contextualMeaning}</div>
         </ColoredBox>
         
+        {/* Opportunities section with harmonious green */}
         {interpretation.opportunities.length > 0 && (
-          <ColoredBox backgroundColor="#f9e20e" textColor="black" className="mt-4 p-4">
+          <ColoredBox 
+            backgroundColor={getAspectTypeStyle('harmonious').background} 
+            textColor={getAspectTypeStyle('harmonious').text} 
+            className="mt-4 p-4 border border-black"
+          >
             <div className="font-bold text-sm mb-2">Opportunities:</div>
             <ul className="text-sm space-y-1">
               {interpretation.opportunities.map((opp, index) => (
@@ -312,8 +324,13 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
           </ColoredBox>
         )}
         
+        {/* Warnings section with challenging red */}
         {interpretation.warnings.length > 0 && (
-          <ColoredBox backgroundColor={INFO_BOX_COLORS.warning} className="mt-4 p-4">
+          <ColoredBox 
+            backgroundColor={getAspectTypeStyle('challenging').background} 
+            textColor={getAspectTypeStyle('challenging').text} 
+            className="mt-4 p-4 border border-black"
+          >
             <div className="font-bold text-sm mb-2">Warnings:</div>
             <ul className="text-sm space-y-1">
               {interpretation.warnings.map((warning, index) => (
@@ -323,14 +340,16 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
           </ColoredBox>
         )}
         
+        {/* Action required with neutral blue */}
         {interpretation.actionRequired && (
-          <InfoBox
-            title="Action Required"
-            content="This aspect requires your active participation to manifest properly"
-            backgroundColor="#29c9ff"
-            textColor="white"
-            className="mt-4 p-4"
-          />
+          <ColoredBox
+            backgroundColor={getAspectTypeStyle('neutral').background}
+            textColor={getAspectTypeStyle('neutral').text}
+            className="mt-4 p-4 border border-black"
+          >
+            <div className="font-bold text-sm mb-2">⚡ Action Required</div>
+            <div className="text-sm">This aspect rewards conscious effort and initiative to manifest its potential.</div>
+          </ColoredBox>
         )}
       </div>
     </div>
@@ -479,7 +498,8 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
                     { value: 'trine', label: 'Trine' },
                     { value: 'square', label: 'Square' },
                     { value: 'sextile', label: 'Sextile' },
-                    { value: 'opposition', label: 'Opposition' }
+                    { value: 'opposition', label: 'Opposition' },
+                    { value: 'quincunx', label: 'Quincunx' }
                   ].map((option) => (
                     <button
                       key={option.value}

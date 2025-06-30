@@ -7,7 +7,8 @@ export const ASPECT_ORBS = {
   opposition: 8,
   trine: 8,
   square: 7,
-  sextile: 6
+  sextile: 6,
+  quincunx: 3
 } as const;
 
 export const ASPECT_ANGLES = {
@@ -15,6 +16,7 @@ export const ASPECT_ANGLES = {
   sextile: 60,
   square: 90,
   trine: 120,
+  quincunx: 150,
   opposition: 180
 } as const;
 
@@ -23,6 +25,7 @@ export const ASPECT_COLORS = {
   sextile: "#059669", // emerald-600
   square: "#dc2626", // red-600
   trine: "#2563eb", // blue-600
+  quincunx: "#7c3aed", // violet-600
   opposition: "#7c2d12" // orange-800
 } as const;
 

@@ -31,6 +31,8 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
     hasActiveFilters
   } = useAspectFilters();
 
+  const aspectFilteringEnabled = shouldShowFeature('aspect-filtering', userIsPremium);
+
   const getAspectCategory = (aspect: ChartAspect): AspectCategory[] => {
     const categories: AspectCategory[] = [];
     const planets = [aspect.planet1.toLowerCase(), aspect.planet2.toLowerCase()];
@@ -130,7 +132,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
         </div>
         <div className="flex items-center gap-3">
           {/* Premium Filter Button or Locked State */}
-          {shouldShowFeature('aspect-filtering', userIsPremium) ? (
+          {aspectFilteringEnabled ? (
             <button
               onClick={toggleAspectFilters}
               className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${showFilters || hasActiveFilters
@@ -162,7 +164,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
             </div>
           )}
           
-          {shouldShowFeature('aspect-filtering', userIsPremium) && hasActiveFilters && (
+          {aspectFilteringEnabled && hasActiveFilters && (
             <button
               onClick={clearAspectFilters}
               className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-50 transition-colors duration-200 border border-black"

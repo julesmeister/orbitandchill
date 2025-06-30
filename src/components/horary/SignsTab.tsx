@@ -23,6 +23,7 @@ import {
   getElementCharacteristics,
   getModeCharacteristics
 } from '@/utils/horary/signsInterpretations';
+import { renderZodiacSymbol } from '@/components/horary/ZodiacSymbols';
 
 interface SignsTabProps {
   chartData: any;
@@ -81,7 +82,13 @@ export default function SignsTab({ chartData, analysisData, question }: SignsTab
   const SectionHeader = ({ icon, title, size = 'lg' }: { icon: string; title: string; size?: 'sm' | 'lg' }) => (
     <div className="flex items-center mb-6">
       <div className={`${size === 'lg' ? 'w-16 h-16' : 'w-12 h-12'} bg-black flex items-center justify-center mr-4`}>
-        <span className={`text-white ${size === 'lg' ? 'text-2xl' : 'text-lg'}`}>{icon}</span>
+        <svg 
+          width={size === 'lg' ? '32' : '24'} 
+          height={size === 'lg' ? '32' : '24'} 
+          viewBox="-15 -15 50 50"
+        >
+          {renderZodiacSymbol(icon)}
+        </svg>
       </div>
       <div>
         <h4 className="font-space-grotesk font-bold text-black text-xl">{title}</h4>
@@ -114,7 +121,9 @@ export default function SignsTab({ chartData, analysisData, question }: SignsTab
         onClick={() => setSelectedSign(sign)}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-2xl">{signData.symbol}</span>
+          <svg width="32" height="32" viewBox="-15 -15 50 50">
+            {renderZodiacSymbol(signData.symbol)}
+          </svg>
           {hasPlanet && (
             <span className="text-xs bg-yellow-200 px-1 py-0.5 rounded">{planetName}</span>
           )}
@@ -139,7 +148,11 @@ export default function SignsTab({ chartData, analysisData, question }: SignsTab
       <div className="bg-white border border-black p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <span className="text-4xl mr-4">{signData.symbol}</span>
+            <div className="mr-4">
+              <svg width="48" height="48" viewBox="-15 -15 50 50">
+                {renderZodiacSymbol(signData.symbol)}
+              </svg>
+            </div>
             <div>
               <h3 className="font-space-grotesk font-bold text-2xl">{sign}</h3>
               <div className="text-gray-600">{signData.elementalQualities}</div>

@@ -84,6 +84,7 @@
             <button class="button" onclick="testFixedDelete()">🔧 Test Delete API Endpoint</button>
             <button class="button" onclick="testCreateAndDelete()">✅ Test Full CRUD Cycle</button>
             <button class="button" onclick="clearBrowserStorage()" style="background: #dc3545;">🧹 Clear Legacy Browser Storage</button>
+            <button class="button" onclick="cleanupDebugQuestions()" style="background: #dc3545;">🗑️ Cleanup Debug Questions</button>
         </div>
         
         <div style="background: #f8f9fa; padding: 15px; margin: 20px 0; border: 1px solid #dee2e6; border-radius: 5px;">
@@ -794,6 +795,46 @@
                 }, data.success ? 'success' : 'error');
             } catch (error) {
                 addResult('❌ Test Connection Pool Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function cleanupDebugQuestions() {
+            try {
+                if (!confirm('⚠️ This will permanently delete ALL debug horary questions (horary_debug_*, debug_user_*, test questions). Continue?')) {
+                    return;
+                }
+
+                const response = await fetch('/api/debug/cleanup-horary', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                addResult('🗑️ Debug Questions Cleanup', {
+                    success: data.success,
+                    deletedCount: data.results?.deletedCount || 0,
+                    remainingDebugQuestions: data.results?.remainingDebugQuestions || 0,
+                    patternsProcessed: data.results?.patternsProcessed || [],
+                    errors: data.results?.errors || null,
+                    message: data.message,
+                    timestamp: data.results?.timestamp || new Date().toISOString(),
+                    statusCode: response.status
+                }, data.success ? 'success' : 'error');
+
+                // If successful, suggest refreshing the horary page
+                if (data.success && data.results?.deletedCount > 0) {
+                    addResult('✅ Cleanup Success', {
+                        message: 'Debug questions have been removed from the database',
+                        nextSteps: [
+                            'Refresh your horary page to see the cleaned results',
+                            'The "removed questions" logs should no longer appear',
+                            'Query filtering should now show fewer items being filtered'
+                        ]
+                    }, 'success');
+                }
+            } catch (error) {
+                addResult('❌ Debug Cleanup Error', { error: error.message }, 'error');
             }
         }
 

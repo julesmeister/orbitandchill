@@ -4,13 +4,16 @@
  * Aspects Interpretations - Based on John Frawley's "The Horary Textbook"
  * 
  * This module provides comprehensive aspect analysis and interpretation
- * for horary astrology, focusing on traditional five major aspects only.
+ * for horary astrology, enhanced with detailed psychological insights
+ * while maintaining traditional horary principles.
  */
+
+import { getFullAspectInfo } from '../astrological/aspectInterpretations';
 
 export interface AspectAnalysis {
   planet1: string;
   planet2: string;
-  aspect: 'conjunction' | 'trine' | 'square' | 'sextile' | 'opposition';
+  aspect: 'conjunction' | 'trine' | 'square' | 'sextile' | 'opposition' | 'quincunx';
   exactDegree: number;
   orb: number;
   applying: boolean;
@@ -59,7 +62,8 @@ export const MAJOR_ASPECTS = {
   trine: { degrees: 120, tolerance: 8, nature: 'harmony' },
   square: { degrees: 90, tolerance: 8, nature: 'tension' },
   sextile: { degrees: 60, tolerance: 6, nature: 'opportunity' },
-  opposition: { degrees: 180, tolerance: 8, nature: 'separation' }
+  opposition: { degrees: 180, tolerance: 8, nature: 'separation' },
+  quincunx: { degrees: 150, tolerance: 3, nature: 'adjustment' }
 } as const;
 
 // Aspect nature descriptions
@@ -93,6 +97,12 @@ export const ASPECT_NATURES = {
     keywords: ['opposition', 'awareness', 'confrontation', 'balance'],
     interpretation: 'External challenges and open conflicts seeking resolution',
     context: 'Tension that brings awareness - seeing both sides'
+  },
+  quincunx: {
+    description: 'Awkward adjustment requiring constant adaptation',
+    keywords: ['adjustment', 'adaptation', 'awkward', 'flexible'],
+    interpretation: 'Requires ongoing fine-tuning and conscious modification',
+    context: 'Neither easy nor difficult - needs continuous attention'
   }
 } as const;
 
@@ -308,52 +318,86 @@ export function analyzeAspectRelevance(
     aspect.strength === 'exact' ? 'immediate' :
     aspect.strength === 'close' ? 'short-term' : 'long-term';
   
-  const aspectNature = ASPECT_NATURES[aspect.aspect];
+  // Get comprehensive aspect interpretation from our detailed dictionary
+  const detailedAspectInfo = getFullAspectInfo({
+    planet1: aspect.planet1.toLowerCase(),
+    planet2: aspect.planet2.toLowerCase(),
+    aspect: aspect.aspect,
+    orb: aspect.orb
+  });
+  
   let outcome: 'favorable' | 'challenging' | 'neutral';
   
   if (aspect.aspect === 'trine' || aspect.aspect === 'sextile') {
     outcome = 'favorable';
   } else if (aspect.aspect === 'square' || aspect.aspect === 'opposition') {
     outcome = 'challenging';
+  } else if (aspect.aspect === 'quincunx') {
+    outcome = 'neutral'; // Quincunx requires adjustment
   } else {
     outcome = 'neutral'; // Conjunction depends on planets involved
   }
   
-  // Context-specific interpretation
-  let contextualMeaning = aspectNature.interpretation;
+  // Start with the comprehensive interpretation as the base
+  let contextualMeaning = detailedAspectInfo.interpretation;
   const warnings: string[] = [];
   const opportunities: string[] = [];
   
+  // Add horary-specific context
   if (isSignificatorAspect) {
     if (aspect.applying) {
-      contextualMeaning += '. This aspect is forming and will influence the outcome of your question.';
+      contextualMeaning += ' **Horary Significance:** This aspect is forming and will directly influence the outcome of your question.';
       if (outcome === 'favorable') {
-        opportunities.push('Positive development approaching');
+        opportunities.push('Positive development approaching - significator aspect favors your question');
+        opportunities.push('The applying nature indicates this influence is still developing');
       } else if (outcome === 'challenging') {
-        warnings.push('Challenge or obstacle approaching');
+        warnings.push('Challenge or obstacle approaching through significator connection');
+        warnings.push('Monitor this developing aspect as it affects your core concern');
+      } else {
+        opportunities.push('Neutral but significant development approaching');
       }
     } else {
-      contextualMeaning += '. This aspect is separating - past influence on the situation.';
+      contextualMeaning += ' **Horary Significance:** This aspect is separating - represents past influence on the situation that is now waning.';
+      warnings.push('Past influence - less relevant to future outcome');
     }
+  } else {
+    contextualMeaning += ' **Horary Context:** Background planetary activity that provides additional context but is not central to your question.';
   }
   
-  // Question-specific context
+  // Add timing context specific to horary
+  contextualMeaning += ` **Timing:** ${timing === 'immediate' ? 'Immediate influence - exact or very close aspect' : 
+    timing === 'short-term' ? 'Short-term influence - within days to weeks' : 
+    'Long-term background influence - months timeframe'}.`;
+  
+  // Question-specific context with horary perspective
   if (questionType.includes('love') || questionType.includes('relationship')) {
     if (aspect.planet1 === 'Venus' || aspect.planet2 === 'Venus' || 
         aspect.planet1 === 'Mars' || aspect.planet2 === 'Mars') {
-      contextualMeaning += ' Particularly significant for relationship matters.';
+      contextualMeaning += ' **Relationship Focus:** Venus-Mars connections are particularly significant for love questions in horary.';
+      if (outcome === 'favorable') {
+        opportunities.push('Romantic or partnership energy supports your question');
+      }
     }
   }
   
   if (questionType.includes('career') || questionType.includes('job')) {
     if (aspect.planet1 === 'Sun' || aspect.planet2 === 'Sun' ||
         aspect.planet1 === 'Saturn' || aspect.planet2 === 'Saturn') {
-      contextualMeaning += ' Important for career and professional matters.';
+      contextualMeaning += ' **Career Focus:** Sun-Saturn connections relate directly to authority, career, and professional matters.';
+      if (outcome === 'favorable') {
+        opportunities.push('Professional or authority-related support for your question');
+      }
     }
   }
   
+  // Horary-specific action requirements
   const actionRequired = aspect.aspect === 'sextile' || 
-                        (aspect.aspect === 'square' && aspect.applying);
+                        (aspect.aspect === 'square' && aspect.applying) ||
+                        (aspect.aspect === 'quincunx' && aspect.applying);
+  
+  if (actionRequired) {
+    opportunities.push('This aspect rewards conscious effort and initiative');
+  }
   
   return {
     aspect,
@@ -443,7 +487,8 @@ export function getAspectSymbol(aspect: string): string {
     trine: '△',
     square: '□',
     sextile: '⚹',
-    opposition: '☍'
+    opposition: '☍',
+    quincunx: '⚻'
   };
   return symbols[aspect as keyof typeof symbols] || '•';
 }
@@ -456,6 +501,7 @@ export function getAspectColor(aspect: string): string {
     square: "#d32f2f", // Dark red - challenging
     sextile: "#f57c00", // Dark orange - opportunity
     opposition: "#c2185b", // Dark pink - confrontation
+    quincunx: "#9c27b0", // Purple - adjustment
   };
   return colors[aspect as keyof typeof colors] || '#19181a';
 }

@@ -20,38 +20,8 @@ interface PremiumFeatureState {
   updateFeature: (featureId: string, updates: Partial<PremiumFeature>) => void;
 }
 
-const DEFAULT_FEATURES: PremiumFeature[] = [
-  // Chart Interpretation Features
-  {
-    id: 'detailed-aspects',
-    name: 'Detailed Aspect Interpretations',
-    description: 'Full descriptions for all planetary aspects including minor aspects',
-    category: 'interpretation',
-    isEnabled: true,
-    isPremium: false,
-    component: 'ChartInterpretation',
-    section: 'aspects'
-  },
-  {
-    id: 'planetary-dignities',
-    name: 'Planetary Dignities Analysis',
-    description: 'Complete dignities and debilities table with interpretations',
-    category: 'interpretation',
-    isEnabled: true,
-    isPremium: false,
-    component: 'ChartInterpretation',
-    section: 'dignities'
-  },
-  {
-    id: 'house-analysis',
-    name: 'Comprehensive House Analysis',
-    description: 'Detailed analysis of all 12 houses with cusp interpretations',
-    category: 'interpretation',
-    isEnabled: true,
-    isPremium: false,
-    component: 'ChartInterpretation',
-    section: 'houses'
-  },
+// Minimal fallback features for core functionality only
+const FALLBACK_FEATURES: PremiumFeature[] = [
   {
     id: 'core-personality',
     name: 'Core Personality Trio',
@@ -63,101 +33,19 @@ const DEFAULT_FEATURES: PremiumFeature[] = [
     section: 'core'
   },
   {
-    id: 'planetary-positions',
-    name: 'Planetary Positions Overview',
-    description: 'Table showing all planetary positions and houses',
-    category: 'interpretation',
-    isEnabled: true,
-    isPremium: false,
-    component: 'ChartInterpretation',
-    section: 'positions'
-  },
-  {
-    id: 'stellium-analysis',
-    name: 'Stellium Analysis',
-    description: 'Detection and interpretation of planetary stelliums in signs and houses',
-    category: 'interpretation',
-    isEnabled: true,
-    isPremium: false,
-    component: 'ChartInterpretation',
-    section: 'stelliums'
-  },
-  {
     id: 'aspect-filtering',
     name: 'Advanced Aspect Filtering',
     description: 'Filter aspects by category, type, and life areas',
     category: 'interpretation',
     isEnabled: true,
-    isPremium: true,
+    isPremium: false,
     component: 'ChartInterpretation',
     section: 'aspect-filters'
-  },
-  {
-    id: 'detailed-modals',
-    name: 'Detailed Interpretation Modals',
-    description: 'In-depth planetary interpretations in modal popups',
-    category: 'interpretation',
-    isEnabled: true,
-    isPremium: true,
-    component: 'ChartInterpretation',
-    section: 'modals'
-  },
-  // Chart Display Features
-  {
-    id: 'interactive-chart',
-    name: 'Interactive Chart Elements',
-    description: 'Clickable planets, houses, and aspects with tooltips',
-    category: 'chart',
-    isEnabled: true,
-    isPremium: false,
-    component: 'UnifiedAstrologicalChart',
-    section: 'interactivity'
-  },
-  {
-    id: 'aspect-lines',
-    name: 'Aspect Lines Visualization',
-    description: 'Visual lines showing planetary aspects on the chart',
-    category: 'chart',
-    isEnabled: true,
-    isPremium: true,
-    component: 'UnifiedAstrologicalChart',
-    section: 'aspects'
-  },
-  {
-    id: 'angular-markers',
-    name: 'Angular Markers (ASC/DSC/MC/IC)',
-    description: 'Display of important chart angles and markers',
-    category: 'chart',
-    isEnabled: true,
-    isPremium: false,
-    component: 'UnifiedAstrologicalChart',
-    section: 'angles'
-  },
-  // Sharing Features
-  {
-    id: 'chart-sharing',
-    name: 'Chart Sharing',
-    description: 'Generate public links to share charts with others',
-    category: 'sharing',
-    isEnabled: true,
-    isPremium: true,
-    component: 'ChartPage',
-    section: 'sharing'
-  },
-  {
-    id: 'chart-export',
-    name: 'Chart Export Options',
-    description: 'Export charts as PNG, PDF, or SVG files',
-    category: 'sharing',
-    isEnabled: false,
-    isPremium: true,
-    component: 'ChartActions',
-    section: 'export'
   }
 ];
 
 export const usePremiumFeatures = (): PremiumFeatureState => {
-  const [features, setFeatures] = useState<PremiumFeature[]>(DEFAULT_FEATURES);
+  const [features, setFeatures] = useState<PremiumFeature[]>([]);
 
   const loadFeatures = useCallback(async () => {
     try {
@@ -187,11 +75,11 @@ export const usePremiumFeatures = (): PremiumFeatureState => {
         const parsed = JSON.parse(savedFeatures);
         setFeatures(parsed);
       } else {
-        setFeatures(DEFAULT_FEATURES);
+        setFeatures(FALLBACK_FEATURES);
       }
     } catch (error) {
       console.error('Error loading premium features from localStorage:', error);
-      setFeatures(DEFAULT_FEATURES);
+      setFeatures(FALLBACK_FEATURES);
     }
   }, []);
 

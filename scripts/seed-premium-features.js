@@ -224,14 +224,14 @@ const premiumFeatures = [
     sort_order: 33
   },
   {
-    id: 'advanced-filtering',
+    id: 'aspect-filtering',
     name: 'Advanced Aspect Filtering',
-    description: 'Filter aspects by orb, type, and planet',
-    category: 'analysis',
+    description: 'Filter aspects by category, type, and life areas',
+    category: 'interpretation',
     is_enabled: true,
-    is_premium: true,
-    component: 'AspectFilters',
-    section: 'analysis',
+    is_premium: false,
+    component: 'MajorAspectsSection',
+    section: 'aspect-filters',
     sort_order: 34
   },
 

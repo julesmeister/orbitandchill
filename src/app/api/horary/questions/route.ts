@@ -215,21 +215,6 @@ export async function GET(request: NextRequest) {
           .limit(limit + 1) // Get one extra to check if there are more
           .offset(offset);
         
-        // Safety filter: If we have a userId and includeAnonymous is false, 
-        // ensure we only return questions that belong to this user
-        if (userId && !includeAnonymous) {
-          const filteredResults = results.filter(q => q.userId === userId);
-          if (filteredResults.length !== results.length) {
-            console.warn(`⚠️ Query filter issue: Expected ${results.length} user questions, filtered to ${filteredResults.length}`);
-            console.warn('🔍 Removed questions:', results.filter(q => q.userId !== userId).map(q => ({
-              id: q.id,
-              userId: q.userId,
-              question: q.question?.substring(0, 30) + '...'
-            })));
-          }
-          return filteredResults;
-        }
-        
         return results;
       },
       {

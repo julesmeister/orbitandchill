@@ -74,7 +74,8 @@ export const ASPECT_COLORS_DARK = {
   trine: '#21b883',       // Darker green
   square: '#ff4949',      // Darker red
   sextile: '#f3930e',     // Darker yellow/amber
-  opposition: '#db17f5'   // Darker pink/purple
+  opposition: '#db17f5',  // Darker pink/purple
+  quincunx: '#9c27b0'     // Purple - adjustment
 } as const;
 
 // Strength indicators (Synapsas-style)
