@@ -18,7 +18,10 @@ import {
   CONDITION_COLORS,
   CONFIDENCE_COLORS,
   LUNAR_COLORS,
-  INFO_BOX_COLORS
+  INFO_BOX_COLORS,
+  ASPECT_TYPE_COLORS,
+  getAspectTypeStyle,
+  getStrengthAssessmentStyle
 } from '@/utils/horary/colorConfigurations';
 import {
   ColoredBox,
@@ -191,7 +194,7 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
     return (
       <div 
         className={`border border-black p-4 cursor-pointer transition-all duration-200 ${
-          selectedPlanet === dignity.planet ? 'bg-blue-100 border-2' : 'bg-white hover:bg-gray-50'
+          selectedPlanet === dignity.planet ? `${getAspectTypeStyle('neutral').badge.replace('border-black', 'border-2')}` : 'bg-white hover:bg-gray-50'
         }`}
         onClick={() => setSelectedPlanet(dignity.planet)}
       >
@@ -202,7 +205,7 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
           </div>
           <span 
             className="text-xs px-2 py-1 border border-black"
-            style={getStrengthStyle(strengthInfo.color)}
+            style={getStrengthAssessmentStyle(strengthInfo.label)}
           >
             {strengthInfo.label}
           </span>
@@ -217,16 +220,54 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
         </div>
         
         <div className="space-y-1">
-          {dignity.joy && <Badge label="Joy" backgroundColor={CONDITION_COLORS.joy} />}
-          {dignity.combustion.cazimi && <Badge label="Cazimi" backgroundColor={CONDITION_COLORS.cazimi} />}
-          {dignity.combustion.combust && !dignity.combustion.cazimi && <Badge label="Combust" backgroundColor={CONDITION_COLORS.combust} />}
-          {dignity.speed === 'fast' && <Badge label="Fast" backgroundColor={CONDITION_COLORS.fast} textColor="black" />}
-          {dignity.speed === 'slow' && <Badge label="Slow" backgroundColor={CONDITION_COLORS.slow} />}
-          {dignity.retrograde && <Badge label="Retrograde" backgroundColor={CONDITION_COLORS.retrograde} />}
+          {dignity.joy && (
+            <Badge 
+              label="Joy" 
+              backgroundColor={getAspectTypeStyle('harmonious').background} 
+              textColor={getAspectTypeStyle('harmonious').text} 
+            />
+          )}
+          {dignity.combustion.cazimi && (
+            <Badge 
+              label="Cazimi" 
+              backgroundColor={getAspectTypeStyle('high').background} 
+              textColor={getAspectTypeStyle('high').text} 
+            />
+          )}
+          {dignity.combustion.combust && !dignity.combustion.cazimi && (
+            <Badge 
+              label="Combust" 
+              backgroundColor={getAspectTypeStyle('challenging').background} 
+              textColor={getAspectTypeStyle('challenging').text} 
+            />
+          )}
+          {dignity.speed === 'fast' && (
+            <Badge 
+              label="Fast" 
+              backgroundColor={getAspectTypeStyle('medium').background} 
+              textColor={getAspectTypeStyle('medium').text} 
+            />
+          )}
+          {dignity.speed === 'slow' && (
+            <Badge 
+              label="Slow" 
+              backgroundColor={getAspectTypeStyle('low').background} 
+              textColor={getAspectTypeStyle('low').text} 
+            />
+          )}
+          {dignity.retrograde && (
+            <Badge 
+              label="Retrograde" 
+              backgroundColor={getAspectTypeStyle('neutral').background} 
+              textColor={getAspectTypeStyle('neutral').text} 
+            />
+          )}
         </div>
         
         {contextual.relevantFactors.length > 0 && (
-          <div className="text-xs text-purple-600 mt-1">⚠ Context relevant</div>
+          <div className="text-xs mt-1" style={{ color: getAspectTypeStyle('medium').text }}>
+            ⚠ Context relevant
+          </div>
         )}
       </div>
     );
@@ -246,7 +287,7 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
             <h3 className="font-space-grotesk font-bold text-2xl mr-4">{planet}</h3>
             <div 
               className="px-3 py-1 border border-black"
-              style={getStrengthStyle(strengthInfo.color)}
+              style={getStrengthAssessmentStyle(strengthInfo.label)}
             >
               {strengthInfo.label}
             </div>
@@ -341,14 +382,26 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
 
         <div className="mt-6 pt-6 border-t border-gray-200">
           <h4 className="font-space-grotesk font-bold mb-3">Contextual Analysis</h4>
-          <ColoredBox backgroundColor={INFO_BOX_COLORS.primary} className="p-4">
+          <ColoredBox 
+            backgroundColor={getAspectTypeStyle('harmonious').text} 
+            textColor="white" 
+            className="p-4"
+          >
             <div className="font-bold text-sm mb-2">For This Question:</div>
             <div className="text-sm">{contextual.interpretation}</div>
             <div className="text-xs mt-2">
               <Badge 
                 label={`${contextual.confidence} confidence`}
-                backgroundColor={CONFIDENCE_COLORS[contextual.confidence as keyof typeof CONFIDENCE_COLORS]}
-                textColor={contextual.confidence === 'high' ? 'black' : 'black'}
+                backgroundColor={
+                  contextual.confidence === 'high' ? getAspectTypeStyle('high').background :
+                  contextual.confidence === 'medium' ? getAspectTypeStyle('medium').background :
+                  getAspectTypeStyle('low').background
+                }
+                textColor={
+                  contextual.confidence === 'high' ? getAspectTypeStyle('high').text :
+                  contextual.confidence === 'medium' ? getAspectTypeStyle('medium').text :
+                  getAspectTypeStyle('low').text
+                }
               />
             </div>
           </ColoredBox>
@@ -363,8 +416,8 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
                   ))}
                 </ul>
               }
-              backgroundColor={INFO_BOX_COLORS.light}
-              textColor="black"
+              backgroundColor={getAspectTypeStyle('neutral').background}
+              textColor={getAspectTypeStyle('neutral').text}
               className="mt-4"
             />
           )}
@@ -501,43 +554,85 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
             <StatCard 
               value={sortedDignities.filter(d => d.overallAssessment === 'very strong' || d.overallAssessment === 'strong').length}
               label="Powerful Planets"
-              backgroundColor={INFO_BOX_COLORS.primary}
+              backgroundColor={getAspectTypeStyle('harmonious').text}
+              textColor="white"
             />
             <StatCard 
               value={sortedDignities.filter(d => d.combustion.combust && !d.combustion.cazimi).length}
               label="Combust"
-              backgroundColor={CONDITION_COLORS.combust}
+              backgroundColor={getAspectTypeStyle('challenging').text}
+              textColor="white"
             />
             <StatCard 
               value={sortedDignities.filter(d => d.retrograde).length}
               label="Retrograde"
-              backgroundColor={CONDITION_COLORS.fast}
-              textColor="black"
+              backgroundColor={getAspectTypeStyle('medium').text}
+              textColor="white"
             />
             <StatCard 
               value={sortedDignities.filter(d => d.joy).length}
               label="In Joy"
-              backgroundColor={CONDITION_COLORS.cazimi}
+              backgroundColor={getAspectTypeStyle('neutral').text}
+              textColor="white"
             />
           </div>
 
           {/* Key principle */}
-          <ColoredBox backgroundColor={INFO_BOX_COLORS.light} textColor="black" className="p-4">
-            <h4 className="font-space-grotesk font-bold mb-3">The Football Manager Principle</h4>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="font-bold">Essential Dignity</div>
-                <div>Shows if the player is skilled (good or bad)</div>
+          <div className="bg-white border-2 border-black p-6">
+            <div className="text-center mb-6">
+              <h4 className="font-space-grotesk font-bold text-xl text-black mb-2">⚽ The Football Manager Principle</h4>
+              <p className="text-sm text-black/70">Understanding the fundamental difference between skill and performance</p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-white border-2 border-black p-4">
+                <div className="flex items-center mb-3">
+                  <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
+                    <span className="text-white text-lg">🎯</span>
+                  </div>
+                  <div className="font-space-grotesk font-bold text-lg text-black">Essential Dignity</div>
+                </div>
+                <div className="text-sm text-black leading-relaxed mb-2">
+                  Shows if the player is <span className="font-bold bg-black text-white px-1">skilled</span> (good or bad)
+                </div>
+                <div className="text-xs text-black/60">
+                  Raw talent and ability
+                </div>
               </div>
-              <div>
-                <div className="font-bold">Accidental Dignity</div>
-                <div>Shows if the player can perform (power to act)</div>
+              
+              <div className="bg-white border-2 border-black p-4">
+                <div className="flex items-center mb-3">
+                  <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
+                    <span className="text-white text-lg">⚡</span>
+                  </div>
+                  <div className="font-space-grotesk font-bold text-lg text-black">Accidental Dignity</div>
+                </div>
+                <div className="text-sm text-black leading-relaxed mb-2">
+                  Shows if the player can <span className="font-bold bg-black text-white px-1">perform</span> (power to act)
+                </div>
+                <div className="text-xs text-black/60">
+                  Current circumstances and state
+                </div>
               </div>
             </div>
-            <div className="text-sm mt-3 italic">
-              "Both have essential dignity (good players), but one is fired up for England selection while the other's mother died last week."
+            
+            <div className="bg-gray-100 border-2 border-black p-4">
+              <div className="flex items-start">
+                <div className="w-8 h-8 bg-black flex items-center justify-center mr-3 mt-1">
+                  <span className="text-white text-lg">💭</span>
+                </div>
+                <div>
+                  <div className="font-space-grotesk font-bold text-sm text-black mb-2">Frawley's Example:</div>
+                  <div className="text-sm text-black leading-relaxed italic mb-3">
+                    "Both have essential dignity (good players), but one is fired up for England selection while the other's mother died last week."
+                  </div>
+                  <div className="text-xs text-black/70">
+                    <span className="font-bold">Key insight:</span> Same skill level, vastly different power to perform
+                  </div>
+                </div>
+              </div>
             </div>
-          </ColoredBox>
+          </div>
         </div>
       )}
 
@@ -548,7 +643,12 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
           <h3 className="font-space-grotesk font-bold text-xl mb-4">Contextual Analysis</h3>
           
           <div className="space-y-4">
-            <ColoredBox backgroundColor={INFO_BOX_COLORS.warning} className="p-4">
+            <ColoredBox
+              backgroundColor="#fff3e0"
+              textColor="black"
+              borderColor="orange-200"
+              className="p-4"
+            >
               <h4 className="font-bold mb-2">Current Question:</h4>
               <p className="text-sm">"{question.question}"</p>
             </ColoredBox>
@@ -559,14 +659,14 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
                 <InfoBox 
                   title="Essential shows WHAT - Accidental shows POWER"
                   content=""
-                  backgroundColor={INFO_BOX_COLORS.secondary}
+                  backgroundColor={getAspectTypeStyle('harmonious').text}
                   textColor="white"
                   className="mb-3"
                 />
                 <InfoBox 
                   title="Both must be considered for complete judgment"
                   content=""
-                  backgroundColor={INFO_BOX_COLORS.primary}
+                  backgroundColor={getAspectTypeStyle('challenging').text}
                   textColor="white"
                 />
                 <p className="text-sm mt-3 text-gray-700">
@@ -593,8 +693,8 @@ export default function AccidentalDignityTab({ chartData, analysisData, question
                   Retrograde for "going back" questions is actually beneficial.
                 </p>
               }
-              backgroundColor={CONDITION_COLORS.fast}
-              textColor="black"
+              backgroundColor={getAspectTypeStyle('neutral').text}
+              textColor="white"
               className="p-4"
             />
           </div>

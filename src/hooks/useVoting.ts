@@ -29,6 +29,7 @@ export function useVoting(
     downvotes: initialDownvotes,
   });
   
+  
   // Store the previous state for reverting on error
   const [previousState, setPreviousState] = useState<VoteState>({
     isVoting: false,

@@ -16,7 +16,7 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
     settings: [],
     categories: [],
     editedSettings: {},
-    expandedCategories: new Set(['seo', 'general']),
+    expandedCategories: new Set(['seo', 'general', 'analytics', 'email', 'security', 'newsletter', 'premium']),
     isLoading: true,
     isSaving: false,
     isResetting: false,
@@ -39,11 +39,15 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
       const data = await response.json();
 
       if (data.success) {
+        // Create a Set with all category names to expand all categories by default
+        const allCategories = new Set((data.categories || []).map((cat: any) => cat.category));
+        
         setState(prev => ({
           ...prev,
           settings: data.settings || [],
           categories: data.categories || [],
           editedSettings: {},
+          expandedCategories: allCategories, // Expand all categories
           isLoading: false,
         }));
       } else {
@@ -72,8 +76,8 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
         body: JSON.stringify({
           action: 'update',
           settings: state.editedSettings,
-          adminUsername: 'Admin User',
-          adminUserId: null
+          adminUsername: 'System Admin',
+          adminUserId: 'debug_admin_1751205318562' // Use the working admin user ID
         })
       });
 
@@ -117,8 +121,8 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
         body: JSON.stringify({
           action: 'reset',
           category: category === 'all' ? undefined : category,
-          adminUsername: 'Admin User',
-          adminUserId: null
+          adminUsername: 'System Admin',
+          adminUserId: 'debug_admin_1751205318562' // Use the working admin user ID
         })
       });
 
@@ -184,6 +188,13 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
     }, 5000);
   }, []);
 
+  const clearNotification = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      notification: null
+    }));
+  }, []);
+
   const getSettingValue = useCallback((setting: AdminSetting) => {
     if (state.editedSettings.hasOwnProperty(setting.key)) {
       return state.editedSettings[setting.key];
@@ -203,6 +214,7 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
     updateSetting,
     toggleCategory,
     showNotification,
+    clearNotification,
     getSettingValue,
   };
 

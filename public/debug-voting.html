@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vote Persistence Debug Tool</title>
+    <style>
+        body { font-family: monospace; margin: 0; display: flex; min-height: 100vh; }
+        .left-panel { width: 50%; padding: 20px; overflow-y: auto; border-right: 2px solid #007acc; }
+        .right-panel { width: 50%; padding: 20px; overflow-y: auto; background: #f8f9fa; }
+        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        .button:hover { background: #0056b3; }
+        .clear-button { background: #dc3545; }
+        .clear-button:hover { background: #c82333; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; border-radius: 3px; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .user-section { margin: 20px 0; padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
+        .vote-section { margin: 20px 0; padding: 15px; background: #e8f4fd; border: 1px solid #bee5eb; border-radius: 5px; }
+        .api-section { margin: 20px 0; padding: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; }
+        .db-section { margin: 20px 0; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; }
+        input[type="text"], select { 
+            width: 250px; padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; 
+        }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #007acc; }
+        .results-title { font-size: 18px; font-weight: bold; color: #007acc; }
+        pre { white-space: pre-wrap; word-wrap: break-word; max-width: 100%; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <h1>🗳️ Vote Persistence Debug Tool</h1>
+        <div style="background: #4caf50; color: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; text-align: center; font-size: 16px;">
+            ✅ VOTE DEBUG TOOL v1.0 (Build: Dec 29, 2025)
+        </div>
+        <div style="background: #ffeb3b; padding: 10px; margin: 10px 0; border-radius: 5px; color: #333;">
+            <strong>🔍 Debugging vote persistence issue:</strong> Vote buttons not staying dark after page refresh
+        </div>
+        
+        <div class="user-section">
+            <h3>👤 User & Authentication Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Debug user state and authentication for voting
+            </p>
+            <input type="text" id="userIdInput" placeholder="Enter User ID" style="width: 300px;" value="">
+            <button class="button" onclick="debugUserAuth()">🔍 Debug User Auth</button>
+            <button class="button" onclick="testUserCreation()">👤 Create Anonymous User</button>
+            <button class="button" onclick="simulateUserStore()">🏪 Simulate User Store</button>
+        </div>
+        
+        <div class="vote-section">
+            <h3>🗳️ Vote System Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test vote persistence and state management
+            </p>
+            <div style="margin-bottom: 15px;">
+                <select id="discussionSelect" onchange="updateDiscussionId()">
+                    <option value="test-discussion-1">Test Discussion 1</option>
+                    <option value="test-discussion-2">Test Discussion 2</option>
+                    <option value="fGl-BggzEF6u">fGl-BggzEF6u (From Logs)</option>
+                    <option value="custom">Custom Discussion ID</option>
+                </select>
+            </div>
+            <input type="text" id="discussionIdInput" placeholder="Discussion ID" value="test-discussion-1">
+            <input type="text" id="voteTypeInput" placeholder="Vote Type (up/down)" value="up">
+            <button class="button" onclick="testVoteCreation()">🗳️ Test Vote Creation</button>
+            <button class="button" onclick="testVoteRetrieval()">📋 Test Vote Retrieval</button>
+            <button class="button" onclick="testVotePersistence()">💾 Test Vote Persistence</button>
+        </div>
+
+        <div class="api-section">
+            <h3>⚡ API Endpoint Testing</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test all vote-related API endpoints
+            </p>
+            <button class="button" onclick="testDiscussionsAPI()">📋 Test Discussions API</button>
+            <button class="button" onclick="testVoteAPI()">🗳️ Test Vote API</button>
+            <button class="button" onclick="testUserVoteData()">👤 Test User Vote Data</button>
+            <button class="button" onclick="testVoteToggle()">🔄 Test Vote Toggle</button>
+        </div>
+
+        <div class="db-section">
+            <h3>💾 Database & Storage Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Debug database vote storage and retrieval
+            </p>
+            <button class="button" onclick="testVotesTable()">📊 Test Votes Table</button>
+            <button class="button" onclick="testDiscussionsTable()">📝 Test Discussions Table</button>
+            <button class="button" onclick="debugSQLQueries()">🔍 Debug SQL Queries</button>
+            <button class="button" onclick="clearTestVotes()">🗑️ Clear Test Votes</button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="results-header">
+            <div class="results-title">📊 Debug Results</div>
+            <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(title, data, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function updateDiscussionId() {
+            const select = document.getElementById('discussionSelect');
+            const input = document.getElementById('discussionIdInput');
+            
+            if (select.value !== 'custom') {
+                input.value = select.value;
+            } else {
+                input.value = '';
+            }
+        }
+
+        async function debugUserAuth() {
+            try {
+                let userId = document.getElementById('userIdInput').value;
+                
+                if (!userId) {
+                    // Try to get user from frontend store or create anonymous
+                    addResult('⚠️ No User ID Provided', { 
+                        message: 'Testing with auto-generated anonymous user',
+                        action: 'Creating anonymous user for testing'
+                    }, 'warning');
+                    
+                    userId = `anon_debug_${Date.now()}`;
+                    document.getElementById('userIdInput').value = userId;
+                }
+
+                // Test user profile API
+                const profileResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const profileData = await profileResponse.json();
+                
+                // Test user authentication status
+                const authResponse = await fetch('/api/auth/verify', {
+                    credentials: 'include'
+                });
+                const authData = await authResponse.json();
+
+                const result = {
+                    userId: userId,
+                    userProfile: {
+                        statusCode: profileResponse.status,
+                        exists: profileResponse.ok,
+                        data: profileData
+                    },
+                    authentication: {
+                        statusCode: authResponse.status,
+                        authenticated: authResponse.ok,
+                        data: authData
+                    },
+                    analysis: {
+                        canVote: !!userId,
+                        hasProfile: profileResponse.ok,
+                        isAuthenticated: authResponse.ok,
+                        issue: !userId ? 'No user ID available' : null
+                    }
+                };
+                
+                addResult(`👤 User Authentication Debug: ${userId}`, result, 
+                    userId && (profileResponse.ok || authResponse.ok) ? 'success' : 'error');
+                    
+            } catch (error) {
+                addResult('❌ User Auth Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testUserCreation() {
+            try {
+                const testUserId = `anon_debug_${Date.now()}`;
+                
+                // Create anonymous user
+                const userData = {
+                    id: testUserId,
+                    username: 'Anonymous Debug User',
+                    authProvider: 'anonymous',
+                    showZodiacPublicly: false,
+                    allowDirectMessages: true,
+                    emailNotifications: false
+                };
+
+                const response = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('userIdInput').value = testUserId;
+                }
+                
+                addResult('👤 Anonymous User Creation', {
+                    testUserId: testUserId,
+                    statusCode: response.status,
+                    success: response.ok,
+                    data: data,
+                    analysis: {
+                        userCreated: response.ok,
+                        canNowVote: response.ok && !!testUserId
+                    }
+                }, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ User Creation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function simulateUserStore() {
+            try {
+                // Simulate what the frontend user store should provide
+                const mockUser = {
+                    id: document.getElementById('userIdInput').value || `anon_sim_${Date.now()}`,
+                    username: 'Simulated User',
+                    authProvider: 'anonymous',
+                    hasNatalChart: false,
+                    privacy: {
+                        showZodiacPublicly: false,
+                        allowDirectMessages: true
+                    }
+                };
+
+                // Update the user ID input
+                document.getElementById('userIdInput').value = mockUser.id;
+
+                addResult('🏪 User Store Simulation', {
+                    simulatedUser: mockUser,
+                    analysis: {
+                        hasUserId: !!mockUser.id,
+                        canVote: !!mockUser.id,
+                        userIdLength: mockUser.id.length,
+                        userIdFormat: mockUser.id.startsWith('anon_') ? 'anonymous' : 'authenticated'
+                    },
+                    instructions: {
+                        message: 'Use this simulated user for subsequent tests',
+                        nextStep: 'Test vote creation with this user ID'
+                    }
+                }, 'success');
+                
+            } catch (error) {
+                addResult('❌ User Store Simulation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testVoteCreation() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const discussionId = document.getElementById('discussionIdInput').value;
+                const voteType = document.getElementById('voteTypeInput').value;
+
+                if (!userId) {
+                    addResult('❌ Vote Creation Failed', { 
+                        error: 'No user ID provided',
+                        solution: 'Create an anonymous user first'
+                    }, 'error');
+                    return;
+                }
+
+                // Test vote creation
+                const response = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        voteType: voteType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('🗳️ Vote Creation Test', {
+                    userId: userId,
+                    discussionId: discussionId,
+                    voteType: voteType,
+                    request: { userId, voteType },
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        data: data
+                    },
+                    analysis: {
+                        voteCreated: response.ok,
+                        upvoteCount: data.upvotes || 0,
+                        downvoteCount: data.downvotes || 0,
+                        userVote: data.userVote || null
+                    }
+                }, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Vote Creation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testVoteRetrieval() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const discussionId = document.getElementById('discussionIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ Vote Retrieval Failed', { 
+                        error: 'No user ID provided' 
+                    }, 'error');
+                    return;
+                }
+
+                // Test getting discussions with user vote data
+                const response = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                // Find the specific discussion
+                const discussion = data.discussions?.find(d => d.id === discussionId);
+                
+                addResult('📋 Vote Retrieval Test', {
+                    userId: userId,
+                    discussionId: discussionId,
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        totalDiscussions: data.discussions?.length || 0
+                    },
+                    specificDiscussion: discussion || null,
+                    analysis: {
+                        discussionFound: !!discussion,
+                        hasUserVote: discussion?.userVote !== undefined,
+                        userVoteValue: discussion?.userVote || null,
+                        voteDataPresent: !!discussion?.userVote
+                    }
+                }, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Vote Retrieval Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testVotePersistence() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const discussionId = document.getElementById('discussionIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ Vote Persistence Failed', { 
+                        error: 'No user ID provided' 
+                    }, 'error');
+                    return;
+                }
+
+                // Step 1: Create a vote
+                const voteResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        voteType: 'up'
+                    })
+                });
+                
+                const voteData = await voteResponse.json();
+                
+                // Step 2: Retrieve vote immediately
+                const immediateResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                const immediateData = await immediateResponse.json();
+                const immediateDiscussion = immediateData.discussions?.find(d => d.id === discussionId);
+                
+                // Step 3: Wait a moment and retrieve again (simulating page refresh)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const persistenceResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                const persistenceData = await persistenceResponse.json();
+                const persistentDiscussion = persistenceData.discussions?.find(d => d.id === discussionId);
+                
+                addResult('💾 Vote Persistence Test', {
+                    userId: userId,
+                    discussionId: discussionId,
+                    step1_voteCreation: {
+                        success: voteResponse.ok,
+                        data: voteData
+                    },
+                    step2_immediateRetrieval: {
+                        success: immediateResponse.ok,
+                        userVote: immediateDiscussion?.userVote || null,
+                        upvotes: immediateDiscussion?.upvotes || 0
+                    },
+                    step3_persistenceCheck: {
+                        success: persistenceResponse.ok,
+                        userVote: persistentDiscussion?.userVote || null,
+                        upvotes: persistentDiscussion?.upvotes || 0
+                    },
+                    analysis: {
+                        voteCreated: voteResponse.ok,
+                        immediatelyVisible: immediateDiscussion?.userVote === 'up',
+                        persistsAfterDelay: persistentDiscussion?.userVote === 'up',
+                        votePersistenceWorking: persistentDiscussion?.userVote === 'up',
+                        issue: persistentDiscussion?.userVote !== 'up' ? 'Vote not persisting' : null
+                    }
+                }, persistentDiscussion?.userVote === 'up' ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Vote Persistence Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testDiscussionsAPI() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+
+                // Test without user ID
+                const noUserResponse = await fetch('/api/discussions');
+                const noUserData = await noUserResponse.json();
+
+                // Test with user ID
+                let withUserResponse, withUserData;
+                if (userId) {
+                    withUserResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                    withUserData = await withUserResponse.json();
+                }
+
+                addResult('📋 Discussions API Test', {
+                    withoutUserId: {
+                        statusCode: noUserResponse.status,
+                        success: noUserResponse.ok,
+                        discussionsCount: noUserData.discussions?.length || 0,
+                        hasUserVoteData: noUserData.discussions?.[0]?.userVote !== undefined
+                    },
+                    withUserId: userId ? {
+                        statusCode: withUserResponse.status,
+                        success: withUserResponse.ok,
+                        discussionsCount: withUserData.discussions?.length || 0,
+                        hasUserVoteData: withUserData.discussions?.[0]?.userVote !== undefined,
+                        sampleUserVote: withUserData.discussions?.[0]?.userVote || null
+                    } : { message: 'No user ID provided' },
+                    analysis: {
+                        userIdRequired: userId ? withUserData.discussions?.[0]?.userVote !== undefined : false,
+                        voteDataIncluded: userId && withUserData.discussions?.[0]?.userVote !== undefined
+                    }
+                }, 'success');
+                
+            } catch (error) {
+                addResult('❌ Discussions API Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testVoteAPI() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const discussionId = document.getElementById('discussionIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ Vote API Test Failed', { 
+                        error: 'No user ID provided' 
+                    }, 'error');
+                    return;
+                }
+
+                // Test upvote
+                const upvoteResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        voteType: 'up'
+                    })
+                });
+                
+                const upvoteData = await upvoteResponse.json();
+
+                // Test downvote (toggle)
+                const downvoteResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        voteType: 'down'
+                    })
+                });
+                
+                const downvoteData = await downvoteResponse.json();
+
+                // Test remove vote (toggle same vote)
+                const removeResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        voteType: 'down'
+                    })
+                });
+                
+                const removeData = await removeResponse.json();
+
+                addResult('🗳️ Vote API Test', {
+                    userId: userId,
+                    discussionId: discussionId,
+                    upvoteTest: {
+                        success: upvoteResponse.ok,
+                        upvotes: upvoteData.upvotes || 0,
+                        userVote: upvoteData.userVote || null
+                    },
+                    downvoteTest: {
+                        success: downvoteResponse.ok,
+                        downvotes: downvoteData.downvotes || 0,
+                        userVote: downvoteData.userVote || null
+                    },
+                    removeVoteTest: {
+                        success: removeResponse.ok,
+                        userVote: removeData.userVote || null
+                    },
+                    analysis: {
+                        voteToggleWorking: upvoteData.userVote === 'up' && downvoteData.userVote === 'down',
+                        voteRemovalWorking: removeData.userVote === null,
+                        allOperationsSuccessful: upvoteResponse.ok && downvoteResponse.ok && removeResponse.ok
+                    }
+                }, 'success');
+                
+            } catch (error) {
+                addResult('❌ Vote API Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testUserVoteData() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ User Vote Data Test Failed', { 
+                        error: 'No user ID provided' 
+                    }, 'error');
+                    return;
+                }
+
+                // Get discussions with vote data
+                const response = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+
+                const voteAnalysis = {
+                    totalDiscussions: data.discussions?.length || 0,
+                    discussionsWithVoteData: 0,
+                    discussionsWithUserVotes: 0,
+                    voteBreakdown: {
+                        upvotes: 0,
+                        downvotes: 0,
+                        noVotes: 0
+                    },
+                    sampleDiscussions: []
+                };
+
+                if (data.discussions) {
+                    data.discussions.forEach((discussion, index) => {
+                        if (discussion.userVote !== undefined) {
+                            voteAnalysis.discussionsWithVoteData++;
+                        }
+                        if (discussion.userVote) {
+                            voteAnalysis.discussionsWithUserVotes++;
+                            if (discussion.userVote === 'up') voteAnalysis.voteBreakdown.upvotes++;
+                            if (discussion.userVote === 'down') voteAnalysis.voteBreakdown.downvotes++;
+                        } else {
+                            voteAnalysis.voteBreakdown.noVotes++;
+                        }
+
+                        if (index < 3) {
+                            voteAnalysis.sampleDiscussions.push({
+                                id: discussion.id,
+                                title: discussion.title?.substring(0, 50) + '...',
+                                upvotes: discussion.upvotes || 0,
+                                downvotes: discussion.downvotes || 0,
+                                userVote: discussion.userVote || null
+                            });
+                        }
+                    });
+                }
+
+                addResult('👤 User Vote Data Analysis', {
+                    userId: userId,
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok
+                    },
+                    voteAnalysis: voteAnalysis,
+                    analysis: {
+                        voteDataStructureCorrect: voteAnalysis.discussionsWithVoteData > 0,
+                        userHasVotes: voteAnalysis.discussionsWithUserVotes > 0,
+                        voteDataComplete: voteAnalysis.discussionsWithVoteData === voteAnalysis.totalDiscussions
+                    }
+                }, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ User Vote Data Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testVoteToggle() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const discussionId = document.getElementById('discussionIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ Vote Toggle Test Failed', { 
+                        error: 'No user ID provided' 
+                    }, 'error');
+                    return;
+                }
+
+                // Get initial state
+                const initialResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                const initialData = await initialResponse.json();
+                const initialDiscussion = initialData.discussions?.find(d => d.id === discussionId);
+                const initialVote = initialDiscussion?.userVote || null;
+
+                // Toggle vote
+                const toggleVote = initialVote === 'up' ? 'down' : 'up';
+                const voteResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        voteType: toggleVote
+                    })
+                });
+                
+                const voteData = await voteResponse.json();
+
+                // Get new state
+                const newResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                const newData = await newResponse.json();
+                const newDiscussion = newData.discussions?.find(d => d.id === discussionId);
+                const newVote = newDiscussion?.userVote || null;
+
+                addResult('🔄 Vote Toggle Test', {
+                    userId: userId,
+                    discussionId: discussionId,
+                    initialState: {
+                        userVote: initialVote,
+                        upvotes: initialDiscussion?.upvotes || 0,
+                        downvotes: initialDiscussion?.downvotes || 0
+                    },
+                    voteAction: {
+                        toggleTo: toggleVote,
+                        success: voteResponse.ok,
+                        response: voteData
+                    },
+                    newState: {
+                        userVote: newVote,
+                        upvotes: newDiscussion?.upvotes || 0,
+                        downvotes: newDiscussion?.downvotes || 0
+                    },
+                    analysis: {
+                        voteToggleSuccessful: newVote === toggleVote,
+                        votePersisted: newVote === toggleVote,
+                        countsUpdated: (newDiscussion?.upvotes + newDiscussion?.downvotes) !== (initialDiscussion?.upvotes + initialDiscussion?.downvotes)
+                    }
+                }, newVote === toggleVote ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Vote Toggle Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testVotesTable() {
+            try {
+                // Test via the API to check database
+                const userId = document.getElementById('userIdInput').value;
+
+                // Create a test vote first
+                const discussionId = 'test-db-check';
+                const createResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId || 'test-user',
+                        voteType: 'up'
+                    })
+                });
+
+                // Try to retrieve it
+                const retrieveResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId || 'test-user')}`);
+                const retrieveData = await retrieveResponse.json();
+
+                addResult('📊 Votes Table Test', {
+                    testUserId: userId || 'test-user',
+                    voteCreation: {
+                        statusCode: createResponse.status,
+                        success: createResponse.ok
+                    },
+                    voteRetrieval: {
+                        statusCode: retrieveResponse.status,
+                        success: retrieveResponse.ok,
+                        discussionsFound: retrieveData.discussions?.length || 0
+                    },
+                    analysis: {
+                        votesTableWorking: createResponse.ok && retrieveResponse.ok,
+                        databaseConnected: retrieveResponse.ok,
+                        voteStorageWorking: createResponse.ok
+                    }
+                }, createResponse.ok && retrieveResponse.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Votes Table Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testDiscussionsTable() {
+            try {
+                // Test discussions table access
+                const response = await fetch('/api/discussions');
+                const data = await response.json();
+
+                addResult('📝 Discussions Table Test', {
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok
+                    },
+                    data: {
+                        discussionsCount: data.discussions?.length || 0,
+                        sampleDiscussion: data.discussions?.[0] ? {
+                            id: data.discussions[0].id,
+                            title: data.discussions[0].title?.substring(0, 50) + '...',
+                            upvotes: data.discussions[0].upvotes || 0,
+                            downvotes: data.discussions[0].downvotes || 0
+                        } : null
+                    },
+                    analysis: {
+                        discussionsTableWorking: response.ok && data.discussions?.length > 0,
+                        hasVoteCounts: data.discussions?.[0]?.upvotes !== undefined
+                    }
+                }, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Discussions Table Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugSQLQueries() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ SQL Debug Failed', { 
+                        error: 'No user ID provided for SQL debugging' 
+                    }, 'error');
+                    return;
+                }
+
+                // Test the SQL query that should fetch vote data
+                const response = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}&debug=true`);
+                const data = await response.json();
+
+                addResult('🔍 SQL Queries Debug', {
+                    userId: userId,
+                    queryTest: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        responseData: data
+                    },
+                    sqlAnalysis: {
+                        userIdInQuery: !!userId,
+                        responseStructure: typeof data,
+                        hasDiscussions: !!data.discussions,
+                        hasUserVoteField: data.discussions?.[0]?.userVote !== undefined,
+                        debugInfo: data.debug || null
+                    },
+                    recommendations: {
+                        checkColumnNames: 'Verify votes table uses discussion_id not target_id',
+                        checkJoinLogic: 'Ensure votes are properly joined to discussions',
+                        checkUserIdPassing: 'Verify userId is passed correctly to SQL query'
+                    }
+                }, response.ok ? 'success' : 'warning');
+                
+            } catch (error) {
+                addResult('❌ SQL Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function clearTestVotes() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+
+                if (!userId) {
+                    addResult('❌ Clear Test Votes Failed', { 
+                        error: 'No user ID provided' 
+                    }, 'error');
+                    return;
+                }
+
+                // Note: Since we don't have a direct delete votes API, 
+                // we'll simulate by toggling votes off
+                const testDiscussions = ['test-discussion-1', 'test-discussion-2', 'fGl-BggzEF6u'];
+                const results = [];
+
+                for (const discussionId of testDiscussions) {
+                    try {
+                        // Get current vote
+                        const getResponse = await fetch(`/api/discussions?userId=${encodeURIComponent(userId)}`);
+                        const getData = await getResponse.json();
+                        const discussion = getData.discussions?.find(d => d.id === discussionId);
+                        
+                        if (discussion?.userVote) {
+                            // Toggle the vote to remove it
+                            const removeResponse = await fetch(`/api/discussions/${discussionId}/vote`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userId: userId,
+                                    voteType: discussion.userVote
+                                })
+                            });
+                            
+                            results.push({
+                                discussionId: discussionId,
+                                hadVote: discussion.userVote,
+                                removed: removeResponse.ok
+                            });
+                        } else {
+                            results.push({
+                                discussionId: discussionId,
+                                hadVote: null,
+                                removed: false,
+                                reason: 'No vote to remove'
+                            });
+                        }
+                    } catch (error) {
+                        results.push({
+                            discussionId: discussionId,
+                            error: error.message
+                        });
+                    }
+                }
+
+                addResult('🗑️ Clear Test Votes', {
+                    userId: userId,
+                    testedDiscussions: testDiscussions,
+                    results: results,
+                    analysis: {
+                        votesRemoved: results.filter(r => r.removed).length,
+                        totalTested: testDiscussions.length
+                    }
+                }, 'success');
+                
+            } catch (error) {
+                addResult('❌ Clear Test Votes Error', { error: error.message }, 'error');
+            }
+        }
+
+        // Initialize with a default anonymous user ID for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const testUserId = `anon_debug_${Date.now()}`;
+            document.getElementById('userIdInput').value = testUserId;
+            
+            console.log('🗳️ Vote Debug Tool Loaded');
+            console.log('💡 Tip: Start with "Debug User Auth" to check user state');
+            console.log('💡 Tip: Use "Test Vote Persistence" for the main issue');
+            console.log('🔧 LATEST FIX: Updated useDiscussions hook to re-fetch when user ID becomes available');
+        });
+
+        // Quick fix test function
+        window.testVoteFix = async function() {
+            console.log('🔧 Testing the vote persistence fix...');
+            
+            try {
+                // Step 1: Create a user and discussion for testing
+                const testUserId = `anon_fix_test_${Date.now()}`;
+                const testDiscussionId = 'fix-test-discussion';
+                
+                console.log('1. Creating test user:', testUserId);
+                const userResponse = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: testUserId,
+                        username: 'Fix Test User',
+                        authProvider: 'anonymous'
+                    })
+                });
+                
+                if (!userResponse.ok) {
+                    console.error('❌ Failed to create test user');
+                    return { success: false, error: 'User creation failed' };
+                }
+                
+                console.log('2. Testing discussions API without user ID...');
+                const noUserResponse = await fetch('/api/discussions');
+                const noUserData = await noUserResponse.json();
+                
+                console.log('3. Testing discussions API WITH user ID...');
+                const withUserResponse = await fetch(`/api/discussions?userId=${testUserId}`);
+                const withUserData = await withUserResponse.json();
+                
+                const results = {
+                    userCreated: userResponse.ok,
+                    withoutUserId: {
+                        success: noUserResponse.ok,
+                        hasUserVoteField: noUserData.discussions?.[0]?.userVote !== undefined
+                    },
+                    withUserId: {
+                        success: withUserResponse.ok,
+                        hasUserVoteField: withUserData.discussions?.[0]?.userVote !== undefined
+                    },
+                    fixWorking: withUserData.discussions?.[0]?.userVote !== undefined
+                };
+                
+                console.log('✅ Fix test completed:', results);
+                return { success: true, results };
+                
+            } catch (error) {
+                console.error('❌ Fix test error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+        
+        console.log('🧪 Quick fix tester loaded. Run testVoteFix() to test the latest fix.');
+    </script>
+</body>
+</html>

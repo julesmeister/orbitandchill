@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // @ts-nocheck
+// TODO: Convert to direct database connection pattern per API_DATABASE_PROTOCOL.md
+// Temporary fix to resolve gte import error while maintaining current functionality
 import { db, adminLogs } from '@/db/index';
-import { desc, eq, and, like, inArray } from 'drizzle-orm';
+import { desc, eq, and, like, inArray, gte } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { executeRawSelect, executeRawSelectOne, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
 

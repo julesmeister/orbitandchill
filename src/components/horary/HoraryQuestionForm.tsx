@@ -11,16 +11,16 @@ import VoidMoonCountdown from "./VoidMoonCountdown";
 const LiveClock = dynamic(() => import("./LiveClock"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center gap-4">
-      <div className="flex items-center gap-2">
-        <FontAwesomeIcon icon={faClock} className="text-indigo-600" />
-        <span className="text-2xl font-mono font-bold text-slate-800">
-          --:--:--
-        </span>
-      </div>
-      <div className="h-8 w-px bg-slate-300"></div>
-      <div className="text-lg text-slate-700">
-        Loading...
+    <div className="flex items-center justify-center">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center space-x-1">
+          <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-2 h-2 bg-black animate-bounce"></div>
+        </div>
+        <div className="text-lg text-slate-700">
+          Loading time...
+        </div>
       </div>
     </div>
   ),
@@ -230,7 +230,11 @@ export default function HoraryQuestionForm({
         >
           {isAnalyzing ? (
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+              <div className="flex items-center space-x-1 mr-3">
+                <div className="w-2 h-2 bg-white animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-white animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-white animate-bounce"></div>
+              </div>
               Casting Horary Chart...
             </div>
           ) : (

@@ -9,7 +9,7 @@
 - **@DISCUSSIONS_INTEGRATION.md** - Forum system database integration (complete)
 
 ## What's Working ✅
-- **Discussions & Replies**: Full forum system with threading, voting, **and proper draft filtering**
+- **Discussions & Replies**: Full forum system with threading, **complete vote persistence across sessions**, and proper draft filtering
 - **User Management**: Anonymous & Google auth, birth data storage, comprehensive preferences
 - **Chart Generation**: Complete API-based chart generation and sharing system **with aspect filtering and enhanced error handling**
 - **Admin Features**: Content management, user management, analytics tracking, premium features management, audit logging, settings management
@@ -86,9 +86,15 @@ npm run db:test
 - Nested comment system with parent-child relationships
 - Voting support, links to discussions and users
 
-#### `votes` - User Voting
-- Tracks upvotes/downvotes on discussions and replies
-- Prevents duplicate voting by same user
+#### `votes` - User Voting System ✅ **COMPLETE VOTE PERSISTENCE**
+- **Architecture**: Single table for both discussion and reply votes with proper foreign key constraints
+- **Vote Storage**: Links userId to either discussionId OR replyId (not both) with vote type ('up'/'down')
+- **Persistence**: Complete vote state persistence across browser sessions and page refreshes
+- **Vote Operations**: Atomic toggle, change, and removal operations with real-time count updates
+- **Anonymous Support**: Full voting functionality for anonymous users with persistent IDs
+- **Database Integrity**: Foreign key constraints with cascade deletion, prevents orphaned votes
+- **Optimization**: Separate vote queries to avoid JOIN complexity, maps vote data efficiently
+- **Error Handling**: Graceful fallback when database unavailable, optimistic UI with rollback
 
 #### `astrological_events` - Electional Astrology & Events
 - ✅ **Complete implementation** with full API integration and database persistence

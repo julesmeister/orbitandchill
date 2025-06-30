@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Settings Debug Tool</title>
+    <style>
+        body { font-family: monospace; margin: 0; display: flex; min-height: 100vh; }
+        .left-panel { width: 50%; padding: 20px; overflow-y: auto; border-right: 2px solid #007acc; }
+        .right-panel { width: 50%; padding: 20px; overflow-y: auto; background: #f8f9fa; }
+        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        .button:hover { background: #0056b3; }
+        .clear-button { background: #dc3545; }
+        .clear-button:hover { background: #c82333; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; border-radius: 3px; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .fetch-section { margin: 20px 0; padding: 15px; background: #e8f4fd; border: 1px solid #bee5eb; border-radius: 5px; }
+        .save-section { margin: 20px 0; padding: 15px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; }
+        .database-section { margin: 20px 0; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; }
+        .validation-section { margin: 20px 0; padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
+        input[type="text"], select { 
+            width: 250px; padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; 
+        }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #007acc; }
+        .results-title { font-size: 18px; font-weight: bold; color: #007acc; }
+        pre { white-space: pre-wrap; word-wrap: break-word; max-width: 100%; overflow-x: auto; }
+        .setting-input { display: block; width: 250px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <h1>⚙️ Admin Settings Debug Tool v2.0 (FUNCTIONAL)</h1>
+        <div style="background: #4caf50; color: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; text-align: center; font-size: 16px;">
+            ✅ SETTINGS DEBUG LOADED - Fixed APIs & Database Tests (Build: Dec 29, 2025)
+        </div>
+        <div style="background: #ffeb3b; padding: 10px; margin: 10px 0; border-radius: 5px; color: #333;">
+            <strong>🔄 If tests still fail:</strong> Hard refresh (Ctrl+F5), clear cache, or try incognito mode!
+        </div>
+        
+        <div class="fetch-section">
+            <h3>📥 Settings Fetch Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test fetching settings from the database - this is where the issue likely is
+            </p>
+            <div style="margin-bottom: 15px;">
+                <h4>Filter Options:</h4>
+                <select id="categorySelect">
+                    <option value="all">All Categories</option>
+                    <option value="general">General</option>
+                    <option value="seo">SEO</option>
+                    <option value="api">API</option>
+                    <option value="security">Security</option>
+                    <option value="email">Email</option>
+                    <option value="analytics">Analytics</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Search query" style="width: 200px;">
+            </div>
+            <button class="button" onclick="testSettingsFetch()">📥 Test GET Settings</button>
+            <button class="button" onclick="testSettingsWithFilters()">🔍 Test Filtered Fetch</button>
+            <button class="button" onclick="debugSettingsAPI()">🔧 Debug Settings API</button>
+        </div>
+        
+        <div class="save-section">
+            <h3>💾 Settings Save Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test saving settings - you mentioned this works
+            </p>
+            <div style="margin-bottom: 15px;">
+                <h4>Test Setting Data:</h4>
+                <input type="text" id="settingKey" placeholder="Setting Key" value="debug_test_setting" class="setting-input">
+                <input type="text" id="settingValue" placeholder="Setting Value" value="debug_test_value" class="setting-input">
+                <select id="settingType" class="setting-input">
+                    <option value="string">String</option>
+                    <option value="number">Number</option>
+                    <option value="boolean">Boolean</option>
+                    <option value="json">JSON</option>
+                </select>
+                <select id="settingCategory" class="setting-input">
+                    <option value="general">General</option>
+                    <option value="seo">SEO</option>
+                    <option value="api">API</option>
+                    <option value="security">Security</option>
+                </select>
+            </div>
+            <button class="button" onclick="testSettingsSave()">💾 Test POST Settings</button>
+            <button class="button" onclick="testSettingsUpdate()">🔄 Test Settings Update</button>
+            <button class="button" onclick="testMultipleSettings()">📊 Test Multiple Settings</button>
+        </div>
+
+        <div class="database-section">
+            <h3>🗄️ Database Connection Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test the underlying database connection and admin_settings table
+            </p>
+            <button class="button" onclick="createAdminUser()">👤 Create Admin User</button>
+            <button class="button" onclick="testDatabaseConnection()">🔗 Test DB Connection</button>
+            <button class="button" onclick="testAdminSettingsTable()">📋 Test Settings Table</button>
+            <button class="button" onclick="testSettingsSchema()">🏗️ Test Table Schema</button>
+            <button class="button" onclick="debugRawSQL()">🔍 Debug Raw SQL</button>
+        </div>
+
+        <div class="validation-section">
+            <h3>✅ Settings Validation Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test settings validation and error handling
+            </p>
+            <button class="button" onclick="testInvalidSettings()">❌ Test Invalid Data</button>
+            <button class="button" onclick="testSettingsTypes()">🔢 Test Data Types</button>
+            <button class="button" onclick="testSettingsLimits()">⚠️ Test Limits</button>
+            <button class="button" onclick="testErrorHandling()">🚨 Test Error Handling</button>
+        </div>
+
+        <div>
+            <h3>🧹 Cleanup & Utilities</h3>
+            <button class="button" onclick="cleanupTestSettings()">🗑️ Cleanup Test Settings</button>
+            <button class="button" onclick="resetAllSettings()">🔄 Reset All Settings</button>
+            <button class="button" onclick="exportSettingsDebug()">📤 Export Debug Data</button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="results-header">
+            <div class="results-title">📊 Debug Results</div>
+            <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        <div id="results">
+            <!-- Debug results will appear here after clicking buttons -->
+        </div>
+    </div>
+
+    <script>
+        // Prevent interference from other scripts
+        console.log('🚀 Debug Settings Tool Loading...');
+        
+        function addResult(title, data, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            results.appendChild(div);
+        }
+
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testSettingsFetch() {
+            try {
+                addResult('🔄 Testing Settings Fetch...', { status: 'starting' }, 'warning');
+                
+                const response = await fetch('/api/admin/settings?_cb=' + Date.now(), {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: 'Non-JSON response', responseText: text.substring(0, 500) };
+                }
+                
+                addResult('📥 Settings Fetch Test', {
+                    statusCode: response.status,
+                    success: response.ok,
+                    contentType: contentType,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: data,
+                    analysis: {
+                        hasSettings: !!data.settings,
+                        settingsCount: data.settings ? data.settings.length : 0,
+                        hasCategories: !!data.categories,
+                        categoriesCount: data.categories ? data.categories.length : 0,
+                        responseSize: JSON.stringify(data).length,
+                        isJsonResponse: contentType && contentType.includes('application/json'),
+                        possibleIssues: response.ok ? [] : [
+                            'API endpoint not responding', 
+                            'Database connection issue', 
+                            'Settings table missing',
+                            'Authentication required',
+                            'Server error'
+                        ]
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Settings Fetch Error', { 
+                    error: error.message,
+                    stack: error.stack,
+                    possibleCauses: [
+                        'Network error',
+                        'API endpoint not found',
+                        'Server error',
+                        'Database connection timeout',
+                        'CORS issue',
+                        'Server not running'
+                    ]
+                }, 'error');
+            }
+        }
+
+        async function testSettingsWithFilters() {
+            try {
+                const category = document.getElementById('categorySelect').value;
+                const search = document.getElementById('searchInput').value;
+                
+                const params = new URLSearchParams();
+                if (category !== 'all') params.set('category', category);
+                if (search) params.set('search', search);
+                
+                const url = `/api/admin/settings?${params}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                addResult('🔍 Filtered Settings Test', {
+                    url: url,
+                    category: category,
+                    search: search,
+                    statusCode: response.status,
+                    success: response.ok,
+                    data: data,
+                    analysis: {
+                        filtersApplied: category !== 'all' || !!search,
+                        resultCount: data.settings ? data.settings.length : 0,
+                        filterWorking: response.ok,
+                        isEmpty: !data.settings || data.settings.length === 0
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Filtered Settings Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugSettingsAPI() {
+            try {
+                // Test multiple API variations
+                const endpoints = [
+                    '/api/admin/settings',
+                    '/api/admin/settings?category=general',
+                    '/api/admin/settings?search=debug',
+                    '/api/settings', // Alternative endpoint
+                    '/api/admin/settings?format=json'
+                ];
+                
+                const results = {};
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(endpoint);
+                        const data = await response.json();
+                        
+                        results[endpoint] = {
+                            statusCode: response.status,
+                            success: response.ok,
+                            contentType: response.headers.get('content-type'),
+                            dataKeys: Object.keys(data),
+                            hasError: !!data.error,
+                            error: data.error
+                        };
+                    } catch (error) {
+                        results[endpoint] = {
+                            error: error.message,
+                            success: false
+                        };
+                    }
+                }
+                
+                addResult('🔧 Settings API Debug', {
+                    endpoints: endpoints,
+                    results: results,
+                    analysis: {
+                        workingEndpoints: Object.values(results).filter(r => r.success).length,
+                        totalEndpoints: endpoints.length,
+                        mainEndpointWorking: results['/api/admin/settings']?.success || false,
+                        commonErrors: Object.values(results).map(r => r.error).filter(Boolean)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ API Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testSettingsSave() {
+            try {
+                const key = document.getElementById('settingKey').value;
+                const value = document.getElementById('settingValue').value;
+                const type = document.getElementById('settingType').value;
+                const category = document.getElementById('settingCategory').value;
+                
+                // Convert value based on type
+                let processedValue = value;
+                if (type === 'number') {
+                    processedValue = parseFloat(value) || 0;
+                } else if (type === 'boolean') {
+                    processedValue = value.toLowerCase() === 'true';
+                } else if (type === 'json') {
+                    try {
+                        processedValue = JSON.parse(value);
+                    } catch (e) {
+                        processedValue = value; // Keep as string if JSON parse fails
+                    }
+                }
+                
+                const testData = {
+                    action: 'update',
+                    settings: {
+                        [key]: processedValue
+                    },
+                    adminUsername: 'Debug User',
+                    adminUserId: null  // Set to null to avoid foreign key constraint
+                };
+                
+                addResult('🔄 Preparing Settings Save...', { 
+                    key: key, 
+                    originalValue: value, 
+                    processedValue: processedValue, 
+                    type: type, 
+                    category: category 
+                }, 'warning');
+                
+                const response = await fetch('/api/admin/settings?_cb=' + Date.now(), {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: 'Non-JSON response', responseText: text.substring(0, 500) };
+                }
+                
+                addResult('💾 Settings Save Test', {
+                    request: testData,
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        contentType: contentType,
+                        data: data
+                    },
+                    analysis: {
+                        saveWorking: response.ok,
+                        settingSaved: !!data.settings,
+                        settingFound: data.settings ? data.settings.some(s => s.key === key) : false,
+                        isJsonResponse: contentType && contentType.includes('application/json'),
+                        hasError: !!data.error
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Settings Save Error', { 
+                    error: error.message, 
+                    stack: error.stack 
+                }, 'error');
+            }
+        }
+
+        async function testSettingsUpdate() {
+            try {
+                // First create a setting, then update it
+                const key = 'debug_update_test';
+                const originalValue = 'original_value';
+                const updatedValue = 'updated_value';
+                
+                // Create
+                const createResponse = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        settings: { [key]: originalValue },
+                        adminUsername: 'Debug User',
+                        adminUserId: null
+                    })
+                });
+                
+                const createData = await createResponse.json();
+                
+                // Update
+                const updateResponse = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        settings: { [key]: updatedValue },
+                        adminUsername: 'Debug User',
+                        adminUserId: null
+                    })
+                });
+                
+                const updateData = await updateResponse.json();
+                
+                addResult('🔄 Settings Update Test', {
+                    create: {
+                        success: createResponse.ok,
+                        data: createData
+                    },
+                    update: {
+                        success: updateResponse.ok,
+                        data: updateData
+                    },
+                    analysis: {
+                        createWorked: createResponse.ok,
+                        updateWorked: updateResponse.ok,
+                        bothWorking: createResponse.ok && updateResponse.ok,
+                        valueChanged: updateData.settings ? 
+                            updateData.settings.find(s => s.key === key)?.value === updatedValue : false
+                    }
+                }, createResponse.ok && updateResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Settings Update Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testMultipleSettings() {
+            try {
+                const multipleSettings = {
+                    'debug_setting_1': 'value1',
+                    'debug_setting_2': 'value2',
+                    'debug_setting_3': 'value3'
+                };
+                
+                const response = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        settings: multipleSettings,
+                        adminUsername: 'Debug User',
+                        adminUserId: null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('📊 Multiple Settings Test', {
+                    request: multipleSettings,
+                    response: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        data: data
+                    },
+                    analysis: {
+                        bulkSaveWorking: response.ok,
+                        settingsCount: Object.keys(multipleSettings).length,
+                        allSaved: data.settings ? 
+                            Object.keys(multipleSettings).every(key => 
+                                data.settings.some(s => s.key === key)
+                            ) : false
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Multiple Settings Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function createAdminUser() {
+            try {
+                const adminUserId = 'debug_admin_' + Date.now();
+                
+                // First check if we can create a user via the API
+                const userResponse = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: adminUserId,
+                        username: 'Debug Admin',
+                        email: 'debug@admin.com',
+                        authProvider: 'anonymous',
+                        role: 'admin',
+                        showZodiacPublicly: false,
+                        allowDirectMessages: false,
+                        emailNotifications: false
+                    })
+                });
+                
+                const userData = await userResponse.json();
+                
+                addResult('👤 Create Admin User Test', {
+                    adminUserId: adminUserId,
+                    userCreation: {
+                        statusCode: userResponse.status,
+                        success: userResponse.ok,
+                        data: userData
+                    },
+                    analysis: {
+                        userCreated: userResponse.ok,
+                        canNowUseForSettings: userResponse.ok,
+                        nextStep: userResponse.ok ? 'Use this user ID for settings updates' : 'Settings must use null adminUserId'
+                    }
+                }, userResponse.ok ? 'success' : 'warning');
+                
+                // If user creation succeeded, try using it for a settings update
+                if (userResponse.ok) {
+                    const settingsResponse = await fetch('/api/admin/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'update',
+                            settings: { 'debug_with_user': 'test_value_with_admin' },
+                            adminUsername: 'Debug Admin',
+                            adminUserId: adminUserId
+                        })
+                    });
+                    
+                    const settingsData = await settingsResponse.json();
+                    
+                    addResult('⚙️ Settings with Valid Admin User', {
+                        settingsUpdate: {
+                            statusCode: settingsResponse.status,
+                            success: settingsResponse.ok,
+                            data: settingsData
+                        },
+                        analysis: {
+                            foreignKeyResolved: settingsResponse.ok,
+                            settingsWorkWithValidUser: settingsResponse.ok
+                        }
+                    }, settingsResponse.ok ? 'success' : 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Create Admin User Error', { 
+                    error: error.message,
+                    stack: error.stack 
+                }, 'error');
+            }
+        }
+
+        async function testDatabaseConnection() {
+            try {
+                // Test various database-related endpoints
+                const tests = [
+                    { name: 'Settings API', url: '/api/admin/settings' },
+                    { name: 'Health Check', url: '/api/admin/health' },
+                    { name: 'DB Connection Debug', url: '/api/debug/db-connection' },
+                    { name: 'List Tables', url: '/api/debug/list-tables' }
+                ];
+                
+                const results = {};
+                
+                for (const test of tests) {
+                    const startTime = Date.now();
+                    try {
+                        const response = await fetch(test.url + '?_cb=' + Date.now(), {
+                            headers: {
+                                'Cache-Control': 'no-cache'
+                            }
+                        });
+                        
+                        const endTime = Date.now();
+                        let data;
+                        const contentType = response.headers.get('content-type');
+                        
+                        if (contentType && contentType.includes('application/json')) {
+                            data = await response.json();
+                        } else {
+                            const text = await response.text();
+                            data = { error: 'Non-JSON response', responseText: text.substring(0, 200) };
+                        }
+                        
+                        results[test.name] = {
+                            statusCode: response.status,
+                            success: response.ok,
+                            responseTime: endTime - startTime,
+                            contentType: contentType,
+                            hasData: !!data,
+                            error: data.error,
+                            data: data
+                        };
+                    } catch (error) {
+                        results[test.name] = {
+                            error: error.message,
+                            success: false,
+                            responseTime: Date.now() - startTime
+                        };
+                    }
+                }
+                
+                addResult('🔗 Database Connection Test', {
+                    results: results,
+                    analysis: {
+                        workingEndpoints: Object.values(results).filter(r => r.success).length,
+                        totalEndpoints: tests.length,
+                        databaseAvailable: Object.values(results).some(r => r.success),
+                        allWorking: Object.values(results).every(r => r.success),
+                        averageResponseTime: Object.values(results)
+                            .filter(r => r.responseTime)
+                            .reduce((a, b) => a + b.responseTime, 0) / tests.length
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Database Connection Error', { 
+                    error: error.message,
+                    stack: error.stack 
+                }, 'error');
+            }
+        }
+
+        async function testAdminSettingsTable() {
+            try {
+                // Try to create a test setting to verify table exists
+                const testKey = `debug_table_test_${Date.now()}`;
+                
+                const response = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        settings: { [testKey]: 'table_test_value' },
+                        adminUsername: 'Debug User',
+                        adminUserId: 'debug_user_123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Try to fetch it back
+                const fetchResponse = await fetch('/api/admin/settings');
+                const fetchData = await fetchResponse.json();
+                
+                addResult('📋 Admin Settings Table Test', {
+                    insert: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        data: data
+                    },
+                    select: {
+                        statusCode: fetchResponse.status,
+                        success: fetchResponse.ok,
+                        settingsCount: fetchData.settings ? fetchData.settings.length : 0
+                    },
+                    analysis: {
+                        tableExists: response.ok,
+                        canInsert: response.ok,
+                        canSelect: fetchResponse.ok,
+                        testSettingFound: fetchData.settings ? 
+                            fetchData.settings.some(s => s.key === testKey) : false,
+                        tableWorking: response.ok && fetchResponse.ok
+                    }
+                }, response.ok && fetchResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Settings Table Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testSettingsSchema() {
+            try {
+                // Test different data types and required fields
+                const schemaTests = [
+                    { key: 'schema_string', value: 'string_value', type: 'string' },
+                    { key: 'schema_number', value: '123', type: 'number' },
+                    { key: 'schema_boolean', value: 'true', type: 'boolean' },
+                    { key: 'schema_json', value: '{"test": "json"}', type: 'json' }
+                ];
+                
+                const results = {};
+                
+                for (const test of schemaTests) {
+                    try {
+                        const response = await fetch('/api/admin/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'update',
+                                settings: { [test.key]: test.value },
+                                adminUsername: 'Debug User',
+                                adminUserId: 'debug_user_123'
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        results[test.type] = {
+                            success: response.ok,
+                            statusCode: response.status,
+                            data: data,
+                            value: test.value
+                        };
+                    } catch (error) {
+                        results[test.type] = {
+                            error: error.message,
+                            success: false
+                        };
+                    }
+                }
+                
+                addResult('🏗️ Settings Schema Test', {
+                    tests: schemaTests,
+                    results: results,
+                    analysis: {
+                        supportedTypes: Object.keys(results).filter(type => results[type].success),
+                        failedTypes: Object.keys(results).filter(type => !results[type].success),
+                        allTypesSupported: Object.values(results).every(r => r.success)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Schema Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugRawSQL() {
+            try {
+                // This will help us see if there are SQL-level issues
+                const response = await fetch('/api/admin/settings?debug=true');
+                const data = await response.json();
+                
+                addResult('🔍 Raw SQL Debug', {
+                    statusCode: response.status,
+                    success: response.ok,
+                    data: data,
+                    analysis: {
+                        hasDebugInfo: !!data.debug,
+                        queryExecuted: !!data.query,
+                        executionTime: data.executionTime,
+                        rowCount: data.rowCount,
+                        sqlError: data.sqlError
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Raw SQL Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testInvalidSettings() {
+            try {
+                const longKey = 'a'.repeat(1000);
+                const invalidTests = [
+                    { name: 'Empty Key', data: { '': 'value' } },
+                    { name: 'Null Value', data: { 'test_null': null } },
+                    { name: 'Very Long Key', data: { [longKey]: 'value' } },
+                    { name: 'Special Characters', data: { 'test<>{}[]': 'value' } },
+                    { name: 'No Action', data: { settings: { 'test': 'value' } } }
+                ];
+                
+                const results = {};
+                
+                for (const test of invalidTests) {
+                    try {
+                        const response = await fetch('/api/admin/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(test.data)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        results[test.name] = {
+                            statusCode: response.status,
+                            success: response.ok,
+                            error: data.error,
+                            rejected: !response.ok
+                        };
+                    } catch (error) {
+                        results[test.name] = {
+                            error: error.message,
+                            rejected: true
+                        };
+                    }
+                }
+                
+                addResult('❌ Invalid Settings Test', {
+                    results: results,
+                    analysis: {
+                        validationWorking: Object.values(results).some(r => r.rejected),
+                        allRejected: Object.values(results).every(r => r.rejected),
+                        errorHandling: Object.values(results).every(r => r.error || r.rejected)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Invalid Settings Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testSettingsTypes() {
+            try {
+                const typeTests = {
+                    string: 'hello world',
+                    number: '42',
+                    boolean: 'true',
+                    json: '{"key": "value", "array": [1,2,3]}'
+                };
+                
+                const results = {};
+                
+                for (const [type, value] of Object.entries(typeTests)) {
+                    const key = `type_test_${type}`;
+                    
+                    const response = await fetch('/api/admin/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'update',
+                            settings: { [key]: value },
+                            adminUsername: 'Debug User',
+                            adminUserId: 'debug_user_123'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    results[type] = {
+                        success: response.ok,
+                        statusCode: response.status,
+                        value: value,
+                        savedCorrectly: data.settings ? 
+                            data.settings.find(s => s.key === key)?.value === value : false
+                    };
+                }
+                
+                addResult('🔢 Data Types Test', {
+                    results: results,
+                    analysis: {
+                        supportedTypes: Object.keys(results).filter(type => results[type].success),
+                        allTypesWork: Object.values(results).every(r => r.success),
+                        valuePreservation: Object.values(results).every(r => r.savedCorrectly)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Data Types Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testSettingsLimits() {
+            try {
+                const limitTests = [
+                    { name: 'Long Value', key: 'limit_long_value', value: 'x'.repeat(10000) },
+                    { name: 'Many Settings', key: 'limit_many', value: 'test', count: 50 },
+                    { name: 'Unicode', key: 'limit_unicode', value: '🌟✨🔮🎭🎨' },
+                    { name: 'HTML', key: 'limit_html', value: '<script>alert("test")<\/script>' }
+                ];
+                
+                const results = {};
+                
+                for (const test of limitTests) {
+                    try {
+                        let settingsData;
+                        
+                        if (test.count) {
+                            // Create many settings
+                            settingsData = {};
+                            for (let i = 0; i < test.count; i++) {
+                                settingsData[`${test.key}_${i}`] = test.value;
+                            }
+                        } else {
+                            settingsData = { [test.key]: test.value };
+                        }
+                        
+                        const response = await fetch('/api/admin/settings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'update',
+                                settings: settingsData,
+                                adminUsername: 'Debug User',
+                                adminUserId: 'debug_user_123'
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        results[test.name] = {
+                            success: response.ok,
+                            statusCode: response.status,
+                            valueLength: test.value.length,
+                            settingsCount: Object.keys(settingsData).length,
+                            accepted: response.ok
+                        };
+                    } catch (error) {
+                        results[test.name] = {
+                            error: error.message,
+                            accepted: false
+                        };
+                    }
+                }
+                
+                addResult('⚠️ Settings Limits Test', {
+                    results: results,
+                    analysis: {
+                        limitsEnforced: Object.values(results).some(r => !r.accepted),
+                        allAccepted: Object.values(results).every(r => r.accepted),
+                        securityFiltering: !results['HTML']?.accepted
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Limits Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testErrorHandling() {
+            try {
+                const errorTests = [
+                    { name: 'Invalid JSON', body: 'invalid json' },
+                    { name: 'Wrong Method', method: 'DELETE' },
+                    { name: 'Missing Headers', headers: {} },
+                    { name: 'Empty Body', body: '' }
+                ];
+                
+                const results = {};
+                
+                for (const test of errorTests) {
+                    try {
+                        const options = {
+                            method: test.method || 'POST',
+                            headers: test.headers || { 'Content-Type': 'application/json' },
+                            body: test.body || JSON.stringify({ action: 'update', settings: {} })
+                        };
+                        
+                        const response = await fetch('/api/admin/settings', options);
+                        let data;
+                        
+                        try {
+                            data = await response.json();
+                        } catch {
+                            data = { error: 'Invalid JSON response' };
+                        }
+                        
+                        results[test.name] = {
+                            statusCode: response.status,
+                            success: response.ok,
+                            hasError: !!data.error,
+                            errorMessage: data.error,
+                            properErrorHandling: !response.ok && !!data.error
+                        };
+                    } catch (error) {
+                        results[test.name] = {
+                            error: error.message,
+                            properErrorHandling: true
+                        };
+                    }
+                }
+                
+                addResult('🚨 Error Handling Test', {
+                    results: results,
+                    analysis: {
+                        errorHandlingWorking: Object.values(results).every(r => r.properErrorHandling),
+                        errorsDetected: Object.values(results).filter(r => r.hasError).length,
+                        allTestsHandled: Object.keys(results).length === errorTests.length
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Error Handling Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function cleanupTestSettings() {
+            try {
+                // Get all settings first
+                const response = await fetch('/api/admin/settings');
+                const data = await response.json();
+                
+                if (!response.ok || !data.settings) {
+                    addResult('🗑️ Cleanup Test Settings', {
+                        message: 'Cannot fetch settings for cleanup',
+                        status: 'cannot_cleanup'
+                    }, 'warning');
+                    return;
+                }
+                
+                // Find test settings
+                const testSettings = data.settings.filter(s => 
+                    s.key.includes('debug') || 
+                    s.key.includes('test') || 
+                    s.key.includes('schema') ||
+                    s.key.includes('limit')
+                );
+                
+                addResult('🗑️ Cleanup Test Settings', {
+                    totalSettings: data.settings.length,
+                    testSettings: testSettings.length,
+                    testKeys: testSettings.map(s => s.key),
+                    message: testSettings.length > 0 ? 
+                        `Found ${testSettings.length} test settings. Note: Cleanup requires manual removal.` :
+                        'No test settings found to cleanup.'
+                }, testSettings.length === 0 ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ Cleanup Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function resetAllSettings() {
+            try {
+                const response = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'reset',
+                        adminUsername: 'Debug User',
+                        adminUserId: 'debug_user_123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('🔄 Reset All Settings', {
+                    statusCode: response.status,
+                    success: response.ok,
+                    data: data,
+                    analysis: {
+                        resetSupported: response.ok,
+                        settingsReset: !!data.settings
+                    }
+                }, response.ok ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ Reset Settings Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function exportSettingsDebug() {
+            try {
+                const response = await fetch('/api/admin/settings');
+                const data = await response.json();
+                
+                const debugData = {
+                    timestamp: new Date().toISOString(),
+                    settingsAPI: {
+                        status: response.status,
+                        success: response.ok,
+                        data: data
+                    },
+                    browser: {
+                        userAgent: navigator.userAgent,
+                        url: window.location.href
+                    },
+                    analysis: {
+                        canFetch: response.ok,
+                        hasSettings: !!data.settings,
+                        settingsCount: data.settings ? data.settings.length : 0,
+                        hasCategories: !!data.categories,
+                        categoriesCount: data.categories ? data.categories.length : 0
+                    }
+                };
+                
+                // Create downloadable file
+                const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `settings-debug-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                addResult('📤 Export Debug Data', {
+                    exported: true,
+                    filename: a.download,
+                    dataSize: JSON.stringify(debugData).length,
+                    includedData: Object.keys(debugData)
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Export Error', { error: error.message }, 'error');
+            }
+        }
+
+        // Get or create a valid admin user for testing
+        window.getValidAdminUserId = async function() {
+            try {
+                // Check if we already have a debug admin user
+                const existingUsers = ['debug_admin_test', 'system_admin', 'admin_user'];
+                
+                for (const userId of existingUsers) {
+                    try {
+                        const checkResponse = await fetch(`/api/users/profile?userId=${userId}`);
+                        if (checkResponse.ok) {
+                            console.log(`✅ Found existing admin user: ${userId}`);
+                            return userId;
+                        }
+                    } catch (e) {
+                        // Continue to next user
+                    }
+                }
+                
+                // Create a new admin user
+                const newAdminId = 'debug_admin_test';
+                const userResponse = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: newAdminId,
+                        username: 'Debug Admin',
+                        email: 'debug@admin.test',
+                        authProvider: 'anonymous',
+                        role: 'admin'
+                    })
+                });
+                
+                if (userResponse.ok) {
+                    console.log(`✅ Created new admin user: ${newAdminId}`);
+                    return newAdminId;
+                } else {
+                    console.warn(`⚠️ Could not create admin user, using null`);
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error getting admin user:', error);
+                return null;
+            }
+        };
+
+        // Console functions for manual testing
+        window.manualSettingsTest = async function() {
+            console.log('⚙️ Manual Settings Test Started...');
+            
+            try {
+                const response = await fetch('/api/admin/settings?_cb=' + Date.now(), {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: 'Non-JSON response', responseText: text.substring(0, 500) };
+                }
+                
+                console.log('📥 Settings Fetch Result:', {
+                    status: response.status,
+                    ok: response.ok,
+                    contentType: contentType,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: data
+                });
+                
+                if (response.ok && data.settings) {
+                    console.log('✅ Settings fetch working');
+                    console.log(`📊 Found ${data.settings?.length || 0} settings`);
+                    console.log(`📂 Found ${data.categories?.length || 0} categories`);
+                    console.log('Sample settings:', data.settings.slice(0, 3));
+                } else {
+                    console.error('❌ Settings fetch failed');
+                    console.error('Error:', data.error || 'Unknown error');
+                    console.error('Response:', data);
+                }
+                
+                return { success: response.ok, data };
+            } catch (error) {
+                console.error('❌ Manual test error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        // Comprehensive settings API test
+        window.testAllSettingsAPIs = async function() {
+            console.log('🔧 Testing all admin settings API endpoints...');
+            
+            const endpoints = [
+                { method: 'GET', url: '/api/admin/settings', name: 'Fetch All Settings' },
+                { method: 'GET', url: '/api/admin/settings?category=general', name: 'Fetch General Settings' },
+                { method: 'GET', url: '/api/admin/settings?search=site', name: 'Search Settings' },
+                { method: 'POST', url: '/api/admin/settings', name: 'Update Settings', 
+                  body: { action: 'update', settings: { debug_test: 'test_value' }, adminUsername: 'Debug', adminUserId: null } }
+            ];
+            
+            const results = {};
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const options = {
+                        method: endpoint.method,
+                        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
+                    };
+                    
+                    if (endpoint.body) {
+                        options.body = JSON.stringify(endpoint.body);
+                    }
+                    
+                    const response = await fetch(endpoint.url + '?_cb=' + Date.now(), options);
+                    const data = await response.json();
+                    
+                    results[endpoint.name] = {
+                        success: response.ok,
+                        status: response.status,
+                        data: data
+                    };
+                    
+                    console.log(`${response.ok ? '✅' : '❌'} ${endpoint.name}:`, {
+                        status: response.status,
+                        success: response.ok,
+                        hasData: !!data.settings
+                    });
+                } catch (error) {
+                    results[endpoint.name] = {
+                        success: false,
+                        error: error.message
+                    };
+                    console.error(`❌ ${endpoint.name} error:`, error.message);
+                }
+            }
+            
+            console.log('🎉 All tests completed:', results);
+            return results;
+        };
+
+        // Quick settings test with proper admin user
+        window.quickSettingsTest = async function() {
+            console.log('🚀 Quick Settings Test with Proper Admin User...');
+            
+            try {
+                const adminUserId = await getValidAdminUserId();
+                console.log('Using admin user ID:', adminUserId);
+                
+                // Test settings save with proper admin user
+                const response = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        settings: { 'quick_test_setting': 'test_value_' + Date.now() },
+                        adminUsername: 'Debug Admin',
+                        adminUserId: adminUserId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                console.log('Quick Test Result:', {
+                    success: response.ok,
+                    status: response.status,
+                    adminUserId: adminUserId,
+                    foreignKeyResolved: response.ok,
+                    data: data
+                });
+                
+                return { success: response.ok, data, adminUserId };
+            } catch (error) {
+                console.error('❌ Quick test error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        // Force reinitialize default settings with proper admin user
+        window.reinitializeSettings = async function() {
+            console.log('🔄 Forcing settings reinitialization...');
+            
+            try {
+                // Step 1: Get a valid admin user
+                const adminUserId = await getValidAdminUserId();
+                console.log('Using admin user for initialization:', adminUserId);
+                
+                // Step 2: Try to create a setting that should trigger initialization
+                const triggerResponse = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        settings: { 'trigger_init': 'force_initialization' },
+                        adminUsername: 'System Admin',
+                        adminUserId: adminUserId
+                    })
+                });
+                
+                const triggerData = await triggerResponse.json();
+                console.log('Trigger response:', triggerData);
+                
+                // Step 3: Wait a moment for initialization
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Step 4: Fetch all settings to see results
+                const finalResponse = await fetch('/api/admin/settings?_cb=' + Date.now());
+                const finalData = await finalResponse.json();
+                
+                console.log('🎉 Reinitialization Result:', {
+                    adminUserId: adminUserId,
+                    triggerCall: {
+                        status: triggerResponse.status,
+                        success: triggerResponse.ok
+                    },
+                    finalCall: {
+                        status: finalResponse.status,
+                        categories: finalData.categories?.length || 0,
+                        settings: finalData.settings?.length || 0,
+                        categoriesList: finalData.categories?.map(c => c.category) || []
+                    },
+                    expectedCategories: ['general', 'seo', 'analytics', 'email', 'security', 'newsletter'],
+                    success: finalData.categories && finalData.categories.length >= 5
+                });
+                
+                return { 
+                    success: finalData.categories && finalData.categories.length >= 5, 
+                    categories: finalData.categories, 
+                    settings: finalData.settings 
+                };
+            } catch (error) {
+                console.error('❌ Reinitialization error:', error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        console.log('🔧 Admin Settings Debug Tools Loaded:');
+        console.log('- Run manualSettingsTest() to test basic settings fetch');
+        console.log('- Run testAllSettingsAPIs() to test all endpoints');
+        console.log('- Run quickSettingsTest() to test with proper admin user');
+        console.log('- Run reinitializeSettings() to force default settings initialization');
+        
+        // Test that all main functions are loaded
+        const allFunctionNames = [
+            'testSettingsFetch', 'testSettingsWithFilters', 'debugSettingsAPI', 
+            'testSettingsSave', 'testSettingsUpdate', 'testMultipleSettings',
+            'createAdminUser', 'testDatabaseConnection', 'testAdminSettingsTable', 'testSettingsSchema',
+            'debugRawSQL', 'testInvalidSettings', 'testSettingsTypes', 
+            'testSettingsLimits', 'testErrorHandling', 'cleanupTestSettings',
+            'resetAllSettings', 'exportSettingsDebug', 'clearResults'
+        ];
+        
+        const loadedFunctions = allFunctionNames.filter(name => typeof window[name] === 'function');
+        console.log(`✅ Loaded ${loadedFunctions.length}/${allFunctionNames.length} functions`);
+        
+        if (loadedFunctions.length !== allFunctionNames.length) {
+            const missingFunctions = allFunctionNames.filter(name => !loadedFunctions.includes(name));
+            console.error(`❌ Missing functions: ${missingFunctions.join(', ')}`);
+        } else {
+            console.log('🎉 All debug functions successfully loaded!');
+            
+            // Test basic functionality
+            if (typeof addResult === 'function') {
+                addResult('🚀 Debug Tool Loaded', {
+                    functionsLoaded: loadedFunctions.length,
+                    totalFunctions: allFunctionNames.length,
+                    status: 'ready',
+                    timestamp: new Date().toISOString()
+                }, 'success');
+            }
+        }
+        
+        // Handle any unhandled errors
+        window.addEventListener('error', function(e) {
+            console.error('🚨 JavaScript Error:', e.error);
+            if (typeof addResult === 'function') {
+                addResult('❌ JavaScript Error', {
+                    message: e.error?.message || 'Unknown error',
+                    filename: e.filename,
+                    lineno: e.lineno,
+                    stack: e.error?.stack
+                }, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, getDbAsync } from '@/db';
 import { horaryQuestions, users } from '@/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, or } from 'drizzle-orm';
 import crypto from 'crypto';
 import { withDatabaseResilience } from '@/db/resilience';
 
@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
   try {
     // Ensure database is initialized
     const dbInstance = db || await getDbAsync();
-    console.log('🔍 Database instance in POST:', !!dbInstance);
     
     const body = await request.json();
     const {
@@ -159,7 +158,6 @@ export async function GET(request: NextRequest) {
   try {
     // Ensure database is initialized
     const dbInstance = db || await getDbAsync();
-    console.log('🔍 Database instance in GET:', !!dbInstance);
     
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -169,21 +167,22 @@ export async function GET(request: NextRequest) {
     const includeAnonymous = searchParams.get('includeAnonymous') === 'true';
 
     // Build query conditions
-    const conditions = [];
+    let userCondition = null;
     
     if (userId) {
       if (includeAnonymous) {
         // Include both user's questions and anonymous questions
-        conditions.push(
-          eq(horaryQuestions.userId, userId)
+        userCondition = or(
+          eq(horaryQuestions.userId, userId),
+          eq(horaryQuestions.userId, null)
         );
       } else {
-        // Only user's questions
-        conditions.push(eq(horaryQuestions.userId, userId));
+        // Only user's questions - STRICT FILTERING
+        userCondition = eq(horaryQuestions.userId, userId);
       }
     } else if (includeAnonymous) {
       // Only anonymous questions if no userId provided
-      conditions.push(eq(horaryQuestions.userId, null));
+      userCondition = eq(horaryQuestions.userId, null);
     } else {
       // No questions if no userId and not including anonymous
       return NextResponse.json({
@@ -194,6 +193,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Build final conditions array
+    const conditions = [];
+    if (userCondition) {
+      conditions.push(userCondition);
+    }
+
     if (category) {
       conditions.push(eq(horaryQuestions.category, category));
     }
@@ -202,13 +207,30 @@ export async function GET(request: NextRequest) {
     const questions = await withDatabaseResilience(
       dbInstance,
       async () => {
-        return await dbInstance
+        const results = await dbInstance
           .select()
           .from(horaryQuestions)
           .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(desc(horaryQuestions.createdAt))
           .limit(limit + 1) // Get one extra to check if there are more
           .offset(offset);
+        
+        // Safety filter: If we have a userId and includeAnonymous is false, 
+        // ensure we only return questions that belong to this user
+        if (userId && !includeAnonymous) {
+          const filteredResults = results.filter(q => q.userId === userId);
+          if (filteredResults.length !== results.length) {
+            console.warn(`⚠️ Query filter issue: Expected ${results.length} user questions, filtered to ${filteredResults.length}`);
+            console.warn('🔍 Removed questions:', results.filter(q => q.userId !== userId).map(q => ({
+              id: q.id,
+              userId: q.userId,
+              question: q.question?.substring(0, 30) + '...'
+            })));
+          }
+          return filteredResults;
+        }
+        
+        return results;
       },
       {
         fallbackValue: [],

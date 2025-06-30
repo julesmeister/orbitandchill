@@ -5,14 +5,17 @@ import { faHeart, faBolt, faCircle, faFilter, faTimes, faLock } from '@fortaweso
 import { NatalChartData, ChartAspect } from '../../../utils/natalChart';
 import { getFullAspectInfo } from '../../../utils/astrologicalInterpretations';
 import { useAspectFilters, AspectCategory, AspectType } from '../../../store/chartStore';
+import { getAspectTypeStyle } from '../../../utils/horary/colorConfigurations';
 
 interface MajorAspectsSectionProps {
+  id?: string;
   chartData: NatalChartData;
   shouldShowFeature: (feature: string, isPremium: boolean) => boolean;
   userIsPremium: boolean;
 }
 
 const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
+  id,
   chartData,
   shouldShowFeature,
   userIsPremium
@@ -100,9 +103,9 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
 
   const typeOptions: { value: AspectType; label: string; color: string }[] = [
     { value: 'all', label: 'All Types', color: 'bg-slate-100 text-slate-700' },
-    { value: 'harmonious', label: 'Harmonious', color: 'bg-emerald-100 text-emerald-700' },
-    { value: 'challenging', label: 'Challenging', color: 'bg-rose-100 text-rose-700' },
-    { value: 'neutral', label: 'Neutral', color: 'bg-sky-100 text-sky-700' },
+    { value: 'harmonious', label: 'Harmonious', color: getAspectTypeStyle('harmonious').badge },
+    { value: 'challenging', label: 'Challenging', color: getAspectTypeStyle('challenging').badge },
+    { value: 'neutral', label: 'Neutral', color: getAspectTypeStyle('neutral').badge },
   ];
 
   if (majorAspects.length === 0) {
@@ -110,8 +113,8 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
   }
 
   return (
-    <div className="bg-white border border-black border-b-0">
-      <div className="flex items-center justify-between p-6 border-b border-black">
+    <div id={id} className="bg-white border border-black border-b-0">
+      <div className="flex items-center justify-between p-6 border-black">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,10 +237,11 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
       )}
       {/* Aspects List */}
       {filteredAspects.length > 0 ? (
-        <div className="p-6 space-y-0 border-t border-black">
+        <div className=" space-y-0 border-t border-black">
           <div className="divide-y divide-black">
             {filteredAspects.map((aspect, index) => {
               const aspectInfo = getFullAspectInfo(aspect);
+              const typeStyle = getAspectTypeStyle(aspectInfo.type);
               const getIconComponent = () => {
                 switch (aspectInfo.type) {
                   case 'harmonious':
@@ -250,7 +254,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
               };
 
               return (
-                <div key={index} className="py-4">
+                <div key={index} className="py-6 px-10">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <div className="w-6 h-6 bg-black mr-2 flex items-center justify-center">
@@ -259,16 +263,8 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
                       <span className="font-space-grotesk font-medium capitalize text-black">
                         {aspect.planet1} {aspect.aspect} {aspect.planet2}
                       </span>
-                      <span className={`ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-black ${aspectInfo.type === 'harmonious'
-                          ? 'bg-green-100 text-green-700' :
-                          aspectInfo.type === 'challenging'
-                            ? 'bg-red-100 text-red-700' :
-                            'bg-blue-100 text-blue-700'
-                        }`}>
-                        <span className={`w-1.5 h-1.5 ${aspectInfo.type === 'harmonious' ? 'bg-green-400' :
-                            aspectInfo.type === 'challenging' ? 'bg-red-400' :
-                              'bg-blue-400'
-                          }`} />
+                      <span className={`ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${typeStyle.badge}`}>
+                        <span className={`w-1.5 h-1.5 ${typeStyle.dot}`} />
                         {aspectInfo.type}
                       </span>
                     </div>

@@ -29,7 +29,7 @@ const LocationInput = React.memo(({
   <div
     className="synapsas-input-group relative"
     style={{
-      zIndex: 1000,
+      zIndex: 30,
       isolation: 'isolate',
       transform: 'translateZ(0)'
     }}

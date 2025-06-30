@@ -531,6 +531,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                   onChange={(value) => setEditFormData(prev => ({ ...prev, status: value }))}
                   placeholder="Select status"
                   variant="default"
+                  direction="up"
                 />
               </div>
             </div>

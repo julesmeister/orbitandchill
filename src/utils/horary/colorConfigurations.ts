@@ -19,6 +19,48 @@ export const OUTCOME_COLORS = {
   neutral: { bg: '#29c9ff', text: 'black' }
 } as const;
 
+// Aspect Type Colors (extracted from MajorAspectsSection - excellent contrast combinations)
+// These provide better readability than the existing OUTCOME_COLORS
+// Usage: getAspectTypeStyle('harmonious').badge for badges, .background for containers
+export const ASPECT_TYPE_COLORS = {
+  harmonious: {
+    badge: 'bg-green-100 text-green-700 border-black',
+    dot: 'bg-green-400',
+    background: '#dcfce7', // green-100 - perfect for favorable outcomes
+    text: '#15803d'        // green-700 - excellent contrast
+  },
+  challenging: {
+    badge: 'bg-red-100 text-red-700 border-black', 
+    dot: 'bg-red-400',
+    background: '#fee2e2', // red-100 - perfect for challenging outcomes
+    text: '#dc2626'        // red-700 - excellent contrast
+  },
+  neutral: {
+    badge: 'bg-blue-100 text-blue-700 border-black',
+    dot: 'bg-blue-400', 
+    background: '#dbeafe', // blue-100 - perfect for neutral outcomes
+    text: '#2563eb'        // blue-700 - excellent contrast
+  },
+  high: {
+    badge: 'bg-emerald-100 text-emerald-700 border-black',
+    dot: 'bg-emerald-400',
+    background: '#d1fae5', // emerald-100 - perfect for high relevance
+    text: '#047857'        // emerald-700 - excellent contrast
+  },
+  medium: {
+    badge: 'bg-amber-100 text-amber-700 border-black',
+    dot: 'bg-amber-400',
+    background: '#fef3c7', // amber-100 - perfect for medium relevance
+    text: '#b45309'        // amber-700 - excellent contrast
+  },
+  low: {
+    badge: 'bg-gray-100 text-gray-700 border-black',
+    dot: 'bg-gray-400',
+    background: '#f3f4f6', // gray-100 - perfect for low relevance
+    text: '#374151'        // gray-700 - excellent contrast
+  }
+} as const;
+
 // Overall tone colors
 export const TONE_COLORS = {
   favorable: '#51bd94',
@@ -101,4 +143,84 @@ export const INFO_BOX_COLORS = {
 // Helper function to get strength style
 export function getStrengthStyle(color: string) {
   return STRENGTH_STYLES[color as keyof typeof STRENGTH_STYLES] || { backgroundColor: '#6b7280', color: 'white' };
+}
+
+// Helper function to get aspect type colors
+export function getAspectTypeStyle(type: 'harmonious' | 'challenging' | 'neutral' | 'high' | 'medium' | 'low') {
+  return ASPECT_TYPE_COLORS[type] || ASPECT_TYPE_COLORS.neutral;
+}
+
+// Helper function to get strength assessment colors (used in both Essential and Accidental Dignity tabs)
+export function getStrengthAssessmentStyle(strengthLabel: string) {
+  const styles = {
+    backgroundColor: 
+      strengthLabel === 'Very Strong' ? getAspectTypeStyle('high').background :
+      strengthLabel === 'Strong' ? getAspectTypeStyle('harmonious').background :
+      strengthLabel === 'Moderate' ? getAspectTypeStyle('medium').background :
+      strengthLabel === 'Weak' ? getAspectTypeStyle('low').background :
+      strengthLabel === 'Very Weak' ? getAspectTypeStyle('challenging').background :
+      getAspectTypeStyle('neutral').background,
+    color:
+      strengthLabel === 'Very Strong' ? getAspectTypeStyle('high').text :
+      strengthLabel === 'Strong' ? getAspectTypeStyle('harmonious').text :
+      strengthLabel === 'Moderate' ? getAspectTypeStyle('medium').text :
+      strengthLabel === 'Weak' ? getAspectTypeStyle('low').text :
+      strengthLabel === 'Very Weak' ? getAspectTypeStyle('challenging').text :
+      getAspectTypeStyle('neutral').text
+  };
+  
+  return styles;
+}
+
+// Helper function to get dignity badge style (using centralized color system)
+export function getDignityBadgeStyle(dignityType: string) {
+  const lowerType = dignityType.toLowerCase();
+  
+  switch (lowerType) {
+    case 'ruler':
+      return {
+        backgroundColor: getAspectTypeStyle('harmonious').background,
+        textColor: getAspectTypeStyle('harmonious').text
+      };
+    case 'exaltation':
+      return {
+        backgroundColor: getAspectTypeStyle('high').background,
+        textColor: getAspectTypeStyle('high').text
+      };
+    case 'triplicity':
+      return {
+        backgroundColor: getAspectTypeStyle('medium').background,
+        textColor: getAspectTypeStyle('medium').text
+      };
+    case 'term':
+      return {
+        backgroundColor: getAspectTypeStyle('neutral').background,
+        textColor: getAspectTypeStyle('neutral').text
+      };
+    case 'face':
+      return {
+        backgroundColor: getAspectTypeStyle('low').background,
+        textColor: getAspectTypeStyle('low').text
+      };
+    case 'detriment':
+      return {
+        backgroundColor: getAspectTypeStyle('challenging').background,
+        textColor: getAspectTypeStyle('challenging').text
+      };
+    case 'fall':
+      return {
+        backgroundColor: getAspectTypeStyle('challenging').background,
+        textColor: getAspectTypeStyle('challenging').text
+      };
+    case 'peregrine':
+      return {
+        backgroundColor: getAspectTypeStyle('low').background,
+        textColor: getAspectTypeStyle('low').text
+      };
+    default:
+      return {
+        backgroundColor: getAspectTypeStyle('neutral').background,
+        textColor: getAspectTypeStyle('neutral').text
+      };
+  }
 }

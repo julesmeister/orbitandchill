@@ -106,10 +106,56 @@ export const useUserStore = create<UserState>()(
           ...data
         };
 
-        await get().updateUser({
-          birthData: updatedBirthData,
-          hasNatalChart: !!(updatedBirthData.dateOfBirth && updatedBirthData.timeOfBirth && updatedBirthData.locationOfBirth)
-        });
+        try {
+          // Call the API to persist birth data
+          const response = await fetch('/api/users/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: currentUser.id,
+              birthData: updatedBirthData
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.user) {
+              // Convert flat database structure back to nested store structure
+              const convertedUser = {
+                ...result.user,
+                createdAt: new Date(result.user.createdAt),
+                updatedAt: new Date(result.user.updatedAt),
+                birthData: result.user.dateOfBirth ? {
+                  dateOfBirth: result.user.dateOfBirth,
+                  timeOfBirth: result.user.timeOfBirth || '',
+                  locationOfBirth: result.user.locationOfBirth || '',
+                  coordinates: {
+                    lat: result.user.latitude?.toString() || '',
+                    lon: result.user.longitude?.toString() || '',
+                  }
+                } : undefined,
+                privacy: {
+                  showZodiacPublicly: result.user.showZodiacPublicly || false,
+                  showStelliumsPublicly: result.user.showStelliumsPublicly || false,
+                  showBirthInfoPublicly: result.user.showBirthInfoPublicly || false,
+                  allowDirectMessages: result.user.allowDirectMessages ?? true,
+                  showOnlineStatus: result.user.showOnlineStatus ?? true,
+                }
+              };
+
+              set({ user: convertedUser });
+            }
+          } else {
+            console.error('Failed to update birth data:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error updating birth data:', error);
+          // Fallback to local update only
+          await get().updateUser({
+            birthData: updatedBirthData,
+            hasNatalChart: !!(updatedBirthData.dateOfBirth && updatedBirthData.timeOfBirth && updatedBirthData.locationOfBirth)
+          });
+        }
       },
 
       updatePrivacySettings: async (data) => {
@@ -162,7 +208,29 @@ export const useUserStore = create<UserState>()(
             if (response.ok) {
               const result = await response.json();
               if (result.user) {
-                set({ user: result.user });
+                // Convert flat database structure to nested store structure
+                const convertedUser = {
+                  ...result.user,
+                  createdAt: new Date(result.user.createdAt),
+                  updatedAt: new Date(result.user.updatedAt),
+                  birthData: result.user.dateOfBirth ? {
+                    dateOfBirth: result.user.dateOfBirth,
+                    timeOfBirth: result.user.timeOfBirth || '',
+                    locationOfBirth: result.user.locationOfBirth || '',
+                    coordinates: {
+                      lat: result.user.latitude?.toString() || '',
+                      lon: result.user.longitude?.toString() || '',
+                    }
+                  } : undefined,
+                  privacy: {
+                    showZodiacPublicly: result.user.showZodiacPublicly || false,
+                    showStelliumsPublicly: result.user.showStelliumsPublicly || false,
+                    showBirthInfoPublicly: result.user.showBirthInfoPublicly || false,
+                    allowDirectMessages: result.user.allowDirectMessages ?? true,
+                    showOnlineStatus: result.user.showOnlineStatus ?? true,
+                  }
+                };
+                set({ user: convertedUser });
               } else {
                 // Create user in Turso
                 const createResponse = await fetch('/api/users/profile', {
@@ -193,7 +261,31 @@ export const useUserStore = create<UserState>()(
                 
                 if (createResponse.ok) {
                   const createResult = await createResponse.json();
-                  set({ user: createResult.user });
+                  if (createResult.user) {
+                    // Convert flat database structure to nested store structure
+                    const convertedUser = {
+                      ...createResult.user,
+                      createdAt: new Date(createResult.user.createdAt),
+                      updatedAt: new Date(createResult.user.updatedAt),
+                      birthData: createResult.user.dateOfBirth ? {
+                        dateOfBirth: createResult.user.dateOfBirth,
+                        timeOfBirth: createResult.user.timeOfBirth || '',
+                        locationOfBirth: createResult.user.locationOfBirth || '',
+                        coordinates: {
+                          lat: createResult.user.latitude?.toString() || '',
+                          lon: createResult.user.longitude?.toString() || '',
+                        }
+                      } : undefined,
+                      privacy: {
+                        showZodiacPublicly: createResult.user.showZodiacPublicly || false,
+                        showStelliumsPublicly: createResult.user.showStelliumsPublicly || false,
+                        showBirthInfoPublicly: createResult.user.showBirthInfoPublicly || false,
+                        allowDirectMessages: createResult.user.allowDirectMessages ?? true,
+                        showOnlineStatus: createResult.user.showOnlineStatus ?? true,
+                      }
+                    };
+                    set({ user: convertedUser });
+                  }
                 }
               }
             }

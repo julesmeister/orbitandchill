@@ -30,14 +30,11 @@ interface DatabaseRow {
 }
 
 export async function GET() {
-  console.log('🎯 [Premium Features API] GET request received');
-  
   try {
     const { client } = await initializeDatabase();
-    console.log('🔗 [Premium Features API] Database client initialized:', !!client);
     
     if (!client) {
-      console.error('❌ [Premium Features API] Database client is null');
+      console.error('❌ Premium Features API: Database not available');
       return NextResponse.json(
         { success: false, error: 'Database not available' },
         { status: 500 }
@@ -45,15 +42,13 @@ export async function GET() {
     }
 
     // First check if table exists
-    console.log('🔍 [Premium Features API] Checking if premium_features table exists...');
     const tableCheck = await client.execute(`
       SELECT name FROM sqlite_master 
       WHERE type='table' AND name='premium_features'
     `);
-    console.log('📋 [Premium Features API] Table check result:', tableCheck.rows);
     
     if (tableCheck.rows.length === 0) {
-      console.error('❌ [Premium Features API] Table premium_features does not exist!');
+      console.warn('⚠️ Premium Features API: Table not found');
       return NextResponse.json({
         success: true,
         features: [],
@@ -62,16 +57,9 @@ export async function GET() {
     }
     
     // Get all features using raw SQL
-    console.log('📊 [Premium Features API] Executing SELECT query...');
     const result = await client.execute(`
       SELECT * FROM premium_features ORDER BY sort_order ASC
     `);
-    
-    console.log('✅ [Premium Features API] Query result:', {
-      rows: result.rows.length,
-      columns: result.columns,
-      firstRow: result.rows[0] || 'No rows'
-    });
 
     // Convert database format to API format
     const features: PremiumFeature[] = result.rows.map((row: DatabaseRow) => ({
@@ -87,18 +75,13 @@ export async function GET() {
       createdAt: row.created_at ? new Date(row.created_at) : undefined,
       updatedAt: row.updated_at ? new Date(row.updated_at) : undefined
     }));
-
-    console.log('📦 [Premium Features API] Returning features:', {
-      count: features.length,
-      features: features.slice(0, 2) // Log first 2 features only
-    });
     
     return NextResponse.json({
       success: true,
       features
     });
   } catch (error) {
-    console.error('❌ [Premium Features API] Error getting premium features:', error);
+    console.error('❌ Premium Features API Error:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to get premium features' },
       { status: 500 }

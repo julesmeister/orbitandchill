@@ -20,6 +20,7 @@ interface Discussion {
   views: number;
   upvotes: number;
   downvotes: number;
+  userVote?: 'up' | 'down' | null;
   isLocked: boolean;
   isPinned: boolean;
   isBlogPost: boolean;
@@ -105,12 +106,6 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                 </svg>
                 <span>{formatCompactNumber(discussion.replies)}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
-                <span>{formatCompactNumber(discussion.upvotes)}</span>
-              </div>
               <span className="text-black/50">{formatTimeAgo(discussion.lastActivity)}</span>
             </div>
             
@@ -119,10 +114,11 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
               id={discussion.id}
               upvotes={discussion.upvotes}
               downvotes={discussion.downvotes}
+              userVote={discussion.userVote}
               type="discussion"
               useHook={true}
               layout="horizontal"
-              showCount={false}
+              showCount={true}
               size="sm"
               onVoteSuccess={(newUpvotes, newDownvotes) => {
                 onVoteSuccess?.(discussion.id, newUpvotes, newDownvotes);
@@ -218,12 +214,6 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                   </svg>
                   <span>{discussion.views} views</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                  <span>{discussion.upvotes} votes</span>
-                </div>
               </div>
             </div>
 
@@ -233,10 +223,11 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                 id={discussion.id}
                 upvotes={discussion.upvotes}
                 downvotes={discussion.downvotes}
+                userVote={discussion.userVote}
                 type="discussion"
                 useHook={true}
                 layout="vertical"
-                showCount={false}
+                showCount={true}
                 size="md"
                 onVoteSuccess={(newUpvotes, newDownvotes) => {
                   onVoteSuccess?.(discussion.id, newUpvotes, newDownvotes);

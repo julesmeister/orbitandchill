@@ -36,34 +36,34 @@ interface VoteButtonsProps {
   upvotes: number;
   downvotes?: number;
   userVote?: 'up' | 'down' | null;
-  
+
   // Handlers
   onUpvote?: () => void;
   onDownvote?: () => void;
   onAuthRequired?: () => void;
   onVoteSuccess?: (upvotes: number, downvotes: number) => void;
-  
+
   // Display options
   size?: keyof typeof SIZE_CONFIG;
   layout?: keyof typeof LAYOUT_CONFIG;
   showDownvote?: boolean;
   showCount?: boolean;
   countPosition?: 'center' | 'right' | 'below';
-  
+
   // Behavior
   useHook?: boolean;
   className?: string;
 }
 
-const VoteButton = React.memo(({ 
-  type, 
-  isUpvote, 
-  onClick, 
-  disabled, 
-  isActive, 
-  isLoading, 
-  layout, 
-  sizeConfig 
+const VoteButton = React.memo(({
+  type,
+  isUpvote,
+  onClick,
+  disabled,
+  isActive,
+  isLoading,
+  layout,
+  sizeConfig
 }: {
   type: 'up' | 'down';
   isUpvote: boolean;
@@ -78,21 +78,21 @@ const VoteButton = React.memo(({
     const baseClasses = `relative flex items-center justify-center ${sizeConfig.elementPadding} transition-all duration-300 group active:scale-95`;
     const stateClasses = isActive ? 'bg-black text-white' : 'text-black hover:bg-black hover:text-white';
     const disabledClasses = disabled ? 'cursor-not-allowed opacity-50' : '';
-    
+
     if (layout === 'horizontal') {
       const borderClass = isUpvote ? 'border-r border-black' : 'border-l border-black';
       return `${baseClasses} ${stateClasses} ${borderClass} ${disabledClasses}`;
     }
-    
+
     return `${baseClasses} ${stateClasses} border border-black ${disabledClasses}`;
   };
 
-  const icon = isUpvote 
+  const icon = isUpvote
     ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
     : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />;
 
   return (
-    <button 
+    <button
       onClick={onClick}
       disabled={disabled}
       className={getButtonClasses()}
@@ -102,10 +102,10 @@ const VoteButton = React.memo(({
       {isLoading ? (
         <div className={`${sizeConfig.iconSize} animate-spin rounded-full border-2 border-current border-t-transparent`} />
       ) : (
-        <svg 
-          className={`${sizeConfig.iconSize} transition-transform group-hover:scale-110`} 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className={`${sizeConfig.iconSize} transition-transform group-hover:scale-110`}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           {icon}
@@ -117,16 +117,16 @@ const VoteButton = React.memo(({
 
 VoteButton.displayName = 'VoteButton';
 
-const VoteCount = React.memo(({ 
-  count, 
-  sizeConfig, 
-  layout 
+const VoteCount = React.memo(({
+  count,
+  sizeConfig,
+  layout
 }: {
   count: number;
   sizeConfig: typeof SIZE_CONFIG[keyof typeof SIZE_CONFIG];
   layout: keyof typeof LAYOUT_CONFIG;
 }) => (
-  <div className={`flex items-center justify-center ${sizeConfig.elementPadding} ${sizeConfig.textSize} font-semibold text-black bg-white font-inter ${sizeConfig.minWidth}`}>
+  <div className={`flex items-center justify-center ${sizeConfig.elementPadding} ${sizeConfig.textSize} font-semibold text-white bg-black font-inter ${sizeConfig.minWidth}`}>
     {count}
     {layout === 'compact' && <span className="ml-1">votes</span>}
   </div>
@@ -153,11 +153,11 @@ export default function VoteButtons({
   className = ''
 }: VoteButtonsProps) {
   const [clickedButton, setClickedButton] = useState<'up' | 'down' | null>(null);
-  
+
   // Get configuration objects
   const sizeConfig = SIZE_CONFIG[size];
   const containerClasses = LAYOUT_CONFIG[layout];
-  
+
   // Use voting hook if enabled
   const votingHook = useVoting(
     type,
@@ -180,7 +180,7 @@ export default function VoteButtons({
   const upvotes = useHook && id ? votingHook.upvotes : initialUpvotes;
   const userVote = useHook && id ? votingHook.userVote : initialUserVote;
   const isVoting = useHook && id ? votingHook.isVoting : false;
-  
+
   // Handle vote actions
   const handleUpvote = useCallback(() => {
     setClickedButton('up');
@@ -190,7 +190,7 @@ export default function VoteButtons({
       manualOnUpvote();
     }
   }, [useHook, id, votingHook, manualOnUpvote]);
-  
+
   const handleDownvote = useCallback(() => {
     setClickedButton('down');
     if (useHook && id) {
@@ -199,7 +199,7 @@ export default function VoteButtons({
       manualOnDownvote();
     }
   }, [useHook, id, votingHook, manualOnDownvote]);
-  
+
   // Clear clicked state when voting completes
   useEffect(() => {
     if (!isVoting) {
@@ -235,10 +235,10 @@ export default function VoteButtons({
   ) : null;
 
   const voteCount = showCount ? (
-    <VoteCount 
-      count={upvotes} 
-      sizeConfig={sizeConfig} 
-      layout={layout} 
+    <VoteCount
+      count={upvotes}
+      sizeConfig={sizeConfig}
+      layout={layout}
     />
   ) : null;
 
@@ -254,7 +254,7 @@ export default function VoteButtons({
             {showCount && countPosition === 'below' && voteCount}
           </>
         );
-        
+
       case 'compact':
         return (
           <>
@@ -262,7 +262,7 @@ export default function VoteButtons({
             {voteCount}
           </>
         );
-        
+
       default: // horizontal
         return (
           <>

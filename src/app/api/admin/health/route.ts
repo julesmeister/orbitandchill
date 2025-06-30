@@ -29,7 +29,7 @@ const startTime = Date.now();
 
 // Simple in-memory store for uptime tracking (in production, use Redis/database)
 let healthHistory: { timestamp: number; status: 'up' | 'down' }[] = [];
-const maxHistoryEntries = 1440; // 24 hours of minute-by-minute data
+const maxHistoryEntries = 288; // 24 hours of 5-minute intervals (reduced memory usage)
 
 export async function GET() {
   try {
@@ -62,16 +62,22 @@ export async function GET() {
     const uptimeMs = currentTime - startTime;
     const uptimeHours = uptimeMs / (1000 * 60 * 60);
     
-    // Record current status in history
+    // Record current status in history (only every 5 minutes to reduce memory)
     const currentStatus = dbStatus === 'connected' ? 'up' : 'down';
-    healthHistory.push({
-      timestamp: currentTime,
-      status: currentStatus
-    });
+    const lastEntry = healthHistory[healthHistory.length - 1];
+    const shouldRecord = !lastEntry || (currentTime - lastEntry.timestamp) >= 300000; // 5 minutes
     
-    // Keep only last 24 hours
-    const twentyFourHoursAgo = currentTime - (24 * 60 * 60 * 1000);
-    healthHistory = healthHistory.filter(entry => entry.timestamp > twentyFourHoursAgo);
+    if (shouldRecord) {
+      healthHistory.push({
+        timestamp: currentTime,
+        status: currentStatus
+      });
+      
+      // Keep only last 288 entries (24 hours of 5-minute intervals) and limit array size
+      if (healthHistory.length > maxHistoryEntries) {
+        healthHistory = healthHistory.slice(-maxHistoryEntries);
+      }
+    }
     
     // Calculate uptime percentage from history (last 24 hours)
     const upEntries = healthHistory.filter(entry => entry.status === 'up').length;

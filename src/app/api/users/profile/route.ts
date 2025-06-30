@@ -57,8 +57,35 @@ export async function POST(request: NextRequest) {
       email, 
       profilePictureUrl, 
       authProvider,
+      birthData,
       ...updateData 
     } = body;
+
+    // Handle nested birthData structure - flatten it for database storage
+    let flattenedBirthData = {};
+    if (birthData) {
+      flattenedBirthData = {
+        dateOfBirth: birthData.dateOfBirth,
+        timeOfBirth: birthData.timeOfBirth,
+        locationOfBirth: birthData.locationOfBirth,
+        latitude: birthData.coordinates?.lat ? parseFloat(birthData.coordinates.lat) : undefined,
+        longitude: birthData.coordinates?.lon ? parseFloat(birthData.coordinates.lon) : undefined,
+      };
+    }
+
+    // Combine all update data and filter out undefined values
+    const finalUpdateData = Object.fromEntries(
+      Object.entries({
+        ...updateData,
+        ...flattenedBirthData
+      }).filter(([_, value]) => value !== undefined)
+    );
+
+    console.log('🔍 Birth data processing:', {
+      originalBirthData: birthData,
+      flattenedBirthData,
+      finalUpdateData
+    });
 
     if (!id || !username || !authProvider) {
       return NextResponse.json(
@@ -76,7 +103,7 @@ export async function POST(request: NextRequest) {
         username,
         email,
         profilePictureUrl,
-        ...updateData
+        ...finalUpdateData
       });
 
       return NextResponse.json({
@@ -104,7 +131,7 @@ export async function POST(request: NextRequest) {
         showBirthInfoPublicly: false,
         allowDirectMessages: true,
         showOnlineStatus: true,
-        ...updateData
+        ...finalUpdateData
       };
 
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
@@ -117,8 +144,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Update with additional data if provided
-      if (Object.keys(updateData).length > 0) {
-        await UserService.updateUser(newUser.id, updateData);
+      if (Object.keys(finalUpdateData).length > 0) {
+        await UserService.updateUser(newUser.id, finalUpdateData);
       }
 
       console.log(`✅ Created user in server database: ${id} (${username})`);
@@ -142,7 +169,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, ...updates } = body;
+    const { userId, birthData, ...updates } = body;
 
     if (!userId) {
       return NextResponse.json(
@@ -151,7 +178,30 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updatedUser = await UserService.updateUser(userId, updates);
+    // Handle nested birthData structure - flatten it for database storage
+    let flattenedBirthData = {};
+    if (birthData) {
+      flattenedBirthData = {
+        dateOfBirth: birthData.dateOfBirth,
+        timeOfBirth: birthData.timeOfBirth,
+        locationOfBirth: birthData.locationOfBirth,
+        latitude: birthData.coordinates?.lat ? parseFloat(birthData.coordinates.lat) : undefined,
+        longitude: birthData.coordinates?.lon ? parseFloat(birthData.coordinates.lon) : undefined,
+      };
+    }
+
+    // Combine all update data and filter out undefined values
+    const finalUpdates = {
+      ...updates,
+      ...flattenedBirthData
+    };
+
+    // Remove undefined values to prevent SQL type errors
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(finalUpdates).filter(([_, value]) => value !== undefined)
+    );
+
+    const updatedUser = await UserService.updateUser(userId, cleanUpdates);
     
     if (!updatedUser) {
       return NextResponse.json(

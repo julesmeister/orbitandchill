@@ -23,10 +23,11 @@ class MemoryPressureManager {
     criticalLevel: false
   };
 
-  private readonly CRITICAL_HEAP_THRESHOLD = 0.95; // 95%
-  private readonly HIGH_HEAP_THRESHOLD = 0.90;     // 90%
-  private readonly CLEANUP_COOLDOWN = 60000;       // 1 minute between cleanups
-  private readonly MAX_CLEANUPS_PER_HOUR = 6;      // Don't cleanup too frequently
+  private readonly EMERGENCY_HEAP_THRESHOLD = 0.975; // 97.5% - immediate action
+  private readonly CRITICAL_HEAP_THRESHOLD = 0.90; // 90% (reduced from 95%)
+  private readonly HIGH_HEAP_THRESHOLD = 0.80;     // 80% (reduced from 90%)
+  private readonly CLEANUP_COOLDOWN = 30000;       // 30 seconds between cleanups (reduced from 1m)
+  private readonly MAX_CLEANUPS_PER_HOUR = 12;     // Increased from 6 to 12
 
   /**
    * Check if system is under memory pressure
@@ -43,6 +44,12 @@ class MemoryPressureManager {
     // Update pressure state
     this.state.criticalLevel = heapPercent > this.CRITICAL_HEAP_THRESHOLD;
     this.state.isUnderPressure = heapPercent > this.HIGH_HEAP_THRESHOLD;
+
+    // Emergency memory condition - immediate action required
+    if (heapPercent > this.EMERGENCY_HEAP_THRESHOLD) {
+      console.error(`🚨 EMERGENCY MEMORY: ${(heapPercent * 100).toFixed(1)}% - forcing immediate cleanup`);
+      this.emergencyMemoryCleanup();
+    }
 
     // Check for external memory pressure signal
     const pressureFile = path.join(process.cwd(), '.memory-pressure');
@@ -88,9 +95,11 @@ class MemoryPressureManager {
       const beforeUsage = process.memoryUsage();
       const beforeHeapPercent = (beforeUsage.heapUsed / beforeUsage.heapTotal) * 100;
 
-      // 1. Force garbage collection if available
+      // 1. Force multiple garbage collection cycles if available
       if (global && typeof global.gc === 'function') {
-        global.gc();
+        global.gc(); // First GC cycle
+        await new Promise(resolve => setTimeout(resolve, 100));
+        global.gc(); // Second GC cycle for better cleanup
       }
 
       // 2. Clear cache systems (import dynamically to avoid circular deps)
@@ -99,23 +108,49 @@ class MemoryPressureManager {
         const cache = getGlobalCache();
         if (cache) {
           const cleared = cache.clear();
-          // Cache entries cleared silently
+          // Also clear any module-level caches
+          if (typeof require !== 'undefined' && require.cache) {
+            // Clear some non-essential cached modules to free memory
+            const moduleKeysToDelete = Object.keys(require.cache).filter(key => 
+              key.includes('analytics') || key.includes('temp') || key.includes('cache')
+            );
+            moduleKeysToDelete.forEach(key => {
+              try { delete require.cache[key]; } catch(e) {}
+            });
+          }
         }
       } catch (error) {
         // Cache might not be available
       }
 
-      // 3. Request connection pool cleanup
+      // 3. Aggressive connection pool cleanup
       try {
-        const { getConnectionPool } = await import('../db/connectionPool');
+        const { getConnectionPool, forcePoolCleanup } = await import('../db/connectionPool');
+        await forcePoolCleanup(); // More aggressive cleanup
+        
         const pool = getConnectionPool();
         if (pool) {
-          // Force cleanup of idle connections
           pool['cleanup']?.();
-          // Connection pool cleanup triggered silently
         }
       } catch (error) {
         // Connection pool might not be available
+      }
+
+      // 4. Clear Next.js internal caches if available
+      try {
+        // Clear any Next.js compilation caches that might be holding memory
+        if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+          // In development, we can be more aggressive with clearing caches
+          if (global && global.__webpack_require__ && global.__webpack_require__.cache) {
+            Object.keys(global.__webpack_require__.cache).forEach(key => {
+              if (key.includes('node_modules') && !key.includes('essential')) {
+                try { delete global.__webpack_require__.cache[key]; } catch(e) {}
+              }
+            });
+          }
+        }
+      } catch (error) {
+        // Ignore webpack cache cleanup errors
       }
 
       // 4. Clear memory monitor snapshots
@@ -130,11 +165,13 @@ class MemoryPressureManager {
       }
 
       // Wait for cleanup to take effect
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Force another GC
+      // Force final aggressive GC cycles
       if (global && typeof global.gc === 'function') {
-        global.gc();
+        global.gc(); // Third GC cycle
+        await new Promise(resolve => setTimeout(resolve, 100));
+        global.gc(); // Fourth GC cycle for maximum cleanup
       }
 
       const afterUsage = process.memoryUsage();
@@ -152,6 +189,71 @@ class MemoryPressureManager {
     } catch (error) {
       console.error('❌ Memory cleanup failed:', error);
       return false;
+    }
+  }
+
+  /**
+   * Emergency memory cleanup - immediate action for critical situations
+   * This bypasses cooldowns and cleanup limits
+   */
+  async emergencyMemoryCleanup(): Promise<void> {
+    console.error('🚨 EMERGENCY MEMORY CLEANUP INITIATED');
+    
+    try {
+      // 1. Force garbage collection immediately (if available)
+      if (global.gc) {
+        global.gc();
+        console.error('🧹 Forced garbage collection');
+      }
+
+      // 2. Emergency cache clearing
+      try {
+        const { getGlobalCache } = await import('./cache');
+        const cache = getGlobalCache();
+        if (cache) {
+          cache.clear();
+          console.error('🗑️  Emergency cache cleared');
+        }
+      } catch (error) {
+        // Continue with cleanup even if cache fails
+      }
+
+      // 3. Emergency connection pool destruction
+      try {
+        const { destroyConnectionPool } = await import('../db/connectionPool');
+        await destroyConnectionPool();
+        console.error('💀 Emergency connection pool destroyed');
+      } catch (error) {
+        // Continue with cleanup even if pool destruction fails
+      }
+
+      // 4. Clear memory monitor snapshots immediately
+      try {
+        const { clearAllSnapshots } = await import('./memoryMonitor');
+        if (clearAllSnapshots) {
+          clearAllSnapshots();
+          console.error('📊 Memory snapshots cleared');
+        }
+      } catch (error) {
+        // Continue with cleanup
+      }
+
+      // 5. Set memory pressure flag
+      const pressureFile = path.join(process.cwd(), '.memory-pressure');
+      try {
+        fs.writeFileSync(pressureFile, JSON.stringify({
+          emergency: true,
+          timestamp: Date.now(),
+          reason: 'Emergency memory threshold exceeded'
+        }));
+      } catch (error) {
+        // File write failure is not critical
+      }
+
+      console.error('🚨 EMERGENCY CLEANUP COMPLETED');
+      
+    } catch (error) {
+      console.error('❌ Emergency cleanup failed:', error);
     }
   }
 
@@ -269,10 +371,11 @@ export function getMemoryPressureStatus() {
   return getMemoryPressureManager().getStatus();
 }
 
-// Auto-start memory pressure monitoring in production
-if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
-  // Check every 5 minutes in production
-  setInterval(checkAndHandleMemoryPressure, 300000);
+// Auto-start memory pressure monitoring
+if (typeof process !== 'undefined') {
+  // Check every 2 minutes in production, every 3 minutes in development
+  const interval = process.env.NODE_ENV === 'production' ? 120000 : 180000;
+  setInterval(checkAndHandleMemoryPressure, interval);
 }
 
 export default MemoryPressureManager;

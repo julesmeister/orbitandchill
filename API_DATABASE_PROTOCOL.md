@@ -127,6 +127,232 @@ export const checkDatabaseHealth = async () => {
 };
 ```
 
+### Advanced Connection Pool Implementation
+
+#### **Connection Pool Architecture**
+For high-performance applications requiring multiple concurrent database operations, implement a connection pool with health monitoring and automatic cleanup:
+
+```typescript
+// /src/db/connectionPool.ts
+interface PooledConnection {
+  id: string;
+  client: Client;
+  db: DrizzleD1Database<any>;
+  inUse: boolean;
+  createdAt: Date;
+  lastUsed: Date;
+  isHealthy: boolean;
+}
+
+export class TursoConnectionPool {
+  private connections: Map<string, PooledConnection> = new Map();
+  private waitingQueue: Array<{
+    resolve: (connection: PooledConnection) => void;
+    reject: (error: Error) => void;
+    timestamp: number;
+  }> = [];
+
+  constructor(
+    private minConnections: number = 1,
+    private maxConnections: number = 3,
+    private acquireTimeoutMs: number = 5000,
+    private healthCheckIntervalMs: number = 30000,
+    private maxIdleTimeMs: number = 300000
+  ) {}
+
+  // Acquire connection with timeout and health check
+  async acquire(): Promise<PooledConnection> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.removeFromQueue(resolve, reject);
+        reject(new Error(`Connection acquisition timeout after ${this.acquireTimeoutMs}ms`));
+      }, this.acquireTimeoutMs);
+
+      this.waitingQueue.push({
+        resolve: (conn) => {
+          clearTimeout(timeoutId);
+          resolve(conn);
+        },
+        reject: (error) => {
+          clearTimeout(timeoutId);
+          reject(error);
+        },
+        timestamp: Date.now()
+      });
+
+      this.processQueue();
+    });
+  }
+
+  // Release connection back to pool
+  async release(connection: PooledConnection): Promise<void> {
+    if (this.connections.has(connection.id)) {
+      connection.inUse = false;
+      connection.lastUsed = new Date();
+      this.processQueue();
+    }
+  }
+
+  // Health monitoring and cleanup
+  private async performHealthCheck(): Promise<void> {
+    for (const [id, conn] of this.connections) {
+      if (!conn.inUse) {
+        try {
+          await conn.client.execute('SELECT 1');
+          conn.isHealthy = true;
+        } catch {
+          conn.isHealthy = false;
+          this.connections.delete(id);
+        }
+      }
+    }
+  }
+}
+```
+
+#### **Pool Integration Pattern**
+```typescript
+// /src/db/index-turso-http.ts
+import { connectionPool } from './connectionPool';
+
+export async function enableConnectionPool(): Promise<boolean> {
+  if (isUsingConnectionPool()) {
+    return true;
+  }
+
+  try {
+    await connectionPool.initialize();
+    connectionPoolEnabled = true;
+    return true;
+  } catch (error) {
+    console.error('Failed to initialize connection pool:', error);
+    return false;
+  }
+}
+
+// Database operation with pool fallback
+export async function executeWithPool<T>(
+  operation: (db: DrizzleD1Database<any>, client: Client) => Promise<T>
+): Promise<T> {
+  if (isUsingConnectionPool()) {
+    const connection = await connectionPool.acquire();
+    try {
+      return await operation(connection.db, connection.client);
+    } finally {
+      await connectionPool.release(connection);
+    }
+  }
+  
+  // Fallback to direct client
+  return await operation(db, client);
+}
+```
+
+### Drizzle ORM Compatibility Issues & Solutions
+
+#### **WHERE Clause Parsing Problems**
+When using Turso HTTP client with Drizzle ORM, WHERE clauses may be ignored due to SQL parsing incompatibilities. This critical issue requires direct SQL queries as a workaround:
+
+```typescript
+// ❌ BROKEN: Drizzle WHERE clauses ignored by Turso HTTP client
+const getQuestionBroken = async (questionId: string) => {
+  const result = await db
+    .select()
+    .from(horaryQuestions)
+    .where(eq(horaryQuestions.id, questionId))
+    .limit(1);
+  // Returns wrong question - WHERE clause ignored!
+};
+
+// ✅ WORKING: Direct SQL with parameter binding
+const getQuestionFixed = async (questionId: string) => {
+  const result = await db.client.execute({
+    sql: 'SELECT * FROM horary_questions WHERE id = ? LIMIT 1',
+    args: [questionId]
+  });
+  
+  if (result.rows.length === 0) {
+    return null;
+  }
+  
+  // Convert snake_case to camelCase
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    question: row.question,
+    userId: row.user_id,
+    createdAt: row.created_at,
+    customLocation: row.custom_location ? JSON.parse(row.custom_location) : null
+  };
+};
+```
+
+#### **Field Name Mapping (snake_case ↔ camelCase)**
+Database uses snake_case, frontend expects camelCase. Always implement bidirectional conversion:
+
+```typescript
+// Database → Frontend conversion
+const dbToFrontend = (dbRecord: any) => ({
+  id: dbRecord.id,
+  userId: dbRecord.user_id,
+  createdAt: dbRecord.created_at ? new Date(dbRecord.created_at) : undefined,
+  customLocation: dbRecord.custom_location ? JSON.parse(dbRecord.custom_location) : null
+});
+
+// Frontend → Database conversion
+const frontendToDb = (frontendData: any) => ({
+  id: frontendData.id,
+  user_id: frontendData.userId,
+  created_at: frontendData.createdAt?.toISOString(),
+  custom_location: frontendData.customLocation ? JSON.stringify(frontendData.customLocation) : null
+});
+```
+
+#### **Hybrid Query Strategy**
+Use a fallback approach for maximum reliability:
+
+```typescript
+const robustDatabaseOperation = async (id: string) => {
+  // Strategy 1: Try connection pool (fastest, most reliable)
+  if (isUsingConnectionPool()) {
+    try {
+      return await executeWithPool(async (db, client) => {
+        const result = await client.execute({
+          sql: 'SELECT * FROM table WHERE id = ?',
+          args: [id]
+        });
+        return result.rows[0];
+      });
+    } catch (error) {
+      console.warn('Connection pool failed, falling back to direct client');
+    }
+  }
+  
+  // Strategy 2: Direct client with raw SQL (reliable)
+  try {
+    const result = await db.client.execute({
+      sql: 'SELECT * FROM table WHERE id = ?',
+      args: [id]
+    });
+    return result.rows[0];
+  } catch (error) {
+    console.warn('Direct SQL failed, falling back to Drizzle ORM');
+  }
+  
+  // Strategy 3: Drizzle ORM (last resort, may have WHERE clause issues)
+  try {
+    const result = await db
+      .select()
+      .from(table)
+      .where(eq(table.id, id))
+      .limit(1);
+    return result[0];
+  } catch (error) {
+    throw new Error(`All database strategies failed: ${error.message}`);
+  }
+};
+```
+
 ---
 
 ## API Endpoint Structure
@@ -525,6 +751,181 @@ export const withRetry = async <T>(
   }
   throw new Error('All retry attempts failed');
 };
+```
+
+### User Feedback & Loading States
+
+#### **Real-time Feedback for Long Operations**
+Critical pattern: Always provide user feedback during database operations that may take time. Never leave users wondering what's happening.
+
+```typescript
+// Complete deletion workflow with loading feedback
+const handleDelete = async (item: Item) => {
+  // 1. Show loading toast immediately
+  toast.show(
+    'Deleting Item',
+    `Removing "${item.name.substring(0, 50)}${item.name.length > 50 ? '...' : ''}"`,
+    'loading'
+  );
+
+  // 2. Close any confirmation modals immediately
+  setShowConfirmModal(false);
+  
+  try {
+    // 3. Perform deletion (may take time)
+    await deleteItem(item.id, user.id);
+    
+    // 4. Show success feedback
+    toast.show(
+      'Item Deleted',
+      'Your item has been successfully removed',
+      'success'
+    );
+    
+    // 5. Update UI state
+    refreshItemsList();
+    
+  } catch (error) {
+    // 6. Show error feedback with recovery guidance
+    toast.show(
+      'Delete Failed', 
+      'Failed to delete the item. Please try again.',
+      'error'
+    );
+  }
+};
+```
+
+#### **Loading Toast Component Pattern**
+```typescript
+// /src/components/reusable/StatusToast.tsx
+interface StatusToastProps {
+  title: string;
+  message: string;
+  status: 'loading' | 'success' | 'error';
+  isVisible: boolean;
+  onHide: () => void;
+  duration?: number; // 0 = don't auto-hide (for loading)
+}
+
+const StatusToast: React.FC<StatusToastProps> = ({
+  status,
+  duration = 0
+}) => {
+  return (
+    <div className={`toast ${status}`}>
+      {status === 'loading' && (
+        <div className="spinner-animation">
+          {/* CSS loading spinner */}
+        </div>
+      )}
+      {/* Toast content */}
+    </div>
+  );
+};
+
+// Usage in operations
+const useOperationFeedback = () => {
+  const [toast, setToast] = useState({
+    title: '',
+    message: '',
+    status: 'success' as const,
+    isVisible: false
+  });
+
+  const show = (title: string, message: string, status: 'loading' | 'success' | 'error') => {
+    setToast({ title, message, status, isVisible: true });
+  };
+
+  const hide = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
+  return { toast, show, hide };
+};
+```
+
+#### **Promise-based Store Operations**
+Ensure store operations return promises for proper error handling in UI:
+
+```typescript
+// Store method must return promise for UI error handling
+deleteQuestion: async (id: string, userId: string) => {
+  try {
+    const response = await fetch(`/api/horary/questions/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Update local state
+        set((state) => ({
+          questions: state.questions.filter((q) => q.id !== id),
+        }));
+        
+        return { success: true };
+      } else {
+        throw new Error(data.error || 'Delete failed');
+      }
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Delete failed with status ${response.status}`);
+    }
+  } catch (error) {
+    // Optimistic local update as fallback
+    set((state) => ({
+      questions: state.questions.filter((q) => q.id !== id),
+    }));
+    
+    // Re-throw for UI error handling
+    throw error;
+  }
+}
+```
+
+#### **HTTP Status Code Classification**
+Proper error classification prevents generic 500 errors:
+
+```typescript
+// API route error handling with specific status codes
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { userId } = await request.json();
+    const questionId = params.id;
+
+    // Check if question exists
+    const question = await getQuestionById(questionId);
+    if (!question) {
+      return NextResponse.json(
+        { success: false, error: 'Question not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check ownership
+    if (question.userId !== userId) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized to delete this question' },
+        { status: 403 }
+      );
+    }
+
+    // Perform deletion
+    await deleteQuestionById(questionId);
+
+    return NextResponse.json({ success: true });
+
+  } catch (error) {
+    console.error('Delete operation failed:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
 ```
 
 ---

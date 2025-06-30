@@ -36,11 +36,11 @@ export default function DiscussionsSidebar({
 }: DiscussionsSidebarProps) {
   return (
     <div className="hidden lg:block w-80 flex-shrink-0">
-      <div className="sticky top-6 space-y-6">
+      <div className="sticky top-6 space-y-4">
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="space-y-3">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Quick Actions</h3>
+          <div className="space-y-2">
             <Link 
               href="/discussions/new"
               className="block w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm text-center"
@@ -54,8 +54,8 @@ export default function DiscussionsSidebar({
         </div>
 
         {/* Categories */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Categories</h3>
           <div className="space-y-2">
             {categories.slice(1).map(category => {
               const isActive = selectedCategory === category;
@@ -102,8 +102,8 @@ export default function DiscussionsSidebar({
         </div>
 
         {/* Popular Tags */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Tags</h3>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Popular Tags</h3>
           <div className="flex flex-wrap gap-2">
             {[
               'natal-chart', 'mercury-retrograde', 'relationships', 'mars', 'synastry',
@@ -120,9 +120,9 @@ export default function DiscussionsSidebar({
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Recent Activity</h3>
+          <div className="space-y-2">
             {[
               { user: 'AstroMaster', action: 'replied to', topic: 'Mars in Scorpio', time: '5m ago' },
               { user: 'StarSeeker', action: 'started', topic: 'Venus Transit Questions', time: '12m ago' },
@@ -157,68 +157,68 @@ export default function DiscussionsSidebar({
         </div>
 
         {/* Community Stats */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-5">Community Stats</h3>
-          <div className="space-y-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-3">Community Stats</h3>
+          <div className="space-y-3">
             {/* Online Now */}
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
+            <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-100 hover:bg-green-100 transition-colors cursor-pointer">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                     <circle cx="10" cy="10" r="3"/>
                   </svg>
                 </div>
                 <div>
                   <p className="text-xs text-green-700 font-medium uppercase tracking-wide">Online Now</p>
-                  <p className="text-lg font-bold text-green-800">342</p>
+                  <p className="text-base font-bold text-green-800">342</p>
                 </div>
               </div>
               <div className="text-xs text-green-600">active users</div>
             </div>
 
             {/* Today's Posts */}
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
                 <div>
                   <p className="text-xs text-blue-700 font-medium uppercase tracking-wide">Today</p>
-                  <p className="text-lg font-bold text-blue-800">127</p>
+                  <p className="text-base font-bold text-blue-800">127</p>
                 </div>
               </div>
               <div className="text-xs text-blue-600">new posts</div>
             </div>
 
             {/* This Week */}
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-100">
+            <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg border border-purple-100 hover:bg-purple-100 transition-colors cursor-pointer">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div>
                   <p className="text-xs text-purple-700 font-medium uppercase tracking-wide">This Week</p>
-                  <p className="text-lg font-bold text-purple-800">1,234</p>
+                  <p className="text-base font-bold text-purple-800">1,234</p>
                 </div>
               </div>
               <div className="text-xs text-purple-600">discussions</div>
             </div>
 
             {/* Total Members */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
                 <div>
                   <p className="text-xs text-gray-700 font-medium uppercase tracking-wide">Total Members</p>
-                  <p className="text-lg font-bold text-gray-800">24,567</p>
+                  <p className="text-base font-bold text-gray-800">24,567</p>
                 </div>
               </div>
               <div className="text-xs text-gray-600">members</div>

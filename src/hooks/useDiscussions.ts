@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { stripHtmlTags } from '@/utils/textUtils';
 import { generateSEOSlug } from '@/utils/slugify';
+import { useUserStore } from '@/store/userStore';
+import { DiscussionsCache } from '@/utils/discussionsCache';
 
 interface Discussion {
   id: string;
@@ -20,6 +22,7 @@ interface Discussion {
   views: number;
   upvotes: number;
   downvotes: number;
+  userVote?: 'up' | 'down' | null;
   isLocked: boolean;
   isPinned: boolean;
   isBlogPost: boolean;
@@ -38,10 +41,15 @@ interface UseDiscussionsState {
   searchQuery: string;
   currentPage: number;
   discussionsPerPage: number;
+  // Cache state
+  isFromCache: boolean;
+  isFetchingFresh: boolean;
+  cacheAge: string;
 }
 
 interface UseDiscussionsActions {
   refreshDiscussions: () => Promise<void>;
+  forceRefresh: () => Promise<void>;
   setSelectedCategory: (category: string) => void;
   setSortBy: (sort: string) => void;
   setSearchQuery: (query: string) => void;
@@ -61,6 +69,7 @@ interface UseDiscussionsReturn extends UseDiscussionsState, UseDiscussionsAction
 }
 
 export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussionsReturn {
+  const { user } = useUserStore();
   const [state, setState] = useState<UseDiscussionsState>({
     discussions: [],
     loading: true,
@@ -70,17 +79,67 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
     searchQuery: "",
     currentPage: initialPage,
     discussionsPerPage: initialPerPage,
+    // Cache state
+    isFromCache: false,
+    isFetchingFresh: false,
+    cacheAge: 'No cache',
   });
 
+  // Load cached discussions immediately
+  const loadCachedDiscussions = useCallback(() => {
+    const { data, isFromCache, timestamp } = DiscussionsCache.getCached();
+    
+    if (data && data.length > 0) {
+      const transformedDiscussions = data.map((d: Discussion) => {
+        const convertTimestamp = (timestamp: number | string | Date) => {
+          if (typeof timestamp === 'number') {
+            return new Date(timestamp * 1000);
+          }
+          return new Date(timestamp);
+        };
+        
+        return {
+          ...d,
+          slug: d.slug || generateSEOSlug(d.title),
+          createdAt: convertTimestamp(d.createdAt),
+          updatedAt: convertTimestamp(d.updatedAt),
+          lastActivity: convertTimestamp(d.lastActivity),
+        };
+      });
+
+      setState(prev => ({
+        ...prev,
+        discussions: transformedDiscussions,
+        loading: false,
+        isFromCache: true,
+        cacheAge: DiscussionsCache.formatCacheAge(),
+      }));
+      
+      return true; // Cached data was loaded
+    }
+    
+    return false; // No cached data available
+  }, []);
+
   // Fetch discussions from API
-  const refreshDiscussions = useCallback(async () => {
+  const refreshDiscussions = useCallback(async (isBackgroundRefresh = false) => {
     try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
+      // If we have cached data and this is a background refresh, set fetching fresh flag
+      if (isBackgroundRefresh && state.discussions.length > 0) {
+        setState(prev => ({ ...prev, isFetchingFresh: true }));
+      } else {
+        setState(prev => ({ ...prev, loading: true, error: null }));
+      }
       
       const params = new URLSearchParams({
         limit: '50',
         sortBy: 'recent'
       });
+      
+      // Include user ID to get vote data
+      if (user?.id) {
+        params.set('userId', user.id);
+      }
       
       const response = await fetch(`/api/discussions?${params}`, {
         headers: {
@@ -105,17 +164,30 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
             return new Date(timestamp);
           };
           
-          return {
+          const transformed = {
             ...d,
             slug: d.slug || generateSEOSlug(d.title),
             createdAt: convertTimestamp(d.createdAt),
             updatedAt: convertTimestamp(d.updatedAt),
             lastActivity: convertTimestamp(d.lastActivity),
           };
+          
+          
+          return transformed;
         });
         
+        // Save to cache
+        DiscussionsCache.setCached(transformedDiscussions, user?.id);
+        
         // Discussions transformed and ready for display
-        setState(prev => ({ ...prev, discussions: transformedDiscussions, loading: false }));
+        setState(prev => ({ 
+          ...prev, 
+          discussions: transformedDiscussions, 
+          loading: false,
+          isFetchingFresh: false,
+          isFromCache: false,
+          cacheAge: 'Just updated'
+        }));
       } else {
         throw new Error(data.error || 'Failed to fetch discussions');
       }
@@ -134,11 +206,11 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
       setState(prev => ({ 
         ...prev, 
         error: errorMessage, 
-        discussions: [],
-        loading: false 
+        loading: false,
+        isFetchingFresh: false
       }));
     }
-  }, []);
+  }, [user?.id]);
 
   // Filter discussions (API already filters by isPublished)
   const filteredDiscussions = state.discussions.filter((discussion) => {
@@ -227,10 +299,30 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
     setState(prev => ({ ...prev, currentPage: page }));
   }, []);
 
-  // Fetch discussions on mount
+  // Cache-first loading on mount
   useEffect(() => {
-    refreshDiscussions();
-  }, [refreshDiscussions]);
+    const initializeDiscussions = async () => {
+      // Step 1: Try to load cached data immediately
+      const hasCachedData = loadCachedDiscussions();
+      
+      // Step 2: Always fetch fresh data (background refresh if we have cached data)
+      await refreshDiscussions(hasCachedData);
+    };
+
+    initializeDiscussions();
+  }, []); // Run only once on mount
+
+  // Re-fetch discussions when user ID becomes available (to get vote data)
+  useEffect(() => {
+    if (user?.id && state.discussions.length > 0) {
+      // Background refresh to get vote data - use setTimeout to avoid dependency issues
+      const timer = setTimeout(() => {
+        refreshDiscussions(true);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user?.id]);
 
   return {
     ...state,
@@ -238,7 +330,8 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
     sortedDiscussions,
     currentDiscussions,
     totalPages,
-    refreshDiscussions,
+    refreshDiscussions: () => refreshDiscussions(false), // Expose as regular refresh
+    forceRefresh: () => refreshDiscussions(true), // Expose background refresh
     setSelectedCategory,
     setSortBy,
     setSearchQuery,

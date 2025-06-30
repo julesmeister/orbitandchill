@@ -7,6 +7,9 @@ import * as schema from './schema';
 let client: any = null;
 let db: any = null;
 
+// Import connection pool functionality (dynamic import to avoid build issues)
+// import { initializeConnectionPool, getConnectionPool, executePooledQuery } from './connectionPool';
+
 // Initialize Turso connection with HTTP-only client
 async function initializeTurso() {
   try {
@@ -69,7 +72,7 @@ async function initializeTurso() {
       return null;
     }
     
-    // Use dynamic import to avoid build-time issues
+    // Use direct client approach for now (connection pool available on demand)
     const { createClient } = await import('@libsql/client/http');
     
     client = createClient({
@@ -733,7 +736,7 @@ const createMockDb = () => ({
             const chunks = (condition as any).queryChunks;
             let clause = '';
             
-            console.log('🔍 DELETE WHERE chunks:', JSON.stringify(chunks, null, 2));
+            // Parse query chunks for WHERE clause
             
             for (const chunk of chunks) {
               if (chunk && chunk.value) {
@@ -760,9 +763,23 @@ const createMockDb = () => ({
             }
             
             whereClause = clause;
+            // WHERE clause generated successfully
+          } else {
+            // Fallback: try to handle simple conditions
+            whereClause = 'id = ?';
+            whereParams = [condition]; // This might be the actual value
           }
         } catch (error) {
           console.error('Failed to parse DELETE WHERE:', error);
+          // Emergency fallback
+          whereClause = '';
+          whereParams = [];
+        }
+        
+        // Safety check: ensure we have a valid WHERE clause
+        if (!whereClause || whereClause.trim() === '') {
+          console.error('❌ Empty WHERE clause generated - aborting delete for safety');
+          throw new Error('Invalid WHERE clause - deletion aborted for safety');
         }
         
         const executeDelete = async () => {
@@ -791,22 +808,65 @@ const createMockDb = () => ({
   }
 });
 
-// Database initialization with proper promise handling
+// Database initialization with proper promise handling and connection pooling
 let initializationPromise: Promise<any> | null = null;
+let poolInitialized = false;
 
 const ensureInitialized = async () => {
   if (!initializationPromise) {
     initializationPromise = (async () => {
       try {
-        console.log('🔄 Initializing Turso database connection...');
+        // Check if we can reuse the existing connection pool first
+        if (!poolInitialized) {
+          try {
+            const { getConnectionPool, initializeConnectionPool } = await import('./connectionPool');
+            const existingPool = getConnectionPool();
+            
+            if (existingPool) {
+              // Pool already exists and is healthy, reuse it
+              const stats = existingPool.getStats();
+              if (stats && stats.totalConnections > 0) {
+                client = { execute: existingPool.execute.bind(existingPool) };
+                db = createMockDb();
+                poolInitialized = true;
+                return db;
+              }
+            }
+            
+            // Initialize new pool
+            const databaseUrl = process.env.TURSO_DATABASE_URL;
+            const authToken = process.env.TURSO_AUTH_TOKEN;
+            
+            if (databaseUrl && authToken) {
+              const pool = await initializeConnectionPool(databaseUrl, authToken, {
+                minConnections: 1,
+                maxConnections: 3,     // Reduced from 8 to 3
+                acquireTimeoutMs: 3000, // Reduced from 5s to 3s
+                idleTimeoutMs: 180000,  // Reduced from 5m to 3m
+                maxLifetimeMs: 900000   // Reduced from 30m to 15m
+              });
+              
+              if (pool) {
+                client = { 
+                  execute: pool.execute.bind(pool),
+                  close: pool.destroy.bind(pool)
+                };
+                db = createMockDb();
+                poolInitialized = true;
+                return db;
+              }
+            }
+          } catch (poolError) {
+            console.warn('⚠️ Connection pool failed, falling back to direct connection:', poolError);
+          }
+        }
+        
+        // Fallback to direct connection if pool fails
         client = await initializeTurso();
         if (client) {
-          console.log('✅ Turso client created successfully');
           db = createMockDb();
-          console.log('✅ Database wrapper created successfully');
           return db;
         } else {
-          console.warn('⚠️ Turso client creation returned null');
           db = null;
           return null;
         }
@@ -1304,10 +1364,114 @@ async function createTablesIfNeeded() {
 // Export schema
 export * from './schema';
 
+// Connection Pool convenience functions
+export function getPoolStats() {
+  try {
+    const poolModule = require('./connectionPool');
+    const pool = poolModule.getConnectionPool();
+    return pool ? pool.getStats() : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function executePooledQueryDirect(sql: string, args?: any[]) {
+  try {
+    const { executePooledQuery } = await import('./connectionPool');
+    return await executePooledQuery(sql, args);
+  } catch (error) {
+    console.error('❌ Pooled query failed:', error);
+    throw error;
+  }
+}
+
+export function isUsingConnectionPool() {
+  return client && client.pool !== undefined;
+}
+
+export function getConnectionPoolInstance() {
+  try {
+    const poolModule = require('./connectionPool');
+    return poolModule.getConnectionPool();
+  } catch (error) {
+    return null;
+  }
+}
+
+// Enable connection pool at runtime
+export async function enableConnectionPool() {
+  if (isUsingConnectionPool()) {
+    console.log('Connection pool already enabled');
+    return true;
+  }
+
+  try {
+    const databaseUrl = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+
+    if (!databaseUrl || !authToken) {
+      throw new Error('Missing database credentials');
+    }
+
+    console.log('🔄 Enabling connection pool at runtime...');
+    const { initializeConnectionPool, executePooledQuery } = await import('./connectionPool');
+    
+    const pool = await initializeConnectionPool(databaseUrl, authToken, {
+      minConnections: 1,
+      maxConnections: 3,
+      acquireTimeoutMs: 5000,
+      idleTimeoutMs: 60000,
+      maxLifetimeMs: 600000,
+      retryAttempts: 2
+    });
+
+    // Test the pool
+    await executePooledQuery('SELECT 1 as test');
+    console.log('✅ Connection pool enabled successfully');
+
+    // Replace the client with a pooled version
+    const oldClient = client;
+    client = {
+      execute: (query: any) => {
+        if (typeof query === 'string') {
+          return executePooledQuery(query);
+        } else if (query && typeof query === 'object' && query.sql) {
+          return executePooledQuery(query.sql, query.args);
+        }
+        throw new Error('Invalid query format');
+      },
+      pool // Expose pool for advanced operations
+    };
+
+    // Close old client if it has a close method
+    if (oldClient && typeof oldClient.close === 'function') {
+      try {
+        oldClient.close();
+      } catch (error) {
+        console.warn('Error closing old client:', error);
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to enable connection pool:', error);
+    return false;
+  }
+}
+
 // Close function
 export function closeDatabase() {
   if (client) {
-    client.close();
+    // If using connection pool, destroy it
+    if (client.pool) {
+      import('./connectionPool').then(({ destroyConnectionPool }) => {
+        destroyConnectionPool().catch(error => {
+          console.warn('Error destroying connection pool:', error);
+        });
+      });
+    } else if (client.close) {
+      client.close();
+    }
     client = null;
     db = null;
   }

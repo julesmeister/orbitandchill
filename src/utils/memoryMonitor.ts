@@ -30,11 +30,11 @@ class MemoryMonitor {
   private snapshots: MemorySnapshot[] = [];
   private interval: NodeJS.Timeout | null = null;
   private isRunning = false;
-  private maxSnapshots = 20; // Keep last 20 snapshots (reduced from 100)
+  private maxSnapshots = 10; // Keep last 10 snapshots (reduced from 20)
   private warningThresholds = {
-    heapUsage: 0.85, // 85% of max heap
-    growthRate: 0.1, // 10% growth per minute
-    sustainedGrowth: 5 // 5 consecutive increasing snapshots
+    heapUsage: 0.80, // 80% of max heap (reduced from 85%)
+    growthRate: 0.05, // 5% growth per minute (reduced from 10%)
+    sustainedGrowth: 3 // 3 consecutive increasing snapshots (reduced from 5)
   };
 
   constructor() {
@@ -47,7 +47,7 @@ class MemoryMonitor {
   /**
    * Start memory monitoring
    */
-  start(intervalMs: number = 180000): void { // Default 3 minutes (reduced from 30 seconds)
+  start(intervalMs: number = 300000): void { // Default 5 minutes (increased from 3 minutes to reduce overhead)
     if (this.isRunning) {
       console.warn('Memory monitor is already running');
       return;
@@ -451,6 +451,19 @@ export function useMemoryMonitor() {
   // }, []);
   
   return null; // Placeholder - implement in component
+}
+
+/**
+ * Emergency function to clear all memory snapshots
+ * Used during critical memory situations
+ */
+export function clearAllSnapshots(): void {
+  const monitor = getGlobalMemoryMonitor();
+  if (monitor) {
+    monitor['snapshots'] = [];
+    monitor['warningTimestamps'] = [];
+    console.error('🧹 All memory snapshots cleared');
+  }
 }
 
 // Auto-start removed - memory monitoring now controlled from layout.tsx only

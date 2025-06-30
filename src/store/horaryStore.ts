@@ -45,7 +45,7 @@ interface HoraryState {
   loadQuestions: (userId?: string) => Promise<void>;
   addQuestion: (question: Omit<HoraryQuestion, 'id'>) => Promise<HoraryQuestion | null>;
   updateQuestion: (id: string, updates: Partial<HoraryQuestion>) => Promise<void>;
-  deleteQuestion: (id: string) => Promise<void>;
+  deleteQuestion: (id: string, userId: string) => Promise<void>;
   getQuestionById: (id: string) => HoraryQuestion | undefined;
   getQuestionsByUser: (userId: string) => HoraryQuestion[];
   clearAllQuestions: () => void;
@@ -85,14 +85,14 @@ export const useHoraryStore = create<HoraryState>()(
 
           const params = new URLSearchParams();
           if (userId) params.append('userId', userId);
-          params.append('includeAnonymous', 'true');
+          // Remove includeAnonymous to only show user's own questions
           params.append('limit', '100');
 
           const response = await fetch(`/api/horary/questions?${params}`);
           if (response.ok) {
             const data = await response.json();
             if (data.success) {
-              const questions = data.questions.map((q: any) => {
+              let questions = data.questions.map((q: any) => {
                 // Handle date conversion more carefully
                 let questionDate = new Date();
                 if (q.date) {
@@ -118,6 +118,15 @@ export const useHoraryStore = create<HoraryState>()(
                   updatedAt: q.updatedAt ? new Date(q.updatedAt) : undefined,
                 };
               });
+              
+              // Client-side safety filter: Only include questions that belong to the current user
+              if (userId) {
+                const originalCount = questions.length;
+                questions = questions.filter((q: any) => q.userId === userId);
+                if (questions.length !== originalCount) {
+                  console.warn(`⚠️ Client filter applied: ${originalCount} → ${questions.length} questions`);
+                }
+              }
               
               set({ questions, isLoading: false });
               // console.log(`✅ Loaded ${questions.length} horary questions from database for user:`, userId);
@@ -221,10 +230,12 @@ export const useHoraryStore = create<HoraryState>()(
       },
 
       // Delete question with database persistence
-      deleteQuestion: async (id) => {
+      deleteQuestion: async (id, userId) => {
         try {
           const response = await fetch(`/api/horary/questions/${id}`, {
             method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
           });
 
           if (response.ok) {
@@ -234,17 +245,24 @@ export const useHoraryStore = create<HoraryState>()(
                 questions: state.questions.filter((q) => q.id !== id),
               }));
               
-              return;
+              return { success: true };
+            } else {
+              // Server returned non-success response
+              throw new Error(data.error || 'Delete failed');
             }
+          } else {
+            // HTTP error status
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Delete failed with status ${response.status}`);
           }
-          
-          set((state) => ({
-            questions: state.questions.filter((q) => q.id !== id),
-          }));
         } catch (error) {
+          // For network errors or other failures, still remove from local state as fallback
           set((state) => ({
             questions: state.questions.filter((q) => q.id !== id),
           }));
+          
+          // Re-throw the error so the UI can handle it
+          throw error;
         }
       },
 

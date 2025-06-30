@@ -28,8 +28,8 @@ export default function SettingsFilters({
   onAdvancedToggle
 }: SettingsFiltersProps) {
   return (
-    <section className="px-[5%] py-4">
-      <div className="max-w-7xl mx-auto">
+    <section className="px-6 py-4">
+      <div className="max-w-none mx-auto">
         <div className="bg-white border border-black p-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="synapsas-input-group">

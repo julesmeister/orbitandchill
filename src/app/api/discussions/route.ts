@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
           isBlogPost,
           isPublished,
           authorId: drafts ? userId : undefined, // Only filter by user for drafts
+          currentUserId: userId, // Pass userId to get vote data
           limit,
           sortBy
         }),

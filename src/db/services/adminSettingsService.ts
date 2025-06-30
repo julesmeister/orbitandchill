@@ -440,12 +440,39 @@ export class AdminSettingsService {
           category: setting.category,
           description: setting.description || null,
           updatedAt: new Date(),
-          updatedBy: 'system'
+          updatedBy: null // Use null instead of 'system' to avoid foreign key constraint
         }));
 
       if (missingSettings.length > 0) {
-        await db.insert(adminSettings).values(missingSettings);
-        console.log(`✅ Initialized ${missingSettings.length} default admin settings`);
+        // BYPASS DRIZZLE ORM - Use raw SQL for consistency with other operations
+        const dbObj = db as any;
+        const client = dbObj?.client;
+        
+        if (!client) {
+          throw new Error('Database client not available for initialization');
+        }
+
+        // Insert each setting individually to avoid batch foreign key issues
+        for (const setting of missingSettings) {
+          try {
+            await client.execute({
+              sql: `INSERT INTO admin_settings (key, value, type, category, description, updated_at, updated_by) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              args: [
+                setting.key,
+                setting.value,
+                setting.type,
+                setting.category,
+                setting.description,
+                setting.updatedAt.toISOString(),
+                setting.updatedBy
+              ]
+            });
+          } catch (error) {
+            console.warn(`⚠️ Failed to initialize setting ${setting.key}:`, error);
+          }
+        }
+        console.log(`✅ Attempted to initialize ${missingSettings.length} default admin settings`);
       } else {
         console.log('✅ All default admin settings already exist');
       }
@@ -466,7 +493,7 @@ export class AdminSettingsService {
       return Object.values(AdminSettingsService.DEFAULT_SETTINGS).map(setting => ({
         ...setting,
         updatedAt: new Date(),
-        updatedBy: 'system'
+        updatedBy: null
       }));
     }
 
@@ -524,7 +551,7 @@ export class AdminSettingsService {
       return {
         ...defaultSetting,
         updatedAt: new Date(),
-        updatedBy: 'system'
+        updatedBy: null
       };
     }
 
@@ -927,7 +954,6 @@ export class AdminSettingsService {
       throw new Error('Invalid database setting: missing key');
     }
     
-    console.log(`🔍 transformSetting: Processing setting ${dbSetting.key}:`, dbSetting);
     
     const defaultSetting = AdminSettingsService.DEFAULT_SETTINGS[dbSetting.key];
     
@@ -956,7 +982,6 @@ export class AdminSettingsService {
       updatedBy: dbSetting.updatedBy
     };
     
-    console.log(`🔍 transformSetting: Final result for ${dbSetting.key}:`, result);
     return result;
   }
 

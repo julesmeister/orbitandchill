@@ -3,43 +3,112 @@
 <head>
     <title>Horary Database Debug</title>
     <style>
-        body { font-family: monospace; margin: 20px; }
-        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; }
-        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; }
-        .error { border-left-color: #dc3545; }
-        .success { border-left-color: #28a745; }
+        body { font-family: monospace; margin: 0; display: flex; min-height: 100vh; }
+        .left-panel { width: 50%; padding: 20px; overflow-y: auto; border-right: 2px solid #007acc; }
+        .right-panel { width: 50%; padding: 20px; overflow-y: auto; background: #f8f9fa; }
+        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        .button:hover { background: #0056b3; }
+        .clear-button { background: #dc3545; }
+        .clear-button:hover { background: #c82333; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; border-radius: 3px; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .basic-section { margin: 20px 0; padding: 15px; background: #e8f4fd; border: 1px solid #bee5eb; border-radius: 5px; }
+        .user-section { margin: 20px 0; padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
+        .deletion-section { margin: 20px 0; padding: 15px; background: #ffe6e6; border: 1px solid #ffcccc; border-radius: 5px; }
+        .question-section { margin: 20px 0; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; }
+        input[type="text"], input[type="date"], input[type="time"], select { 
+            width: 250px; padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; 
+        }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #007acc; }
+        .results-title { font-size: 18px; font-weight: bold; color: #007acc; }
+        pre { white-space: pre-wrap; word-wrap: break-word; max-width: 100%; overflow-x: auto; }
     </style>
 </head>
 <body>
-    <h1>🔧 Horary Database Debug Tool</h1>
-    
-    <div>
-        <button class="button" onclick="checkEnv()">🔍 Check Environment Variables</button>
-        <button class="button" onclick="testConnection()">🔌 Test Database Connection</button>
-        <button class="button" onclick="listTables()">📊 List Database Tables</button>
-        <button class="button" onclick="createHoraryTable()">🔧 Create Horary Table</button>
-        <button class="button" onclick="testQuestionCreation()">✨ Test Question Creation</button>
-        <button class="button" onclick="testRealLocationQuestion()">📍 Test with Real User Location</button>
-        <button class="button" onclick="testHoraryCreation()">🧪 Test Horary Creation (Debug)</button>
+    <div class="left-panel">
+        <h1>🔮 Horary Database Debug Tool</h1>
+        <div style="background: #4caf50; color: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; text-align: center; font-size: 16px;">
+            🔍 Turso Database API Debugger v2.0
+        </div>
+        <div style="background: #007acc; color: white; padding: 10px; margin: 10px 0; border-radius: 3px; font-size: 14px;">
+            ✅ <strong>Migration Status:</strong> Fully migrated to Turso database with API endpoints<br>
+            ⚠️ <strong>Note:</strong> IndexedDB is legacy - all data now persists via Turso database
+        </div>
+        
+        <div class="user-section">
+            <h3>👤 User & Environment Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Debug user profile vs location API inconsistency
+            </p>
+            <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., 113425479876942125321)" style="width: 300px;" value="113425479876942125321">
+            <button class="button" onclick="debugUserLookup()">🔍 Debug User Lookup</button>
+            <button class="button" onclick="testLocationAPI()">📍 Test Location API</button>
+        </div>
+        
+        <div class="basic-section">
+            <h3>🔧 Turso Database Operations</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test Turso database connectivity and table structure
+            </p>
+            <button class="button" onclick="checkEnv()">🔍 Check Environment Variables</button>
+            <button class="button" onclick="testConnection()">🔌 Test Turso Database Connection</button>
+            <button class="button" onclick="listTables()">📊 List Database Tables</button>
+            <button class="button" onclick="testTursoAPI()">🌐 Test Turso API Endpoints</button>
+        </div>
+
+        <div class="question-section">
+            <h3>✨ Question Creation & Testing</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test horary question creation with different location formats
+            </p>
+            <button class="button" onclick="testQuestionCreation()">✨ Test Question Creation</button>
+            <button class="button" onclick="testRealLocationQuestion()">📍 Test with Real User Location</button>
+            <button class="button" onclick="testHoraryCreation()">🧪 Test Horary Creation (Debug)</button>
+        </div>
+
+        <div class="deletion-section">
+            <h3>🗑️ Question CRUD Operations</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test complete CRUD operations via Turso API endpoints
+            </p>
+            <input type="text" id="questionIdInput" placeholder="Enter Question ID to debug" style="width: 300px;">
+            <br><br>
+            <button class="button" onclick="listAllQuestions()">📋 List All Questions (API)</button>
+            <button class="button" onclick="debugSpecificQuestion()">🎯 Debug Specific Question</button>
+            <button class="button" onclick="testTursoAPI()">🌐 Test API Health</button>
+            <button class="button" onclick="enableConnectionPool()" style="background: #28a745;">🔄 Enable Connection Pool</button>
+            <button class="button" onclick="testConnectionPool()">🧪 Test Connection Pool</button>
+            <button class="button" onclick="simulateDeleteAndReload()">🧪 Simulate Delete & Reload</button>
+            <button class="button" onclick="testFixedDelete()">🔧 Test Delete API Endpoint</button>
+            <button class="button" onclick="testCreateAndDelete()">✅ Test Full CRUD Cycle</button>
+            <button class="button" onclick="clearBrowserStorage()" style="background: #dc3545;">🧹 Clear Legacy Browser Storage</button>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 15px; margin: 20px 0; border: 1px solid #dee2e6; border-radius: 5px;">
+            <h4 style="margin: 0 0 10px 0; color: #495057;">🔗 Production Links</h4>
+            <p style="margin: 5px 0; font-size: 14px;">
+                📱 <strong>Main Horary Interface:</strong> <a href="/horary" target="_blank">/horary</a> (Uses Turso database)<br>
+                ⚙️ <strong>Admin Dashboard:</strong> <a href="/admin" target="_blank">/admin</a> (Database management)<br>
+                📊 <strong>API Documentation:</strong> See @API_PROGRESS.md and @DATABASE.md
+            </p>
+        </div>
     </div>
-    
-    <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border: 1px solid #dee2e6;">
-        <h3>🔍 User Lookup Debug</h3>
-        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
-            Debug why user <code>113425479876942125321</code> returns 404 when the user is clearly logged in
-        </p>
-        <input type="text" id="userIdInput" placeholder="Enter User ID (e.g., 113425479876942125321)" style="width: 300px; padding: 8px; margin-right: 10px;" value="113425479876942125321">
-        <button class="button" onclick="debugUserLookup()">🔍 Debug User Lookup</button>
-        <button class="button" onclick="testLocationAPI()">📍 Test Location API</button>
+
+    <div class="right-panel">
+        <div class="results-header">
+            <div class="results-title">📊 Debug Results</div>
+            <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        <div id="results"></div>
     </div>
-    
-    <div id="results"></div>
 
     <script>
-        function addResult(title, data, isError = false) {
+        function addResult(title, data, type = 'success') {
             const results = document.getElementById('results');
             const div = document.createElement('div');
-            div.className = `result ${isError ? 'error' : 'success'}`;
+            div.className = `result ${type}`;
             div.innerHTML = `
                 <h3>${title}</h3>
                 <pre>${JSON.stringify(data, null, 2)}</pre>
@@ -47,13 +116,17 @@
             results.appendChild(div);
         }
 
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
         async function checkEnv() {
             try {
                 const response = await fetch('/api/debug/env-check');
                 const data = await response.json();
-                addResult('🔍 Environment Variables', data, !response.ok);
+                addResult('🔍 Environment Variables', data, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ Environment Check Error', { error: error.message }, true);
+                addResult('❌ Environment Check Error', { error: error.message }, 'error');
             }
         }
 
@@ -61,9 +134,9 @@
             try {
                 const response = await fetch('/api/debug/db-connection');
                 const data = await response.json();
-                addResult('🔌 Database Connection Test', data, !response.ok);
+                addResult('🔌 Database Connection Test', data, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ Connection Test Error', { error: error.message }, true);
+                addResult('❌ Connection Test Error', { error: error.message }, 'error');
             }
         }
 
@@ -71,22 +144,47 @@
             try {
                 const response = await fetch('/api/debug/list-tables');
                 const data = await response.json();
-                addResult('📊 Database Tables', data, !response.ok);
+                addResult('📊 Database Tables', data, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ List Tables Error', { error: error.message }, true);
+                addResult('❌ List Tables Error', { error: error.message }, 'error');
             }
         }
 
-        async function createHoraryTable() {
+        async function testTursoAPI() {
             try {
-                const response = await fetch('/api/debug/create-horary-table', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
-                addResult('🔧 Create Horary Table', data, !response.ok);
+                // Test multiple API endpoints to verify Turso connectivity
+                const tests = [
+                    { name: 'Environment Check', endpoint: '/api/debug/env-check' },
+                    { name: 'Database Connection', endpoint: '/api/debug/db-connection' },
+                    { name: 'Table List', endpoint: '/api/debug/list-tables' },
+                    { name: 'Connection Pool Status', endpoint: '/api/debug/connection-pool?action=status' },
+                    { name: 'Horary Questions API', endpoint: '/api/horary/questions?userId=test&limit=1' }
+                ];
+
+                for (const test of tests) {
+                    const response = await fetch(test.endpoint);
+                    const data = await response.json();
+                    
+                    let resultData = {
+                        endpoint: test.endpoint,
+                        statusCode: response.status,
+                        success: response.ok,
+                        data: data
+                    };
+                    
+                    // Add special handling for connection pool status
+                    if (test.name === 'Connection Pool Status' && response.ok) {
+                        resultData.poolInfo = {
+                            usingPool: data.usingConnectionPool,
+                            stats: data.poolStats,
+                            message: data.message
+                        };
+                    }
+                    
+                    addResult(`🌐 ${test.name}`, resultData, response.ok ? 'success' : 'error');
+                }
             } catch (error) {
-                addResult('❌ Create Table Error', { error: error.message }, true);
+                addResult('❌ Turso API Test Error', { error: error.message }, 'error');
             }
         }
 
@@ -169,10 +267,10 @@
                         ...data,
                         requestPayload: test.payload,
                         statusCode: response.status
-                    }, !response.ok);
+                    }, !response.ok ? 'error' : 'success');
                 }
             } catch (error) {
-                addResult('❌ Question Creation Error', { error: error.message }, true);
+                addResult('❌ Question Creation Error', { error: error.message }, 'error');
             }
         }
 
@@ -180,7 +278,7 @@
             try {
                 const userId = document.getElementById('userIdInput').value;
                 if (!userId) {
-                    addResult('❌ Real Location Test Error', { error: 'Please enter a user ID first' }, true);
+                    addResult('❌ Real Location Test Error', { error: 'Please enter a user ID first' }, 'error');
                     return;
                 }
 
@@ -192,7 +290,7 @@
                     addResult('❌ Real Location Test Error', { 
                         error: 'Could not fetch user location', 
                         locationResponse: locationData 
-                    }, true);
+                    }, 'error');
                     return;
                 }
 
@@ -225,9 +323,9 @@
                     requestPayload: testPayload,
                     statusCode: response.status,
                     userLocationUsed: userLocation
-                }, !response.ok);
+                }, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ Real Location Test Error', { error: error.message }, true);
+                addResult('❌ Real Location Test Error', { error: error.message }, 'error');
             }
         }
 
@@ -238,9 +336,9 @@
                     headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await response.json();
-                addResult('🧪 Debug Horary Creation Test', data, !response.ok);
+                addResult('🧪 Debug Horary Creation Test', data, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ Debug Creation Test Error', { error: error.message }, true);
+                addResult('❌ Debug Creation Test Error', { error: error.message }, 'error');
             }
         }
 
@@ -248,15 +346,15 @@
             try {
                 const userId = document.getElementById('userIdInput').value;
                 if (!userId) {
-                    addResult('❌ User Lookup Error', { error: 'Please enter a user ID' }, true);
+                    addResult('❌ User Lookup Error', { error: 'Please enter a user ID' }, 'error');
                     return;
                 }
                 
                 const response = await fetch(`/api/debug/user-lookup?userId=${encodeURIComponent(userId)}`);
                 const data = await response.json();
-                addResult(`🔍 User Lookup Debug for: ${userId}`, data, !response.ok);
+                addResult(`🔍 User Lookup Debug for: ${userId}`, data, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ User Lookup Error', { error: error.message }, true);
+                addResult('❌ User Lookup Error', { error: error.message }, 'error');
             }
         }
 
@@ -264,7 +362,7 @@
             try {
                 const userId = document.getElementById('userIdInput').value;
                 if (!userId) {
-                    addResult('❌ Location API Test Error', { error: 'Please enter a user ID' }, true);
+                    addResult('❌ Location API Test Error', { error: 'Please enter a user ID' }, 'error');
                     return;
                 }
                 
@@ -280,11 +378,425 @@
                     isSuccess: response.ok
                 };
                 
-                addResult(`📍 Location API Test for: ${userId}`, result, !response.ok);
+                addResult(`📍 Location API Test for: ${userId}`, result, !response.ok ? 'error' : 'success');
             } catch (error) {
-                addResult('❌ Location API Test Error', { error: error.message }, true);
+                addResult('❌ Location API Test Error', { error: error.message }, 'error');
             }
         }
+
+        // Question deletion debugging functions
+        async function listAllQuestions() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ List Questions Error', { error: 'Please enter a user ID first' }, 'error');
+                    return;
+                }
+
+                const response = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}&includeDeleted=true`);
+                const data = await response.json();
+                
+                addResult('📋 All Questions (including deleted)', {
+                    totalQuestions: data.questions?.length || 0,
+                    questions: data.questions?.map(q => ({
+                        id: q.id,
+                        question: q.question.substring(0, 50) + '...',
+                        date: q.date,
+                        isDeleted: q.isDeleted || false,
+                        deletedAt: q.deletedAt
+                    })),
+                    statusCode: response.status
+                }, !response.ok ? 'error' : 'success');
+            } catch (error) {
+                addResult('❌ List Questions Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function clearBrowserStorage() {
+            try {
+                if (!confirm('⚠️ This will clear all legacy browser storage (localStorage, sessionStorage, IndexedDB). Continue?')) {
+                    return;
+                }
+
+                const results = {
+                    localStorage: { cleared: false, keys: [] },
+                    sessionStorage: { cleared: false, keys: [] },
+                    indexedDB: { cleared: false, databases: [] },
+                    timestamp: new Date().toISOString()
+                };
+
+                // Clear localStorage
+                const localKeys = Object.keys(localStorage).filter(k => 
+                    k.includes('horary') || k.includes('question') || k.includes('user') || k.includes('natal') || k.includes('chart')
+                );
+                results.localStorage.keys = localKeys;
+                localKeys.forEach(key => localStorage.removeItem(key));
+                results.localStorage.cleared = true;
+
+                // Clear sessionStorage
+                const sessionKeys = Object.keys(sessionStorage).filter(k => 
+                    k.includes('horary') || k.includes('question') || k.includes('user') || k.includes('natal') || k.includes('chart')
+                );
+                results.sessionStorage.keys = sessionKeys;
+                sessionKeys.forEach(key => sessionStorage.removeItem(key));
+                results.sessionStorage.cleared = true;
+
+                // Clear IndexedDB (legacy)
+                if (window.indexedDB) {
+                    try {
+                        const databases = ['LuckstrologyDatabase', 'horary-db', 'user-db'];
+                        for (const dbName of databases) {
+                            const deleteRequest = indexedDB.deleteDatabase(dbName);
+                            deleteRequest.onsuccess = () => results.indexedDB.databases.push(`${dbName}: deleted`);
+                            deleteRequest.onerror = () => results.indexedDB.databases.push(`${dbName}: not found`);
+                        }
+                        results.indexedDB.cleared = true;
+                    } catch (error) {
+                        results.indexedDB = { error: error.message };
+                    }
+                }
+
+                addResult('🧹 Legacy Storage Cleanup Complete', {
+                    ...results,
+                    summary: `Cleared ${localKeys.length} localStorage keys, ${sessionKeys.length} sessionStorage keys`,
+                    recommendation: 'Refresh the page and use the main horary interface at /horary for Turso database persistence'
+                }, 'success');
+
+            } catch (error) {
+                addResult('❌ Storage Cleanup Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugSpecificQuestion() {
+            try {
+                const questionId = document.getElementById('questionIdInput').value;
+                const userId = document.getElementById('userIdInput').value;
+                
+                if (!questionId) {
+                    addResult('❌ Question Debug Error', { error: 'Please enter a question ID' }, 'error');
+                    return;
+                }
+
+                // Try to fetch specific question details
+                const response = await fetch(`/api/horary/questions/${encodeURIComponent(questionId)}?userId=${encodeURIComponent(userId || '')}`);
+                const data = await response.json();
+
+                addResult(`🎯 Question Debug: ${questionId}`, {
+                    found: response.ok,
+                    statusCode: response.status,
+                    questionData: data,
+                    searchedWith: { questionId, userId }
+                }, !response.ok ? 'error' : 'success');
+            } catch (error) {
+                addResult('❌ Question Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+
+        async function simulateDeleteAndReload() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ Delete Simulation Error', { error: 'Please enter a user ID first' }, 'error');
+                    return;
+                }
+
+                // Get current questions
+                const beforeResponse = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}`);
+                const beforeData = await beforeResponse.json();
+                
+                if (!beforeData.questions || beforeData.questions.length === 0) {
+                    addResult('❌ Delete Simulation Error', { error: 'No questions found to simulate deletion' }, 'error');
+                    return;
+                }
+
+                const testQuestion = beforeData.questions[0];
+                
+                // First, get detailed question info to see who owns it
+                let questionOwnerInfo = null;
+                try {
+                    const questionDetailResponse = await fetch(`/api/horary/questions/${testQuestion.id}`);
+                    const questionDetailData = await questionDetailResponse.json();
+                    questionOwnerInfo = {
+                        questionOwner: questionDetailData.question?.userId,
+                        found: questionDetailResponse.ok,
+                        data: questionDetailData
+                    };
+                } catch (error) {
+                    questionOwnerInfo = { error: error.message };
+                }
+                
+                // Simulate deletion (if endpoint exists)
+                let deleteResult = null;
+                try {
+                    const deleteResponse = await fetch(`/api/horary/questions/${testQuestion.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId })
+                    });
+                    deleteResult = {
+                        requestingUser: userId,
+                        questionOwner: questionOwnerInfo?.questionOwner,
+                        statusCode: deleteResponse.status,
+                        success: deleteResponse.ok,
+                        data: await deleteResponse.json(),
+                        permissionMismatch: questionOwnerInfo?.questionOwner !== userId
+                    };
+                } catch (deleteError) {
+                    deleteResult = { error: deleteError.message };
+                }
+
+                // Check questions after deletion attempt
+                const afterResponse = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}`);
+                const afterData = await afterResponse.json();
+
+                addResult('🧪 Delete & Reload Simulation', {
+                    questionTested: {
+                        id: testQuestion.id,
+                        question: testQuestion.question.substring(0, 50) + '...',
+                        userIdFromList: testQuestion.userId  // What the list shows
+                    },
+                    questionOwnership: questionOwnerInfo,
+                    before: {
+                        count: beforeData.questions.length,
+                        questionExists: true
+                    },
+                    deleteAttempt: deleteResult,
+                    after: {
+                        count: afterData.questions?.length || 0,
+                        questionStillExists: afterData.questions?.some(q => q.id === testQuestion.id),
+                        questionsFound: afterData.questions?.map(q => ({
+                            id: q.id,
+                            question: q.question.substring(0, 30) + '...',
+                            userId: q.userId
+                        }))
+                    },
+                    analysis: {
+                        userIdMismatch: testQuestion.userId !== questionOwnerInfo?.questionOwner,
+                        listShowsWrongOwner: testQuestion.userId && questionOwnerInfo?.questionOwner && testQuestion.userId !== questionOwnerInfo?.questionOwner,
+                        requestingUser: userId,
+                        questionActualOwner: questionOwnerInfo?.questionOwner,
+                        questionListOwner: testQuestion.userId
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Delete Simulation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testFixedDelete() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ Fixed Delete Test Error', { error: 'Please enter a user ID first' }, 'error');
+                    return;
+                }
+
+                // Get current questions
+                const beforeResponse = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}`);
+                const beforeData = await beforeResponse.json();
+                
+                if (!beforeData.questions || beforeData.questions.length === 0) {
+                    addResult('❌ Fixed Delete Test Error', { error: 'No questions found to test deletion' }, 'error');
+                    return;
+                }
+
+                // Find a test question to delete (prefer debug questions)
+                let testQuestion = beforeData.questions.find(q => q.question.includes('Debug') || q.question.includes('test'));
+                if (!testQuestion) {
+                    testQuestion = beforeData.questions[0];
+                }
+
+                // Get detailed question info to compare ownership
+                let questionOwnerInfo = null;
+                try {
+                    const questionDetailResponse = await fetch(`/api/horary/questions/${testQuestion.id}`);
+                    const questionDetailData = await questionDetailResponse.json();
+                    questionOwnerInfo = {
+                        questionOwner: questionDetailData.question?.userId,
+                        found: questionDetailResponse.ok
+                    };
+                } catch (error) {
+                    questionOwnerInfo = { error: error.message };
+                }
+
+                // Test the fixed delete endpoint with proper request body
+                const deleteResponse = await fetch(`/api/horary/questions/${testQuestion.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                
+                const deleteData = await deleteResponse.json();
+
+                // Check questions after deletion attempt
+                const afterResponse = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}`);
+                const afterData = await afterResponse.json();
+
+                addResult('🔧 Fixed Delete API Test', {
+                    questionTested: {
+                        id: testQuestion.id,
+                        question: testQuestion.question.substring(0, 50) + '...',
+                        userIdFromList: testQuestion.userId
+                    },
+                    ownership: {
+                        requestingUser: userId,
+                        questionListOwner: testQuestion.userId,
+                        questionActualOwner: questionOwnerInfo?.questionOwner,
+                        ownershipMismatch: testQuestion.userId !== questionOwnerInfo?.questionOwner
+                    },
+                    before: {
+                        count: beforeData.questions.length
+                    },
+                    deleteAttempt: {
+                        statusCode: deleteResponse.status,
+                        success: deleteResponse.ok,
+                        data: deleteData
+                    },
+                    after: {
+                        count: afterData.questions?.length || 0,
+                        questionStillExists: afterData.questions?.some(q => q.id === testQuestion.id),
+                        actuallyDeleted: deleteResponse.ok && !afterData.questions?.some(q => q.id === testQuestion.id)
+                    },
+                    analysis: {
+                        fixWorked: deleteResponse.ok && !afterData.questions?.some(q => q.id === testQuestion.id),
+                        errorFixed: deleteResponse.status !== 500,
+                        questionsReduced: afterData.questions?.length < beforeData.questions.length,
+                        permissionIssue: deleteResponse.status === 403,
+                        dataInconsistency: testQuestion.userId !== questionOwnerInfo?.questionOwner
+                    }
+                }, deleteResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Fixed Delete Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testCreateAndDelete() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                if (!userId) {
+                    addResult('❌ Create & Delete Test Error', { error: 'Please enter a user ID first' }, 'error');
+                    return;
+                }
+
+                // Step 1: Create a test question with the correct user ID
+                const createPayload = {
+                    question: `Complete test - create and delete - ${new Date().toLocaleString()}`,
+                    date: new Date().toISOString(),
+                    userId: userId,
+                    category: 'test',
+                    customLocation: {
+                        name: 'Test Location, USA',
+                        coordinates: { lat: '40.0000', lon: '-74.0000' }
+                    }
+                };
+
+                const createResponse = await fetch('/api/horary/questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(createPayload)
+                });
+                
+                const createData = await createResponse.json();
+                
+                if (!createResponse.ok || !createData.success) {
+                    addResult('❌ Create & Delete Test - Creation Failed', {
+                        createAttempt: {
+                            statusCode: createResponse.status,
+                            data: createData
+                        }
+                    }, 'error');
+                    return;
+                }
+
+                const newQuestionId = createData.question.id;
+                
+                // Step 2: Verify question was created
+                const verifyResponse = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}`);
+                const verifyData = await verifyResponse.json();
+                const questionExists = verifyData.questions?.some(q => q.id === newQuestionId);
+
+                // Step 3: Delete the question we just created
+                const deleteResponse = await fetch(`/api/horary/questions/${newQuestionId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                
+                const deleteData = await deleteResponse.json();
+
+                // Step 4: Verify question was deleted
+                const finalResponse = await fetch(`/api/horary/questions?userId=${encodeURIComponent(userId)}`);
+                const finalData = await finalResponse.json();
+                const questionStillExists = finalData.questions?.some(q => q.id === newQuestionId);
+
+                addResult('✅ Complete Create & Delete Test', {
+                    step1_create: {
+                        statusCode: createResponse.status,
+                        success: createResponse.ok,
+                        questionId: newQuestionId,
+                        data: createData
+                    },
+                    step2_verify: {
+                        questionFoundAfterCreate: questionExists,
+                        totalQuestions: verifyData.questions?.length || 0
+                    },
+                    step3_delete: {
+                        statusCode: deleteResponse.status,
+                        success: deleteResponse.ok,
+                        data: deleteData
+                    },
+                    step4_final: {
+                        questionFoundAfterDelete: questionStillExists,
+                        totalQuestions: finalData.questions?.length || 0
+                    },
+                    analysis: {
+                        fullCycleWorked: createResponse.ok && questionExists && deleteResponse.ok && !questionStillExists,
+                        creationWorked: createResponse.ok && questionExists,
+                        deletionWorked: deleteResponse.ok && !questionStillExists,
+                        permissionsCorrect: deleteResponse.ok || deleteResponse.status === 403,
+                        noMoreErrors: deleteResponse.status !== 500
+                    }
+                }, (createResponse.ok && deleteResponse.ok && !questionStillExists) ? 'success' : 'warning');
+
+            } catch (error) {
+                addResult('❌ Create & Delete Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function enableConnectionPool() {
+            try {
+                const response = await fetch('/api/debug/connection-pool?action=enable');
+                const data = await response.json();
+                
+                addResult('🔄 Enable Connection Pool', {
+                    success: data.success,
+                    usingConnectionPool: data.usingConnectionPool,
+                    poolStats: data.poolStats,
+                    message: data.message
+                }, data.success ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Enable Connection Pool Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testConnectionPool() {
+            try {
+                const response = await fetch('/api/debug/connection-pool?action=test');
+                const data = await response.json();
+                
+                addResult('🧪 Test Connection Pool', {
+                    success: data.success,
+                    testResult: data.testResult,
+                    poolStats: data.poolStats,
+                    message: data.message,
+                    error: data.error
+                }, data.success ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Test Connection Pool Error', { error: error.message }, 'error');
+            }
+        }
+
     </script>
 </body>
 </html>

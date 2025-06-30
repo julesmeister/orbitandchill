@@ -50,7 +50,20 @@ class TursoConnectionPool {
       ...config
     };
 
-    this.initialize();
+    // Only initialize if we're in a runtime environment (not during build)
+    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'development') {
+      // Defer initialization to avoid build-time issues
+      process.nextTick(() => {
+        this.initialize().catch(error => {
+          console.warn('Deferred connection pool initialization failed:', error);
+        });
+      });
+    } else if (typeof window === 'undefined') {
+      // In development, initialize immediately
+      this.initialize().catch(error => {
+        console.warn('Connection pool initialization failed:', error);
+      });
+    }
   }
 
   /**
@@ -370,6 +383,11 @@ let globalPool: TursoConnectionPool | null = null;
  * Initialize the global connection pool (singleton with health check)
  */
 export async function initializeConnectionPool(databaseUrl: string, authToken: string, config?: Partial<PoolConfig>) {
+  // Only proceed if we have valid credentials and are in a server environment
+  if (!databaseUrl || !authToken || typeof window !== 'undefined') {
+    throw new Error('Connection pool requires valid credentials and server environment');
+  }
+
   // Check if existing pool is healthy and not destroyed
   if (globalPool && !globalPool['isDestroyed']) {
     try {

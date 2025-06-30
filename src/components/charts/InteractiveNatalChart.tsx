@@ -45,6 +45,13 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
     const svg = container.querySelector("svg");
     if (!svg) return;
 
+    // Track all event listeners for cleanup
+    const eventListeners: Array<{
+      element: Element;
+      event: string;
+      handler: EventListener;
+    }> = [];
+
     // Make SVG responsive
     svg.style.width = "100%";
     svg.style.height = "auto";
@@ -154,6 +161,12 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
           const hideTooltip = () =>
             setTooltip((prev) => ({ ...prev, visible: false }));
 
+          // Track listeners for cleanup
+          eventListeners.push(
+            { element: text, event: "mouseenter", handler: showTooltip },
+            { element: text, event: "mouseleave", handler: hideTooltip }
+          );
+          
           text.addEventListener("mouseenter", showTooltip);
           text.addEventListener("mouseleave", hideTooltip);
         }
@@ -452,6 +465,12 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
           htmlElement.style.transform = "scale(1)";
         };
 
+        // Track listeners for cleanup
+        eventListeners.push(
+          { element: textElement, event: "mouseenter", handler: hoverIn },
+          { element: textElement, event: "mouseleave", handler: hoverOut }
+        );
+        
         textElement.addEventListener("mouseenter", hoverIn);
         textElement.addEventListener("mouseleave", hoverOut);
       }
@@ -689,10 +708,27 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
 
       // Add listeners to all elements in the group
       group.forEach((element) => {
+        // Track listeners for cleanup
+        eventListeners.push(
+          { element, event: "mouseenter", handler: addHoverEffect },
+          { element, event: "mouseleave", handler: removeHoverEffect }
+        );
+        
         element.addEventListener("mouseenter", addHoverEffect);
         element.addEventListener("mouseleave", removeHoverEffect);
       });
     });
+
+    // Cleanup function to remove all event listeners
+    return () => {
+      eventListeners.forEach(({ element, event, handler }) => {
+        try {
+          element.removeEventListener(event, handler);
+        } catch (error) {
+          // Silently handle cases where element might be removed from DOM
+        }
+      });
+    };
   }, [svgContent, chartData]);
 
   return (

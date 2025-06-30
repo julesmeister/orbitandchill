@@ -205,107 +205,100 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
 
   return (
     <div className="bg-white">
-      {/* Header Section */}
-      <section className="px-[5%] py-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black">Audit Logs</h1>
-              <p className="font-inter text-xl text-black/80 mt-4 leading-relaxed">Track all administrative actions and system changes</p>
-            </div>
-            
-            <div className="flex gap-0 border border-black">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="px-6 py-3 bg-white text-black font-inter font-semibold border-r border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filters
-              </button>
-              
-              <button
-                onClick={() => loadAuditLogs(true)}
-                disabled={isLoading}
-                className="px-6 py-3 bg-black text-white font-inter font-semibold hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
+      {/* Header Section with Integrated Statistics */}
+      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+        <div className="px-6 py-4">
+          <div className="max-w-none mx-auto">
+            <div className="flex flex-col gap-4">
+              {/* Top row: Title + Action buttons */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="font-space-grotesk text-2xl font-bold text-black">Audit Logs</h1>
+                  <p className="font-inter text-sm text-black/70 mt-0.5">Track all administrative actions and system changes</p>
+                </div>
+                
+                <div className="flex gap-0 border border-black">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="px-4 py-2 bg-white text-black font-inter font-semibold border-r border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filters
+                  </button>
+                  
+                  <button
+                    onClick={() => loadAuditLogs(true)}
+                    disabled={isLoading}
+                    className="px-4 py-2 bg-black text-white font-inter font-semibold hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* Bottom row: Statistics (only show if available) */}
+              {statistics && (
+                <div className="flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-black">
+                    <div className="w-4 h-4 bg-black flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <span className="font-inter text-xs text-black/70">Total</span>
+                    <span className="font-space-grotesk text-sm font-bold text-black">{statistics.totalLogs.toLocaleString()}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-black">
+                    <div className="w-4 h-4 bg-green-600 flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <span className="font-inter text-xs text-black/70">Creates</span>
+                    <span className="font-space-grotesk text-sm font-bold text-black">{statistics.logsByAction.create || 0}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-black">
+                    <div className="w-4 h-4 bg-red-600 flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </div>
+                    <span className="font-inter text-xs text-black/70">Deletes</span>
+                    <span className="font-space-grotesk text-sm font-bold text-black">{statistics.logsByAction.delete || 0}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-black">
+                    <div className="w-4 h-4 bg-orange-600 flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <span className="font-inter text-xs text-black/70">Critical</span>
+                    <span className="font-space-grotesk text-sm font-bold text-black">
+                      {(statistics.logsBySeverity.high || 0) + (statistics.logsBySeverity.critical || 0)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Statistics Section */}
-      {statistics && (
-        <section className="px-[5%] py-8">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">Statistics Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 border border-black">
-              <div className="p-8 border-r border-b lg:border-b-0 border-black" style={{ backgroundColor: '#6bdbff' }}>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <p className="font-inter text-sm font-medium text-black mb-2">Total Logs</p>
-                  <p className="font-space-grotesk text-3xl font-bold text-black">{statistics.totalLogs.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="p-8 border-r border-b md:border-b-0 border-black" style={{ backgroundColor: '#51bd94' }}>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <p className="font-inter text-sm font-medium text-black mb-2">Creates</p>
-                  <p className="font-space-grotesk text-3xl font-bold text-black">{statistics.logsByAction.create || 0}</p>
-                </div>
-              </div>
-
-              <div className="p-8 border-r lg:border-r-0 border-b md:border-b-0 border-black" style={{ backgroundColor: '#f2e356' }}>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </div>
-                  <p className="font-inter text-sm font-medium text-black mb-2">Deletes</p>
-                  <p className="font-space-grotesk text-3xl font-bold text-black">{statistics.logsByAction.delete || 0}</p>
-                </div>
-              </div>
-
-              <div className="p-8" style={{ backgroundColor: '#ff91e9' }}>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <p className="font-inter text-sm font-medium text-black mb-2">High/Critical</p>
-                  <p className="font-space-grotesk text-3xl font-bold text-black">
-                    {(statistics.logsBySeverity.high || 0) + (statistics.logsBySeverity.critical || 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Filters Panel */}
       {showFilters && (
-        <section className="px-[5%] py-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-white border border-black p-8">
-              <div className="flex justify-between items-center mb-6">
+        <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+          <div className="px-6 py-8">
+            <div className="max-w-none mx-auto">
+              <div className="bg-white border border-black p-8">
+                <div className="flex justify-between items-center mb-6">
                 <h3 className="font-space-grotesk text-xl font-bold text-black">Filters</h3>
                 <button
                   onClick={clearFilters}
@@ -405,14 +398,15 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                 </div>
               </div>
             </div>
-          </div>
+          </div></div>
         </section>
       )}
 
       {/* Error State */}
       {error && (
-        <section className="px-[5%] py-4">
-          <div className="max-w-7xl mx-auto">
+        <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+          <div className="px-6 py-4">
+            <div className="max-w-none mx-auto">
             <div className="bg-red-100 border-2 border-black p-6">
               <div className="flex">
                 <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -423,13 +417,15 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                 </div>
               </div>
             </div>
-          </div>
+            </div>
+            </div>
         </section>
       )}
 
       {/* Audit Logs Table */}
-      <section className="px-[5%] py-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+        <div className="px-6 py-8">
+          <div className="max-w-none mx-auto">
           <div className="bg-white border border-black overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-black">
@@ -571,7 +567,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
               </div>
             )}
           </div>
-        </div>
+        </div></div>
       </section>
     </div>
   );

@@ -52,5 +52,6 @@ export interface SettingsActions {
   updateSetting: (key: string, value: any, type: string) => void;
   toggleCategory: (category: string) => void;
   showNotification: (type: 'success' | 'error', message: string) => void;
+  clearNotification: () => void;
   getSettingValue: (setting: AdminSetting) => any;
 }

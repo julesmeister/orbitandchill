@@ -22,8 +22,8 @@ interface DiscussionStats {
   recentActivity: number; // discussions in last 7 days
 }
 
-export default function CommunityStats({ 
-  className = '' 
+export default function CommunityStats({
+  className = ''
 }: CommunityStatsProps) {
   const [stats, setStats] = useState<StatItem[]>([
     { label: 'Active Members', value: '...' },
@@ -40,10 +40,10 @@ export default function CommunityStats({
         // Fetch discussions data
         const response = await fetch('/api/discussions?limit=1000&sortBy=recent');
         const data = await response.json();
-        
+
         if (data.success && data.discussions) {
           const discussions = data.discussions;
-          
+
           // Calculate real statistics
           const discussionStats: DiscussionStats = {
             totalDiscussions: discussions.length,
@@ -52,9 +52,21 @@ export default function CommunityStats({
             totalVotes: discussions.reduce((sum: number, d: any) => sum + (d.upvotes || 0) + (d.downvotes || 0), 0),
             uniqueAuthors: new Set(discussions.map((d: any) => d.authorId || d.author).filter(Boolean)),
             recentActivity: discussions.filter((d: any) => {
-              const createdAt = new Date(d.createdAt);
+              // Handle various date formats
+              let createdAt;
+              const rawDate = d.createdAt || d.lastActivity || d.updatedAt;
+              
+              if (typeof rawDate === 'number') {
+                // If it's a Unix timestamp, multiply by 1000 if it looks like seconds
+                createdAt = new Date(rawDate > 1000000000000 ? rawDate : rawDate * 1000);
+              } else {
+                createdAt = new Date(rawDate);
+              }
+              
               const weekAgo = new Date();
               weekAgo.setDate(weekAgo.getDate() - 7);
+              
+              // console.log('Raw date:', rawDate, 'Parsed date:', createdAt, 'Week ago:', weekAgo, 'Include?', createdAt > weekAgo);
               return createdAt > weekAgo;
             }).length
           };
@@ -62,25 +74,25 @@ export default function CommunityStats({
 
           // Create stats array with real data
           const realStats: StatItem[] = [
-            { 
-              label: 'Active Members', 
-              value: discussionStats.uniqueAuthors.size.toString() 
+            {
+              label: 'Active Members',
+              value: discussionStats.uniqueAuthors.size.toString()
             },
-            { 
-              label: 'Total Discussions', 
-              value: discussionStats.totalDiscussions.toString() 
+            {
+              label: 'Total Discussions',
+              value: discussionStats.totalDiscussions.toString()
             },
-            { 
-              label: 'Total Replies', 
-              value: discussionStats.totalReplies.toString() 
+            {
+              label: 'Total Replies',
+              value: discussionStats.totalReplies.toString()
             },
-            { 
-              label: 'Total Views', 
-              value: discussionStats.totalViews.toString() 
+            {
+              label: 'Total Views',
+              value: discussionStats.totalViews.toString()
             },
-            { 
-              label: 'This Week', 
-              value: discussionStats.recentActivity.toString() 
+            {
+              label: 'This Week',
+              value: discussionStats.recentActivity.toString()
             }
           ];
 
@@ -114,23 +126,30 @@ export default function CommunityStats({
   }, []);
   return (
     <div className={`border-t border-black ${className}`}>
-      <div className="p-6">
-        <h3 className="font-space-grotesk text-lg font-bold text-black mb-6">Community Stats</h3>
-        <div className="space-y-4 ml-8">
+      <div className="p-3">
+        <h3 className="font-space-grotesk text-sm font-bold text-black mb-3">Community Stats</h3>
+        
+        {/* Horizontal Bar Layout */}
+        <div className="space-y-1">
           {stats.map((stat, index) => (
             <div key={`${stat.label}-${index}`} className="relative">
-              <ThreadingLines 
-                isNested={true} 
-                isLastChild={index === stats.length - 1} 
-                hasMoreSiblings={index < stats.length - 1} 
-              />
-              <div className={`flex items-center justify-between px-3 py-2 ml-4 rounded-none border border-transparent hover:border-black hover:bg-black hover:text-white transition-all duration-200 cursor-pointer group ${loading ? 'animate-pulse' : ''}`}>
-                <span className={`text-sm group-hover:text-white ${loading ? 'bg-gray-200 text-transparent rounded' : ''}`}>
-                  {stat.label}
-                </span>
-                <span className={`font-semibold ${loading ? 'bg-gray-200 text-transparent rounded w-8' : ''}`}>
-                  {stat.value}
-                </span>
+              <div className={`flex border border-black ${loading ? 'animate-pulse' : ''}`}>
+                {/* Left accent bar */}
+                <div className="w-1 bg-gray-300"></div>
+                
+                {/* Middle section - Label (flex grows) */}
+                <div className="flex-1 bg-white px-3 py-1 flex items-center">
+                  <span className={`text-xs text-black font-medium ${loading ? 'bg-gray-200 text-transparent' : ''}`}>
+                    {stat.label}
+                  </span>
+                </div>
+                
+                {/* Right section - Value (fixed width) */}
+                <div className="w-12 bg-black text-white flex items-center justify-center">
+                  <span className={`text-xs font-bold ${loading ? 'bg-gray-200 text-transparent' : ''}`}>
+                    {stat.value}
+                  </span>
+                </div>
               </div>
             </div>
           ))}

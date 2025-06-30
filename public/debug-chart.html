@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart Page Debug Tool</title>
+    <style>
+        body { font-family: monospace; margin: 0; display: flex; min-height: 100vh; }
+        .left-panel { width: 50%; padding: 20px; overflow-y: auto; border-right: 2px solid #007acc; }
+        .right-panel { width: 50%; padding: 20px; overflow-y: auto; background: #f8f9fa; }
+        .button { padding: 10px; margin: 5px; background: #007acc; color: white; border: none; cursor: pointer; border-radius: 3px; }
+        .button:hover { background: #0056b3; }
+        .clear-button { background: #dc3545; }
+        .clear-button:hover { background: #c82333; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 4px solid #007acc; border-radius: 3px; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+        .form-section { margin: 20px 0; padding: 15px; background: #e8f4fd; border: 1px solid #bee5eb; border-radius: 5px; }
+        .user-section { margin: 20px 0; padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
+        .chart-section { margin: 20px 0; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; }
+        .db-section { margin: 20px 0; padding: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; }
+        input[type="text"], input[type="date"], input[type="time"], select { 
+            width: 250px; padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; 
+        }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #007acc; }
+        .results-title { font-size: 18px; font-weight: bold; color: #007acc; }
+        pre { white-space: pre-wrap; word-wrap: break-word; max-width: 100%; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <h1>📊 Chart Page Debug Tool v1.0</h1>
+        <div style="background: #4caf50; color: white; padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; text-align: center; font-size: 16px;">
+            ✅ BIRTH DATA & CHART DEBUG TOOL LOADED
+        </div>
+        <div style="background: #ffeb3b; padding: 10px; margin: 10px 0; border-radius: 5px; color: #333;">
+            <strong>🎯 Purpose:</strong> Debug birth data persistence issues with NatalChartForm and chart page fetching
+        </div>
+        
+        <div class="user-section">
+            <h3>👤 User Store & Birth Data Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test user store, database persistence, and birth data flow
+            </p>
+            <input type="text" id="userIdInput" placeholder="Enter User ID" style="width: 300px;" value="113425479876942125321">
+            <button class="button" onclick="debugUserStore()">🗄️ Debug User Store</button>
+            <button class="button" onclick="testBirthDataPersistence()">💾 Test Birth Data Save</button>
+            <button class="button" onclick="debugBirthDataFlow()">🔄 Debug Data Flow</button>
+        </div>
+        
+        <div class="form-section">
+            <h3>📝 NatalChartForm Simulation</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Simulate form input and test auto-save functionality
+            </p>
+            <div style="margin-bottom: 15px;">
+                <h4>Test Birth Data:</h4>
+                <input type="text" id="testName" placeholder="Name" value="Test User">
+                <input type="date" id="testDate" value="1990-06-15">
+                <input type="time" id="testTime" value="14:30">
+                <input type="text" id="testLocation" placeholder="Location" value="New York, NY, USA">
+                <input type="text" id="testLat" placeholder="Latitude" value="40.7128">
+                <input type="text" id="testLon" placeholder="Longitude" value="-74.0060">
+            </div>
+            <button class="button" onclick="simulateFormInput()">📝 Simulate Form Input</button>
+            <button class="button" onclick="testAutoSave()">💾 Test Auto-Save</button>
+            <button class="button" onclick="verifyFormPersistence()">✅ Verify Persistence</button>
+        </div>
+
+        <div class="chart-section">
+            <h3>📊 Chart Generation & Caching Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test chart generation, caching, and retrieval
+            </p>
+            <button class="button" onclick="testChartGeneration()">🎨 Test Chart Generation</button>
+            <button class="button" onclick="debugChartCache()">🗂️ Debug Chart Cache</button>
+            <button class="button" onclick="testChartPageData()">📄 Test Chart Page Data</button>
+            <button class="button" onclick="clearChartCache()">🗑️ Clear Chart Cache</button>
+        </div>
+
+        <div class="db-section">
+            <h3>💾 Database & Storage Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test IndexedDB, Zustand store, and localStorage
+            </p>
+            <button class="button" onclick="testIndexedDB()">🗄️ Test IndexedDB</button>
+            <button class="button" onclick="testZustandStore()">📦 Test Zustand Store</button>
+            <button class="button" onclick="testLocalStorage()">💿 Test localStorage</button>
+            <button class="button" onclick="compareStorageLayers()">🔍 Compare Storage</button>
+        </div>
+
+        <div>
+            <h3>🔧 Comprehensive Tests</h3>
+            <button class="button" onclick="runFullDiagnostic()">🔬 Full Diagnostic</button>
+            <button class="button" onclick="testDataConsistency()">🎯 Data Consistency</button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="results-header">
+            <div class="results-title">📊 Debug Results</div>
+            <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Initialize test data
+        document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+
+        function addResult(title, data, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function debugUserStore() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Test user profile API
+                const profileResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const profileData = await profileResponse.json();
+                
+                addResult('👤 User Store Debug', {
+                    userId: userId,
+                    profile: {
+                        statusCode: profileResponse.status,
+                        success: profileResponse.ok,
+                        data: profileData,
+                        hasBirthData: !!(profileData.user?.dateOfBirth || profileData.user?.birthData)
+                    },
+                    analysis: {
+                        userExists: profileResponse.ok,
+                        hasBirthData: !!(profileData.user?.dateOfBirth || profileData.user?.birthData?.dateOfBirth),
+                        birthDataStructure: profileData.user?.birthData ? 'nested' : profileData.user?.dateOfBirth ? 'flat' : 'none'
+                    }
+                }, profileResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ User Store Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testBirthDataPersistence() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const testBirthData = {
+                    dateOfBirth: document.getElementById('testDate').value,
+                    timeOfBirth: document.getElementById('testTime').value,
+                    locationOfBirth: document.getElementById('testLocation').value,
+                    coordinates: {
+                        lat: document.getElementById('testLat').value,
+                        lon: document.getElementById('testLon').value
+                    }
+                };
+
+                // Test saving birth data
+                const saveResponse = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: userId,
+                        username: document.getElementById('testName').value,
+                        authProvider: 'anonymous',
+                        ...testBirthData,
+                        // Also try nested structure
+                        birthData: testBirthData
+                    })
+                });
+                
+                const saveData = await saveResponse.json();
+                
+                // Test retrieving the data
+                const getResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const getData = await getResponse.json();
+                
+                addResult('💾 Birth Data Persistence Test', {
+                    testData: testBirthData,
+                    save: {
+                        statusCode: saveResponse.status,
+                        success: saveResponse.ok,
+                        data: saveData
+                    },
+                    retrieve: {
+                        statusCode: getResponse.status,
+                        success: getResponse.ok,
+                        data: getData
+                    },
+                    analysis: {
+                        dataSaved: saveResponse.ok,
+                        dataRetrieved: getResponse.ok,
+                        birthDataPersisted: !!(getData.user?.birthData || getData.user?.dateOfBirth),
+                        coordinatesPersisted: !!(getData.user?.coordinates || getData.user?.birthData?.coordinates)
+                    }
+                }, saveResponse.ok && getResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Birth Data Persistence Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugBirthDataFlow() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Step 1: Check current user data
+                const currentResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const currentData = await currentResponse.json();
+                
+                // Step 2: Test the updateBirthData flow (simulate form auto-save)
+                const updateData = {
+                    dateOfBirth: '1990-06-15',
+                    timeOfBirth: '14:30',
+                    locationOfBirth: 'Test Location Flow',
+                    coordinates: { lat: '40.7128', lon: '-74.0060' }
+                };
+                
+                const updateResponse = await fetch('/api/users/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        birthData: updateData
+                    })
+                });
+                
+                const updateResult = await updateResponse.json();
+                
+                // Step 3: Verify the update
+                const verifyResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const verifyData = await verifyResponse.json();
+                
+                addResult('🔄 Birth Data Flow Debug', {
+                    current: {
+                        success: currentResponse.ok,
+                        birthData: currentData.user?.birthData,
+                        flatData: {
+                            dateOfBirth: currentData.user?.dateOfBirth,
+                            timeOfBirth: currentData.user?.timeOfBirth,
+                            locationOfBirth: currentData.user?.locationOfBirth
+                        }
+                    },
+                    update: {
+                        statusCode: updateResponse.status,
+                        success: updateResponse.ok,
+                        sentData: updateData,
+                        response: updateResult
+                    },
+                    verify: {
+                        success: verifyResponse.ok,
+                        updatedBirthData: verifyData.user?.birthData,
+                        updatedFlatData: {
+                            dateOfBirth: verifyData.user?.dateOfBirth,
+                            timeOfBirth: verifyData.user?.timeOfBirth,
+                            locationOfBirth: verifyData.user?.locationOfBirth
+                        }
+                    },
+                    analysis: {
+                        flowWorking: updateResponse.ok && verifyResponse.ok,
+                        dataStructureConsistent: !!(verifyData.user?.birthData),
+                        autoSaveSimulated: true
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Birth Data Flow Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function simulateFormInput() {
+            try {
+                // Simulate the exact flow that happens in NatalChartForm
+                const formData = {
+                    name: document.getElementById('testName').value,
+                    dateOfBirth: document.getElementById('testDate').value,
+                    timeOfBirth: document.getElementById('testTime').value,
+                    locationOfBirth: document.getElementById('testLocation').value,
+                    coordinates: {
+                        lat: document.getElementById('testLat').value,
+                        lon: document.getElementById('testLon').value
+                    }
+                };
+                
+                // This simulates the updateFormData -> updateBirthData flow
+                const { name, ...birthData } = formData;
+                
+                // Test the API call that would be made by the store (using PATCH for updates)
+                const response = await fetch('/api/users/profile', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: document.getElementById('userIdInput').value,
+                        birthData: birthData
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('📝 Form Input Simulation', {
+                    formData: formData,
+                    birthDataExtracted: birthData,
+                    apiCall: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        response: data
+                    },
+                    analysis: {
+                        formDataValid: Object.values(birthData).every(v => v !== ''),
+                        coordinatesValid: birthData.coordinates.lat && birthData.coordinates.lon,
+                        apiWorking: response.ok
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Form Simulation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testAutoSave() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Simulate multiple auto-save calls (like typing in form)
+                const autoSaveSteps = [
+                    { field: 'dateOfBirth', value: '1990-06-15' },
+                    { field: 'timeOfBirth', value: '14:30' },
+                    { field: 'locationOfBirth', value: 'Auto Save Test Location' },
+                    { field: 'coordinates', value: { lat: '40.7128', lon: '-74.0060' } }
+                ];
+                
+                const results = [];
+                
+                for (let i = 0; i < autoSaveSteps.length; i++) {
+                    const step = autoSaveSteps[i];
+                    const partialData = {};
+                    
+                    // Build cumulative data
+                    for (let j = 0; j <= i; j++) {
+                        partialData[autoSaveSteps[j].field] = autoSaveSteps[j].value;
+                    }
+                    
+                    const response = await fetch('/api/users/profile', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userId,
+                            birthData: partialData
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    results.push({
+                        step: i + 1,
+                        field: step.field,
+                        partialData: partialData,
+                        success: response.ok,
+                        statusCode: response.status
+                    });
+                    
+                    // Small delay to simulate real typing
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                addResult('💾 Auto-Save Test', {
+                    totalSteps: autoSaveSteps.length,
+                    results: results,
+                    analysis: {
+                        allStepsSuccessful: results.every(r => r.success),
+                        failedSteps: results.filter(r => !r.success).length,
+                        autoSaveWorking: results.every(r => r.success)
+                    }
+                }, results.every(r => r.success) ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Auto-Save Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function verifyFormPersistence() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Get current data
+                const response = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                // Check what data structure we have
+                const user = data.user;
+                const birthDataNested = user?.birthData;
+                const birthDataFlat = {
+                    dateOfBirth: user?.dateOfBirth,
+                    timeOfBirth: user?.timeOfBirth,
+                    locationOfBirth: user?.locationOfBirth,
+                    coordinates: user?.coordinates
+                };
+                
+                addResult('✅ Form Persistence Verification', {
+                    userId: userId,
+                    userExists: !!user,
+                    dataStructures: {
+                        nested: {
+                            exists: !!birthDataNested,
+                            data: birthDataNested,
+                            complete: birthDataNested && 
+                                     birthDataNested.dateOfBirth && 
+                                     birthDataNested.timeOfBirth && 
+                                     birthDataNested.locationOfBirth &&
+                                     birthDataNested.coordinates?.lat &&
+                                     birthDataNested.coordinates?.lon
+                        },
+                        flat: {
+                            exists: !!(birthDataFlat.dateOfBirth || birthDataFlat.timeOfBirth),
+                            data: birthDataFlat,
+                            complete: birthDataFlat.dateOfBirth && 
+                                     birthDataFlat.timeOfBirth && 
+                                     birthDataFlat.locationOfBirth &&
+                                     birthDataFlat.coordinates?.lat &&
+                                     birthDataFlat.coordinates?.lon
+                        }
+                    },
+                    analysis: {
+                        hasAnyBirthData: !!(birthDataNested || birthDataFlat.dateOfBirth),
+                        dataStructurePreferred: birthDataNested ? 'nested' : 'flat',
+                        readyForChartGeneration: !!(
+                            (birthDataNested && birthDataNested.dateOfBirth && birthDataNested.coordinates?.lat) ||
+                            (birthDataFlat.dateOfBirth && birthDataFlat.coordinates?.lat)
+                        )
+                    }
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Persistence Verification Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testChartGeneration() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // First check if user has birth data
+                const userResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                const userData = await userResponse.json();
+                
+                if (!userResponse.ok) {
+                    throw new Error('User not found');
+                }
+                
+                const birthData = userData.user?.birthData || {
+                    dateOfBirth: userData.user?.dateOfBirth,
+                    timeOfBirth: userData.user?.timeOfBirth,
+                    locationOfBirth: userData.user?.locationOfBirth,
+                    coordinates: userData.user?.coordinates
+                };
+                
+                // Test chart generation API
+                const chartResponse = await fetch('/api/chart/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        birthData: birthData
+                    })
+                });
+                
+                const chartData = await chartResponse.json();
+                
+                addResult('🎨 Chart Generation Test', {
+                    userId: userId,
+                    birthData: birthData,
+                    generation: {
+                        statusCode: chartResponse.status,
+                        success: chartResponse.ok,
+                        data: chartData,
+                        hasChartData: !!(chartData.chart || chartData.svg)
+                    },
+                    analysis: {
+                        birthDataComplete: !!(birthData.dateOfBirth && birthData.timeOfBirth && birthData.coordinates?.lat),
+                        chartGenerated: chartResponse.ok,
+                        chartDataValid: !!(chartData.chart || chartData.svg)
+                    }
+                }, chartResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Chart Generation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugChartCache() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Test cache endpoints
+                const cacheResponse = await fetch(`/api/chart/cache?userId=${encodeURIComponent(userId)}`);
+                const cacheData = await cacheResponse.json();
+                
+                addResult('🗂️ Chart Cache Debug', {
+                    userId: userId,
+                    cache: {
+                        statusCode: cacheResponse.status,
+                        success: cacheResponse.ok,
+                        data: cacheData,
+                        hasCachedChart: !!(cacheData.chart || cacheData.cached)
+                    },
+                    analysis: {
+                        cacheWorking: cacheResponse.ok,
+                        chartCached: !!(cacheData.chart || cacheData.cached),
+                        cacheAge: cacheData.timestamp ? new Date() - new Date(cacheData.timestamp) : 'unknown'
+                    }
+                }, cacheResponse.ok ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ Chart Cache Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testChartPageData() {
+            try {
+                // Simulate what happens when /chart page loads
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Test the full flow: user data -> chart generation -> page load
+                const steps = {
+                    userProfile: null,
+                    chartGeneration: null,
+                    chartData: null
+                };
+                
+                // Step 1: Get user profile (what useUserStore does)
+                const profileResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                steps.userProfile = {
+                    success: profileResponse.ok,
+                    statusCode: profileResponse.status,
+                    data: profileResponse.ok ? await profileResponse.json() : null
+                };
+                
+                if (steps.userProfile.success && steps.userProfile.data?.user) {
+                    const user = steps.userProfile.data.user;
+                    const birthData = user.birthData || {
+                        dateOfBirth: user.dateOfBirth,
+                        timeOfBirth: user.timeOfBirth,
+                        locationOfBirth: user.locationOfBirth,
+                        coordinates: user.coordinates
+                    };
+                    
+                    // Step 2: Test chart generation (what useNatalChart does)
+                    if (birthData.dateOfBirth && birthData.coordinates?.lat) {
+                        const chartResponse = await fetch('/api/chart/generate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: userId,
+                                birthData: birthData
+                            })
+                        });
+                        
+                        steps.chartGeneration = {
+                            success: chartResponse.ok,
+                            statusCode: chartResponse.status,
+                            data: chartResponse.ok ? await chartResponse.json() : null
+                        };
+                        
+                        // Step 3: Get chart data for display
+                        if (steps.chartGeneration.success) {
+                            const chartDataResponse = await fetch(`/api/chart?userId=${encodeURIComponent(userId)}`);
+                            steps.chartData = {
+                                success: chartDataResponse.ok,
+                                statusCode: chartDataResponse.status,
+                                data: chartDataResponse.ok ? await chartDataResponse.json() : null
+                            };
+                        }
+                    }
+                }
+                
+                addResult('📄 Chart Page Data Test', {
+                    userId: userId,
+                    steps: steps,
+                    analysis: {
+                        userDataAvailable: steps.userProfile.success,
+                        birthDataComplete: !!(steps.userProfile.data?.user?.birthData?.dateOfBirth || steps.userProfile.data?.user?.dateOfBirth),
+                        chartGenerationWorking: !!steps.chartGeneration?.success,
+                        chartDataRetrievable: !!steps.chartData?.success,
+                        fullFlowWorking: steps.userProfile.success && 
+                                        (steps.chartGeneration?.success || false) && 
+                                        (steps.chartData?.success || false)
+                    }
+                }, steps.userProfile.success ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Chart Page Data Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function clearChartCache() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                const response = await fetch(`/api/chart/cache?userId=${encodeURIComponent(userId)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                addResult('🗑️ Clear Chart Cache', {
+                    userId: userId,
+                    statusCode: response.status,
+                    success: response.ok,
+                    data: data
+                }, response.ok ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Clear Cache Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testIndexedDB() {
+            try {
+                // Test if we can access IndexedDB APIs directly
+                const dbTest = {
+                    available: 'indexedDB' in window,
+                    databases: null,
+                    testWrite: null,
+                    testRead: null
+                };
+                
+                if (dbTest.available) {
+                    // Try to open a test database
+                    const testDB = indexedDB.open('test-debug-db', 1);
+                    
+                    testDB.onsuccess = function(event) {
+                        const db = event.target.result;
+                        dbTest.testWrite = { success: true, message: 'IndexedDB accessible' };
+                        db.close();
+                        indexedDB.deleteDatabase('test-debug-db');
+                    };
+                    
+                    testDB.onerror = function(event) {
+                        dbTest.testWrite = { success: false, error: event.target.error };
+                    };
+                }
+                
+                // Also test if we can call our app's database APIs
+                const appDbResponse = await fetch('/api/debug/db-connection');
+                const appDbData = await appDbResponse.json();
+                
+                addResult('🗄️ IndexedDB Test', {
+                    browser: dbTest,
+                    appDatabase: {
+                        statusCode: appDbResponse.status,
+                        success: appDbResponse.ok,
+                        data: appDbData
+                    },
+                    analysis: {
+                        browserSupport: dbTest.available,
+                        appDatabaseWorking: appDbResponse.ok
+                    }
+                }, dbTest.available && appDbResponse.ok ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ IndexedDB Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testZustandStore() {
+            try {
+                // We can't directly access the Zustand store from here, 
+                // but we can test the APIs that the store would use
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Test the APIs that Zustand store calls
+                const tests = {
+                    loadProfile: null,
+                    updateBirthData: null,
+                    persistence: null
+                };
+                
+                // Test loadProfile equivalent
+                const loadResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                tests.loadProfile = {
+                    success: loadResponse.ok,
+                    statusCode: loadResponse.status,
+                    data: loadResponse.ok ? await loadResponse.json() : null
+                };
+                
+                // Test updateBirthData equivalent
+                const updateResponse = await fetch('/api/users/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: userId,
+                        birthData: {
+                            dateOfBirth: '1990-06-15',
+                            timeOfBirth: '14:30',
+                            locationOfBirth: 'Zustand Test Location',
+                            coordinates: { lat: '40.7128', lon: '-74.0060' }
+                        }
+                    })
+                });
+                tests.updateBirthData = {
+                    success: updateResponse.ok,
+                    statusCode: updateResponse.status,
+                    data: updateResponse.ok ? await updateResponse.json() : null
+                };
+                
+                addResult('📦 Zustand Store Test', {
+                    userId: userId,
+                    tests: tests,
+                    analysis: {
+                        loadWorking: tests.loadProfile.success,
+                        updateWorking: tests.updateBirthData.success,
+                        storeAPIsFunctional: tests.loadProfile.success && tests.updateBirthData.success
+                    }
+                }, tests.loadProfile.success && tests.updateBirthData.success ? 'success' : 'error');
+            } catch (error) {
+                addResult('❌ Zustand Store Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testLocalStorage() {
+            try {
+                const testKey = 'debug-test-storage';
+                const testData = { timestamp: Date.now(), test: true };
+                
+                // Test localStorage
+                localStorage.setItem(testKey, JSON.stringify(testData));
+                const retrieved = JSON.parse(localStorage.getItem(testKey) || '{}');
+                localStorage.removeItem(testKey);
+                
+                // Test sessionStorage
+                sessionStorage.setItem(testKey, JSON.stringify(testData));
+                const sessionRetrieved = JSON.parse(sessionStorage.getItem(testKey) || '{}');
+                sessionStorage.removeItem(testKey);
+                
+                addResult('💿 localStorage Test', {
+                    localStorage: {
+                        available: 'localStorage' in window,
+                        writeSuccess: !!retrieved.test,
+                        dataMatch: retrieved.timestamp === testData.timestamp
+                    },
+                    sessionStorage: {
+                        available: 'sessionStorage' in window,
+                        writeSuccess: !!sessionRetrieved.test,
+                        dataMatch: sessionRetrieved.timestamp === testData.timestamp
+                    },
+                    analysis: {
+                        localStorageWorking: 'localStorage' in window && !!retrieved.test,
+                        sessionStorageWorking: 'sessionStorage' in window && !!sessionRetrieved.test,
+                        storageAvailable: 'localStorage' in window
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ localStorage Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function compareStorageLayers() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Check what's in each storage layer
+                const comparison = {
+                    api: null,
+                    localStorage: null,
+                    sessionStorage: null
+                };
+                
+                // API layer
+                const apiResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                comparison.api = {
+                    available: apiResponse.ok,
+                    data: apiResponse.ok ? await apiResponse.json() : null
+                };
+                
+                // localStorage layer (check for user store persistence)
+                const localStorageKeys = Object.keys(localStorage).filter(key => 
+                    key.includes('user') || key.includes('natal') || key.includes('chart')
+                );
+                comparison.localStorage = {
+                    available: 'localStorage' in window,
+                    relevantKeys: localStorageKeys,
+                    data: localStorageKeys.reduce((acc, key) => {
+                        try {
+                            acc[key] = JSON.parse(localStorage.getItem(key) || '{}');
+                        } catch {
+                            acc[key] = localStorage.getItem(key);
+                        }
+                        return acc;
+                    }, {})
+                };
+                
+                // sessionStorage layer
+                const sessionStorageKeys = Object.keys(sessionStorage).filter(key => 
+                    key.includes('user') || key.includes('natal') || key.includes('chart')
+                );
+                comparison.sessionStorage = {
+                    available: 'sessionStorage' in window,
+                    relevantKeys: sessionStorageKeys,
+                    data: sessionStorageKeys.reduce((acc, key) => {
+                        try {
+                            acc[key] = JSON.parse(sessionStorage.getItem(key) || '{}');
+                        } catch {
+                            acc[key] = sessionStorage.getItem(key);
+                        }
+                        return acc;
+                    }, {})
+                };
+                
+                addResult('🔍 Storage Layers Comparison', {
+                    userId: userId,
+                    comparison: comparison,
+                    analysis: {
+                        apiHasData: !!(comparison.api.data?.user),
+                        localStorageHasData: localStorageKeys.length > 0,
+                        sessionStorageHasData: sessionStorageKeys.length > 0,
+                        dataConsistency: comparison.api.available ? 'check_api_vs_storage' : 'api_unavailable'
+                    }
+                }, comparison.api.available ? 'success' : 'warning');
+            } catch (error) {
+                addResult('❌ Storage Comparison Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function runFullDiagnostic() {
+            clearResults();
+            addResult('🔬 Starting Full Diagnostic...', { timestamp: new Date().toISOString() }, 'success');
+            
+            await debugUserStore();
+            await testBirthDataPersistence();
+            await debugBirthDataFlow();
+            await testChartGeneration();
+            await debugChartCache();
+            await testChartPageData();
+            await compareStorageLayers();
+            
+            addResult('✅ Full Diagnostic Complete', { 
+                timestamp: new Date().toISOString(),
+                message: 'All tests completed. Check results above for issues.'
+            }, 'success');
+        }
+
+        async function testDataConsistency() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Get data from all sources and compare
+                const sources = {
+                    userProfile: null,
+                    directAPI: null,
+                    localStorage: null
+                };
+                
+                // User profile API
+                const profileResponse = await fetch(`/api/users/profile?userId=${encodeURIComponent(userId)}`);
+                if (profileResponse.ok) {
+                    sources.userProfile = await profileResponse.json();
+                }
+                
+                // Check localStorage for cached data
+                const localKeys = Object.keys(localStorage).filter(key => key.includes('user') || key.includes('birth'));
+                sources.localStorage = localKeys.reduce((acc, key) => {
+                    try {
+                        acc[key] = JSON.parse(localStorage.getItem(key) || '{}');
+                    } catch {
+                        acc[key] = localStorage.getItem(key);
+                    }
+                    return acc;
+                }, {});
+                
+                // Compare birth data across sources
+                const profileBirthData = sources.userProfile?.user?.birthData || {
+                    dateOfBirth: sources.userProfile?.user?.dateOfBirth,
+                    timeOfBirth: sources.userProfile?.user?.timeOfBirth,
+                    locationOfBirth: sources.userProfile?.user?.locationOfBirth,
+                    coordinates: sources.userProfile?.user?.coordinates
+                };
+                
+                addResult('🎯 Data Consistency Test', {
+                    userId: userId,
+                    sources: sources,
+                    birthDataComparison: {
+                        profileAPI: profileBirthData,
+                        localStorage: sources.localStorage
+                    },
+                    analysis: {
+                        profileHasBirthData: !!(profileBirthData.dateOfBirth),
+                        localStorageHasData: Object.keys(sources.localStorage).length > 0,
+                        dataConsistent: 'manual_comparison_needed',
+                        readyForChart: !!(profileBirthData.dateOfBirth && profileBirthData.coordinates?.lat)
+                    }
+                }, 'success');
+            } catch (error) {
+                addResult('❌ Data Consistency Error', { error: error.message }, 'error');
+            }
+        }
+
+        console.log('🔧 Chart Debug Tool loaded. Use buttons to test birth data persistence and chart generation.');
+    </script>
+</body>
+</html>

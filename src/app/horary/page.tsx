@@ -165,21 +165,53 @@ export default function HoraryPage() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    if (questionToDelete) {
-      deleteQuestion(questionToDelete.id);
+  const confirmDelete = async () => {
+    if (questionToDelete && user?.id) {
+      // Show loading toast
+      toast.show(
+        'Deleting Question',
+        `Removing "${questionToDelete.question.substring(0, 50)}${questionToDelete.question.length > 50 ? '...' : ''}"`,
+        'loading'
+      );
 
-      // If the deleted question was being viewed, return to the question form
-      if (selectedQuestion?.id === questionToDelete.id) {
-        setShowQuestionForm(true);
-        setSelectedQuestion(null);
-        setCurrentChartData(null);
-        setRealChartData(null);
-      }
-
-      // Close confirmation modal
+      // Close confirmation modal immediately
       setShowDeleteConfirm(false);
+      const questionBeingDeleted = questionToDelete;
       setQuestionToDelete(null);
+
+      try {
+        // Call delete function and wait for completion
+        await deleteQuestion(questionBeingDeleted.id, user.id);
+
+        // Show success toast
+        toast.show(
+          'Question Deleted',
+          'Your horary question has been successfully removed',
+          'success'
+        );
+
+        // If the deleted question was being viewed, return to the question form
+        if (selectedQuestion?.id === questionBeingDeleted.id) {
+          setShowQuestionForm(true);
+          setSelectedQuestion(null);
+          setCurrentChartData(null);
+          setRealChartData(null);
+        }
+
+        // Force refresh questions list
+        if (user?.id) {
+          await loadQuestions(user.id);
+        }
+        setForceUpdate(prev => prev + 1);
+
+      } catch (error) {
+        // Show error toast
+        toast.show(
+          'Delete Failed',
+          'Failed to delete the question. Please try again.',
+          'error'
+        );
+      }
     }
   };
 
@@ -206,9 +238,6 @@ export default function HoraryPage() {
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       <div className="min-h-screen bg-white">
-
-
-
         {/* Main Content Section */}
         <section className="px-[5%] py-12">
           {/* Horary Limit Banner for Free Users */}

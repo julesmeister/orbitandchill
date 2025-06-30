@@ -19,7 +19,7 @@ import { BRAND } from "../../config/brand";
 
 export default function ChartPage() {
   const router = useRouter();
-  const { user, isProfileComplete } =
+  const { user, isProfileComplete, isLoading: isUserLoading, loadProfile } =
     useUserStore();
   const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
   const { activeTab } = useChartTab();
@@ -50,6 +50,14 @@ export default function ChartPage() {
     generateChartRef.current = generateChart;
     getUserChartsRef.current = getUserCharts;
   }, [generateChart, getUserCharts]);
+
+  // Load user profile when component mounts
+  useEffect(() => {
+    // Only load profile if we don't have a user yet
+    if (!user && !isUserLoading) {
+      loadProfile();
+    }
+  }, [user, isUserLoading, loadProfile]);
 
   // Check for existing charts and auto-generate if needed
   useEffect(() => {
@@ -317,7 +325,11 @@ export default function ChartPage() {
             );
           }
           
-          if (isLoadingCache && hasExistingChart) {
+          // Show loading state if any of these conditions are true:
+          // 1. User data is loading
+          // 2. Chart cache is loading and we know there's an existing chart
+          // 3. Chart is being generated
+          if (isUserLoading || (isLoadingCache && hasExistingChart) || isGenerating) {
             return (
           <div className="border border-black bg-white">
             <div className="p-12 text-center">
@@ -328,12 +340,16 @@ export default function ChartPage() {
 
               {/* Heading */}
               <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
-                Loading Your Chart
+                {isUserLoading ? 'Loading Your Profile' : 
+                 isGenerating ? 'Generating Your Chart' : 
+                 'Loading Your Chart'}
               </h1>
               
               {/* Description */}
               <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto mb-12">
-                We're retrieving your cosmic blueprint. This should only take a moment...
+                {isUserLoading ? 'Retrieving your birth data and preferences...' :
+                 isGenerating ? 'Creating your cosmic blueprint from the stars...' :
+                 'We\'re retrieving your cosmic blueprint. This should only take a moment...'}
               </p>
             </div>
           </div>

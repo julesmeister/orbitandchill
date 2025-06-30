@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-import { db, getDbAsync } from '@/db';
+import { db, getDbAsync, executePooledQueryDirect, isUsingConnectionPool } from '@/db';
 import { horaryQuestions } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 // GET - Retrieve specific horary question by ID
 export async function GET(
@@ -15,11 +15,65 @@ export async function GET(
     const resolvedParams = await params;
     const questionId = resolvedParams.id;
 
-    const [question] = await db
-      .select()
-      .from(horaryQuestions)
-      .where(eq(horaryQuestions.id, questionId))
-      .limit(1);
+    // Use connection pool if available, otherwise fallback to Drizzle ORM
+    let question = null;
+    
+    if (isUsingConnectionPool()) {
+      console.log('🔄 Using connection pool for GET query');
+      try {
+        const rawResult = await executePooledQueryDirect(
+          'SELECT * FROM horary_questions WHERE id = ? LIMIT 1',
+          [questionId]
+        );
+        
+        if (rawResult.rows && rawResult.rows.length > 0) {
+          const row = rawResult.rows[0];
+          question = {
+            id: row.id,
+            question: row.question,
+            userId: row.user_id,
+            date: row.date,
+            location: row.location,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            timezone: row.timezone,
+            category: row.category,
+            tags: row.tags,
+            answer: row.answer,
+            timing: row.timing,
+            interpretation: row.interpretation,
+            chartData: row.chart_data,
+            chartSvg: row.chart_svg,
+            ascendantDegree: row.ascendant_degree,
+            moonSign: row.moon_sign,
+            moonVoidOfCourse: row.moon_void_of_course,
+            planetaryHour: row.planetary_hour,
+            isRadical: row.is_radical,
+            chartWarnings: row.chart_warnings,
+            isShared: row.is_shared,
+            shareToken: row.share_token,
+            aspectCount: row.aspect_count,
+            retrogradeCount: row.retrograde_count,
+            significatorPlanet: row.significator_planet,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          };
+        }
+      } catch (poolError) {
+        console.warn('Pool query failed, falling back to Drizzle:', poolError);
+      }
+    }
+    
+    // Fallback to Drizzle ORM if pool not available or failed
+    if (!question) {
+      console.log('🔄 Using Drizzle ORM for GET query');
+      const [result] = await db
+        .select()
+        .from(horaryQuestions)
+        .where(eq(horaryQuestions.id, questionId))
+        .limit(1);
+      question = result;
+    }
 
     if (!question) {
       return NextResponse.json(
@@ -233,26 +287,195 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
     const questionId = resolvedParams.id;
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    // Build where conditions (allow user to delete their own questions, or admin to delete any)
-    let whereCondition = eq(horaryQuestions.id, questionId);
     
-    if (userId) {
-      // Regular user can only delete their own questions
-      whereCondition = and(
-        eq(horaryQuestions.id, questionId),
-        eq(horaryQuestions.userId, userId)
-      ) as any;
+    // Get userId from request body for proper authentication
+    let userId = null;
+    try {
+      const body = await request.json();
+      userId = body.userId;
+    } catch (error) {
+      // If no body, try query params
+      const { searchParams } = new URL(request.url);
+      userId = searchParams.get('userId');
     }
 
-    // First check if question exists and user has permission
-    const [existingQuestion] = await db
-      .select()
-      .from(horaryQuestions)
-      .where(whereCondition)
-      .limit(1);
+    console.log('🗑️ DELETE request:', { questionId, userId });
+
+    // Use connection pool if available, otherwise fallback to Drizzle ORM
+    let existingQuestion = null;
+    let deleteResult = null;
+    
+    if (isUsingConnectionPool()) {
+      console.log('🔄 Using connection pool for DELETE operations');
+      try {
+        // First check if question exists
+        const checkResult = await executePooledQueryDirect(
+          'SELECT * FROM horary_questions WHERE id = ? LIMIT 1',
+          [questionId]
+        );
+        
+        if (checkResult.rows && checkResult.rows.length > 0) {
+          const row = checkResult.rows[0];
+          existingQuestion = {
+            id: row.id,
+            question: row.question,
+            userId: row.user_id,
+            date: row.date,
+            location: row.location
+          };
+          
+          console.log('🔍 Question found in DB:', {
+            requestedId: questionId,
+            foundId: existingQuestion.id,
+            idMatch: questionId === existingQuestion.id,
+            questionOwner: existingQuestion.userId,
+            requestingUser: userId,
+            questionText: existingQuestion.question?.substring(0, 50) + '...'
+          });
+          
+          // Check ownership if userId provided
+          if (userId && existingQuestion.userId !== userId) {
+            console.log('❌ Permission denied:', { requestingUserId: userId, questionOwner: existingQuestion.userId });
+            return NextResponse.json(
+              { success: false, error: 'Access denied - you can only delete your own questions' },
+              { status: 403 }
+            );
+          }
+          
+          // Delete the question
+          console.log('🗑️ Deleting question:', questionId);
+          deleteResult = await executePooledQueryDirect(
+            'DELETE FROM horary_questions WHERE id = ?',
+            [questionId]
+          );
+          
+          console.log('✅ Direct SQL delete result:', deleteResult);
+        }
+        
+      } catch (poolError) {
+        console.error('❌ Pool DELETE failed, falling back to Drizzle:', poolError);
+        existingQuestion = null; // Reset to trigger fallback
+      }
+    }
+    
+    // Fallback to Drizzle ORM if pool not available or failed
+    if (!existingQuestion) {
+      console.log('🔄 Using Drizzle ORM for DELETE operations');
+      
+      try {
+        // First check if question exists using raw SQL to avoid WHERE clause parsing issues
+        let foundQuestion = null;
+        try {
+          // Use direct SQL to bypass Drizzle WHERE clause issues
+          const result = await db.client.execute({
+            sql: 'SELECT * FROM horary_questions WHERE id = ? LIMIT 1',
+            args: [questionId]
+          });
+          
+          if (result.rows && result.rows.length > 0) {
+            const row = result.rows[0];
+            foundQuestion = {
+              id: row.id,
+              question: row.question,
+              userId: row.user_id,
+              date: row.date,
+              location: row.location,
+              latitude: row.latitude,
+              longitude: row.longitude,
+              timezone: row.timezone,
+              category: row.category,
+              tags: row.tags,
+              answer: row.answer,
+              timing: row.timing,
+              interpretation: row.interpretation,
+              chartData: row.chart_data,
+              chartSvg: row.chart_svg,
+              ascendantDegree: row.ascendant_degree,
+              moonSign: row.moon_sign,
+              moonVoidOfCourse: row.moon_void_of_course,
+              planetaryHour: row.planetary_hour,
+              isRadical: row.is_radical,
+              chartWarnings: row.chart_warnings,
+              isShared: row.is_shared,
+              shareToken: row.share_token,
+              aspectCount: row.aspect_count,
+              retrogradeCount: row.retrograde_count,
+              significatorPlanet: row.significator_planet,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at
+            };
+          }
+        } catch (sqlError) {
+          console.error('❌ Raw SQL query failed, falling back to Drizzle:', sqlError);
+          // Fallback to Drizzle as last resort
+          const [drizzleResult] = await db
+            .select()
+            .from(horaryQuestions)
+            .where(eq(horaryQuestions.id, questionId))
+            .limit(1);
+          foundQuestion = drizzleResult;
+        }
+        
+        if (!foundQuestion) {
+          return NextResponse.json(
+            { success: false, error: 'Horary question not found' },
+            { status: 404 }
+          );
+        }
+        
+        existingQuestion = foundQuestion;
+        
+        console.log('🔍 Question found in DB:', {
+          requestedId: questionId,
+          foundId: existingQuestion.id,
+          questionOwner: existingQuestion.userId,
+          requestingUser: userId,
+          questionText: existingQuestion.question?.substring(0, 50) + '...'
+        });
+        
+        // Check ownership if userId provided
+        if (userId && existingQuestion.userId !== userId) {
+          console.log('❌ Permission denied:', { requestingUserId: userId, questionOwner: existingQuestion.userId });
+          return NextResponse.json(
+            { success: false, error: 'Access denied - you can only delete your own questions' },
+            { status: 403 }
+          );
+        }
+
+        // Delete the question using direct SQL to avoid WHERE clause parsing issues
+        console.log('🗑️ Deleting question with direct SQL:', questionId);
+        try {
+          const sqlDeleteResult = await db.client.execute({
+            sql: 'DELETE FROM horary_questions WHERE id = ?',
+            args: [questionId]
+          });
+
+          console.log('✅ Direct SQL delete result:', sqlDeleteResult);
+          
+          if (sqlDeleteResult.rowsAffected === 0) {
+            return NextResponse.json(
+              { success: false, error: 'Question not found or already deleted' },
+              { status: 404 }
+            );
+          }
+          
+          deleteResult = { rowsAffected: sqlDeleteResult.rowsAffected };
+        } catch (deleteError) {
+          console.error('❌ Direct SQL delete failed:', deleteError);
+          return NextResponse.json(
+            { success: false, error: 'Failed to delete horary question' },
+            { status: 500 }
+          );
+        }
+        
+      } catch (drizzleError) {
+        console.error('❌ Drizzle DELETE failed:', drizzleError);
+        return NextResponse.json(
+          { success: false, error: 'Database operation failed' },
+          { status: 500 }
+        );
+      }
+    }
 
     if (!existingQuestion) {
       return NextResponse.json(
@@ -261,16 +484,11 @@ export async function DELETE(
       );
     }
 
-    // Delete the question
-    const deletedQuestions = await db
-      .delete(horaryQuestions)
-      .where(whereCondition)
-      .returning();
-
-    if (deletedQuestions.length === 0) {
+    // Check delete result
+    if (deleteResult && deleteResult.rowsAffected === 0) {
       return NextResponse.json(
-        { success: false, error: 'Failed to delete horary question' },
-        { status: 500 }
+        { success: false, error: 'Question not found or already deleted' },
+        { status: 404 }
       );
     }
 
@@ -286,9 +504,19 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('❌ Error deleting horary question:', error);
+    console.error('❌ Error deleting horary question:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      questionId,
+      userId,
+      isUsingPool: isUsingConnectionPool()
+    });
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { 
+        success: false, 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

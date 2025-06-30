@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFilter, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { HoraryQuestion } from '@/store/horaryStore';
 import { 
   analyzeChartAspects,
@@ -18,7 +20,9 @@ import {
   OUTCOME_COLORS,
   TONE_COLORS,
   ASPECT_COLORS_DARK,
-  INFO_BOX_COLORS
+  INFO_BOX_COLORS,
+  ASPECT_TYPE_COLORS,
+  getAspectTypeStyle
 } from '@/utils/horary/colorConfigurations';
 import {
   ColoredBox,
@@ -39,6 +43,10 @@ interface AspectsTabProps {
 export default function AspectsTab({ chartData, analysisData, question }: AspectsTabProps) {
   const [selectedAspect, setSelectedAspect] = useState<AspectAnalysis | null>(null);
   const [activeSection, setActiveSection] = useState<'overview' | 'major' | 'patterns' | 'context'>('overview');
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedRelevance, setSelectedRelevance] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [selectedOutcome, setSelectedOutcome] = useState<'all' | 'harmonious' | 'challenging' | 'neutral'>('all');
+  const [selectedAspectType, setSelectedAspectType] = useState<'all' | 'conjunction' | 'trine' | 'square' | 'sextile' | 'opposition'>('all');
   
   // Extract actual planetary positions from chart data
   const getPlanetaryPositions = (): PlanetaryPosition[] => {
@@ -84,6 +92,38 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
     analyzeChartAspects(planetaryPositions, question.question, significators) :
     { interpretations: [], patterns: [], summary: { totalAspects: 0, applyingAspects: 0, separatingAspects: 0, majorPatterns: 0, overallTone: 'neutral', significance: 'low' } };
 
+  // Filter logic for aspects
+  const filteredInterpretations = aspectAnalysis.interpretations.filter(interpretation => {
+    // Filter by relevance
+    if (selectedRelevance !== 'all' && interpretation.questionRelevance !== selectedRelevance) {
+      return false;
+    }
+    
+    // Filter by outcome
+    if (selectedOutcome !== 'all' && interpretation.outcome !== selectedOutcome) {
+      return false;
+    }
+    
+    // Filter by aspect type
+    if (selectedAspectType !== 'all' && interpretation.aspect.aspect !== selectedAspectType) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  // Check if filters are active
+  const hasActiveFilters = selectedRelevance !== 'all' || selectedOutcome !== 'all' || selectedAspectType !== 'all';
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedRelevance('all');
+    setSelectedOutcome('all');
+    setSelectedAspectType('all');
+    // Also clear selected aspect to avoid confusion when filters change
+    setSelectedAspect(null);
+  };
+
 
   const AspectCard = ({ aspect, interpretation }: { aspect: AspectAnalysis; interpretation: AspectInterpretation }) => (
     <div 
@@ -123,12 +163,13 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
       <div className="flex gap-1 mb-2">
         <Badge 
           label={`${interpretation.questionRelevance} relevance`}
-          backgroundColor={RELEVANCE_COLORS[interpretation.questionRelevance as keyof typeof RELEVANCE_COLORS].bg}
-          textColor={RELEVANCE_COLORS[interpretation.questionRelevance as keyof typeof RELEVANCE_COLORS].text}
+          backgroundColor={getAspectTypeStyle(interpretation.questionRelevance as 'high' | 'medium' | 'low').background}
+          textColor={getAspectTypeStyle(interpretation.questionRelevance as 'high' | 'medium' | 'low').text}
         />
         <Badge 
           label={interpretation.outcome}
-          backgroundColor={OUTCOME_COLORS[interpretation.outcome as keyof typeof OUTCOME_COLORS].bg}
+          backgroundColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').background}
+          textColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').text}
         />
       </div>
       
@@ -234,15 +275,15 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
             <InfoBox
               title={`Relevance: ${interpretation.questionRelevance}`}
               content={<div className="text-xs">How important this aspect is for your question</div>}
-              backgroundColor="#33ccff"
-              textColor="black"
+              backgroundColor={getAspectTypeStyle(interpretation.questionRelevance as 'high' | 'medium' | 'low').background}
+              textColor={getAspectTypeStyle(interpretation.questionRelevance as 'high' | 'medium' | 'low').text}
             />
             
             <InfoBox
               title={`Outcome: ${interpretation.outcome}`}
               content={<div className="text-xs">General nature of this influence</div>}
-              backgroundColor={OUTCOME_COLORS[interpretation.outcome as keyof typeof OUTCOME_COLORS].bg}
-              textColor={OUTCOME_COLORS[interpretation.outcome as keyof typeof OUTCOME_COLORS].text}
+              backgroundColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').background}
+              textColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').text}
             />
             
             <InfoBox
@@ -300,26 +341,164 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
       <SectionHeader icon="⚹" title="Aspects & Planetary Connections" />
       
       {/* Navigation tabs */}
-      <div className="flex gap-2 mb-6">
-        {([
-          { id: 'overview', label: 'Overview', icon: '📋' },
-          { id: 'major', label: 'Major Aspects', icon: '⚹' },
-          { id: 'patterns', label: 'Advanced Patterns', icon: '🔗' },
-          { id: 'context', label: 'Context', icon: '🎯' }
-        ] as TabConfig[]).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveSection(tab.id as any)}
-            className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${
-              activeSection === tab.id 
-                ? 'bg-black text-white' 
-                : 'bg-gray-200 text-black hover:bg-gray-300'
-            }`}
-          >
-            {tab.icon} {tab.label}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex gap-2">
+          {([
+            { id: 'overview', label: 'Overview', icon: '📋' },
+            { id: 'major', label: 'Major Aspects', icon: '⚹' },
+            { id: 'patterns', label: 'Advanced Patterns', icon: '🔗' },
+            { id: 'context', label: 'Context', icon: '🎯' }
+          ] as TabConfig[]).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSection(tab.id as any)}
+              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${
+                activeSection === tab.id 
+                  ? 'bg-black text-white' 
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filter Controls - Only show for major aspects tab */}
+        {activeSection === 'major' && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
+                showFilters || hasActiveFilters
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black hover:bg-gray-50'
+              }`}
+            >
+              <FontAwesomeIcon
+                icon={faFilter}
+                className={`text-sm transition-transform duration-200 ${showFilters ? 'rotate-12' : ''}`}
+              />
+              <span>Filter Aspects</span>
+              {hasActiveFilters && (
+                <span className="text-xs font-semibold bg-white text-black px-1.5 py-0.5 border border-black">
+                  {[selectedRelevance !== 'all' ? 1 : 0, selectedOutcome !== 'all' ? 1 : 0, selectedAspectType !== 'all' ? 1 : 0].filter(Boolean).length}
+                </span>
+              )}
+            </button>
+            
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-50 transition-colors duration-200 border border-black"
+              >
+                <FontAwesomeIcon icon={faTimes} className="text-xs" />
+                Clear
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Collapsible Filter System - Only show for major aspects tab */}
+      {activeSection === 'major' && showFilters && (
+        <div className="animate-in slide-in-from-top-2 duration-200 mb-6">
+          <div className="bg-white border border-black p-4">
+            <div className="space-y-4">
+              {/* Relevance Filter */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1.5 h-1.5 bg-black"></div>
+                  <span className="font-space-grotesk text-sm font-medium text-black">Relevance Level</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'all', label: 'All Levels', color: 'bg-slate-100 text-slate-700' },
+                    { value: 'high', label: 'High', color: getAspectTypeStyle('high').badge },
+                    { value: 'medium', label: 'Medium', color: getAspectTypeStyle('medium').badge },
+                    { value: 'low', label: 'Low', color: getAspectTypeStyle('low').badge }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSelectedRelevance(option.value as any)}
+                      className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
+                        selectedRelevance === option.value
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-black"></div>
+
+              {/* Outcome Filter */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1.5 h-1.5 bg-black"></div>
+                  <span className="font-space-grotesk text-sm font-medium text-black">Outcome Type</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'all', label: 'All Types', color: 'bg-slate-100 text-slate-700' },
+                    { value: 'harmonious', label: 'Harmonious', color: getAspectTypeStyle('harmonious').badge },
+                    { value: 'challenging', label: 'Challenging', color: getAspectTypeStyle('challenging').badge },
+                    { value: 'neutral', label: 'Neutral', color: getAspectTypeStyle('neutral').badge }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSelectedOutcome(option.value as any)}
+                      className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
+                        selectedOutcome === option.value
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-black"></div>
+
+              {/* Aspect Type Filter */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-1.5 h-1.5 bg-black"></div>
+                  <span className="font-space-grotesk text-sm font-medium text-black">Aspect Type</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'all', label: 'All Aspects' },
+                    { value: 'conjunction', label: 'Conjunction' },
+                    { value: 'trine', label: 'Trine' },
+                    { value: 'square', label: 'Square' },
+                    { value: 'sextile', label: 'Sextile' },
+                    { value: 'opposition', label: 'Opposition' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSelectedAspectType(option.value as any)}
+                      className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
+                        selectedAspectType === option.value
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-50'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Aspect detail panel */}
       {selectedAspect && (
@@ -337,15 +516,41 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
         <div className="space-y-6">
           {/* Summary stats */}
           <div className="grid md:grid-cols-4 gap-4">
-            <StatCard value={aspectAnalysis.summary.totalAspects} label="Total Aspects" backgroundColor="#29c9ff" textColor='black' />
-            <StatCard value={aspectAnalysis.summary.applyingAspects} label="Applying" backgroundColor="#51bd94" />
-            <StatCard value={aspectAnalysis.summary.separatingAspects} label="Separating" backgroundColor="#f2e356" textColor="black" />
-            <StatCard value={aspectAnalysis.summary.majorPatterns} label="Advanced Patterns" backgroundColor="#e74c3c" />
+            <StatCard 
+              value={aspectAnalysis.summary.totalAspects} 
+              label="Total Aspects" 
+              backgroundColor={getAspectTypeStyle('neutral').text} 
+              textColor="white" 
+            />
+            <StatCard 
+              value={aspectAnalysis.summary.applyingAspects} 
+              label="Applying" 
+              backgroundColor={getAspectTypeStyle('harmonious').text} 
+              textColor="white" 
+            />
+            <StatCard 
+              value={aspectAnalysis.summary.separatingAspects} 
+              label="Separating" 
+              backgroundColor={getAspectTypeStyle('medium').text} 
+              textColor="white" 
+            />
+            <StatCard 
+              value={aspectAnalysis.summary.majorPatterns} 
+              label="Advanced Patterns" 
+              backgroundColor={getAspectTypeStyle('challenging').text} 
+              textColor="white" 
+            />
           </div>
+
 
           {/* Overall assessment */}
           <ColoredBox 
-            backgroundColor={TONE_COLORS[aspectAnalysis.summary.overallTone as keyof typeof TONE_COLORS] || '#29c9ff'}
+            backgroundColor={
+              aspectAnalysis.summary.overallTone === 'favorable' ? getAspectTypeStyle('harmonious').text :
+              aspectAnalysis.summary.overallTone === 'challenging' ? getAspectTypeStyle('challenging').text :
+              getAspectTypeStyle('neutral').text
+            }
+            textColor="white"
             className="p-4"
           >
             <h4 className="font-space-grotesk font-bold mb-2">Overall Aspect Assessment</h4>
@@ -378,13 +583,71 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
 
       {activeSection === 'major' && (
         <div className="space-y-6">
-          <div className="bg-white border border-black p-6">
-            <h4 className="font-space-grotesk font-bold mb-4">Major Aspects in Chart</h4>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {aspectAnalysis.interpretations.map((interpretation, index) => (
-                <AspectCard key={index} aspect={interpretation.aspect} interpretation={interpretation} />
-              ))}
+          {/* Filter Summary - Show when filters are active */}
+          {hasActiveFilters && (
+            <div className="bg-yellow-100 border border-black p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-space-grotesk font-bold text-sm">Active Filters</h4>
+                  <p className="text-xs text-gray-700">
+                    Showing {filteredInterpretations.length} of {aspectAnalysis.interpretations.length} aspects
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedRelevance !== 'all' && (
+                    <span className="px-2 py-1 text-xs bg-white border border-black">
+                      {selectedRelevance} relevance
+                    </span>
+                  )}
+                  {selectedOutcome !== 'all' && (
+                    <span className="px-2 py-1 text-xs bg-white border border-black">
+                      {selectedOutcome} outcome
+                    </span>
+                  )}
+                  {selectedAspectType !== 'all' && (
+                    <span className="px-2 py-1 text-xs bg-white border border-black">
+                      {selectedAspectType}
+                    </span>
+                  )}
+                  <button
+                    onClick={clearFilters}
+                    className="px-2 py-1 text-xs bg-black text-white hover:bg-gray-800 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
+
+          <div className="bg-white border border-black p-6">
+            <h4 className="font-space-grotesk font-bold mb-4">
+              Major Aspects in Chart 
+              <span className="text-sm font-normal text-gray-600 ml-2">
+                ({filteredInterpretations.length} of {aspectAnalysis.interpretations.length} shown)
+              </span>
+            </h4>
+            {filteredInterpretations.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredInterpretations.map((interpretation, index) => (
+                  <AspectCard key={index} aspect={interpretation.aspect} interpretation={interpretation} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 border border-black bg-gray-50">
+                <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto mb-3">
+                  <FontAwesomeIcon icon={faFilter} className="text-white" />
+                </div>
+                <p className="font-space-grotesk text-black font-medium mb-1">No aspects match your filters</p>
+                <p className="font-inter text-sm text-black/60 mb-4">Try adjusting your filter criteria or clear all filters</p>
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 bg-black text-white font-medium border border-black hover:bg-gray-800 transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Aspect nature guide */}
@@ -456,7 +719,12 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
           <h3 className="font-space-grotesk font-bold text-xl mb-4">Question Context Analysis</h3>
           
           <div className="space-y-4">
-            <ColoredBox backgroundColor={INFO_BOX_COLORS.warning} className="p-4">
+            <ColoredBox
+              backgroundColor="#fff3e0"
+              textColor="black"
+              borderColor="orange-200"
+              className="p-4"
+            >
               <h4 className="font-bold mb-2">Current Question:</h4>
               <p className="text-sm">"{question.question}"</p>
             </ColoredBox>
@@ -465,13 +733,13 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
               <div>
                 <h4 className="font-bold mb-3">Aspect Significance Rules</h4>
                 <div className="space-y-2 text-sm">
-                  <ColoredBox backgroundColor="#51bd94" className="p-2">
+                  <ColoredBox backgroundColor={getAspectTypeStyle('high').background} textColor={getAspectTypeStyle('high').text} className="p-2">
                     <span className="font-bold">High relevance:</span> Aspects involving significators
                   </ColoredBox>
-                  <ColoredBox backgroundColor="#ffe609" textColor="black" className="p-2">
+                  <ColoredBox backgroundColor={getAspectTypeStyle('medium').background} textColor={getAspectTypeStyle('medium').text} className="p-2">
                     <span className="font-bold">Medium relevance:</span> General planetary aspects
                   </ColoredBox>
-                  <ColoredBox backgroundColor="#6b7280" className="p-2">
+                  <ColoredBox backgroundColor={getAspectTypeStyle('low').background} textColor={getAspectTypeStyle('low').text} className="p-2">
                     <span className="font-bold">Low relevance:</span> Background planetary activity
                   </ColoredBox>
                 </div>

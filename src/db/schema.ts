@@ -30,6 +30,7 @@ export const users = sqliteTable('users', {
   sunSign: text('sun_sign'),
   stelliumSigns: text('stellium_signs'), // JSON array
   stelliumHouses: text('stellium_houses'), // JSON array
+  detailedStelliums: text('detailed_stelliums'), // JSON array with detailed stellium data
   hasNatalChart: integer('has_natal_chart', { mode: 'boolean' }).default(false),
   
   // Privacy settings

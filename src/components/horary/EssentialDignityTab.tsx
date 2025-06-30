@@ -17,6 +17,10 @@ import {
   DIGNITY_COLORS,
   CONFIDENCE_COLORS,
   INFO_BOX_COLORS,
+  ASPECT_TYPE_COLORS,
+  getAspectTypeStyle,
+  getStrengthAssessmentStyle,
+  getDignityBadgeStyle
 } from "@/utils/horary/colorConfigurations";
 import {
   ColoredBox,
@@ -204,7 +208,7 @@ export default function EssentialDignityTab({
       <div
         className={`border border-black p-4 cursor-pointer transition-all duration-200 ${
           selectedPlanet === dignity.planet
-            ? "bg-blue-100 border-2"
+            ? `${getAspectTypeStyle('neutral').badge.replace('border-black', 'border-2')}`
             : "bg-white hover:bg-gray-50"
         }`}
         onClick={() => setSelectedPlanet(dignity.planet)}
@@ -218,10 +222,8 @@ export default function EssentialDignityTab({
           </div>
           <Badge
             label={strengthInfo.label}
-            backgroundColor={
-              getStrengthStyle(strengthInfo.color).backgroundColor
-            }
-            textColor={getStrengthStyle(strengthInfo.color).color}
+            backgroundColor={getStrengthAssessmentStyle(strengthInfo.label).backgroundColor}
+            textColor={getStrengthAssessmentStyle(strengthInfo.label).color}
           />
         </div>
 
@@ -238,40 +240,53 @@ export default function EssentialDignityTab({
 
         <div className="space-y-1">
           {dignity.dignities.ruler && (
-            <Badge label="Ruler" backgroundColor={DIGNITY_COLORS.ruler} />
+            <Badge 
+              label="Ruler" 
+              backgroundColor={getDignityBadgeStyle('ruler').backgroundColor}
+              textColor={getDignityBadgeStyle('ruler').textColor}
+            />
           )}
           {dignity.dignities.exaltation && (
             <Badge
               label="Exaltation"
-              backgroundColor={DIGNITY_COLORS.exaltation}
+              backgroundColor={getDignityBadgeStyle('exaltation').backgroundColor}
+              textColor={getDignityBadgeStyle('exaltation').textColor}
             />
           )}
           {dignity.dignities.triplicity && (
             <Badge
               label="Triplicity"
-              backgroundColor={DIGNITY_COLORS.triplicity}
-              textColor="black"
+              backgroundColor={getDignityBadgeStyle('triplicity').backgroundColor}
+              textColor={getDignityBadgeStyle('triplicity').textColor}
             />
           )}
           {dignity.debilities.detriment && (
             <Badge
               label="Detriment"
-              backgroundColor={DIGNITY_COLORS.detriment}
+              backgroundColor={getDignityBadgeStyle('detriment').backgroundColor}
+              textColor={getDignityBadgeStyle('detriment').textColor}
             />
           )}
           {dignity.debilities.fall && (
-            <Badge label="Fall" backgroundColor={DIGNITY_COLORS.fall} />
+            <Badge 
+              label="Fall" 
+              backgroundColor={getDignityBadgeStyle('fall').backgroundColor}
+              textColor={getDignityBadgeStyle('fall').textColor}
+            />
           )}
           {dignity.debilities.peregrine && (
             <Badge
               label="Peregrine"
-              backgroundColor={DIGNITY_COLORS.peregrine}
+              backgroundColor={getDignityBadgeStyle('peregrine').backgroundColor}
+              textColor={getDignityBadgeStyle('peregrine').textColor}
             />
           )}
         </div>
 
         {contradictions.hasContradictions && (
-          <div className="text-xs text-purple-600 mt-1">⚠ Mixed dignities</div>
+          <div className="text-xs mt-1" style={{ color: getAspectTypeStyle('medium').text }}>
+            ⚠ Mixed dignities
+          </div>
         )}
       </div>
     );
@@ -300,7 +315,7 @@ export default function EssentialDignityTab({
             </h3>
             <div
               className="px-3 py-1 border border-black"
-              style={getStrengthStyle(strengthInfo.color)}
+              style={getStrengthAssessmentStyle(strengthInfo.label)}
             >
               {strengthInfo.label}
             </div>
@@ -345,14 +360,16 @@ export default function EssentialDignityTab({
               {dignity.dignities.ruler && (
                 <DignityBadge
                   type="Ruler"
-                  backgroundColor={DIGNITY_COLORS.ruler}
+                  backgroundColor={getDignityBadgeStyle('ruler').backgroundColor}
+                  textColor={getDignityBadgeStyle('ruler').textColor}
                   score="+5"
                 />
               )}
               {dignity.dignities.exaltation && (
                 <DignityBadge
                   type="Exaltation"
-                  backgroundColor={DIGNITY_COLORS.exaltation}
+                  backgroundColor={getDignityBadgeStyle('exaltation').backgroundColor}
+                  textColor={getDignityBadgeStyle('exaltation').textColor}
                   score="+4"
                 />
               )}
@@ -364,21 +381,24 @@ export default function EssentialDignityTab({
               {dignity.dignities.triplicity && (
                 <DignityBadge
                   type="Triplicity"
-                  backgroundColor={DIGNITY_COLORS.triplicity}
+                  backgroundColor={getDignityBadgeStyle('triplicity').backgroundColor}
+                  textColor={getDignityBadgeStyle('triplicity').textColor}
                   score="+3"
                 />
               )}
               {dignity.dignities.term && (
                 <DignityBadge
                   type="Term"
-                  backgroundColor={DIGNITY_COLORS.term}
+                  backgroundColor={getDignityBadgeStyle('term').backgroundColor}
+                  textColor={getDignityBadgeStyle('term').textColor}
                   score="+2"
                 />
               )}
               {dignity.dignities.face && (
                 <DignityBadge
                   type="Face"
-                  backgroundColor={DIGNITY_COLORS.face}
+                  backgroundColor={getDignityBadgeStyle('face').backgroundColor}
+                  textColor={getDignityBadgeStyle('face').textColor}
                   score="+1"
                 />
               )}
@@ -448,23 +468,25 @@ export default function EssentialDignityTab({
               </ColoredBox>
             )}
 
-            <ColoredBox backgroundColor="#0ec47e" className="p-4">
+            <ColoredBox 
+              backgroundColor={getAspectTypeStyle('harmonious').text} 
+              textColor="white" 
+              className="p-4"
+            >
               <div className="font-bold text-sm mb-2">For This Question:</div>
               <div className="text-sm">{contextual.interpretation}</div>
               <div className="text-xs mt-2">
                 <Badge
                   label={`${contextual.confidence} confidence`}
                   backgroundColor={
-                    CONFIDENCE_COLORS[
-                      contextual.confidence as keyof typeof CONFIDENCE_COLORS
-                    ]
+                    contextual.confidence === 'high' ? getAspectTypeStyle('high').background :
+                    contextual.confidence === 'medium' ? getAspectTypeStyle('medium').background :
+                    getAspectTypeStyle('low').background
                   }
                   textColor={
-                    contextual.confidence === "high"
-                      ? "black"
-                      : contextual.confidence === "medium"
-                      ? "black"
-                      : "white"
+                    contextual.confidence === 'high' ? getAspectTypeStyle('high').text :
+                    contextual.confidence === 'medium' ? getAspectTypeStyle('medium').text :
+                    getAspectTypeStyle('low').text
                   }
                 />
               </div>
@@ -728,9 +750,8 @@ export default function EssentialDignityTab({
                   ).length
                 }
                 label="Strong Planets"
-                backgroundColor="#e8f5e9"
-                textColor="#2e7d32"
-                borderColor="green-200"
+                backgroundColor={getAspectTypeStyle('harmonious').text}
+                textColor="white"
               />
               <StatCard
                 value={
@@ -742,18 +763,16 @@ export default function EssentialDignityTab({
                   ).length
                 }
                 label="Debilitated"
-                backgroundColor="#ffebee"
-                textColor="#c62828"
-                borderColor="red-200"
+                backgroundColor={getAspectTypeStyle('challenging').text}
+                textColor="white"
               />
               <StatCard
                 value={
                   sortedDignities.filter((d) => d.debilities.peregrine).length
                 }
                 label="Peregrine"
-                backgroundColor="#f5f5f5"
-                textColor="#616161"
-                borderColor="gray-200"
+                backgroundColor={getAspectTypeStyle('low').text}
+                textColor="white"
               />
               <StatCard
                 value={
@@ -762,9 +781,8 @@ export default function EssentialDignityTab({
                   ).length
                 }
                 label="Mixed Dignities"
-                backgroundColor="#f3e5f5"
-                textColor="#6a1b9a"
-                borderColor="purple-200"
+                backgroundColor={getAspectTypeStyle('medium').text}
+                textColor="white"
               />
             </div>
 
@@ -795,10 +813,8 @@ export default function EssentialDignityTab({
                       </div>
                       <Badge
                         label={strengthInfo.label}
-                        backgroundColor={
-                          getStrengthStyle(strengthInfo.color).backgroundColor
-                        }
-                        textColor={getStrengthStyle(strengthInfo.color).color}
+                        backgroundColor={getStrengthAssessmentStyle(strengthInfo.label).backgroundColor}
+                        textColor={getStrengthAssessmentStyle(strengthInfo.label).color}
                       />
                     </div>
                     <div className="text-sm text-gray-700">

@@ -159,13 +159,13 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
                     
                   case 'detailed-aspects':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <MajorAspectsSection 
-                          chartData={chartData}
-                          shouldShowFeature={shouldShowFeature}
-                          userIsPremium={userIsPremium}
-                        />
-                      </div>
+                      <MajorAspectsSection 
+                        key={section.id}
+                        id={sectionId}
+                        chartData={chartData}
+                        shouldShowFeature={shouldShowFeature}
+                        userIsPremium={userIsPremium}
+                      />
                     );
                     
                   case 'planetary-dignities':

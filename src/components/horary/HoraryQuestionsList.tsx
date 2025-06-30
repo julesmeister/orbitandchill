@@ -23,11 +23,23 @@ export default function HoraryQuestionsList({
 }: HoraryQuestionsListProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Get current user ID from the questions to ensure consistency
+  const currentUserId = userQuestions.find(q => q.userId)?.userId;
+  
+  // Extra safety filter: Only show questions that definitely belong to current user
+  const safeDisplayQuestions = displayQuestions.filter(q => 
+    !currentUserId || q.userId === currentUserId
+  );
+
+  if (safeDisplayQuestions.length !== displayQuestions.length) {
+    console.warn(`⚠️ UI Safety filter: Removed ${displayQuestions.length - safeDisplayQuestions.length} inconsistent questions`);
+  }
+
   // Pagination calculations
-  const totalPages = Math.ceil(displayQuestions.length / itemsPerPage);
+  const totalPages = Math.ceil(safeDisplayQuestions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedQuestions = displayQuestions.slice(startIndex, endIndex);
+  const paginatedQuestions = safeDisplayQuestions.slice(startIndex, endIndex);
 
   return (
     <div className="lg:col-span-1">
@@ -46,7 +58,7 @@ export default function HoraryQuestionsList({
             </div>
             <div className="flex items-center gap-2">
               <div className="bg-black text-white px-3 py-1.5 font-space-grotesk font-bold text-sm">
-                {displayQuestions.length}
+                {safeDisplayQuestions.length}
               </div>
               {!userIsPremium && userQuestions.length > 10 && (
                 <div className="text-xs text-black/60 font-inter">

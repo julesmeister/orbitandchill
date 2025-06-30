@@ -21,6 +21,78 @@ This document provides a clean reference for all API endpoints, their status, an
 
 ## 🎯 Recent Fixes & Improvements
 
+### ✅ Horary Questions DELETE API & Connection Pool Implementation (2025-06-30)
+- **Problem**: Horary question deletion was failing with 500 errors and had no user feedback during the operation
+- **Root Cause**: 
+  - Drizzle ORM WHERE clauses were being ignored by Turso HTTP client, causing wrong questions to be returned/deleted
+  - No loading state during deletion operations, leaving users uncertain about progress
+  - Connection pool architecture was documented but not properly implemented
+- **Complete Solution Implemented**: 
+  - **Database Layer**: Replaced Drizzle ORM with direct SQL queries for reliable WHERE clause handling
+  - **Connection Pool**: Implemented comprehensive database connection pooling system with health monitoring
+  - **API Layer**: Enhanced DELETE operations with proper error handling and status codes (403 for permission denied, 404 for not found)
+  - **Frontend Layer**: Added loading toasts during deletion with success/error feedback
+  - **Error Recovery**: Proper HTTP status codes replacing generic 500 errors with specific permission/not found responses
+- **Architecture Overview**:
+  - **Direct SQL Pattern**: Raw SQL queries bypass Drizzle ORM WHERE clause parsing issues with Turso HTTP client
+  - **Connection Pooling**: Database connection pool with configurable min/max connections, health monitoring, and cleanup
+  - **Hybrid Fallback**: Connection pool when available, direct client as fallback, Drizzle ORM as last resort
+  - **User Feedback**: Loading toasts with spinner during operations, success/error messages upon completion
+  - **Field Mapping**: Proper snake_case ↔ camelCase conversion for database compatibility
+- **Files Modified**:
+  - `src/db/connectionPool.ts` - Complete connection pooling implementation with health monitoring and cleanup
+  - `src/db/index-turso-http.ts` - Connection pool integration with runtime enablement and fallback strategies
+  - `src/app/api/horary/questions/[id]/route.ts` - Enhanced DELETE/GET/PATCH with direct SQL and connection pool support
+  - `src/app/api/debug/connection-pool/route.ts` - Debug endpoints for connection pool management and testing
+  - `src/app/horary/page.tsx` - Enhanced delete workflow with loading states and user feedback
+  - `src/store/horaryStore.ts` - Improved error handling and promise-based deletion with proper error propagation
+  - `src/components/reusable/StatusToast.tsx` - Loading state support with spinner animation
+  - `public/debug-horary.html` - Connection pool testing and monitoring interface
+- **Technical Implementation**:
+  - **Connection Pool**: Configurable pool with 1-3 connections, automatic cleanup, health monitoring, and statistics
+  - **Raw SQL Queries**: Direct database queries with proper parameter binding and field mapping
+  - **Error Classification**: 403 Forbidden for permission issues, 404 Not Found for missing resources, 500 only for actual server errors
+  - **Loading States**: Real-time user feedback with loading spinners and success/error messages
+  - **Async Operations**: Non-blocking UI with proper promise handling and error propagation
+  - **Debug Tools**: Comprehensive testing interface for connection pool status, enablement, and testing
+- **Impact**: Reliable horary question deletion with clear user feedback and enhanced database performance through connection pooling
+
+### ✅ Vote Persistence Implementation (2025-06-29)
+- **Problem**: User votes on discussions weren't persisting after page refresh
+- **Root Cause**: 
+  - Votes table used `discussion_id` column, but query was looking for `target_id`
+  - Frontend interfaces missing `userVote` field
+  - API not passing user ID to fetch vote data
+- **Complete Solution Implemented**: 
+  - **Database Layer**: Fixed SQL query to use correct column names (`discussion_id` instead of `target_id`)
+  - **API Layer**: Updated `getAllDiscussions` to fetch and include user vote data when user ID provided
+  - **Hook Layer**: Modified `useDiscussions` hook to send user ID in API requests
+  - **Component Layer**: Added `userVote` field to Discussion interfaces and pass to VoteButtons
+  - **Vote Logic**: Comprehensive vote management with optimistic updates and error handling
+- **Architecture Overview**:
+  - **Votes Table**: Single table for both discussion and reply votes with proper foreign keys
+  - **Vote Retrieval**: Separate SQL query after main discussion query to avoid JOIN complexity
+  - **State Management**: `useVoting` hook provides toggle logic, optimistic UI, and persistence
+  - **API Endpoints**: Dedicated vote endpoints for discussions and replies with atomic operations
+  - **Vote Counting**: Real-time vote count updates with proper increment/decrement logic
+- **Files Modified**:
+  - `src/db/services/discussionService.ts` - Added `voteOnDiscussion()` and `voteOnReply()` methods with atomic operations
+  - `src/hooks/useDiscussions.ts` - Send userId to API for vote data retrieval
+  - `src/hooks/useVoting.ts` - Complete vote management hook with optimistic updates
+  - `src/components/reusable/VoteButtons.tsx` - Vote UI component with state persistence
+  - `src/components/discussions/DiscussionCard.tsx` - Pass userVote to VoteButtons component
+  - `src/app/api/discussions/[id]/vote/route.ts` - Discussion voting API endpoint
+  - `src/app/api/replies/[id]/vote/route.ts` - Reply voting API endpoint
+  - `src/types/threads.ts` - Added userVote field to Thread and ThreadReply interfaces
+- **Technical Implementation**:
+  - **Vote Storage**: `votes` table with userId, discussionId/replyId, voteType, and timestamps
+  - **Vote Query**: Optimized query fetches user votes for multiple discussions in single request
+  - **Vote Toggle**: Clicking same vote removes it, clicking different vote changes it
+  - **Atomic Operations**: Vote removal + count update + new vote insertion in single transaction
+  - **Error Handling**: Graceful fallback when database unavailable, optimistic UI rollback on failure
+  - **Anonymous Users**: Automatic anonymous user creation for voting without authentication
+- **Impact**: Complete vote persistence across page refreshes with real-time UI updates
+
 ### ✅ Google OAuth Session Persistence Fix (2025-06-28)
 - **Problem**: Google OAuth users were logged out after page refresh due to race condition in initialization
 - **Root Cause**: `ensureAnonymousUser` was being called before `loadProfile` completed rehydration, overwriting Google user with anonymous user
@@ -58,7 +130,7 @@ This document provides a clean reference for all API endpoints, their status, an
 ### API Endpoints Reference
 | Endpoint | Method | Status | Description |
 |----------|--------|--------|-------------|
-| `/api/discussions` | GET | ✅ Complete | List discussions with filtering, pagination, sorting |
+| `/api/discussions` | GET | ✅ Complete | List discussions with filtering, pagination, sorting, **user vote data persistence** |
 | `/api/discussions/create` | POST | ✅ Complete | Create new discussions with validation |
 | `/api/discussions/[id]` | GET | ✅ Complete | Get single discussion with replies |
 | `/api/discussions/[id]` | PATCH | ✅ Complete | Update discussion (admin/author only) |
@@ -80,7 +152,12 @@ This document provides a clean reference for all API endpoints, their status, an
 - ✅ Discussion detail page (`/discussions/[id]`)
 - ✅ Create/edit discussion forms
 - ✅ Reply system with threading visualization
-- ✅ Voting system with real-time updates
+- ✅ **Complete Vote Persistence System**: Real-time updates with cross-session vote state persistence
+  - Vote buttons maintain active state after page refresh
+  - Optimistic UI updates with error rollback
+  - Anonymous user voting support
+  - Atomic vote operations (toggle, change, remove)
+  - Database-backed vote storage with proper foreign key constraints
 
 ---
 

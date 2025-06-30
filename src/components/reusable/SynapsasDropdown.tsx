@@ -15,6 +15,7 @@ interface SynapsasDropdownProps {
   placeholder?: string;
   className?: string;
   variant?: 'default' | 'thin';
+  direction?: 'down' | 'up';
 }
 
 export default function SynapsasDropdown({
@@ -23,42 +24,51 @@ export default function SynapsasDropdown({
   onChange,
   placeholder = "Select option",
   className = "",
-  variant = "default"
+  variant = "default",
+  direction = "down"
 }: SynapsasDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Calculate position when opening
+  // Calculate dropdown position
+  const calculatePosition = useCallback(() => {
+    if (!buttonRef.current) return;
+
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 200; // Max height of dropdown
+
+    const top = direction === 'up'
+      ? rect.top - dropdownHeight + 40 // Position above button with 4px gap
+      : rect.bottom + 4; // Position below button with 4px gap
+
+    setDropdownPosition({
+      top,
+      left: rect.left,
+      width: rect.width
+    });
+  }, [direction]);
+
+  // Handle toggle and calculate position when opening
   const handleToggle = useCallback(() => {
-    if (!isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + 4, // Add 4px gap below button
-        left: rect.left,
-        width: rect.width
-      });
+    if (!isOpen) {
+      calculatePosition();
     }
     setIsOpen(!isOpen);
-  }, [isOpen]);
+  }, [isOpen, calculatePosition]);
 
   // Update position on scroll and handle click outside
   useEffect(() => {
     const handleScroll = () => {
-      if (buttonRef.current && isOpen) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.bottom + 4, // Add 4px gap below button
-          left: rect.left,
-          width: rect.width
-        });
+      if (isOpen) {
+        calculatePosition();
       }
     };
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
-          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -71,7 +81,7 @@ export default function SynapsasDropdown({
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [isOpen]);
+  }, [isOpen, calculatePosition]);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
@@ -99,7 +109,7 @@ export default function SynapsasDropdown({
 
       {/* Portal dropdown to bypass z-index issues */}
       {isOpen && typeof window !== 'undefined' && createPortal(
-        <div 
+        <div
           ref={dropdownRef}
           className="synapsas-sort-dropdown"
           style={{
