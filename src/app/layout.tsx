@@ -9,6 +9,8 @@ import { Toaster } from "sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { startMemoryMonitoring } from "@/utils/memoryMonitor";
 import MemoryCleanup from "@/components/MemoryCleanup";
+// Import memory pressure manager to enable emergency cleanup at 97.5% heap usage
+import "@/utils/memoryPressure";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

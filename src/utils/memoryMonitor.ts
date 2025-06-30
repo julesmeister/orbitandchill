@@ -137,6 +137,12 @@ class MemoryMonitor {
         (!lastHighUsageWarning || now - lastHighUsageWarning > 600000)) {
       console.warn(`Critical heap usage: ${(heapUsagePercent * 100).toFixed(1)}%`);
       this.logMemoryWarning('high_heap_usage', { heapUsagePercent });
+      
+      // Trigger immediate emergency cleanup if heap usage is critical (97.5%+)
+      if (heapUsagePercent > 0.975) {
+        console.error('🚨 EMERGENCY: Memory at critical levels - triggering immediate cleanup');
+        this.triggerEmergencyCleanup();
+      }
     }
 
     if (heapGrowth > 0.25 && 
@@ -318,6 +324,27 @@ class MemoryMonitor {
     }
     
     this.warningTimes.set(type, time);
+  }
+
+  /**
+   * Trigger emergency memory cleanup immediately
+   */
+  private async triggerEmergencyCleanup(): Promise<void> {
+    try {
+      // Dynamic import to avoid circular dependencies
+      const { checkAndHandleMemoryPressure } = await import('./memoryPressure');
+      await checkAndHandleMemoryPressure();
+      
+      // Also force garbage collection if available
+      if (global.gc) {
+        global.gc();
+        console.error('🧹 Forced garbage collection');
+      }
+      
+      console.error('✅ Emergency cleanup completed');
+    } catch (error) {
+      console.error('❌ Emergency cleanup failed:', error);
+    }
   }
 
   /**

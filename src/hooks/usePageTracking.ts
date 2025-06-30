@@ -99,12 +99,15 @@ export const usePageTracking = (userId?: string) => {
         userId: userId
       };
 
-      // Use sendBeacon for reliable delivery on page unload
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/analytics/track', JSON.stringify({
+      // Use sendBeacon for reliable delivery on page unload (only if user consented)
+      if (shouldTrackAnalytics() && navigator.sendBeacon) {
+        // Create Blob with correct content-type for sendBeacon
+        const blob = new Blob([JSON.stringify({
           event: 'session_end',
           data: sessionData
-        }));
+        })], { type: 'application/json' });
+        
+        navigator.sendBeacon('/api/analytics/track', blob);
       }
     };
 

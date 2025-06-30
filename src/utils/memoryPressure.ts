@@ -373,8 +373,9 @@ export function getMemoryPressureStatus() {
 
 // Auto-start memory pressure monitoring
 if (typeof process !== 'undefined') {
-  // Check every 2 minutes in production, every 3 minutes in development
-  const interval = process.env.NODE_ENV === 'production' ? 120000 : 180000;
+  // Check every 30 seconds in production, every 60 seconds in development for faster emergency response
+  const interval = process.env.NODE_ENV === 'production' ? 30000 : 60000;
+  console.log(`🔍 Memory pressure monitoring started (checking every ${interval/1000}s)`);
   setInterval(checkAndHandleMemoryPressure, interval);
 }
 
