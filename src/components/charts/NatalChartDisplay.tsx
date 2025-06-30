@@ -8,6 +8,7 @@ import ChartTabs from './ChartTabs';
 import ChartInterpretation from './ChartInterpretation';
 import ChartActions from './ChartActions';
 import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
+import TransitAspectsTab from './TransitAspectsTab';
 
 interface NatalChartDisplayProps {
   svgContent: string;
@@ -217,7 +218,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                   </div>
                 </div>
               );
-            } else {
+            } else if (activeTab === 'interpretation') {
               return (
                 // Interpretation View
                 <div>
@@ -228,17 +229,25 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                   />
                 </div>
               );
+            } else if (activeTab === 'transits') {
+              return (
+                // Transit Effects View
+                <div>
+                  <TransitAspectsTab chartData={stableChartData} />
+                </div>
+              );
             }
           })()}
           
 
-          <ChartActions
+          {/* Export & Share section commented out as requested */}
+          {/* <ChartActions
             onDownloadSVG={handleDownloadSVG}
             onDownloadPNG={handleDownloadPNG}
             onDownloadPDF={handleDownloadPDF}
             onShare={onShare}
             isPDFGenerating={isPDFGenerating}
-          />
+          /> */}
         </div>
 
         {/* Chart Info */}

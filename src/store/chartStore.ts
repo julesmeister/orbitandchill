@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // Chart tab types
-export type ChartTab = 'chart' | 'interpretation';
+export type ChartTab = 'chart' | 'interpretation' | 'transits';
 
 // Aspect filter types
 export type AspectCategory = 'all' | 'personality' | 'relationships' | 'money' | 'career' | 'spirituality' | 'communication';
@@ -255,7 +255,7 @@ export const useChartStore = create<ChartStore>()(
     }),
     {
       name: 'chart-store',
-      version: 1,
+      version: 2,
       // Only persist user preferences, not the current active tab
       partialize: (state) => ({
         interpretationSections: state.interpretationSections,

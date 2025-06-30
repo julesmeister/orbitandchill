@@ -20,7 +20,7 @@ export function generateSlug(title: string): string {
  * Generate a unique slug by checking against existing slugs
  */
 export function generateUniqueSlug(title: string, existingSlugs: string[] = []): string {
-  let baseSlug = generateSlug(title);
+  const baseSlug = generateSlug(title);
   let slug = baseSlug;
   let counter = 1;
   

@@ -22,7 +22,7 @@ export async function DELETE(request: NextRequest) {
     ];
 
     let deletedCount = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     // Try connection pool first
     try {
