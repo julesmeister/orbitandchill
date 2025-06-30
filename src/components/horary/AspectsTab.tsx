@@ -46,7 +46,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
   const [activeSection, setActiveSection] = useState<'overview' | 'major' | 'patterns' | 'context'>('overview');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRelevance, setSelectedRelevance] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const [selectedOutcome, setSelectedOutcome] = useState<'all' | 'harmonious' | 'challenging' | 'neutral'>('all');
+  const [selectedOutcome, setSelectedOutcome] = useState<'all' | 'favorable' | 'challenging' | 'neutral'>('all');
   const [selectedAspectType, setSelectedAspectType] = useState<'all' | 'conjunction' | 'trine' | 'square' | 'sextile' | 'opposition' | 'quincunx'>('all');
   
   // Extract actual planetary positions from chart data
@@ -169,8 +169,8 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
         />
         <Badge 
           label={interpretation.outcome}
-          backgroundColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').background}
-          textColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').text}
+          backgroundColor={getAspectTypeStyle(interpretation.outcome === 'favorable' ? 'harmonious' : interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').background}
+          textColor={getAspectTypeStyle(interpretation.outcome === 'favorable' ? 'harmonious' : interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').text}
         />
       </div>
       
@@ -283,8 +283,8 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
             <InfoBox
               title={`Outcome: ${interpretation.outcome}`}
               content={<div className="text-xs">General nature of this influence</div>}
-              backgroundColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').background}
-              textColor={getAspectTypeStyle(interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').text}
+              backgroundColor={getAspectTypeStyle(interpretation.outcome === 'favorable' ? 'harmonious' : interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').background}
+              textColor={getAspectTypeStyle(interpretation.outcome === 'favorable' ? 'harmonious' : interpretation.outcome as 'harmonious' | 'challenging' | 'neutral').text}
             />
             
             <InfoBox
@@ -463,7 +463,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
                 <div className="flex flex-wrap gap-2">
                   {[
                     { value: 'all', label: 'All Types', color: 'bg-slate-100 text-slate-700' },
-                    { value: 'harmonious', label: 'Harmonious', color: getAspectTypeStyle('harmonious').badge },
+                    { value: 'favorable', label: 'Favorable', color: getAspectTypeStyle('harmonious').badge },
                     { value: 'challenging', label: 'Challenging', color: getAspectTypeStyle('challenging').badge },
                     { value: 'neutral', label: 'Neutral', color: getAspectTypeStyle('neutral').badge }
                   ].map((option) => (
@@ -566,9 +566,10 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
           {/* Overall assessment */}
           <ColoredBox 
             backgroundColor={
-              aspectAnalysis.summary.overallTone === 'favorable' ? getAspectTypeStyle('harmonious').text :
-              aspectAnalysis.summary.overallTone === 'challenging' ? getAspectTypeStyle('challenging').text :
-              getAspectTypeStyle('neutral').text
+              aspectAnalysis.summary.overallTone === 'favorable' ? TONE_COLORS.favorable :
+              aspectAnalysis.summary.overallTone === 'challenging' ? TONE_COLORS.challenging :
+              aspectAnalysis.summary.overallTone === 'mixed' ? TONE_COLORS.neutral :
+              TONE_COLORS.neutral
             }
             textColor="white"
             className="p-4"
