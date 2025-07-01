@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:memory": "NODE_OPTIONS=\"--max-old-space-size=1536 --expose-gc --optimize-for-size\" next dev",
+    "dev:memory": "node --max-old-space-size=1536 --expose-gc --optimize-for-size node_modules/next/dist/bin/next dev",
     "build": "NODE_OPTIONS=\"--max-old-space-size=3072 --expose-gc\" next build",
     "start": "NODE_OPTIONS=\"--max-old-space-size=2048 --expose-gc\" next start",
     "start:memory": "NODE_OPTIONS=\"--max-old-space-size=1536 --expose-gc --optimize-for-size\" next start",

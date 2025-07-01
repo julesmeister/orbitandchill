@@ -9,6 +9,7 @@ import ChartInterpretation from './ChartInterpretation';
 import ChartActions from './ChartActions';
 import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
 import TransitAspectsTab from './TransitAspectsTab';
+import MatrixOfDestiny from './MatrixOfDestiny';
 
 interface NatalChartDisplayProps {
   svgContent: string;
@@ -234,6 +235,22 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                 // Transit Effects View
                 <div>
                   <TransitAspectsTab chartData={stableChartData} />
+                </div>
+              );
+            } else if (activeTab === 'matrix-destiny') {
+              return (
+                // Matrix of Destiny View
+                <div>
+                  {stableBirthData ? (
+                    <MatrixOfDestiny 
+                      birthData={stableBirthData} 
+                      personName={personName}
+                    />
+                  ) : (
+                    <div className="p-8 text-center">
+                      <p className="text-gray-600">Birth data is required for Matrix of Destiny calculation.</p>
+                    </div>
+                  )}
                 </div>
               );
             }

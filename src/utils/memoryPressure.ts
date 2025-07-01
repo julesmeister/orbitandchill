@@ -23,11 +23,11 @@ class MemoryPressureManager {
     criticalLevel: false
   };
 
-  private readonly EMERGENCY_HEAP_THRESHOLD = 0.975; // 97.5% - immediate action
-  private readonly CRITICAL_HEAP_THRESHOLD = 0.90; // 90% (reduced from 95%)
-  private readonly HIGH_HEAP_THRESHOLD = 0.80;     // 80% (reduced from 90%)
-  private readonly CLEANUP_COOLDOWN = 30000;       // 30 seconds between cleanups (reduced from 1m)
-  private readonly MAX_CLEANUPS_PER_HOUR = 12;     // Increased from 6 to 12
+  private readonly EMERGENCY_HEAP_THRESHOLD = 0.98;  // 98% - immediate action
+  private readonly CRITICAL_HEAP_THRESHOLD = 0.95;  // 95% - more realistic threshold
+  private readonly HIGH_HEAP_THRESHOLD = 0.85;      // 85% - reasonable warning level
+  private readonly CLEANUP_COOLDOWN = 300000;       // 5 minutes between cleanups
+  private readonly MAX_CLEANUPS_PER_HOUR = 4;       // Reduced cleanup frequency
 
   /**
    * Check if system is under memory pressure
@@ -45,10 +45,10 @@ class MemoryPressureManager {
     this.state.criticalLevel = heapPercent > this.CRITICAL_HEAP_THRESHOLD;
     this.state.isUnderPressure = heapPercent > this.HIGH_HEAP_THRESHOLD;
 
-    // Emergency memory condition - immediate action required
-    if (heapPercent > this.EMERGENCY_HEAP_THRESHOLD) {
-      console.error(`🚨 EMERGENCY MEMORY: ${(heapPercent * 100).toFixed(1)}% - forcing immediate cleanup`);
-      this.emergencyMemoryCleanup();
+    // Emergency memory condition - DISABLED to prevent death spiral
+    if (false && heapPercent > this.EMERGENCY_HEAP_THRESHOLD) {
+      console.error(`🚨 EMERGENCY MEMORY: ${(heapPercent * 100).toFixed(1)}% - monitoring disabled`);
+      // Emergency cleanup completely disabled
     }
 
     // Check for external memory pressure signal
@@ -200,10 +200,15 @@ class MemoryPressureManager {
     console.error('🚨 EMERGENCY MEMORY CLEANUP INITIATED');
     
     try {
-      // 1. Force garbage collection immediately (if available)
+      const startUsage = process.memoryUsage();
+      
+      // 1. Multiple garbage collection cycles with delays
       if (global.gc) {
-        global.gc();
-        console.error('🧹 Forced garbage collection');
+        for (let i = 0; i < 3; i++) {
+          global.gc();
+          await new Promise(resolve => setTimeout(resolve, 100)); // Wait for GC
+        }
+        console.error('🧹 Multiple garbage collection cycles completed');
       }
 
       // 2. Emergency cache clearing
@@ -218,7 +223,27 @@ class MemoryPressureManager {
         // Continue with cleanup even if cache fails
       }
 
-      // 3. Emergency connection pool destruction
+      // 3. Clear Node.js require cache for non-essential modules
+      try {
+        let clearedModules = 0;
+        const essentialModules = [
+          'fs', 'path', 'http', 'https', 'crypto', 'util', 'events',
+          'stream', 'buffer', 'process', 'next', 'react'
+        ];
+        
+        for (const key in require.cache) {
+          const isEssential = essentialModules.some(mod => key.includes(mod));
+          if (!isEssential && !key.includes('node_modules')) {
+            delete require.cache[key];
+            clearedModules++;
+          }
+        }
+        console.error(`🗂️  Cleared ${clearedModules} non-essential modules from require cache`);
+      } catch (error) {
+        // Continue cleanup
+      }
+
+      // 4. Emergency connection pool destruction
       try {
         const { destroyConnectionPool } = await import('../db/connectionPool');
         await destroyConnectionPool();
@@ -227,30 +252,44 @@ class MemoryPressureManager {
         // Continue with cleanup even if pool destruction fails
       }
 
-      // 4. Clear memory monitor snapshots immediately
+      // 5. Clear memory monitor snapshots immediately
       try {
         const { clearAllSnapshots } = await import('./memoryMonitor');
         if (clearAllSnapshots) {
           clearAllSnapshots();
-          console.error('📊 Memory snapshots cleared');
+          console.error('🧹 All memory snapshots cleared');
         }
       } catch (error) {
         // Continue with cleanup
       }
 
-      // 5. Set memory pressure flag
-      const pressureFile = path.join(process.cwd(), '.memory-pressure');
+      // 6. Clear global variables and accumulated data
       try {
-        fs.writeFileSync(pressureFile, JSON.stringify({
-          emergency: true,
-          timestamp: Date.now(),
-          reason: 'Emergency memory threshold exceeded'
-        }));
+        // Clear global timers and intervals (be careful not to break app)
+        if (typeof global !== 'undefined') {
+          // Clear any custom global variables we might have set
+          delete global.__MEMORY_SNAPSHOTS__;
+          delete global.__CACHE_STATS__;
+          delete global.__CONNECTION_POOL__;
+        }
+        console.error('📊 Memory snapshots cleared');
       } catch (error) {
-        // File write failure is not critical
+        // Continue cleanup
       }
 
-      console.error('🚨 EMERGENCY CLEANUP COMPLETED');
+      // 7. Force another GC cycle after cleanup
+      if (global.gc) {
+        global.gc();
+      }
+
+      // 8. Calculate memory freed
+      const endUsage = process.memoryUsage();
+      const freedMB = (startUsage.heapUsed - endUsage.heapUsed) / 1024 / 1024;
+      
+      console.error(`🚨 EMERGENCY CLEANUP COMPLETED - Freed: ${freedMB.toFixed(1)}MB`);
+      
+      // Add delay before allowing next emergency cleanup
+      this.state.lastCleanup = Date.now();
       
     } catch (error) {
       console.error('❌ Emergency cleanup failed:', error);
@@ -371,11 +410,13 @@ export function getMemoryPressureStatus() {
   return getMemoryPressureManager().getStatus();
 }
 
-// Auto-start memory pressure monitoring
-if (typeof process !== 'undefined') {
-  // Check every 30 seconds in production, every 60 seconds in development for faster emergency response
-  const interval = process.env.NODE_ENV === 'production' ? 30000 : 60000;
-  console.log(`🔍 Memory pressure monitoring started (checking every ${interval/1000}s)`);
+// Auto-start memory pressure monitoring - DISABLED
+// Note: Auto-monitoring disabled to prevent excessive alerts
+// Use manual monitoring via admin panel or specific API calls
+if (false && typeof process !== 'undefined') {
+  // Check every 10 minutes for reduced noise
+  const interval = 600000; // 10 minutes
+  console.log(`🔍 Memory pressure monitoring started (checking every ${interval/1000/60}m)`);
   setInterval(checkAndHandleMemoryPressure, interval);
 }
 

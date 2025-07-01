@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // Chart tab types
-export type ChartTab = 'chart' | 'interpretation' | 'transits';
+export type ChartTab = 'chart' | 'interpretation' | 'transits' | 'matrix-destiny';
 
 // Aspect filter types
 export type AspectCategory = 'all' | 'personality' | 'relationships' | 'money' | 'career' | 'spirituality' | 'communication';

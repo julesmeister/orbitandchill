@@ -143,9 +143,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate the chart SVG and metadata
-    console.log('Generating chart for:', body.subjectName, body.dateOfBirth, body.timeOfBirth);
     const { svg, metadata } = await generateChartSVG(body);
-    console.log('Chart generated successfully, SVG length:', svg?.length);
+
+    // Validate that we have valid chart data before attempting to save
+    if (!svg || svg.length === 0) {
+      console.error('Chart generation failed: Empty SVG returned');
+      return NextResponse.json(
+        { error: 'Chart generation failed: No SVG content generated' },
+        { status: 500 }
+      );
+    }
+
+    if (!svg.includes('<svg')) {
+      console.error('Chart generation failed: Invalid SVG format');
+      return NextResponse.json(
+        { error: 'Chart generation failed: Invalid SVG format' },
+        { status: 500 }
+      );
+    }
 
     // Save to database
     console.log('Saving chart to database...');

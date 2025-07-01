@@ -77,6 +77,26 @@
             <button class="button" onclick="clearChartCache()">🗑️ Clear Chart Cache</button>
         </div>
 
+        <div class="chart-section" style="background: #e8f5e8; border-color: #28a745;">
+            <h3>🔗 Chart Sharing Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test chart sharing functionality and shared charts dropdown
+            </p>
+            <input type="text" id="chartIdInput" placeholder="Chart ID (optional)" style="width: 200px;">
+            <input type="text" id="shareTokenInput" placeholder="Share Token (optional)" style="width: 200px;">
+            <br>
+            <button class="button" onclick="createTestSharedChart()">➕ Create Test Shared Chart</button>
+            <button class="button" onclick="testChartSharing()">🔗 Test Chart Sharing</button>
+            <button class="button" onclick="testSharedChartAccess()">👀 Test Shared Chart Access</button>
+            <button class="button" onclick="testSharedChartsDropdown()">📋 Test Shared Charts List</button>
+            <button class="button" onclick="testShareUrlGeneration()">🌐 Test Share URL Generation</button>
+            <br><br>
+            <button class="button" onclick="runSharingTestSequence()" style="background: #28a745; font-weight: bold;">🚀 Run Complete Sharing Test</button>
+            <button class="button" onclick="debugDatabaseState()" style="background: #6f42c1; color: white;">🔍 Debug Database State</button>
+            <button class="button" onclick="testMinimalChart()" style="background: #e83e8c; color: white;">🧪 Test Minimal Chart</button>
+            <button class="button" onclick="testDatabaseConnection()" style="background: #fd7e14; color: white;">🔌 Test Database Connection</button>
+        </div>
+
         <div class="db-section">
             <h3>💾 Database & Storage Debug</h3>
             <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
@@ -830,9 +850,16 @@
             await testChartPageData();
             await compareStorageLayers();
             
+            // Add sharing tests
+            addResult('🔗 Starting Sharing Tests...', { timestamp: new Date().toISOString() }, 'success');
+            await testChartSharing();
+            await testSharedChartAccess();
+            await testSharedChartsDropdown();
+            await testShareUrlGeneration();
+            
             addResult('✅ Full Diagnostic Complete', { 
                 timestamp: new Date().toISOString(),
-                message: 'All tests completed. Check results above for issues.'
+                message: 'All tests completed including sharing functionality. Check results above for issues.'
             }, 'success');
         }
 
@@ -891,7 +918,605 @@
             }
         }
 
-        console.log('🔧 Chart Debug Tool loaded. Use buttons to test birth data persistence and chart generation.');
+        // ===== CHART SHARING DEBUG FUNCTIONS =====
+
+        async function createTestSharedChart() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Create test chart data - API expects coordinates as strings in an object
+                const testChartRequest = {
+                    userId: userId,
+                    subjectName: `Test Shared Chart ${Date.now()}`,
+                    dateOfBirth: '1990-06-15',
+                    timeOfBirth: '14:30',
+                    locationOfBirth: 'New York, NY, USA',
+                    coordinates: {
+                        lat: '40.7128',
+                        lon: '-74.0060'
+                    },
+                    chartType: 'natal',
+                    title: 'Debug Test Chart',
+                    description: 'Created by debug tool for sharing tests',
+                    isPublic: true,  // Make it public for sharing
+                    forceRegenerate: true  // Force new chart generation
+                };
+                
+                // First, create the chart
+                const createResponse = await fetch('/api/charts/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testChartRequest)
+                });
+                
+                let createData;
+                try {
+                    createData = await createResponse.json();
+                } catch (parseError) {
+                    const responseText = await createResponse.text();
+                    createData = { 
+                        error: 'Failed to parse response', 
+                        responseText: responseText.substring(0, 500),
+                        parseError: parseError.message 
+                    };
+                }
+                
+                // If chart creation successful, generate share token
+                let shareResult = null;
+                if (createResponse.ok && createData.chart?.id) {
+                    const shareResponse = await fetch(`/api/charts/${createData.chart.id}/share`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: userId })
+                    });
+                    
+                    shareResult = {
+                        statusCode: shareResponse.status,
+                        success: shareResponse.ok,
+                        data: shareResponse.ok ? await shareResponse.json() : null
+                    };
+                    
+                    // Store the chart ID and share token for other tests
+                    if (shareResult.success && shareResult.data) {
+                        document.getElementById('chartIdInput').value = createData.chart.id;
+                        if (shareResult.data.shareToken) {
+                            document.getElementById('shareTokenInput').value = shareResult.data.shareToken;
+                        } else if (shareResult.data.shareUrl && shareResult.data.shareUrl.includes('/chart/shared/')) {
+                            // Extract token from URL if shareToken not provided separately
+                            const extractedToken = shareResult.data.shareUrl.split('/chart/shared/').pop();
+                            document.getElementById('shareTokenInput').value = extractedToken;
+                        }
+                    }
+                }
+                
+                addResult('➕ Create Test Shared Chart', {
+                    userId: userId,
+                    chartCreation: {
+                        statusCode: createResponse.status,
+                        success: createResponse.ok,
+                        data: createData,
+                        chartId: createData.chart?.id
+                    },
+                    shareGeneration: shareResult,
+                    testData: testChartRequest,
+                    analysis: {
+                        chartCreated: createResponse.ok,
+                        shareTokenGenerated: shareResult?.success || false,
+                        readyForTesting: createResponse.ok && (shareResult?.success || false)
+                    }
+                }, createResponse.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Create Test Shared Chart Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testChartSharing() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                let chartId = document.getElementById('chartIdInput').value;
+                
+                // If no chart ID provided, try to get user's charts first
+                if (!chartId) {
+                    const chartsResponse = await fetch(`/api/charts/user/${encodeURIComponent(userId)}`);
+                    if (chartsResponse.ok) {
+                        const chartsData = await chartsResponse.json();
+                        if (chartsData.charts && chartsData.charts.length > 0) {
+                            chartId = chartsData.charts[0].id;
+                            addResult('📊 Found User Chart', { chartId, totalCharts: chartsData.charts.length }, 'success');
+                        }
+                    }
+                }
+                
+                if (!chartId) {
+                    addResult('❌ Chart Sharing Test', { error: 'No chart ID available. Generate a chart first.' }, 'error');
+                    return;
+                }
+                
+                // Test generating a share token
+                const shareResponse = await fetch(`/api/charts/${chartId}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                
+                let shareData;
+                let responseText = '';
+                try {
+                    responseText = await shareResponse.text();
+                    shareData = JSON.parse(responseText);
+                } catch (parseError) {
+                    shareData = { 
+                        error: 'Failed to parse response', 
+                        responseText: responseText ? responseText.substring(0, 500) : 'No response',
+                        parseError: parseError.message 
+                    };
+                }
+                
+                // If sharing was successful, test accessing the shared chart
+                let sharedChartTest = null;
+                if (shareResponse.ok && shareData.shareToken) {
+                    const accessResponse = await fetch(`/api/charts/shared?shareToken=${shareData.shareToken}`);
+                    sharedChartTest = {
+                        statusCode: accessResponse.status,
+                        success: accessResponse.ok,
+                        data: accessResponse.ok ? await accessResponse.json() : null
+                    };
+                }
+                
+                addResult('🔗 Chart Sharing Test', {
+                    userId: userId,
+                    chartId: chartId,
+                    shareGeneration: {
+                        statusCode: shareResponse.status,
+                        success: shareResponse.ok,
+                        data: shareData,
+                        shareToken: shareData.shareToken,
+                        shareUrl: shareData.shareUrl
+                    },
+                    sharedChartAccess: sharedChartTest,
+                    analysis: {
+                        shareTokenGenerated: !!(shareData.shareToken),
+                        shareUrlCreated: !!(shareData.shareUrl),
+                        sharedChartAccessible: sharedChartTest?.success || false,
+                        fullSharingFlowWorking: shareResponse.ok && (sharedChartTest?.success || false)
+                    }
+                }, shareResponse.ok ? 'success' : 'error');
+                
+                // Store the share token for other tests (extract from URL if needed)
+                if (shareData.shareToken) {
+                    document.getElementById('shareTokenInput').value = shareData.shareToken;
+                } else if (shareData.shareUrl && shareData.shareUrl.includes('/chart/shared/')) {
+                    // Extract token from URL if shareToken not provided separately
+                    const extractedToken = shareData.shareUrl.split('/chart/shared/').pop();
+                    document.getElementById('shareTokenInput').value = extractedToken;
+                }
+                
+            } catch (error) {
+                addResult('❌ Chart Sharing Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testSharedChartAccess() {
+            try {
+                let shareToken = document.getElementById('shareTokenInput').value;
+                
+                if (!shareToken) {
+                    addResult('❌ Shared Chart Access Test', { error: 'No share token provided. Run Chart Sharing test first or enter a token.' }, 'error');
+                    return;
+                }
+                
+                // Extract token from URL if a full URL was provided
+                if (shareToken.includes('/chart/shared/')) {
+                    shareToken = shareToken.split('/chart/shared/').pop();
+                }
+                
+                // Test accessing the shared chart
+                const accessResponse = await fetch(`/api/charts/shared?shareToken=${shareToken}`);
+                const accessData = accessResponse.ok ? await accessResponse.json() : null;
+                
+                // Test the shared chart page route
+                const pageResponse = await fetch(`/chart/shared/${shareToken}`);
+                const pageWorking = pageResponse.ok;
+                
+                addResult('👀 Shared Chart Access Test', {
+                    shareToken: shareToken,
+                    apiAccess: {
+                        statusCode: accessResponse.status,
+                        success: accessResponse.ok,
+                        data: accessData,
+                        hasChartData: !!(accessData?.chart),
+                        chartInfo: accessData?.chart ? {
+                            subjectName: accessData.chart.subjectName,
+                            dateOfBirth: accessData.chart.dateOfBirth,
+                            shareToken: accessData.chart.shareToken,
+                            isPublic: accessData.chart.isPublic
+                        } : null
+                    },
+                    pageAccess: {
+                        statusCode: pageResponse.status,
+                        success: pageResponse.ok,
+                        sharePageWorking: pageWorking
+                    },
+                    analysis: {
+                        tokenValid: accessResponse.ok,
+                        chartDataComplete: !!(accessData?.chart?.chartData),
+                        sharePageAccessible: pageWorking,
+                        fullAccessWorking: accessResponse.ok && pageWorking
+                    }
+                }, accessResponse.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Shared Chart Access Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testSharedChartsDropdown() {
+            try {
+                // Test the shared charts list API (used by the dropdown)
+                const listResponse = await fetch('/api/charts/shared?list=true');
+                const listData = listResponse.ok ? await listResponse.json() : null;
+                
+                // Test the hook endpoint structure
+                let hookTestResult = null;
+                if (listData?.charts) {
+                    hookTestResult = {
+                        totalCharts: listData.charts.length,
+                        sampleChart: listData.charts[0] || null,
+                        chartStructure: listData.charts[0] ? Object.keys(listData.charts[0]) : [],
+                        hasRequiredFields: listData.charts.length > 0 ? !!(
+                            listData.charts[0].shareToken &&
+                            listData.charts[0].subjectName &&
+                            listData.charts[0].dateOfBirth &&
+                            listData.charts[0].chartData
+                        ) : false
+                    };
+                }
+                
+                addResult('📋 Shared Charts Dropdown Test', {
+                    listAPI: {
+                        statusCode: listResponse.status,
+                        success: listResponse.ok,
+                        data: listData,
+                        chartsCount: listData?.charts?.length || 0
+                    },
+                    hookCompatibility: hookTestResult,
+                    dropdownDataStructure: {
+                        hasCharts: !!(listData?.charts?.length),
+                        chartFieldsValid: hookTestResult?.hasRequiredFields || false,
+                        sampleChartFields: hookTestResult?.chartStructure || []
+                    },
+                    analysis: {
+                        apiWorking: listResponse.ok,
+                        hasSharedCharts: !!(listData?.charts?.length),
+                        chartsHaveRequiredData: hookTestResult?.hasRequiredFields || false,
+                        dropdownReady: listResponse.ok && !!(listData?.charts?.length)
+                    }
+                }, listResponse.ok ? 'success' : 'warning');
+                
+            } catch (error) {
+                addResult('❌ Shared Charts Dropdown Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testShareUrlGeneration() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                let chartId = document.getElementById('chartIdInput').value;
+                
+                // Get a chart ID if not provided
+                if (!chartId) {
+                    const chartsResponse = await fetch(`/api/charts/user/${encodeURIComponent(userId)}`);
+                    if (chartsResponse.ok) {
+                        const chartsData = await chartsResponse.json();
+                        if (chartsData.charts && chartsData.charts.length > 0) {
+                            chartId = chartsData.charts[0].id;
+                        }
+                    }
+                }
+                
+                if (!chartId) {
+                    addResult('❌ Share URL Generation Test', { error: 'No chart available for URL generation' }, 'error');
+                    return;
+                }
+                
+                // Test the share endpoint
+                const shareResponse = await fetch(`/api/charts/${chartId}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userId })
+                });
+                
+                let shareData;
+                let responseText = '';
+                try {
+                    responseText = await shareResponse.text();
+                    shareData = JSON.parse(responseText);
+                } catch (parseError) {
+                    shareData = { 
+                        error: 'Failed to parse response', 
+                        responseText: responseText ? responseText.substring(0, 500) : 'No response',
+                        parseError: parseError.message 
+                    };
+                }
+                
+                // Analyze the generated URL structure
+                let urlAnalysis = null;
+                if (shareData.shareUrl) {
+                    const url = new URL(shareData.shareUrl);
+                    urlAnalysis = {
+                        fullUrl: shareData.shareUrl,
+                        baseUrl: url.origin,
+                        path: url.pathname,
+                        expectedPattern: '/chart/shared/[token]',
+                        pathMatches: url.pathname.includes('/chart/shared/'),
+                        tokenInPath: url.pathname.split('/').pop(),
+                        tokenMatches: url.pathname.split('/').pop() === shareData.shareToken
+                    };
+                }
+                
+                addResult('🌐 Share URL Generation Test', {
+                    chartId: chartId,
+                    shareGeneration: {
+                        statusCode: shareResponse.status,
+                        success: shareResponse.ok,
+                        shareToken: shareData.shareToken,
+                        shareUrl: shareData.shareUrl
+                    },
+                    urlAnalysis: urlAnalysis,
+                    analysis: {
+                        urlGenerated: !!(shareData.shareUrl),
+                        urlStructureValid: urlAnalysis?.pathMatches && urlAnalysis?.tokenMatches,
+                        tokenEmbedded: urlAnalysis?.tokenMatches || false,
+                        readyForSharing: shareResponse.ok && !!(shareData.shareUrl) && (urlAnalysis?.pathMatches || false)
+                    }
+                }, shareResponse.ok && urlAnalysis?.pathMatches ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Share URL Generation Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testDatabaseConnection() {
+            try {
+                addResult('🔌 Testing Database Connection...', { 
+                    timestamp: new Date().toISOString()
+                }, 'success');
+                
+                // Test basic database connection
+                const dbResponse = await fetch('/api/debug/db-connection');
+                let dbData;
+                try {
+                    dbData = await dbResponse.json();
+                } catch (parseError) {
+                    const responseText = await dbResponse.text();
+                    dbData = { 
+                        error: 'Failed to parse response',
+                        responseText: responseText.substring(0, 500)
+                    };
+                }
+                
+                // Test table listing
+                const tablesResponse = await fetch('/api/debug/list-tables');
+                let tablesData;
+                try {
+                    tablesData = await tablesResponse.json();
+                } catch (parseError) {
+                    const responseText = await tablesResponse.text();
+                    tablesData = { 
+                        error: 'Failed to parse response',
+                        responseText: responseText.substring(0, 500)
+                    };
+                }
+                
+                addResult('🔌 Database Connection Results', {
+                    basicConnection: {
+                        statusCode: dbResponse.status,
+                        success: dbResponse.ok,
+                        data: dbData
+                    },
+                    tablesListing: {
+                        statusCode: tablesResponse.status,
+                        success: tablesResponse.ok,
+                        data: tablesData
+                    },
+                    analysis: {
+                        dbConnectionWorking: dbResponse.ok,
+                        tablesAccessible: tablesResponse.ok,
+                        hasNatalChartsTable: !!(tablesData?.tables?.includes?.('natal_charts')),
+                        databaseFullyOperational: dbResponse.ok && tablesResponse.ok
+                    }
+                }, dbResponse.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Database Connection Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function testMinimalChart() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                
+                // Test with the most basic chart request possible
+                const minimalRequest = {
+                    userId: userId,
+                    subjectName: 'Minimal Test Chart',
+                    dateOfBirth: '1990-06-15',
+                    timeOfBirth: '12:00',
+                    locationOfBirth: 'London, UK',
+                    coordinates: {
+                        lat: '51.5074',
+                        lon: '-0.1278'
+                    }
+                };
+                
+                addResult('🧪 Testing Minimal Chart Creation...', { 
+                    timestamp: new Date().toISOString(),
+                    request: minimalRequest
+                }, 'success');
+                
+                const response = await fetch('/api/charts/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(minimalRequest)
+                });
+                
+                let responseData;
+                const responseText = await response.text();
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (parseError) {
+                    responseData = { 
+                        error: 'Failed to parse response',
+                        responseText: responseText.substring(0, 1000)
+                    };
+                }
+                
+                // Wait for potential database save
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check if chart was actually saved
+                const userChartsResponse = await fetch(`/api/charts/user/${encodeURIComponent(userId)}`);
+                const userChartsData = userChartsResponse.ok ? await userChartsResponse.json() : null;
+                
+                addResult('🧪 Minimal Chart Test Results', {
+                    creation: {
+                        statusCode: response.status,
+                        success: response.ok,
+                        data: responseData,
+                        chartId: responseData.chart?.id,
+                        hasChartData: !!(responseData.chart?.chartData),
+                        chartDataLength: responseData.chart?.chartData?.length || 0,
+                        isTemporary: responseData.temporary || false
+                    },
+                    databaseCheck: {
+                        statusCode: userChartsResponse.status,
+                        success: userChartsResponse.ok,
+                        chartsFound: userChartsData?.charts?.length || 0,
+                        charts: userChartsData?.charts
+                    },
+                    analysis: {
+                        apiWorking: response.ok,
+                        chartGenerated: !!(responseData.chart?.id),
+                        chartDataPresent: !!(responseData.chart?.chartData),
+                        savedToDatabase: !!(userChartsData?.charts?.length > 0),
+                        dbSaveWorking: response.ok && !!(userChartsData?.charts?.length > 0)
+                    }
+                }, response.ok ? 'success' : 'error');
+                
+                // Update form fields if chart was created
+                if (responseData.chart?.id) {
+                    document.getElementById('chartIdInput').value = responseData.chart.id;
+                }
+                
+            } catch (error) {
+                addResult('❌ Minimal Chart Test Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function debugDatabaseState() {
+            try {
+                const userId = document.getElementById('userIdInput').value;
+                const chartId = document.getElementById('chartIdInput').value;
+                const shareToken = document.getElementById('shareTokenInput').value;
+                
+                addResult('🔍 Database State Debug', { 
+                    timestamp: new Date().toISOString(),
+                    inputs: { userId, chartId, shareToken }
+                }, 'success');
+                
+                // Check user's charts
+                const userChartsResponse = await fetch(`/api/charts/user/${encodeURIComponent(userId)}`);
+                const userChartsData = userChartsResponse.ok ? await userChartsResponse.json() : null;
+                
+                // Check shared charts list
+                const sharedChartsResponse = await fetch('/api/charts/shared?list=true');
+                const sharedChartsData = sharedChartsResponse.ok ? await sharedChartsResponse.json() : null;
+                
+                // Check specific chart by ID (if available)
+                let specificChartData = null;
+                if (chartId) {
+                    const specificChartResponse = await fetch(`/api/charts/${chartId}`);
+                    specificChartData = specificChartResponse.ok ? await specificChartResponse.json() : null;
+                }
+                
+                // Check chart by share token (if available)
+                let tokenChartData = null;
+                if (shareToken) {
+                    const tokenChartResponse = await fetch(`/api/charts/shared?shareToken=${shareToken}`);
+                    tokenChartData = tokenChartResponse.ok ? await tokenChartResponse.json() : { 
+                        error: 'Failed',
+                        status: tokenChartResponse.status 
+                    };
+                }
+                
+                addResult('🔍 Database State Results', {
+                    userCharts: {
+                        statusCode: userChartsResponse.status,
+                        success: userChartsResponse.ok,
+                        count: userChartsData?.charts?.length || 0,
+                        data: userChartsData
+                    },
+                    sharedCharts: {
+                        statusCode: sharedChartsResponse.status,
+                        success: sharedChartsResponse.ok,
+                        count: sharedChartsData?.charts?.length || 0,
+                        data: sharedChartsData
+                    },
+                    specificChart: specificChartData ? {
+                        found: true,
+                        data: specificChartData
+                    } : { found: false },
+                    tokenChart: tokenChartData,
+                    analysis: {
+                        userHasCharts: !!(userChartsData?.charts?.length),
+                        hasSharedCharts: !!(sharedChartsData?.charts?.length),
+                        tokenWorking: !!(tokenChartData && !tokenChartData.error),
+                        databaseConsistency: 'check_data_above'
+                    }
+                }, userChartsResponse.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                addResult('❌ Database State Debug Error', { error: error.message }, 'error');
+            }
+        }
+
+        async function runSharingTestSequence() {
+            try {
+                addResult('🚀 Starting Complete Sharing Test Sequence...', { 
+                    timestamp: new Date().toISOString(),
+                    note: 'This will create a test chart, share it, and test all sharing functionality'
+                }, 'success');
+                
+                // Step 1: Create test shared chart
+                await createTestSharedChart();
+                
+                // Wait a moment for database to update
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Step 2: Test chart sharing (if chart was created)
+                await testChartSharing();
+                
+                // Step 3: Test shared chart access
+                await testSharedChartAccess();
+                
+                // Step 4: Test shared charts dropdown (should now have at least 1 chart)
+                await testSharedChartsDropdown();
+                
+                // Step 5: Test share URL generation
+                await testShareUrlGeneration();
+                
+                addResult('✅ Complete Sharing Test Sequence Finished', { 
+                    timestamp: new Date().toISOString(),
+                    message: 'All sharing tests completed. Check results above for any issues.'
+                }, 'success');
+                
+            } catch (error) {
+                addResult('❌ Sharing Test Sequence Error', { error: error.message }, 'error');
+            }
+        }
+
+        console.log('🔧 Chart Debug Tool loaded with sharing functionality. Use buttons to test birth data persistence, chart generation, and sharing features.');
     </script>
 </body>
 </html>

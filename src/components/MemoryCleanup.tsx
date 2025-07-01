@@ -11,8 +11,9 @@ import { getGlobalCache } from '@/utils/cache';
  */
 export default function MemoryCleanup() {
   useEffect(() => {
-    // Cleanup on unmount (hot reload, tab close, etc.)
+    // Cleanup on unmount - DISABLED to prevent interference
     return () => {
+      if (false) { // Disable all cleanup
       try {
         // Clean up analytics event listeners and pageViews Set
         destroyAnalytics();

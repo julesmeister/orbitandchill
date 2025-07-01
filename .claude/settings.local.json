@@ -56,7 +56,9 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npm run build)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --max-warnings 0 --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --fix --max-warnings 500)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck)",
+      "Bash(ss:*)"
     ],
     "deny": []
   }

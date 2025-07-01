@@ -31,3 +31,22 @@ export interface PersonStorage {
 }
 
 export type PersonFormData = Omit<Person, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
+
+export interface SharedChart {
+  id: string;
+  shareToken: string;
+  title?: string;
+  subjectName: string;
+  dateOfBirth: string;
+  timeOfBirth: string;
+  locationOfBirth: string;
+  latitude: number;
+  longitude: number;
+  chartData: string; // SVG content
+  createdAt: string;
+  metadata?: {
+    name?: string;
+    birthData?: BirthData;
+    chartData?: any;
+  };
+}

@@ -9,8 +9,8 @@ import { Toaster } from "sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { startMemoryMonitoring } from "@/utils/memoryMonitor";
 import MemoryCleanup from "@/components/MemoryCleanup";
-// Import memory pressure manager to enable emergency cleanup at 97.5% heap usage
-import "@/utils/memoryPressure";
+// Memory pressure monitoring disabled - import only when needed
+// import "@/utils/memoryPressure";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,11 +22,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Synapsas fonts
+// Synapsas fonts - reduced weights to save memory
 const epilogue = Epilogue({
   variable: "--font-epilogue",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700"], // Reduced from 6 to 3 weights
 });
 
 const spaceGrotesk = localFont({
@@ -63,7 +63,7 @@ const spaceGrotesk = localFont({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700"], // Reduced from 6 to 3 weights
 });
 
 const arvo = localFont({
@@ -157,10 +157,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Start memory monitoring in production and development (singleton prevents duplicates)
-  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
-    startMemoryMonitoring(600000); // Monitor every 10 minutes (reduced from 5 minutes)
-  }
+  // Memory monitoring disabled at startup - use admin panel when needed
+  // if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  //   startMemoryMonitoring(600000); // Monitor every 10 minutes
+  // }
 
   return (
     <html lang="en">
@@ -180,7 +180,7 @@ export default function RootLayout({
           closeButton
           duration={5000}
         />
-        <MemoryCleanup />
+{/* <MemoryCleanup /> */}
       </body>
     </html>
   );

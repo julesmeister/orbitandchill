@@ -324,6 +324,7 @@ export default function ChartPage() {
                         onPersonChange={handlePersonChange}
                         onAddPersonClick={handleAddPersonClick}
                         onClearCache={handleClearAllCaches}
+                        chartId={cachedChart?.id}
                       />
 
                       {/* Birth Data Summary */}

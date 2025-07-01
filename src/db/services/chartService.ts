@@ -56,6 +56,12 @@ export class ChartService {
     const chartId = generateId();
     const shareToken = data.isPublic ? generateId() : undefined;
     
+    // Validate chart data before attempting to save
+    if (!data.chartData || data.chartData.length === 0) {
+      console.error('ChartService.createChart: Cannot save chart with empty chartData');
+      throw new Error('Chart data is required and cannot be empty');
+    }
+    
     const newChart = {
       id: chartId,
       userId: data.userId,
@@ -249,9 +255,22 @@ export class ChartService {
    */
   static async generateShareToken(id: string, userId: string): Promise<string | null> {
     return resilient.operation(db, 'generateShareToken', async () => {
+      // First get the existing chart to check if it already has a token
+      const chart = await this.getChartById(id, userId);
+      
+      if (!chart) {
+        throw new Error('Chart not found');
+      }
+
+      // If chart already has a share token, return it
+      if (chart.shareToken && chart.isPublic) {
+        return chart.shareToken;
+      }
+
+      // Generate new share token
       const shareToken = generateId();
       
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      // Update the chart with the new token
       await executeRawUpdate(db, 'natal_charts', {
           share_token: shareToken,
           is_public: true,
@@ -263,5 +282,33 @@ export class ChartService {
 
       return shareToken;
     }, null); // Return null if database unavailable
+  }
+
+  /**
+   * Get recent shared charts for the dropdown
+   */
+  static async getRecentSharedCharts(limit: number = 10): Promise<ChartData[]> {
+    return resilient.array(db, 'getRecentSharedCharts', async () => {
+      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      const charts = await executeRawSelect(db, {
+        table: 'natal_charts',
+        conditions: [
+          { column: 'is_public', value: 1 }, // Boolean true = 1 in SQLite
+          { column: 'share_token', operator: 'IS NOT NULL' } // Has a share token
+        ],
+        orderBy: [{ column: 'created_at', direction: 'DESC' }],
+        limit
+      });
+
+      return charts.map((chart: any) => {
+        const transformedChart = transformDatabaseRow(chart);
+        return {
+          ...transformedChart,
+          metadata: JSON.parse(chart.metadata),
+          createdAt: new Date(chart.created_at),
+          updatedAt: new Date(chart.updated_at),
+        };
+      });
+    });
   }
 }

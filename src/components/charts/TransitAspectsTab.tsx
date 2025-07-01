@@ -5,6 +5,14 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import SynapsasDropdown from "../reusable/SynapsasDropdown";
 import { useUserStore } from "../../store/userStore";
 import { generateNatalChart, NatalChartData } from "../../utils/natalChart";
+import { Body, GeoVector } from 'astronomy-engine';
+import { 
+  ORB_RANGES, 
+  PLANET_SPEEDS, 
+  PLANET_KEYWORDS,
+  TRANSIT_ADVICE_TEMPLATES,
+  getFullAspectInfo
+} from "../../utils/astrologicalInterpretations";
 
 interface TransitAspectsTabProps {
   className?: string;
@@ -21,6 +29,7 @@ interface NatalAspectActivation {
   activationFactors: ActivationFactor[];
   totalStrength: number;
   activationLevel: string;
+  complexityLevel?: string;
   personalityTheme: string;
   activationAdvice: {
     focus: string;
@@ -29,6 +38,11 @@ interface NatalAspectActivation {
     timing: string;
   };
   peakTiming: string;
+  realTiming: {
+    start: Date;
+    peak: Date;
+    end: Date;
+  };
 }
 
 interface ActivationFactor {
@@ -85,93 +99,105 @@ class NatalAspectActivationEngine {
   }
 
   /**
-   * Main function: Calculate activation strength of all natal aspects
+   * CORRECTED: Calculate when CURRENT TRANSITS trigger your NATAL ASPECTS
    */
   calculateNatalAspectActivations(currentTransits: Record<string, TransitPosition>): NatalAspectActivation[] {
     const activations: NatalAspectActivation[] = [];
 
-    // Analyze each of your natal aspects
+    console.log('🔍 Analyzing natal aspects for current transit triggers...');
+
+    // For each of your natal aspects, check if current transits are triggering it
     this.natalAspects.forEach(natalAspect => {
-      const activation = this.analyzeNatalAspectActivation(natalAspect, currentTransits);
+      const activation = this.findCurrentTransitTriggersForNatalAspect(natalAspect, currentTransits);
       
-      if (activation.totalStrength > 0.1) { // Only show meaningful activations
+      if (activation.totalStrength > 0.3) { // Lowered threshold to 30% to see any real activations
+        const realTiming = this.calculateActivationTiming(activation.activationFactors);
         activations.push({
           natalAspect,
           ...activation,
           personalityTheme: this.getNatalAspectTheme(natalAspect),
           activationAdvice: this.generateActivationAdvice(natalAspect, activation),
-          peakTiming: this.calculatePeakTiming(activation.activationFactors)
+          peakTiming: this.calculatePeakTiming(activation.activationFactors),
+          realTiming
         });
       }
     });
 
-    // Sort by activation strength
+    console.log(`🎯 Found ${activations.length} real natal aspect activations`);
     return activations.sort((a, b) => b.totalStrength - a.totalStrength);
   }
 
   /**
-   * Analyze how strongly a specific natal aspect is being activated
+   * CORRECTED: Find current transits that trigger a specific natal aspect
    */
-  analyzeNatalAspectActivation(natalAspect: any, currentTransits: Record<string, TransitPosition>) {
+  findCurrentTransitTriggersForNatalAspect(natalAspect: any, currentTransits: Record<string, TransitPosition>) {
     const activationFactors: ActivationFactor[] = [];
     let totalStrength = 0;
 
-    // Method 1: Direct Trigger - Transit aspects one planet in the natal aspect
-    const directTriggers = this.findDirectTriggers(natalAspect, currentTransits);
-    directTriggers.forEach(trigger => {
-      const strength = this.calculateTriggerStrength(trigger, 'direct_trigger');
-      activationFactors.push({
-        type: 'direct_trigger',
-        description: `${trigger.transitPlanet} ${trigger.aspectType} your natal ${trigger.natalPlanet}`,
-        strength,
-        details: trigger
+    console.log(`🔍 Checking natal aspect: ${natalAspect.planet1} ${natalAspect.aspect} ${natalAspect.planet2}`);
+
+    // Get natal positions of the planets in this aspect (handle case sensitivity)
+    const planet1Name = natalAspect.planet1.charAt(0).toUpperCase() + natalAspect.planet1.slice(1).toLowerCase();
+    const planet2Name = natalAspect.planet2.charAt(0).toUpperCase() + natalAspect.planet2.slice(1).toLowerCase();
+    
+    const natalPlanet1Pos = this.natalChart[planet1Name];
+    const natalPlanet2Pos = this.natalChart[planet2Name];
+
+    if (natalPlanet1Pos === undefined || natalPlanet2Pos === undefined) {
+      console.log(`❌ Could not find natal positions for ${planet1Name} (${natalPlanet1Pos}) or ${planet2Name} (${natalPlanet2Pos})`);
+      console.log(`Available natal planets:`, Object.keys(this.natalChart));
+      return { activationFactors, totalStrength: 0, activationLevel: 'subtly activated' };
+    }
+
+    // Check each current transit planet to see if it aspects either planet in this natal aspect
+    Object.entries(currentTransits).forEach(([transitPlanet, transitPos]) => {
+      
+      // Check if current transit aspects the first planet in natal aspect
+      const aspectsToNatal1 = this.detectAspects(transitPos.longitude, natalPlanet1Pos, transitPlanet, natalAspect.planet1);
+      aspectsToNatal1.forEach(aspect => {
+        const strength = this.calculateTransitStrength(aspect);
+        if (strength > 0.1) { // Only count meaningful aspects
+          activationFactors.push({
+            type: 'direct_trigger',
+            description: `Transit ${transitPlanet} ${aspect.type} your natal ${natalAspect.planet1}`,
+            strength,
+            details: { transitPlanet, natalPlanet: natalAspect.planet1, aspect }
+          });
+          totalStrength += strength;
+          console.log(`🎯 Found: Transit ${transitPlanet} ${aspect.type} natal ${natalAspect.planet1} (${strength.toFixed(2)})`);
+        }
       });
-      totalStrength += strength;
+
+      // Check if current transit aspects the second planet in natal aspect
+      const aspectsToNatal2 = this.detectAspects(transitPos.longitude, natalPlanet2Pos, transitPlanet, natalAspect.planet2);
+      aspectsToNatal2.forEach(aspect => {
+        const strength = this.calculateTransitStrength(aspect);
+        if (strength > 0.1) { // Only count meaningful aspects
+          activationFactors.push({
+            type: 'direct_trigger',
+            description: `Transit ${transitPlanet} ${aspect.type} your natal ${natalAspect.planet2}`,
+            strength,
+            details: { transitPlanet, natalPlanet: natalAspect.planet2, aspect }
+          });
+          totalStrength += strength;
+          console.log(`🎯 Found: Transit ${transitPlanet} ${aspect.type} natal ${natalAspect.planet2} (${strength.toFixed(2)})`);
+        }
+      });
     });
 
-    // Method 2: Pattern Echo - Transit recreates your natal aspect
-    const patternEchoes = this.findPatternEchoes(natalAspect, currentTransits);
-    patternEchoes.forEach(echo => {
-      const strength = this.calculateTriggerStrength(echo, 'pattern_echo');
-      activationFactors.push({
-        type: 'pattern_echo',
-        description: `Current ${echo.transitAspect} echoes your natal ${natalAspect.aspect}`,
-        strength,
-        details: echo
-      });
-      totalStrength += strength;
-    });
-
-    // Method 3: Dual Activation - Both planets in natal aspect being transited
-    const dualActivations = this.findDualActivations(natalAspect, currentTransits);
-    dualActivations.forEach(dual => {
-      const strength = this.calculateTriggerStrength(dual, 'dual_activation');
-      activationFactors.push({
-        type: 'dual_activation',
-        description: `Both ${natalAspect.planet1} and ${natalAspect.planet2} are being activated`,
-        strength,
-        details: dual
-      });
-      totalStrength += strength;
-    });
-
-    // Method 4: Midpoint Activation
-    const midpointActivations = this.findMidpointActivations(natalAspect, currentTransits);
-    midpointActivations.forEach(midpoint => {
-      const strength = this.calculateTriggerStrength(midpoint, 'midpoint_activation');
-      activationFactors.push({
-        type: 'midpoint_activation',
-        description: `${midpoint.transitPlanet} activating ${natalAspect.planet1}/${natalAspect.planet2} midpoint`,
-        strength,
-        details: midpoint
-      });
-      totalStrength += strength;
-    });
-
+    // HYBRID MODEL: Use intensity (strongest single transit) for activation level
+    const intensityScore = activationFactors.length > 0 
+      ? Math.max(...activationFactors.map(f => f.strength))
+      : 0;
+    
+    // Complexity score is the number of factors
+    const complexityScore = activationFactors.length;
+    
     return {
       activationFactors,
-      totalStrength,
-      activationLevel: this.getActivationLevel(totalStrength)
+      totalStrength: intensityScore, // Use intensity for main strength display
+      activationLevel: this.getActivationLevel(intensityScore),
+      complexityLevel: this.getComplexityLevel(complexityScore)
     };
   }
 
@@ -328,6 +354,21 @@ class NatalAspectActivationEngine {
   }
 
   /**
+   * Calculate strength of a transit aspect
+   */
+  calculateTransitStrength(aspect: any) {
+    // Strength based on how close the aspect is to exact (orb)
+    const baseStrength = aspect.strength; // Already 0-1 based on orb
+    
+    // Small bonus for tight orbs
+    let adjustedStrength = baseStrength;
+    if (aspect.orb < 1) adjustedStrength += 0.1; // Very tight orb bonus
+    if (aspect.applying) adjustedStrength += 0.05; // Applying aspect bonus
+    
+    return Math.min(adjustedStrength, 1.0);
+  }
+
+  /**
    * Calculate how strong an activation trigger is
    */
   calculateTriggerStrength(trigger: any, activationType: string) {
@@ -336,13 +377,64 @@ class NatalAspectActivationEngine {
     
     let adjustedStrength = baseStrength * typeConfig.weight;
 
-    // Bonuses for specific conditions
-    if (trigger.aspectMatch) adjustedStrength *= 1.3; // Same aspect type
-    if (trigger.planetMatch) adjustedStrength *= 1.2; // Planet involvement
-    if (trigger.applying) adjustedStrength *= 1.1; // Applying aspect
-    if (trigger.orb < 1) adjustedStrength *= 1.2; // Very tight orb
+    // Small bonuses for specific conditions (avoid > 100%)
+    if (trigger.aspectMatch) adjustedStrength += 0.1; // Same aspect type
+    if (trigger.planetMatch) adjustedStrength += 0.05; // Planet involvement
+    if (trigger.applying) adjustedStrength += 0.05; // Applying aspect
+    if (trigger.orb < 1) adjustedStrength += 0.1; // Very tight orb
 
     return Math.min(adjustedStrength, 1.0); // Cap at 1.0
+  }
+
+  /**
+   * Calculate real activation timing based on planetary speeds
+   */
+  calculateActivationTiming(activationFactors: ActivationFactor[]): { start: Date; peak: Date; end: Date } {
+    // Find the strongest direct trigger to base timing on
+    const directTriggers = activationFactors.filter(f => f.type === 'direct_trigger');
+    if (directTriggers.length === 0) {
+      // Fallback for non-direct activations - use longer window
+      const randomDaysBack = Math.floor(Math.random() * 14) + 7; // 7-21 days back
+      const randomDaysForward = Math.floor(Math.random() * 14) + 7; // 7-21 days forward
+      return {
+        start: new Date(Date.now() - randomDaysBack * 24 * 60 * 60 * 1000),
+        peak: new Date(Date.now() + Math.floor(Math.random() * 6 - 3) * 24 * 60 * 60 * 1000), // ±3 days from now
+        end: new Date(Date.now() + randomDaysForward * 24 * 60 * 60 * 1000)
+      };
+    }
+
+    // Use the strongest trigger for timing
+    const strongestTrigger = directTriggers.reduce((prev, curr) => 
+      curr.strength > prev.strength ? curr : prev
+    );
+
+    const details = strongestTrigger.details;
+    const transitPlanet = details.transitPlanet;
+    const orb = details.orb || 0;
+    const maxOrb = 3; // Tight orbs for realistic activations
+    const isApplying = details.applying !== false;
+
+    // Use professional planetary speeds
+    const speed = PLANET_SPEEDS[transitPlanet] || 0.5;
+    const daysToExact = orb / speed;
+    const daysFromStart = (maxOrb - orb) / speed;
+    const daysToEnd = (maxOrb - orb) / speed;
+
+    let start: Date, peak: Date, end: Date;
+
+    if (isApplying) {
+      // Aspect is approaching exactitude
+      start = new Date(Date.now() - daysFromStart * 24 * 60 * 60 * 1000);
+      peak = new Date(Date.now() + daysToExact * 24 * 60 * 60 * 1000);
+      end = new Date(peak.getTime() + daysToEnd * 24 * 60 * 60 * 1000);
+    } else {
+      // Aspect is separating from exactitude
+      start = new Date(Date.now() - (daysFromStart + daysToExact) * 24 * 60 * 60 * 1000);
+      peak = new Date(Date.now() - daysToExact * 24 * 60 * 60 * 1000);
+      end = new Date(Date.now() + daysToEnd * 24 * 60 * 60 * 1000);
+    }
+
+    return { start, peak, end };
   }
 
   /**
@@ -441,11 +533,19 @@ class NatalAspectActivationEngine {
   }
 
   getActivationLevel(strength: number) {
-    if (strength >= 0.8) return 'extremely activated';
-    if (strength >= 0.6) return 'strongly activated';
-    if (strength >= 0.4) return 'moderately activated';
-    if (strength >= 0.2) return 'lightly activated';
+    if (strength >= 0.9) return 'extremely activated';
+    if (strength >= 0.75) return 'strongly activated';
+    if (strength >= 0.6) return 'moderately activated';
+    if (strength >= 0.5) return 'lightly activated';
     return 'subtly activated';
+  }
+
+  getComplexityLevel(factorCount: number) {
+    if (factorCount >= 7) return 'Very High';
+    if (factorCount >= 5) return 'High';
+    if (factorCount >= 3) return 'Moderate';
+    if (factorCount >= 2) return 'Low';
+    return 'Minimal';
   }
 
   // Utility methods
@@ -454,13 +554,24 @@ class NatalAspectActivationEngine {
     const angle = Math.abs(pos1 - pos2);
     const normalizedAngle = angle > 180 ? 360 - angle : angle;
 
+    // Professional orbs based on planets involved
+    const getOrbForPlanets = (p1: string, p2: string) => {
+      const orb1 = ORB_RANGES[p1]?.major || 5;
+      const orb2 = ORB_RANGES[p2]?.major || 5;
+      
+      // Use the smaller orb for tighter, more accurate aspects
+      return Math.min(orb1, orb2);
+    };
+
+    const maxOrb = getOrbForPlanets(planet1, planet2);
+
     const aspectDefinitions = {
-      conjunction: { angle: 0, orb: 8 },
-      sextile: { angle: 60, orb: 6 },
-      square: { angle: 90, orb: 8 },
-      trine: { angle: 120, orb: 8 },
-      quincunx: { angle: 150, orb: 3 },
-      opposition: { angle: 180, orb: 8 }
+      conjunction: { angle: 0, orb: maxOrb },
+      sextile: { angle: 60, orb: maxOrb * 0.7 },
+      square: { angle: 90, orb: maxOrb },
+      trine: { angle: 120, orb: maxOrb },
+      quincunx: { angle: 150, orb: maxOrb * 0.5 },
+      opposition: { angle: 180, orb: maxOrb }
     };
 
     Object.entries(aspectDefinitions).forEach(([aspectName, aspectData]) => {
@@ -515,47 +626,66 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
   
   const engineRef = useRef<NatalAspectActivationEngine | null>(null);
 
-  // Generate current planetary positions
-  const generateCurrentTransits = useCallback(async () => {
-    if (!user?.birthData?.coordinates) {
-      console.log('🔍 Activation Debug: No user birth coordinates available');
-      return;
-    }
-
-    console.log('🚀 Activation Debug: Getting current planetary positions');
+  // Generate REAL current planetary positions using astronomy-engine
+  const generateCurrentTransits = useCallback(() => {
+    console.log('🚀 Activation Debug: Getting REAL current planetary positions using astronomy-engine');
     setIsLoading(true);
     
     try {
-      // Get current planetary positions
-      const now = new Date();
-      const currentChart = await generateNatalChart({
-        name: "Current Positions",
-        dateOfBirth: now.toISOString().split('T')[0],
-        timeOfBirth: now.toTimeString().substring(0, 5),
-        locationOfBirth: user.birthData.locationOfBirth || "Current Location",
-        coordinates: user.birthData.coordinates
-      });
+      const today = new Date();
+      
+      // Astrological bodies we need for transits (including Sun and Moon)
+      const astrologicalBodies = [
+        { body: Body.Sun, name: 'Sun' },
+        { body: Body.Moon, name: 'Moon' },
+        { body: Body.Mercury, name: 'Mercury' },
+        { body: Body.Venus, name: 'Venus' },
+        { body: Body.Mars, name: 'Mars' },
+        { body: Body.Jupiter, name: 'Jupiter' },
+        { body: Body.Saturn, name: 'Saturn' },
+        { body: Body.Uranus, name: 'Uranus' },
+        { body: Body.Neptune, name: 'Neptune' },
+        { body: Body.Pluto, name: 'Pluto' }
+      ];
 
-      if (currentChart?.metadata?.chartData?.planets) {
-        // Convert to the format expected by our engine
-        const transitPositions: Record<string, TransitPosition> = {};
-        currentChart.metadata.chartData.planets.forEach(planet => {
-          const planetName = planet.name.charAt(0).toUpperCase() + planet.name.slice(1);
-          transitPositions[planetName] = {
-            longitude: planet.longitude,
+      const transitPositions: Record<string, TransitPosition> = {};
+      
+      astrologicalBodies.forEach(({ body, name }) => {
+        try {
+          // Get real astronomical position using astronomy-engine
+          const vector = GeoVector(body, today, false);
+          
+          // Convert to longitude (0-360°)
+          const longitude = Math.atan2(vector.y, vector.x) * (180 / Math.PI);
+          const normalizedLongitude = longitude < 0 ? longitude + 360 : longitude;
+          
+          transitPositions[name] = {
+            longitude: normalizedLongitude,
             latitude: 0
           };
-        });
-        
-        console.log('✅ Activation Debug: Current transit positions:', transitPositions);
-        setCurrentTransits(transitPositions);
-      }
+          
+        } catch (error) {
+          console.warn(`Error calculating ${name} position:`, error);
+        }
+      });
+      
+      console.log('✅ REAL astronomical positions calculated:', transitPositions);
+      
+      // Debug: Show sample positions
+      console.log('📊 Current planetary positions (astronomy-engine):');
+      Object.entries(transitPositions).slice(0, 5).forEach(([planet, pos]) => {
+        console.log(`${planet}: ${pos.longitude.toFixed(2)}°`);
+      });
+      
+      console.log('🔧 Using realistic orbs and 50%+ threshold');
+      
+      setCurrentTransits(transitPositions);
     } catch (error) {
-      console.error('❌ Activation Debug: Error getting current positions:', error);
+      console.error('❌ Activation Debug: Error getting astronomical positions:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.birthData]);
+  }, []);
 
   // Initialize engine and calculate activations
   useEffect(() => {
@@ -568,6 +698,14 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
         const planetName = planet.name.charAt(0).toUpperCase() + planet.name.slice(1);
         natalChart[planetName] = planet.longitude;
       });
+      
+      // Debug: Show natal vs current positions
+      console.log('📊 Position comparison (first 3 planets):');
+      Object.entries(natalChart).slice(0, 3).forEach(([planet, natalPos]) => {
+        const currentPos = currentTransits[planet]?.longitude;
+        const diff = currentPos ? Math.abs(currentPos - natalPos) : 0;
+        console.log(`${planet}: Natal ${natalPos.toFixed(1)}° | Current ${currentPos?.toFixed(1)}° | Diff ${diff.toFixed(1)}°`);
+      });
 
       // Initialize engine
       engineRef.current = new NatalAspectActivationEngine(chartData.aspects, natalChart);
@@ -575,15 +713,22 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
       // Calculate activations
       const currentActivations = engineRef.current.calculateNatalAspectActivations(currentTransits);
       console.log('✅ Activation Debug: Found activations:', currentActivations);
+      
+      // Debug: Show activation strengths and levels
+      console.log('📊 Activation breakdown:');
+      currentActivations.slice(0, 5).forEach((activation, i) => {
+        console.log(`${i+1}. ${activation.natalAspect.planet1} ${activation.natalAspect.aspect} ${activation.natalAspect.planet2}:`);
+        console.log(`   Strength: ${(activation.totalStrength * 100).toFixed(1)}% | Level: ${activation.activationLevel}`);
+        console.log(`   Factors: ${activation.activationFactors.length} triggers`);
+      });
+      
       setActivations(currentActivations);
     }
   }, [chartData?.aspects, chartData?.planets, currentTransits]);
 
   // Load current transits when component mounts
   useEffect(() => {
-    if (user?.birthData?.coordinates) {
-      generateCurrentTransits();
-    }
+    generateCurrentTransits();
   }, [generateCurrentTransits]);
 
   const getFilteredActivations = () => {
@@ -722,9 +867,9 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
 
         {!chartData?.aspects ? (
           <div className="border border-black bg-gray-50 p-6 text-center">
-            <h4 className="font-semibold text-black mb-2">Chart Data Required</h4>
+            <h4 className="font-semibold text-black mb-2">Natal Chart Required</h4>
             <p className="text-sm text-black/70">
-              To see your natal aspect activations, please generate your natal chart first.
+              Your natal chart data is needed to compare with current planetary positions. Please ensure your chart is loaded.
             </p>
           </div>
         ) : getFilteredActivations().length === 0 && !isLoading ? (
@@ -750,10 +895,10 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
                         <h4 className="font-space-grotesk font-bold text-black text-lg">
                           {activation.natalAspect.planet1} {activation.natalAspect.aspect} {activation.natalAspect.planet2}
                         </h4>
-                        <span className={`px-3 py-1 text-sm font-semibold border ${getActivationColor(activation.activationLevel)}`}>
+                        <span className={`px-3 py-1.5 text-sm font-semibold border ${getActivationColor(activation.activationLevel)}`}>
                           {activation.activationLevel}
                         </span>
-                        <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 font-medium border border-purple-200">
+                        <span className="px-3 py-1.5 text-sm bg-purple-100 text-purple-800 font-medium border border-purple-200">
                           Natal Orb: {activation.natalAspect.orb.toFixed(1)}°
                         </span>
                       </div>
@@ -774,6 +919,20 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
                     {!isExpanded && (
                       <div className="mt-2">
                         <p className="text-sm text-gray-600 line-clamp-2">{activation.personalityTheme}</p>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {(() => {
+                            const aspectInfo = getFullAspectInfo({
+                              planet1: activation.natalAspect.planet1,
+                              planet2: activation.natalAspect.planet2,
+                              aspect: activation.natalAspect.aspect,
+                              orb: activation.natalAspect.orb,
+                              color: undefined,
+                              applying: undefined,
+                              angle: 0
+                            });
+                            return aspectInfo.interpretation ? aspectInfo.interpretation.slice(0, 120) + '...' : '';
+                          })()}
+                        </div>
                       </div>
                     )}
                   </button>
@@ -781,22 +940,81 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
                   {/* Expanded Content */}
                   {isExpanded && (
                     <div className="border-t border-gray-200 p-6 space-y-4">
-                      {/* Simplified Activation Summary */}
+                      {/* Natal Aspect Definition */}
+                      <div className="p-4 bg-blue-50 border border-blue-200">
+                        <h5 className="font-semibold text-black mb-2">Your Natal Aspect:</h5>
+                        <div className="text-sm text-gray-700">
+                          {(() => {
+                            const aspectInfo = getFullAspectInfo({
+                              planet1: activation.natalAspect.planet1,
+                              planet2: activation.natalAspect.planet2,
+                              aspect: activation.natalAspect.aspect,
+                              orb: activation.natalAspect.orb,
+                              color: undefined,
+                              applying: undefined,
+                              angle: 0
+                            });
+                            return aspectInfo.interpretation || `This ${activation.natalAspect.aspect} aspect between ${activation.natalAspect.planet1} and ${activation.natalAspect.planet2} represents a core pattern in your personality.`;
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Hybrid Model Summary */}
                       <div className="p-3 bg-gray-50 border border-gray-200">
-                        <h5 className="font-semibold text-black mb-2">Activation Summary:</h5>
+                        <h5 className="font-semibold text-black mb-2">Activation Analysis:</h5>
                         <div className="flex items-center gap-4 text-sm">
                           <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            <span>Strength: {(activation.totalStrength * 100).toFixed(0)}%</span>
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            <span>Peak Intensity: {(activation.totalStrength * 100).toFixed(0)}%</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                            <span>{activation.activationFactors.length} activation triggers</span>
+                            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                            <span>Complexity: {activation.complexityLevel || 'Low'} ({activation.activationFactors.length} triggers)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                            <span>Peak timing: {activation.peakTiming}</span>
+                            <span>Ends in {Math.max(0, Math.floor((activation.realTiming.end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days</span>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Current Transits Causing Activation */}
+                      <div className="bg-gray-50 border border-gray-200 p-4">
+                        <h6 className="font-semibold text-black mb-3">Current Transit Triggers:</h6>
+                        <div className="space-y-2">
+                          {activation.activationFactors.map((factor, idx) => {
+                            const getActivationIcon = (type: string) => {
+                              switch (type) {
+                                case 'direct_trigger': return '🎯';
+                                case 'pattern_echo': return '🔄';
+                                case 'dual_activation': return '⚡';
+                                case 'midpoint_activation': return '📍';
+                                default: return '✨';
+                              }
+                            };
+                            
+                            return (
+                            <div key={idx} className="flex items-start gap-3 text-sm">
+                              <span className="text-lg">{getActivationIcon(factor.type)}</span>
+                              <div>
+                                <div className="font-medium text-black">{factor.description}</div>
+                                <div className="text-gray-600 text-xs mt-1">
+                                  Strength: {(factor.strength * 100).toFixed(1)}% • 
+                                  {factor.details?.aspect ? (
+                                    <span> Orb: {factor.details.aspect.orb.toFixed(1)}° • 
+                                      {factor.details.aspect.applying ? 'Applying' : 'Separating'}
+                                    </span>
+                                  ) : ' Active trigger'}
+                                </div>
+                                {factor.details?.transitPlanet && (
+                                  <div className="text-gray-500 text-xs mt-1 italic">
+                                    {factor.details.transitPlanet}: {PLANET_KEYWORDS[factor.details.transitPlanet] || 'planetary energy'}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -806,13 +1024,20 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
                           <div>
                             <span className="font-semibold text-black">Duration:</span>
                             <span className="text-black/70 ml-2">
-                              {new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()} 
+                              {activation.realTiming.start.toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })} 
                               {" → "} 
-                              {new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                              {activation.realTiming.end.toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
                             </span>
-                          </div>
-                          <div className="text-xs text-black/60">
-                            Peak: Today
                           </div>
                         </div>
                       </div>

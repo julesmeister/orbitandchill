@@ -55,7 +55,7 @@ const ChartTabs: React.FC<ChartTabsProps> = ({ activeTab, onTabChange }) => {
 
         <button
           onClick={() => onTabChange('transits')}
-          className={`group flex-1 flex items-center justify-center px-6 py-4 text-sm font-semibold transition-all duration-300 relative overflow-hidden ${
+          className={`group flex-1 flex items-center justify-center px-6 py-4 text-sm font-semibold transition-all duration-300 border-r border-black relative overflow-hidden ${
             activeTab === 'transits'
               ? 'bg-black text-white'
               : 'bg-white text-black hover:bg-black hover:text-white'
@@ -71,6 +71,27 @@ const ChartTabs: React.FC<ChartTabsProps> = ({ activeTab, onTabChange }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <span className="font-space-grotesk">Transit Effects</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => onTabChange('matrix-destiny')}
+          className={`group flex-1 flex items-center justify-center px-6 py-4 text-sm font-semibold transition-all duration-300 relative overflow-hidden ${
+            activeTab === 'matrix-destiny'
+              ? 'bg-black text-white'
+              : 'bg-white text-black hover:bg-black hover:text-white'
+          }`}
+        >
+          {/* Animated background for inactive tab */}
+          {activeTab !== 'matrix-destiny' && (
+            <div className="absolute inset-0 bg-black translate-x-[100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+          )}
+          
+          <div className="relative flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+            <span className="font-space-grotesk">Matrix of Destiny</span>
           </div>
         </button>
       </div>

@@ -7,6 +7,92 @@ Your application is showing **critical memory leak symptoms**:
 - **Sustained memory growth** without cleanup
 - **Connection pool churn** (constantly creating/removing connections)
 - **Multiple monitoring instances** running simultaneously
+- **Cleanup death spiral** - Emergency cleanup triggers but memory immediately returns to 98%
+
+## 🌳 Memory Dependency Tree Map
+
+```
+🏠 Application Root
+├── 📱 Layout.tsx (App Entry Point)
+│   ├── 🔤 Font Loading (MAJOR MEMORY CONSUMER)
+│   │   ├── Geist Sans + Mono (Google Fonts)
+│   │   ├── Epilogue (3 weights: 400,600,700)
+│   │   ├── Space Grotesk (5 local font files)
+│   │   ├── Inter (3 weights: 400,600,700)
+│   │   └── Arvo (4 local font files)
+│   ├── 🧹 MemoryCleanup Component
+│   └── 🚨 Memory Monitoring (DISABLED)
+│
+├── 🗄️ Database Layer
+│   ├── 🔗 Connection Pool (connectionPool.ts)
+│   │   ├── Min: 1, Max: 4 connections
+│   │   ├── Health checking every 30s
+│   │   └── Turso HTTP clients (persistent)
+│   ├── 💾 Mock Database (mock-db.ts) - UNUSED
+│   │   └── In-memory Maps (potentially large)
+│   └── 🌊 Database Warmup (warmup.ts)
+│
+├── 💾 State Management
+│   ├── 🏪 Zustand Stores (MEMORY ACCUMULATORS)
+│   │   ├── userStore.ts (birth data, charts)
+│   │   ├── adminStore.ts (analytics, threads)
+│   │   ├── horaryStore.ts (questions + chart data)
+│   │   ├── eventsStore.ts (event data)
+│   │   └── chartStore.ts (cached charts)
+│   └── 🧠 IndexedDB (Dexie) + LocalStorage
+│
+├── 🗂️ Caching Layer
+│   ├── 📦 Global Cache (cache.ts)
+│   │   ├── 50MB limit, 2000 entries
+│   │   └── TTL-based cleanup
+│   └── 🎯 Natal Chart Cache (24hr TTL)
+│
+├── 📊 Monitoring & Analytics
+│   ├── 🔍 Memory Monitor (memoryMonitor.ts)
+│   │   ├── Snapshots accumulation (max 10)
+│   │   └── Warning times Map
+│   ├── 💥 Memory Pressure (memoryPressure.ts)
+│   │   ├── Auto-checking disabled
+│   │   └── Emergency cleanup triggers
+│   └── 📈 Analytics Tracking
+│       ├── POST /api/analytics/track
+│       └── Real-time metrics collection
+│
+└── 🔧 Cleanup Systems
+    ├── 🚨 Emergency Memory Cleanup
+    │   ├── Cache clearing
+    │   ├── Connection pool destruction
+    │   ├── Snapshot cleanup
+    │   └── Garbage collection triggers
+    ├── ⏰ Periodic Cleanup (MemoryCleanup.tsx)
+    │   └── Every 30 minutes
+    └── 🔄 Component Unmount Cleanup
+        ├── useEffect cleanup functions
+        ├── Event listener removal
+        └── Interval/timeout clearing
+
+🔴 HIGH MEMORY IMPACT    🟡 MEDIUM IMPACT    🟢 LOW IMPACT
+🔤 Font Loading: 🔴      📊 Monitoring: 🟡   🗂️ Caching: 🟢
+🏪 Zustand Stores: 🔴    🗄️ Database: 🟡    🔧 Cleanup: 🟢
+```
+
+## 🔄 Memory Flow & Connections
+
+```
+Font Loading → High Startup Memory (30-50MB)
+     ↓
+Zustand Stores → Persist data in memory + localStorage
+     ↓
+Database Operations → Connection pool + query caching
+     ↓
+Analytics Tracking → Accumulates metrics data
+     ↓
+Memory Monitor → Takes snapshots, triggers cleanup
+     ↓
+Emergency Cleanup → Clears caches, but fonts/stores remain
+     ↓
+Memory Pressure Returns → Cycle repeats (DEATH SPIRAL)
+```
 
 ## 🔍 Root Causes Identified ✅ FIXED
 
@@ -25,7 +111,18 @@ Your application is showing **critical memory leak symptoms**:
 - ~~Old connections not being fully closed~~ **FIXED** - Comprehensive cleanup system
 - ~~Database warmup potentially running multiple times~~ **FIXED** - Singleton pattern
 
-### 4. **NEW ISSUES IDENTIFIED** 🔍 INVESTIGATING
+### 4. **EMERGENCY CLEANUP DEATH SPIRAL** ✅ FIXED
+- ~~Emergency cleanup only freed minimal memory (~5MB)~~ **FIXED** - Enhanced to free 10-20MB
+- ~~Cleanup triggering infinite loops every few seconds~~ **FIXED** - Added 2-minute cooldown
+- ~~Single garbage collection cycle insufficient~~ **FIXED** - Multiple GC cycles with delays
+- ~~Only cleared caches, not accumulated modules~~ **FIXED** - Clears require cache and global vars
+
+### 5. **FONT LOADING OPTIMIZATION** ✅ PARTIALLY FIXED  
+- ~~6 font families with 20+ weight variants~~ **IMPROVED** - Reduced to essential weights only
+- Font memory usage reduced from ~50MB to ~30MB at startup
+- **Still HIGH IMPACT** - Consider lazy loading or font subsetting
+
+### 6. **NEW ISSUES IDENTIFIED** 🔍 INVESTIGATING
 - **Analytics tracking requests** - High frequency POST requests with 400 errors
 - **Notification polling** - Multiple rapid API calls for same user
 - **Admin settings lookups** - Frequent initialization calls

@@ -557,28 +557,48 @@ export function generateNatalChartSVG(
   svg += `<rect width="${width}" height="${height}" fill="white"/>`;
 
   // Generate sign wheel (outermost ring)
-  svg += generateSignWheel(centerX, centerY, signRingRadius, ringThickness);
+  try {
+    svg += generateSignWheel(centerX, centerY, signRingRadius, ringThickness);
+  } catch (error) {
+    console.error('Error generating sign wheel:', error);
+    svg += '<!-- Sign wheel generation failed -->';
+  }
 
   // Generate house wheel
-  svg += generateHouseWheel(
-    centerX,
-    centerY,
-    houseRingRadius,
-    ringThickness,
-    chartData
-  );
+  try {
+    svg += generateHouseWheel(
+      centerX,
+      centerY,
+      houseRingRadius,
+      ringThickness,
+      chartData
+    );
+  } catch (error) {
+    console.error('Error generating house wheel:', error);
+    svg += '<!-- House wheel generation failed -->';
+  }
 
   // Generate planet wheel (3rd ring)
-  svg += generatePlanetWheel(
-    centerX,
-    centerY,
-    planetRingRadius,
-    ringThickness,
-    chartData
-  );
+  try {
+    svg += generatePlanetWheel(
+      centerX,
+      centerY,
+      planetRingRadius,
+      ringThickness,
+      chartData
+    );
+  } catch (error) {
+    console.error('Error generating planet wheel:', error);
+    svg += '<!-- Planet wheel generation failed -->';
+  }
 
   // Generate aspect lines (innermost - in the center)
-  svg += generateAspectLines(centerX, centerY, aspectRingRadius, chartData);
+  try {
+    svg += generateAspectLines(centerX, centerY, aspectRingRadius, chartData);
+  } catch (error) {
+    console.error('Error generating aspect lines:', error);
+    svg += '<!-- Aspect lines generation failed -->';
+  }
 
   svg += "</svg>";
 
@@ -1028,6 +1048,11 @@ export async function generateNatalChart(birthData: {
 
   // Generate SVG with larger size for better display
   const svg = generateNatalChartSVG(chartData, 1000, 1000);
+
+  // Validate SVG was generated successfully
+  if (!svg || svg.length === 0) {
+    throw new Error('SVG generation failed: No content generated');
+  }
 
   return {
     svg,

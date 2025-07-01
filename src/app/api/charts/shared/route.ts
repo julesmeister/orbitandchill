@@ -5,7 +5,18 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const shareToken = url.searchParams.get('shareToken');
+    const listShared = url.searchParams.get('list');
 
+    // If listShared=true, return recent shared charts
+    if (listShared === 'true') {
+      const recentSharedCharts = await ChartService.getRecentSharedCharts();
+      return NextResponse.json({
+        success: true,
+        charts: recentSharedCharts,
+      });
+    }
+
+    // Otherwise, get specific chart by token
     if (!shareToken) {
       return NextResponse.json(
         { error: 'Share token is required' },

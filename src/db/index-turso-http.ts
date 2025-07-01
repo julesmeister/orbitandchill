@@ -1367,6 +1367,7 @@ export * from './schema';
 // Connection Pool convenience functions
 export function getPoolStats() {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const poolModule = require('./connectionPool');
     const pool = poolModule.getConnectionPool();
     return pool ? pool.getStats() : null;
@@ -1391,6 +1392,7 @@ export function isUsingConnectionPool() {
 
 export function getConnectionPoolInstance() {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const poolModule = require('./connectionPool');
     return poolModule.getConnectionPool();
   } catch (error) {

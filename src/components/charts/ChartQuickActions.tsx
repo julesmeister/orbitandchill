@@ -4,6 +4,9 @@ import { Person } from '../../types/people';
 import PeopleSelector from '../people/PeopleSelector';
 import CompactNatalChartForm from '../forms/CompactNatalChartForm';
 import { usePeopleStore } from '../../store/peopleStore';
+import StatusToast from '../reusable/StatusToast';
+import { useStatusToast } from '../../hooks/useStatusToast';
+import { useUserStore } from '../../store/userStore';
 
 interface ChartQuickActionsProps {
   onRegenerateChart: () => void;
@@ -12,6 +15,7 @@ interface ChartQuickActionsProps {
   onAddPersonClick?: () => void;
   onDropdownToggle?: (isOpen: boolean) => void;
   onClearCache?: () => void;
+  chartId?: string; // Add chart ID for internal sharing
 }
 
 export default function ChartQuickActions({
@@ -20,13 +24,16 @@ export default function ChartQuickActions({
   onPersonChange,
   onAddPersonClick,
   onDropdownToggle,
-  onClearCache
+  onClearCache,
+  chartId
 }: ChartQuickActionsProps) {
   const router = useRouter();
   const [showAddPersonForm, setShowAddPersonForm] = useState(false);
   const [showEditPersonForm, setShowEditPersonForm] = useState(false);
   const [editingPersonData, setEditingPersonData] = useState<Person | null>(null);
   const { selectedPerson, defaultPerson, loadPeople, people, selectedPersonId, setSelectedPerson } = usePeopleStore();
+  const { user } = useUserStore();
+  const { toast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
 
   // Load people when component mounts (only once)
   React.useEffect(() => {
@@ -114,6 +121,44 @@ export default function ChartQuickActions({
     onPersonChange?.(person);
   };
 
+  // Handle share chart button click
+  const handleShareChart = async () => {
+    if (!chartId || !user?.id) {
+      showError('Share Failed', 'Chart ID or user not available');
+      return;
+    }
+
+    try {
+      showLoading('Generating Share Link', 'Creating shareable link for your chart...');
+
+      // Generate share token
+      const response = await fetch(`/api/charts/${chartId}/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate share link: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.shareUrl) {
+        // Copy to clipboard
+        await navigator.clipboard.writeText(data.shareUrl);
+        showSuccess('Link Copied!', 'Share link has been copied to your clipboard');
+      } else {
+        throw new Error('No share URL returned from server');
+      }
+    } catch (error) {
+      console.error('Share chart error:', error);
+      showError('Share Failed', 'Unable to create share link. Please try again.');
+    }
+  };
+
   return (
     <div className="bg-white overflow-visible">
       {/* Header */}
@@ -181,6 +226,28 @@ export default function ChartQuickActions({
             </div>
             <PeopleSelector
               onPersonSelect={handlePersonSelectWrapper}
+              onSharedChartSelect={(chart) => {
+                // Generate a chart from shared chart data
+                const chartAsPerson = {
+                  id: `shared_${chart.shareToken}`,
+                  userId: 'shared',
+                  name: chart.subjectName,
+                  relationship: 'other' as const,
+                  birthData: {
+                    dateOfBirth: chart.dateOfBirth,
+                    timeOfBirth: chart.timeOfBirth,
+                    locationOfBirth: chart.locationOfBirth,
+                    coordinates: {
+                      lat: chart.latitude.toString(),
+                      lon: chart.longitude.toString(),
+                    },
+                  },
+                  createdAt: new Date(chart.createdAt),
+                  updatedAt: new Date(chart.createdAt),
+                  notes: `Shared chart from ${new Date(chart.createdAt).toLocaleDateString()}`,
+                };
+                handlePersonSelectWrapper(chartAsPerson);
+              }}
               onAddNew={handleAddPersonClick}
               onDropdownToggle={onDropdownToggle}
               className="w-full"
@@ -257,7 +324,7 @@ export default function ChartQuickActions({
           </button>
 
           {/* Secondary Actions Grid */}
-          <div className="grid grid-cols-2 gap-0 border-b border-black">
+          <div className="grid grid-cols-3 gap-0 border-b border-black">
             {/* Edit Data Button */}
             <button
               onClick={handleEditDataClick}
@@ -275,6 +342,28 @@ export default function ChartQuickActions({
                 <div>
                   <div className="font-space-grotesk font-semibold text-black group-hover:text-white text-sm transition-colors duration-300">Edit Data</div>
                   <div className="font-inter text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Update info</div>
+                </div>
+              </div>
+            </button>
+
+            {/* Share Chart Button */}
+            <button
+              onClick={handleShareChart}
+              disabled={!chartId || !user?.id}
+              className="group relative p-4 transition-all duration-300 border-r border-black hover:bg-black overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {/* Animated background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-200/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+
+              <div className="relative flex flex-col items-center text-center space-y-2">
+                <div className="w-10 h-10 bg-black group-hover:bg-white transition-colors duration-300 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-5 h-5 text-white group-hover:text-black transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-space-grotesk font-semibold text-black group-hover:text-white text-sm transition-colors duration-300">Share Chart</div>
+                  <div className="font-inter text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Copy link</div>
                 </div>
               </div>
             </button>
@@ -326,6 +415,28 @@ export default function ChartQuickActions({
             </div>
             <PeopleSelector
               onPersonSelect={handlePersonSelectWrapper}
+              onSharedChartSelect={(chart) => {
+                // Generate a chart from shared chart data
+                const chartAsPerson = {
+                  id: `shared_${chart.shareToken}`,
+                  userId: 'shared',
+                  name: chart.subjectName,
+                  relationship: 'other' as const,
+                  birthData: {
+                    dateOfBirth: chart.dateOfBirth,
+                    timeOfBirth: chart.timeOfBirth,
+                    locationOfBirth: chart.locationOfBirth,
+                    coordinates: {
+                      lat: chart.latitude.toString(),
+                      lon: chart.longitude.toString(),
+                    },
+                  },
+                  createdAt: new Date(chart.createdAt),
+                  updatedAt: new Date(chart.createdAt),
+                  notes: `Shared chart from ${new Date(chart.createdAt).toLocaleDateString()}`,
+                };
+                handlePersonSelectWrapper(chartAsPerson);
+              }}
               onAddNew={handleAddPersonClick}
               onDropdownToggle={onDropdownToggle}
               className="w-full"
@@ -333,6 +444,18 @@ export default function ChartQuickActions({
           </div>
         </div>
       )}
+
+      {/* Status Toast */}
+      <StatusToast
+        title={toast.title}
+        message={toast.message}
+        status={toast.status}
+        isVisible={toast.isVisible}
+        onHide={hideStatus}
+        duration={toast.duration}
+        showProgress={toast.showProgress}
+        progress={toast.progress}
+      />
     </div>
   );
 }

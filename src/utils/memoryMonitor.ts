@@ -32,9 +32,9 @@ class MemoryMonitor {
   private isRunning = false;
   private maxSnapshots = 10; // Keep last 10 snapshots (reduced from 20)
   private warningThresholds = {
-    heapUsage: 0.80, // 80% of max heap (reduced from 85%)
-    growthRate: 0.05, // 5% growth per minute (reduced from 10%)
-    sustainedGrowth: 3 // 3 consecutive increasing snapshots (reduced from 5)
+    heapUsage: 0.90, // 90% of max heap (increased to reduce noise)
+    growthRate: 0.10, // 10% growth per minute
+    sustainedGrowth: 5 // 5 consecutive increasing snapshots
   };
 
   constructor() {
@@ -47,7 +47,7 @@ class MemoryMonitor {
   /**
    * Start memory monitoring
    */
-  start(intervalMs: number = 300000): void { // Default 5 minutes (increased from 3 minutes to reduce overhead)
+  start(intervalMs: number = 600000): void { // Default 10 minutes (increased to reduce overhead)
     if (this.isRunning) {
       console.warn('Memory monitor is already running');
       return;
