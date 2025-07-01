@@ -6,6 +6,13 @@ import { AnalyticsService } from '@/db/services/analyticsService';
 import { AdminAuditService } from '@/db/services/adminAuditService';
 
 export async function POST() {
+  // DISABLED: Seed data API disabled to prevent memory issues
+  return NextResponse.json({ 
+    success: false, 
+    message: 'Seed data API has been disabled to prevent memory consumption issues',
+    disabled: true 
+  });
+  
   try {
     await initializeDatabase();
     

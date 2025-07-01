@@ -6,6 +6,7 @@ import {
   calculateMatrixDimensions
 } from '../../utils/matrixResponsive';
 import { getArcanaInfo } from '../../utils/arcanaInfo';
+import { getMatrixInterpretation, type MatrixInterpretation } from '../../utils/matrixInterpretations';
 import { getAgeConnections, getMainCircleAges } from '../../utils/ageConnections';
 import { getAgeLabelProps } from '../../utils/ageLabels';
 import MatrixOfDestinyHeader from './MatrixOfDestinyHeader';
@@ -141,7 +142,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
     O: { x: -150, y: 0 }, // As a Parent (15% from A)
     P: { x: 0, y: -150 }, // Higher Self (15% from B)
     Q: { x: 150, y: 0 }, // Past Life Money Mindset (15% from C)
-    R: { x: 0, y: 150 }, // Foundation (15% from D)
+    R: { x: 0, y: 150 }, // Present Life Task (15% from D)
 
     // J position - will be overridden by responsive calculations
     J: { x: 0, y: 35 }, // Past Life Mistakes (below center)
@@ -339,6 +340,62 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
       })()
     };
   }, [responsive.centerX, responsive.centerY, convertPositionsToRelative, responsiveGenerationalPositions, debugPositions, anchorPositions.incomeStreams, anchorPositions.ingredientsForLove]);
+
+  // Helper function to map position IDs to Matrix aspect types
+  const getPositionAspectType = (positionId: string): 'incomeStreams' | 'workLifeBalance' | 'ingredientsForLove' | 'pastLifeIncome' | 'sexuality' | 'powerOfAncestors' | null => {
+    const aspectMap: Record<string, 'incomeStreams' | 'workLifeBalance' | 'ingredientsForLove' | 'pastLifeIncome' | 'sexuality' | 'powerOfAncestors'> = {
+      // INCOME & MONEY RELATED POSITIONS
+      'K': 'incomeStreams',        // Income Streams (original mapping)
+      'C': 'incomeStreams',        // Money Block - financial obstacles and patterns
+      'Q': 'pastLifeIncome',       // Past Life Money Mindset
+      'N': 'pastLifeIncome',       // Past Life Income (original mapping)
+      
+      // WORK & LIFE PURPOSE POSITIONS  
+      'L': 'workLifeBalance',      // Work Life Balance (original mapping)
+      'R': 'workLifeBalance',      // Present Life Task
+      'D': 'workLifeBalance',      // Biggest Obstacle in Life
+      'A': 'workLifeBalance',      // Reputation - how you're seen professionally
+      'E': 'workLifeBalance',      // Comfort Zone - work patterns and habits
+      'P': 'workLifeBalance',      // Higher Self - spiritual work purpose
+      'T': 'workLifeBalance',      // Self Expression - how you show up at work
+      'O': 'workLifeBalance',      // As a Parent - family-work balance
+      
+      // LOVE & RELATIONSHIPS POSITIONS
+      'M': 'ingredientsForLove',   // Ingredients for Love (original mapping) 
+      'B': 'ingredientsForLove',   // Inspiration - emotional nature in relationships
+      'FUTURE_CHILDREN': 'ingredientsForLove', // Future Children - family aspirations
+      'TALENT': 'ingredientsForLove', // Heart's Desire - what you need emotionally
+      
+      // SEXUALITY & INTIMATE ENERGY
+      'V': 'sexuality',            // Sexuality (original mapping)
+      'S': 'sexuality',            // Relationship sexuality and passion
+      'U': 'sexuality',            // Intimate connection and sexual expression
+      'W': 'sexuality',            // Physical attraction and magnetism
+      'X': 'sexuality',            // Sexual healing and transformation
+      
+      // ANCESTRAL & FAMILY LINEAGE
+      'POWER_OF_ANCESTORS': 'powerOfAncestors', // Power of Ancestors (original mapping)
+      'F': 'powerOfAncestors',     // Dad's Talents - paternal lineage
+      'G': 'powerOfAncestors',     // Mom's Talents - maternal lineage  
+      'H': 'powerOfAncestors',     // Dad's Karma - paternal patterns
+      'I': 'powerOfAncestors',     // Mom's Karma - maternal patterns
+      'J': 'powerOfAncestors',     // Past Life Mistakes - ancestral karma
+      'F1': 'powerOfAncestors',    // Dad's Talents (outer)
+      'F2': 'powerOfAncestors',    // Dad's Talents (inner)
+      'G1': 'powerOfAncestors',    // Mom's Talents (outer)
+      'G2': 'powerOfAncestors',    // Mom's Talents (inner)
+      'H1': 'powerOfAncestors',    // Dad's Karma (outer)
+      'H2': 'powerOfAncestors',    // Dad's Karma (inner)
+      'I1': 'powerOfAncestors',    // Mom's Karma (outer)
+      'I2': 'powerOfAncestors',    // Mom's Karma (inner)
+      
+      // HEART & SPIRITUAL PURPOSE
+      'HEART_WISHES': 'ingredientsForLove' // Heart/Wishes - material desires in love
+    };
+    
+    return aspectMap[positionId] || null;
+  };
+
 
   // Create reusable event handlers (before early returns)
   const handleMouseEnter = matrixData ? createMatrixMouseEnterHandler(
@@ -1358,40 +1415,188 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
         </div> */}
       </div>
 
-      {/* Information Panel */}
-      {selectedPosition && (
-        <div className="mt-8 max-w-2xl mx-auto">
-          <div className="bg-gray-50 border-2 border-black p-6">
-            {(() => {
-              const number = matrixData.positions[selectedPosition];
-              const arcana = getArcanaInfo(number);
-              const position = positions[selectedPosition];
+      {/* Matrix Interpretation Panel */}
+      {selectedPosition && (() => {
+        // Get the arcana number for this position
+        let arcanaNumber: number | null = null;
+        
+        // Check different data sources for the arcana number
+        if (matrixData.positions && selectedPosition in matrixData.positions) {
+          arcanaNumber = matrixData.positions[selectedPosition as keyof typeof matrixData.positions];
+        } else if (matrixData.centers && selectedPosition in matrixData.centers) {
+          arcanaNumber = matrixData.centers[selectedPosition as keyof typeof matrixData.centers];
+        } else if (matrixData.innerElements) {
+          // Map inner element keys to their properties
+          const innerElementMap: Record<string, keyof typeof matrixData.innerElements> = {
+            'POWER_OF_ANCESTORS': 'heart',
+            'TALENT': 'talent', 
+            'FUTURE_CHILDREN': 'guard',
+            'HEART_WISHES': 'earthPurpose'
+          };
+          
+          const innerElementKey = innerElementMap[selectedPosition];
+          if (innerElementKey && matrixData.innerElements[innerElementKey]) {
+            arcanaNumber = matrixData.innerElements[innerElementKey];
+          }
+        }
 
-              return (
-                <>
-                  <div className="flex items-center mb-4">
+        if (!arcanaNumber) return null;
+
+        const arcana = getArcanaInfo(arcanaNumber);
+        const positionName = getElementLabel(selectedPosition); // Use the same function as tooltips
+        const aspectType = getPositionAspectType(selectedPosition);
+        const matrixInterpretation = aspectType ? getMatrixInterpretation(aspectType, arcanaNumber) : null;
+
+        return (
+          <div className="margin-large padding-global">
+            <div className="container-large">
+              {/* Synapsas-style Card Design */}
+              <div className="bg-white border-2 border-black">
+                {/* Header Section with Synapsas Colors */}
+                <div 
+                  className="px-8 py-6 border-b-2 border-black"
+                  style={{ backgroundColor: '#f0e3ff' }} // Synapsas light purple
+                >
+                  <div className="flex items-center space-x-6">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mr-4"
-                      style={{ backgroundColor: arcana.color }}
+                      className="w-20 h-20 border-2 border-black flex items-center justify-center text-white font-black"
+                      style={{ 
+                        backgroundColor: arcana.color
+                      }}
                     >
-                      {number}
+                      <span className="text-2xl font-epilogue">{arcanaNumber}</span>
                     </div>
-                    <div>
-                      <h3 className="font-space-grotesk text-xl font-bold text-black">
-                        {position?.label || `Position ${selectedPosition}`}
+                    <div className="flex-1">
+                      <h3 className="font-space-grotesk text-3xl font-black text-black mb-1">
+                        {positionName}
                       </h3>
-                      <p className="text-gray-600">Arcana {number}: {arcana.name}</p>
+                      <p className="font-inter text-xl text-black/70 mb-2">Arcana {arcanaNumber}: {arcana.name}</p>
+                      {aspectType && (
+                        <div 
+                          className="inline-flex items-center px-3 py-1 text-sm font-semibold text-black border-2 border-black"
+                          style={{ 
+                            backgroundColor: '#fffbed' // Synapsas light yellow
+                          }}
+                        >
+                          {aspectType.replace(/([A-Z])/g, ' $1').trim()}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <p className="text-gray-800 leading-relaxed">
-                    {arcana.description}
-                  </p>
-                </>
-              );
-            })()}
+                </div>
+
+                <div className="p-8">
+                  {/* Basic Arcana Description */}
+                  <div className="margin-medium">
+                    <h4 className="font-space-grotesk text-xl font-bold text-black margin-small">
+                      General Meaning
+                    </h4>
+                    <p className="font-inter text-black leading-relaxed text-lg">
+                      {arcana.description}
+                    </p>
+                  </div>
+
+                  {/* Matrix-Specific Interpretation */}
+                  {matrixInterpretation && (
+                    <div className="space-y-6">
+                      <h4 className="font-space-grotesk text-xl font-bold text-black margin-medium">
+                        Matrix of Destiny Interpretation
+                      </h4>
+                      
+                      <div className="grid lg:grid-cols-2 gap-6">
+                        {/* Overview & Strengths */}
+                        <div className="space-y-6">
+                          <div 
+                            className="p-6 border-2 border-black"
+                            style={{ 
+                              backgroundColor: '#6bdbff' // Synapsas blue
+                            }}
+                          >
+                            <h5 className="font-space-grotesk font-bold text-black margin-small">Overview</h5>
+                            <p className="font-inter text-black leading-relaxed">
+                              {matrixInterpretation.general}
+                            </p>
+                          </div>
+                          
+                          <div 
+                            className="p-6 border-2 border-black"
+                            style={{ 
+                              backgroundColor: '#4ade80' // Synapsas green
+                            }}
+                          >
+                            <h5 className="font-space-grotesk font-bold text-black margin-small">Strengths</h5>
+                            <p className="font-inter text-black leading-relaxed">
+                              {matrixInterpretation.positive}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Challenges & Guidance */}
+                        <div className="space-y-6">
+                          <div 
+                            className="p-6 border-2 border-black"
+                            style={{ 
+                              backgroundColor: '#f2e356' // Synapsas yellow
+                            }}
+                          >
+                            <h5 className="font-space-grotesk font-bold text-black margin-small">Challenges</h5>
+                            <p className="font-inter text-black leading-relaxed">
+                              {matrixInterpretation.challenge}
+                            </p>
+                          </div>
+                          
+                          <div 
+                            className="p-6 border-2 border-black"
+                            style={{ 
+                              backgroundColor: '#ff91e9' // Synapsas purple
+                            }}
+                          >
+                            <h5 className="font-space-grotesk font-bold text-black margin-small">Guidance</h5>
+                            <p className="font-inter text-black leading-relaxed">
+                              {matrixInterpretation.advice}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No Matrix Interpretation Available */}
+                  {!matrixInterpretation && aspectType === null && (
+                    <div 
+                      className="p-6 border-2 border-black"
+                      style={{ 
+                        backgroundColor: '#e7fff6' // Synapsas light green
+                      }}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div 
+                          className="w-6 h-6 border-2 border-black flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{ 
+                            backgroundColor: '#19181a' // Synapsas black
+                          }}
+                        >
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h5 className="font-space-grotesk font-bold text-black margin-small">Foundational Element</h5>
+                          <p className="font-inter text-black leading-relaxed">
+                            This position represents a foundational element in your Matrix of Destiny. 
+                            While specific interpretations for this aspect are still being developed, 
+                            the general arcana meaning above provides valuable insight into this energy in your life.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
       {/* Instructions */}

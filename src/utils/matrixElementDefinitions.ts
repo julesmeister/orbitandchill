@@ -79,6 +79,102 @@ export const MATRIX_MAIN_POSITIONS = {
   },
 } as const;
 
+// Extended alphabet positions (K-X)
+export const MATRIX_EXTENDED_POSITIONS = {
+  K: {
+    label: "Income Streams",
+    description: "How you naturally attract and generate money",
+  },
+  L: {
+    label: "Work Life Balance", 
+    description: "How you balance career and personal life",
+  },
+  M: {
+    label: "Ingredients for Love",
+    description: "What you need to give and receive in relationships",
+  },
+  N: {
+    label: "Past Life Income",
+    description: "How past life patterns affect your money mindset",
+  },
+  O: {
+    label: "As a Parent",
+    description: "Your parenting style and family dynamics",
+  },
+  P: {
+    label: "Higher Self",
+    description: "Your spiritual purpose and highest potential",
+  },
+  Q: {
+    label: "Past Life Money Mindset",
+    description: "Inherited beliefs and patterns around money",
+  },
+  R: {
+    label: "Present Life Task",
+    description: "Your current life purpose and mission",
+  },
+  S: {
+    label: "Relationship Passion",
+    description: "How you express passion in relationships",
+  },
+  T: {
+    label: "Self Expression",
+    description: "How you show your authentic self to the world",
+  },
+  U: {
+    label: "Intimate Connection",
+    description: "Your approach to deep emotional intimacy",
+  },
+  V: {
+    label: "Sexuality",
+    description: "How you express and experience sexual energy",
+  },
+  W: {
+    label: "Physical Magnetism",
+    description: "Your physical presence and attraction energy",
+  },
+  X: {
+    label: "Sexual Transformation",
+    description: "How sexuality transforms and heals you",
+  },
+} as const;
+
+// Family line extended positions
+export const MATRIX_FAMILY_POSITIONS = {
+  F1: {
+    label: "Dad's Talents (Outer)",
+    description: "Paternal talents from outer family line",
+  },
+  F2: {
+    label: "Dad's Talents (Inner)",
+    description: "Paternal talents from inner family line",
+  },
+  G1: {
+    label: "Mom's Talents (Outer)",
+    description: "Maternal talents from outer family line",
+  },
+  G2: {
+    label: "Mom's Talents (Inner)",
+    description: "Maternal talents from inner family line",
+  },
+  H1: {
+    label: "Dad's Karma (Outer)",
+    description: "Paternal karma from outer family line",
+  },
+  H2: {
+    label: "Dad's Karma (Inner)",
+    description: "Paternal karma from inner family line",
+  },
+  I1: {
+    label: "Mom's Karma (Outer)",
+    description: "Maternal karma from outer family line",
+  },
+  I2: {
+    label: "Mom's Karma (Inner)",
+    description: "Maternal karma from inner family line",
+  },
+} as const;
+
 // Karmic Tail positions
 export const MATRIX_KARMIC_TAIL = {
   K1: {
@@ -105,6 +201,8 @@ export const getElementLabel = (elementId: string): string => {
   const element =
     MATRIX_INNER_ELEMENTS[elementId as keyof typeof MATRIX_INNER_ELEMENTS] ||
     MATRIX_MAIN_POSITIONS[elementId as keyof typeof MATRIX_MAIN_POSITIONS] ||
+    MATRIX_EXTENDED_POSITIONS[elementId as keyof typeof MATRIX_EXTENDED_POSITIONS] ||
+    MATRIX_FAMILY_POSITIONS[elementId as keyof typeof MATRIX_FAMILY_POSITIONS] ||
     MATRIX_KARMIC_TAIL[elementId as keyof typeof MATRIX_KARMIC_TAIL];
   return element?.label || elementId;
 };

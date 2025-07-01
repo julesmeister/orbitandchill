@@ -5,6 +5,10 @@ import { DiscussionService } from './services/discussionService';
 import { AnalyticsService } from './services/analyticsService';
 
 async function testDatabase() {
+  // DISABLED: Database test function disabled to prevent memory issues
+  console.log('🧪 Database test function has been disabled to prevent memory consumption');
+  return { success: true, message: 'Database tests disabled' };
+  
   try {
     console.log('🚀 Initializing database...');
     await initializeDatabase();

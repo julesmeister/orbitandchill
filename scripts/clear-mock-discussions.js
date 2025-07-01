@@ -162,7 +162,7 @@ async function clearMockDiscussions() {
 }
 
 // Run the script
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   clearMockDiscussions()
     .then(() => {
       console.log('\n✨ Script completed.');

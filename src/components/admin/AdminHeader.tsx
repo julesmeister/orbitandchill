@@ -228,7 +228,8 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                   <button 
                     onClick={async () => {
                       try {
-                        const response = await fetch('/api/admin/seed-data', { method: 'POST' });
+                        // DISABLED: Seed data API disabled to prevent memory issues
+                        const response = { ok: false, json: async () => ({ message: 'Seed data disabled' }) };
                         const data = await response.json();
                         if (data.success) {
                           alert('Test data seeded successfully! Refresh to see updated metrics.');
