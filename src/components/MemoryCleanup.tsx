@@ -34,6 +34,7 @@ export default function MemoryCleanup() {
       } catch (error) {
         console.warn('⚠️ Error during memory cleanup:', error);
       }
+      }
     };
   }, []);
 

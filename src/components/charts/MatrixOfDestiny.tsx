@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ChartTooltip, type TooltipData } from '../horary/ChartTooltip';
-import { 
-  getMatrixResponsiveValues, 
-  calculateMatrixDimensions 
+import {
+  getMatrixResponsiveValues,
+  calculateMatrixDimensions
 } from '../../utils/matrixResponsive';
 import { getArcanaInfo } from '../../utils/arcanaInfo';
 import { getAgeConnections, getMainCircleAges } from '../../utils/ageConnections';
@@ -13,15 +13,16 @@ import MatrixOfDestinyLegend from './MatrixOfDestinyLegend';
 import MatrixOfDestinyCalculationDetails from './MatrixOfDestinyCalculationDetails';
 import MatrixOfDestinyInstructions from './MatrixOfDestinyInstructions';
 import MatrixCircleElement from './MatrixCircleElement';
-import { 
-  createMatrixMouseEnterHandler, 
-  createMatrixMouseLeaveHandler, 
-  createMatrixClickHandler 
+import {
+  createMatrixMouseEnterHandler,
+  createMatrixMouseLeaveHandler,
+  createMatrixClickHandler
 } from '../../utils/matrixEventHandlers';
 import { MatrixLine, LabeledMatrixLine, MATRIX_LINE_STYLES } from '../../utils/matrixLineUtils';
 import { calculateMatrixPositions } from '../../utils/matrixPositions';
 import { MATRIX_INNER_ELEMENTS, createElementPosition, getElementLabel } from '../../utils/matrixElementDefinitions';
 import { calculateMatrixOfDestiny, validateBirthDate, MatrixCalculation } from '../../utils/matrixCalculations';
+import { calculateAgeDestinyArcana } from '../../utils/ageDestinyCalculations';
 
 interface MatrixOfDestinyProps {
   birthData: {
@@ -49,7 +50,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 500, height: 500 });
   const [isClient, setIsClient] = useState(false);
-  
+
   // Helper functions for positioning calculations
   const calculatePositionAtPercent = (
     fromPosition: { x: number; y: number },
@@ -89,14 +90,14 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
     const x4 = line2End.x, y4 = line2End.y;
 
     const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-    
+
     if (Math.abs(denominator) < 0.0001) {
       // Lines are parallel
       return null;
     }
 
     const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
-    
+
     return {
       x: x1 + t * (x2 - x1),
       y: y1 + t * (y2 - y1)
@@ -110,22 +111,22 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
     L: { x: 111, y: 114 }, // Partnership  
     M: { x: 166, y: 61 }, // Social
     N: { x: 228, y: 0 }, // Growth
-    
+
     // Inner elements that need positioning  
     V: { x: 85, y: 0 }, // Relations
-    
+
     // F, G, H, I positions - DIAGONAL square corners (45-degree angles)
     F: { x: -212, y: -212 }, // Top-left diagonal (radius * cos(45°))
     G: { x: 212, y: -212 }, // Top-right diagonal
     H: { x: 212, y: 212 }, // Bottom-right diagonal  
     I: { x: -212, y: 212 }, // Bottom-left diagonal
-    
+
     // Special inner elements
     HEART_POWER: { x: 60, y: 0 }, // Power of Ancestors
     TALENT: { x: 0, y: -120 }, // Talent
     GUARD: { x: -225, y: 0 }, // Guard/Blockage
     EARTH_PURPOSE: { x: -130, y: 0 }, // Earth Purpose
-    
+
     // Temporary static positions - will be overridden by responsive calculations
     F1: { x: -190, y: -193 },
     F2: { x: -168, y: -169 },
@@ -135,20 +136,20 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
     H2: { x: -173, y: 169 },
     I1: { x: 200, y: 198 },
     I2: { x: 181, y: 179 },
-    
+
     // O, P, Q, R positions - will be overridden by responsive calculations  
     O: { x: -150, y: 0 }, // Past Life (15% from A)
     P: { x: 0, y: -150 }, // Higher Self (15% from B)
     Q: { x: 150, y: 0 }, // Life Purpose (15% from C)
     R: { x: 0, y: 150 }, // Foundation (15% from D)
-    
+
     // J position - will be overridden by responsive calculations
     J: { x: 0, y: 35 }, // Family Center (below center)
-    
+
     diagonal: { x1: 0, y1: 30, x2: 180, y2: 0 } // Will be overridden by J to N coordinates
   });
   const [isDragging, setIsDragging] = useState<string | null>(null);
-  
+
   const [responsive, setResponsive] = useState(() => {
     // Default values for SSR
     return {
@@ -178,7 +179,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
   // Update responsive values on mount and resize
   useEffect(() => {
     setIsClient(true);
-    
+
     const updateResponsiveValues = () => {
       setResponsive(getMatrixResponsiveValues());
     };
@@ -215,63 +216,71 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
     return calculateMatrixOfDestiny(birthData.dateOfBirth);
   }, [birthData.dateOfBirth]);
 
+  // Calculate age-specific destiny arcana for all ages 0-79
+  const ageDestinyMap = useMemo(() => {
+    if (!birthData.dateOfBirth || !validateBirthDate(birthData.dateOfBirth)) {
+      return {};
+    }
+    return calculateAgeDestinyArcana(birthData.dateOfBirth);
+  }, [birthData.dateOfBirth]);
+
   // Calculate positions using responsive values
   const positions = calculateMatrixPositions(responsive.centerX, responsive.centerY, responsive.radius);
 
   // Calculate responsive generational line positions
   const responsiveGenerationalPositions = useMemo(() => {
     const centerPoint = { x: responsive.centerX, y: responsive.centerY };
-    
+
     // Calculate 30% positions first (for "2" positions)
     const f2Position = calculatePositionAtPercent(positions.F, centerPoint, 0.30);
     const g2Position = calculatePositionAtPercent(positions.G, centerPoint, 0.30);
     const h2Position = calculatePositionAtPercent(positions.I, centerPoint, 0.30); // Swapped
     const i2Position = calculatePositionAtPercent(positions.H, centerPoint, 0.30); // Swapped
-    
+
     return {
       // F1, F2: along F to center line (male generational line top)
       F2: f2Position,
       F1: calculateMidpoint(positions.F, f2Position),
-      
+
       // G1, G2: along G to center line (female generational line top)
       G2: g2Position,
       G1: calculateMidpoint(positions.G, g2Position),
-      
+
       // H1, H2: positioned on bottom-left (swapped to female side)
       H2: h2Position,
       H1: calculateMidpoint(positions.I, h2Position),
-      
+
       // I1, I2: positioned on bottom-right (swapped to male side)
       I2: i2Position,
       I1: calculateMidpoint(positions.H, i2Position),
-      
+
       // Main axis "2" positions (30% from outer toward center)
       T: calculatePositionAtPercent(positions.B, centerPoint, 0.30), // Destiny
       N: calculatePositionAtPercent(positions.C, centerPoint, 0.30), // Growth  
       FUTURE_CHILDREN: calculatePositionAtPercent(positions.A, centerPoint, 0.30),
       J: calculatePositionAtPercent(positions.D, centerPoint, 0.30), // Family Center
-      
+
       // "1" positions - midpoint between outer circles and their respective "2" positions  
       O: calculateMidpoint(positions.A, calculatePositionAtPercent(positions.A, centerPoint, 0.30)), // Past Life
       P: calculateMidpoint(positions.B, calculatePositionAtPercent(positions.B, centerPoint, 0.30)), // Higher Self
       Q: calculateMidpoint(positions.C, calculatePositionAtPercent(positions.C, centerPoint, 0.30)), // Life Purpose
       R: calculateMidpoint(positions.D, calculatePositionAtPercent(positions.D, centerPoint, 0.30)), // Foundation
-      
-      
+
+
       // Calculate intersection-based positions
       L: (() => {
         // Calculate intersection of male generational line (F to H) and diagonal line (J to N)
         const jPosition = calculatePositionAtPercent(positions.D, centerPoint, 0.30);
         const nPosition = calculatePositionAtPercent(positions.C, centerPoint, 0.30);
-        
+
         const intersection = calculateLineIntersection(
           positions.F, positions.H,
           jPosition, nPosition
         );
-        
+
         return intersection || calculatePositionAtPercent(positions.D, centerPoint, 0.45); // fallback
       })(),
-      
+
       // Other inner circles using helper functions
       V: calculatePositionAtPercent(centerPoint, positions.C, 0.33), // Relations - 33% from center toward C
       POWER_OF_ANCESTORS: calculatePositionAtPercent(centerPoint, positions.C, 0.20), // 20% from center toward C
@@ -294,7 +303,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
     const centerPoint = { x: responsive.centerX, y: responsive.centerY };
     return Object.fromEntries(
       Object.entries(positions).map(([key, pos]) => [
-        key, 
+        key,
         convertToRelativePosition(pos, centerPoint)
       ])
     );
@@ -304,7 +313,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
   const updatedDebugPositions = useMemo(() => {
     const centerPoint = { x: responsive.centerX, y: responsive.centerY };
     const convertedPositions = convertPositionsToRelative(responsiveGenerationalPositions);
-    
+
     return {
       ...debugPositions,
       // Convert all responsive positions to relative coordinates
@@ -323,9 +332,9 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
       diagonal: (() => {
         const jRelative = convertToRelativePosition(responsiveGenerationalPositions.J, centerPoint);
         const nRelative = convertToRelativePosition(responsiveGenerationalPositions.N, centerPoint);
-        return { 
+        return {
           x1: jRelative.x, y1: jRelative.y,
-          x2: nRelative.x, y2: nRelative.y 
+          x2: nRelative.x, y2: nRelative.y
         };
       })()
     };
@@ -333,12 +342,12 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
 
   // Create reusable event handlers (before early returns)
   const handleMouseEnter = matrixData ? createMatrixMouseEnterHandler(
-    setTooltip, 
-    setHoveredPosition, 
-    containerRef, 
+    setTooltip,
+    setHoveredPosition,
+    containerRef,
     matrixData.positions
-  ) : () => {};
-  
+  ) : () => { };
+
   const handleMouseLeave = createMatrixMouseLeaveHandler(setHoveredPosition, setTooltip);
   const handleClick = createMatrixClickHandler(selectedPosition, setSelectedPosition);
 
@@ -350,21 +359,21 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
 
   const handleDragMove = (e: React.MouseEvent) => {
     if (!isDragging || !containerRef.current) return;
-    
+
     const rect = containerRef.current.getBoundingClientRect();
     const svgRect = containerRef.current.querySelector('svg')?.getBoundingClientRect();
     if (!svgRect) return;
-    
+
     // Convert mouse position to SVG coordinates
     const x = ((e.clientX - svgRect.left) / svgRect.width) * 700;
     const y = ((e.clientY - svgRect.top) / svgRect.height) * 850 - 100;
-    
+
     setDebugPositions(prev => {
       if (isDragging === 'diagonal') {
         // For diagonal, update based on which end is closer
-        const dist1 = Math.sqrt((x - (responsive.centerX + prev.diagonal.x1))**2 + (y - (responsive.centerY + prev.diagonal.y1))**2);
-        const dist2 = Math.sqrt((x - (responsive.centerX + prev.diagonal.x2))**2 + (y - (responsive.centerY + prev.diagonal.y2))**2);
-        
+        const dist1 = Math.sqrt((x - (responsive.centerX + prev.diagonal.x1)) ** 2 + (y - (responsive.centerY + prev.diagonal.y1)) ** 2);
+        const dist2 = Math.sqrt((x - (responsive.centerX + prev.diagonal.x2)) ** 2 + (y - (responsive.centerY + prev.diagonal.y2)) ** 2);
+
         if (dist1 < dist2) {
           return {
             ...prev,
@@ -435,10 +444,10 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             {/* Background elements */}
             <defs>
               <filter id="glow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge> 
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
             </defs>
@@ -531,7 +540,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
                 strokeWidth="2"
                 opacity="0.8"
               />
-              
+
               {/* Female Generational Line Label */}
               <text
                 x={positions.I.x + (positions.G.x - positions.I.x) * 0.68}
@@ -560,7 +569,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
                 strokeWidth="2"
                 opacity="0.8"
               />
-              
+
               {/* Male Generational Line Label */}
               <text
                 x={positions.F.x + (positions.H.x - positions.F.x) * 0.35}
@@ -585,24 +594,25 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
                 from: positions[conn.from],
                 to: positions[conn.to],
                 ages: conn.ages,
+                ageBrackets: conn.ageBrackets,
                 phase: conn.phase
               }));
-              
+
               return connections.map((connection, index) => (
                 <g key={`connection-${index}`}>
                   {/* Base line */}
-                  <line 
-                    x1={connection.from.x} 
-                    y1={connection.from.y} 
-                    x2={connection.to.x} 
-                    y2={connection.to.y} 
-                    stroke="#000000" 
-                    strokeWidth="0.5" 
-                    opacity="0.25" 
+                  <line
+                    x1={connection.from.x}
+                    y1={connection.from.y}
+                    x2={connection.to.x}
+                    y2={connection.to.y}
+                    stroke="#000000"
+                    strokeWidth="0.5"
+                    opacity="0.25"
                   />
-                  
+
                   {/* Age dots */}
-                  {connection.ages.map((age, ageIndex) => {
+                  {connection.ages.map((ageCode, ageIndex) => {
                     // Move dots much further from circles by adjusting progress
                     const totalSegments = connection.ages.length + 1;
                     const segmentLength = 1 / totalSegments;
@@ -610,47 +620,78 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
                     const availableLength = 1 - (2 * buffer); // Space available for dots
                     const dotSpacing = availableLength / connection.ages.length;
                     const adjustedProgress = buffer + (ageIndex * dotSpacing) + (dotSpacing * 0.5);
-                    
+
                     const x = connection.from.x + (connection.to.x - connection.from.x) * adjustedProgress;
                     const y = connection.from.y + (connection.to.y - connection.from.y) * adjustedProgress;
-                    
+
+                    // Get destiny arcana for this age code
+                    const destinyArcana = ageDestinyMap[ageCode];
+                    const arcanaInfo = destinyArcana ? getArcanaInfo(destinyArcana) : null;
+
+                    // Get age bracket display for this age
+                    const ageBracket = connection.ageBrackets?.[ageIndex];
+
                     // Calculate label position based on dot's position relative to center
                     const centerX = responsive.centerX;
                     const centerY = responsive.centerY;
                     const isLeft = x < centerX;
                     const isTop = y < centerY;
+
+                    // Offset labels from dot based on position
+                    const outwardOffsetX = isLeft ? -responsive.ageDot.labelOffset : responsive.ageDot.labelOffset;
+                    const outwardOffsetY = isTop ? -responsive.ageDot.labelOffset * 0.5 : responsive.ageDot.labelOffset * 0.5;
                     
-                    // Offset label from dot based on position
-                    const labelOffsetX = isLeft ? -responsive.ageDot.labelOffset : responsive.ageDot.labelOffset;
-                    const labelOffsetY = isTop ? -responsive.ageDot.labelOffset * 0.5 : responsive.ageDot.labelOffset * 0.5;
-                    
+                    // Inward offset (closer to center) for age bracket labels
+                    const inwardOffsetX = isLeft ? responsive.ageDot.labelOffset * 0.5 : -responsive.ageDot.labelOffset * 0.5;
+                    const inwardOffsetY = isTop ? responsive.ageDot.labelOffset * 0.3 : -responsive.ageDot.labelOffset * 0.3;
+
                     return (
-                      <g key={`age-${age}`}>
-                        {/* Age dot */}
+                      <g key={`age-${ageCode}`}>
+                        {/* Age dot with destiny arcana color */}
                         <circle
                           cx={x}
                           cy={y}
                           r={responsive.ageDot.radius}
-                          fill="#000000"
+                          fill={arcanaInfo?.color || "#000000"}
                           stroke="#000000"
                           strokeWidth="0.5"
-                          opacity="1"
+                          opacity="0.7"
+                          className="cursor-pointer"
                         />
-                        
-                        {/* Age label */}
-                        <text
-                          x={x + labelOffsetX}
-                          y={y + labelOffsetY}
-                          textAnchor={isLeft ? "end" : "start"}
-                          dominantBaseline="central"
-                          className="pointer-events-none select-none"
-                          fontSize={responsive.ageDot.fontSize}
-                          fontFamily="system-ui, -apple-system, sans-serif"
-                          fill="#000000"
-                          opacity="0.8"
-                        >
-                          {age}
-                        </text>
+
+                        {/* Destiny arcana number - outward (clear and visible) */}
+                        {destinyArcana && (
+                          <text
+                            x={x + outwardOffsetX}
+                            y={y + outwardOffsetY}
+                            textAnchor={isLeft ? "end" : "start"}
+                            dominantBaseline="central"
+                            className="pointer-events-none select-none font-bold"
+                            fontSize={responsive.ageDot.fontSize}
+                            fontFamily="system-ui, -apple-system, sans-serif"
+                            fill="#000000"
+                            opacity="0.9"
+                          >
+                            {destinyArcana}
+                          </text>
+                        )}
+
+                        {/* Age bracket label - inward (closer to center) */}
+                        {ageBracket && (
+                          <text
+                            x={x + inwardOffsetX}
+                            y={y + inwardOffsetY}
+                            textAnchor={isLeft ? "start" : "end"}
+                            dominantBaseline="central"
+                            className="pointer-events-none select-none"
+                            fontSize={Math.max(5, responsive.ageDot.fontSize - 2)}
+                            fontFamily="system-ui, -apple-system, sans-serif"
+                            fill="#666666"
+                            opacity="0.8"
+                          >
+                            {ageBracket.display}
+                          </text>
+                        )}
                       </g>
                     );
                   })}
@@ -758,7 +799,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* Matrix Inner Elements - Following Reference Implementation */}
-            
+
             {/* Medium Circles - Secondary Powers */}
             {/* O Point - Left Inner (Past Life) - moved closer to day energy */}
             <MatrixCircleElement
@@ -867,7 +908,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
 
 
             {/* DEBUG: N Point - Right Center (Growth) */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'N' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('N', e)}
             >
@@ -891,7 +932,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
 
             {/* DEBUG: Relationship/Family Lines */}
             {/* K Point - Family Karma */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'K' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('K', e)}
             >
@@ -913,7 +954,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* L Point - Partnership */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'L' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('L', e)}
             >
@@ -935,7 +976,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* M Point - Social Connections */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'M' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('M', e)}
             >
@@ -970,18 +1011,18 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
 
               const number = matrixData.positions[key];
               if (!number || number === undefined) return null; // Skip if number is invalid
-              
+
               const arcana = getArcanaInfo(number);
               const isSelected = selectedPosition === key;
               const isHovered = hoveredPosition === key;
               const isCenter = key === 'E';
-              
+
               const circleRadius = isCenter ? responsive.circleRadius.center : responsive.circleRadius.outer;
               const strokeWidth = isSelected ? 3 : isHovered ? 2 : 1;
 
               return (
                 <g key={key}>
-                  
+
                   {/* Position circle */}
                   <circle
                     cx={pos.x}
@@ -1000,7 +1041,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
                     onMouseLeave={handleMouseLeave}
                     onClick={() => setSelectedPosition(selectedPosition === key ? null : key)}
                   />
-                  
+
                   {/* Position number */}
                   <text
                     x={pos.x}
@@ -1019,10 +1060,10 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
                     const mainCircleAges = getMainCircleAges();
                     const ageData = mainCircleAges.find(a => a.position === key);
                     if (!ageData) return null;
-                    
+
                     const age = ageData.age.toString();
                     const labelProps = getAgeLabelProps(key, pos.x, pos.y, age, circleRadius);
-                    
+
                     return (
                       <text
                         x={labelProps.x}
@@ -1045,7 +1086,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             })}
 
             {/* F1, F2 - Male Generational Line Inner Circles */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'F1' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('F1', e)}
             >
@@ -1066,7 +1107,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
               />
             </g>
 
-            <g 
+            <g
               style={{ cursor: isDragging === 'F2' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('F2', e)}
             >
@@ -1088,7 +1129,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* G1, G2 - Female Generational Line Inner Circles */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'G1' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('G1', e)}
             >
@@ -1109,7 +1150,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
               />
             </g>
 
-            <g 
+            <g
               style={{ cursor: isDragging === 'G2' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('G2', e)}
             >
@@ -1131,7 +1172,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* H1, H2 - Male Generational Line Inner Circles */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'H1' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('H1', e)}
             >
@@ -1152,7 +1193,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
               />
             </g>
 
-            <g 
+            <g
               style={{ cursor: isDragging === 'H2' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('H2', e)}
             >
@@ -1174,7 +1215,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* I1, I2 - Female Generational Line Inner Circles */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'I1' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('I1', e)}
             >
@@ -1195,7 +1236,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
               />
             </g>
 
-            <g 
+            <g
               style={{ cursor: isDragging === 'I2' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('I2', e)}
             >
@@ -1217,7 +1258,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
             </g>
 
             {/* V - Relations (keeping only this one) */}
-            <g 
+            <g
               style={{ cursor: isDragging === 'V' ? 'grabbing' : 'grab' }}
               onMouseDown={(e) => handleDragStart('V', e)}
             >
@@ -1240,14 +1281,14 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
 
           </svg>
         </div>
-        
+
         {/* Tooltip */}
         <ChartTooltip
           tooltip={tooltip}
           containerRef={containerRef}
         />
-        
-        {/* DEBUG: Floating Coordinate Display */}
+
+        {/* DEBUG: Floating Coordinate Display
         <div className="fixed top-4 right-4 bg-white border-2 border-gray-300 p-4 rounded shadow-lg z-50 font-mono text-xs max-h-96 overflow-y-auto">
           <div className="font-bold mb-2 text-sm">Debug Coordinates</div>
           <div className="space-y-1">
@@ -1286,7 +1327,7 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
               </div>
             )}
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Information Panel */}
@@ -1297,11 +1338,11 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
               const number = matrixData.positions[selectedPosition];
               const arcana = getArcanaInfo(number);
               const position = positions[selectedPosition];
-              
+
               return (
                 <>
                   <div className="flex items-center mb-4">
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mr-4"
                       style={{ backgroundColor: arcana.color }}
                     >
@@ -1328,9 +1369,9 @@ const MatrixOfDestiny: React.FC<MatrixOfDestinyProps> = ({ birthData, personName
       <MatrixOfDestinyLegend />
 
       {/* Calculation Details */}
-      <MatrixOfDestinyCalculationDetails 
-        birthData={birthData} 
-        matrixData={matrixData} 
+      <MatrixOfDestinyCalculationDetails
+        birthData={birthData}
+        matrixData={matrixData}
       />
 
       {/* Instructions */}
