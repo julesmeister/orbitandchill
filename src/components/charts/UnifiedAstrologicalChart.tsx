@@ -39,6 +39,7 @@ interface UnifiedAstrologicalChartProps {
   showPlanetInfo?: boolean;
   showAspects?: boolean;
   showAngularMarkers?: boolean;
+  showPlanetCircles?: boolean;
   title?: string;
 }
 
@@ -49,6 +50,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
   showPlanetInfo = true,
   showAspects = true,
   showAngularMarkers = true,
+  showPlanetCircles = true,
   title
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -374,6 +376,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
                 key={`planet-${planet.name}`}
                 planet={planet}
                 ascendantLongitude={chartData.ascendant || 0}
+                showCircles={showPlanetCircles}
                 onMouseEnter={handlePlanetHover}
                 onMouseLeave={handleHoverEnd}
               />

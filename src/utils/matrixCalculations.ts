@@ -20,13 +20,13 @@ export interface MatrixCalculation {
     I: number; // Bottom-left
   };
   centers: {
-    E: number; // Personal center
-    J: number; // Family center
+    E: number; // Comfort zone
+    J: number; // Past life mistakes
   };
   karmicTail: {
     d1: number; // Left - Paternal karma
     d2: number; // Center - Combined karma
-    d: number;  // Right - Day energy
+    d: number;  // Right - Reputation
   };
   innerElements: {
     // Primary Inner Elements (Layer 1)
@@ -41,7 +41,7 @@ export interface MatrixCalculation {
     karmicLessons: number; // Deep karmic patterns
     
     // Love Line Elements
-    pastKarma: number; // Past life influences
+    pastKarma: number; // As a parent influences
     heartDesire: number; // Core soul desires
     partnershipPotential: number; // Relationship compatibility
     
@@ -52,7 +52,7 @@ export interface MatrixCalculation {
     spiritualWealth: number; // Higher abundance relationship
     
     // Chakra System Elements
-    rootChakra: number; // Foundation/survival
+    rootChakra: number; // Present Life Task/survival
     sacralChakra: number; // Creativity/sexuality
     solarPlexusChakra: number; // Personal power
     heartChakra: number; // Love/compassion
@@ -115,9 +115,9 @@ export const calculateMatrixOfDestiny = (birthDate: string): MatrixCalculation =
   const year = date.getFullYear();
 
   // Extract and reduce base numbers (following exact reference implementation)
-  const aPoint = reduceNumber(day);      // Day energy - reduced
-  const bPoint = month;                   // Month energy - NOT reduced, used directly
-  const cPoint = calculateYear(year);     // Year energy - sum all digits then reduce
+  const aPoint = reduceNumber(day);      // Reputation - reduced
+  const bPoint = month;                   // Inspiration - NOT reduced, used directly
+  const cPoint = calculateYear(year);     // Money block - sum all digits then reduce
   
   // Calculate all positions using the reference implementation logic
   const dpoint = reduceNumber(aPoint + bPoint + cPoint);
@@ -168,10 +168,10 @@ export const calculateMatrixOfDestiny = (birthDate: string): MatrixCalculation =
 
   // Diagonal square (rhombus) - personal energies
   const diagonalSquare = {
-    A: aPoint,        // Left - Day energy
-    B: bPoint,        // Top - Month energy  
-    C: cPoint,        // Right - Year energy
-    D: dpoint         // Bottom - Karmic number
+    A: aPoint,        // Left - Reputation
+    B: bPoint,        // Top - Inspiration  
+    C: cPoint,        // Right - Money block
+    D: dpoint         // Bottom - Biggest obstacle in life
   };
 
   // Straight square - ancestral energies
@@ -184,20 +184,20 @@ export const calculateMatrixOfDestiny = (birthDate: string): MatrixCalculation =
 
   // Centers
   const centers = {
-    E: epoint,        // Personal center
-    J: jpoint         // Family center
+    E: epoint,        // Comfort zone
+    J: jpoint         // Past life mistakes
   };
 
   // Karmic tail
   const karmicTail = {
     d1: fpoint,       // Left - Paternal karma
     d2: f1point,      // Center - Combined karma
-    d: aPoint         // Right - Day energy
+    d: aPoint         // Right - Reputation
   };
 
   // Calculate inner elements
   const heart = reduceNumber(epoint + gpoint); // E + G (Heart/Wishes)
-  const talent = gpoint; // G position (Natural talents)
+  const talent = gpoint; // G position (Heart's desire)
   const guard = reduceNumber(aPoint + epoint); // A + E (Blockages)
   const earthPurpose = reduceNumber(aPoint + cPoint); // A + C (Material purpose)
   
@@ -207,7 +207,7 @@ export const calculateMatrixOfDestiny = (birthDate: string): MatrixCalculation =
   const karmicLessons = reduceNumber(cPoint + dpoint); // C + D (Deep patterns)
   
   // Love Line Elements
-  const pastKarma = reduceNumber(fpoint + aPoint); // Past life influences
+  const pastKarma = reduceNumber(fpoint + aPoint); // As a parent influences
   const heartDesire = reduceNumber(epoint + bPoint); // Core soul desires
   const partnershipPotential = reduceNumber(fpoint + gpoint); // Relationship compatibility
   
@@ -218,7 +218,7 @@ export const calculateMatrixOfDestiny = (birthDate: string): MatrixCalculation =
   const spiritualWealth = reduceNumber(bPoint + fpoint); // Higher abundance relationship
   
   // Chakra System Elements
-  const rootChakra = reduceNumber(dpoint + ipoint); // Foundation/survival
+  const rootChakra = reduceNumber(dpoint + ipoint); // Present Life Task/survival
   const sacralChakra = reduceNumber(hpoint + cPoint); // Creativity/sexuality
   const solarPlexusChakra = reduceNumber(cPoint + epoint); // Personal power
   const heartChakra = reduceNumber(epoint + heart); // Love/compassion

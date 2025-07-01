@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { getElementLabel } from './matrixElementDefinitions';
+import { getElementLabel } from "./matrixElementDefinitions";
 
 export interface Position {
   x: number;
   y: number;
   id: string;
   label: string;
-  type: 'diagonal' | 'straight' | 'center';
+  type: "diagonal" | "straight" | "center";
 }
 
 /**
  * Calculate SVG positions for the Matrix of Destiny octagram
  */
 export const calculateMatrixPositions = (
-  centerX: number, 
-  centerY: number, 
+  centerX: number,
+  centerY: number,
   radius: number
 ): Record<string, Position> => {
   const cos45 = Math.cos(Math.PI / 4);
@@ -22,30 +22,138 @@ export const calculateMatrixPositions = (
 
   return {
     // Diagonal square (rhombus) corners - Personal energies
-    A: { x: centerX - radius, y: centerY, id: 'A', label: getElementLabel('A'), type: 'diagonal' },
-    B: { x: centerX, y: centerY - radius, id: 'B', label: getElementLabel('B'), type: 'diagonal' },
-    C: { x: centerX + radius, y: centerY, id: 'C', label: getElementLabel('C'), type: 'diagonal' },
-    D: { x: centerX, y: centerY + radius, id: 'D', label: getElementLabel('D'), type: 'diagonal' },
-    
+    A: {
+      x: centerX - radius,
+      y: centerY,
+      id: "A",
+      label: getElementLabel("A"),
+      type: "diagonal",
+    },
+    B: {
+      x: centerX,
+      y: centerY - radius,
+      id: "B",
+      label: getElementLabel("B"),
+      type: "diagonal",
+    },
+    C: {
+      x: centerX + radius,
+      y: centerY,
+      id: "C",
+      label: getElementLabel("C"),
+      type: "diagonal",
+    },
+    D: {
+      x: centerX,
+      y: centerY + radius,
+      id: "D",
+      label: getElementLabel("D"),
+      type: "diagonal",
+    },
+
     // Straight square corners - Ancestral energies
-    F: { x: centerX - radius * cos45, y: centerY - radius * sin45, id: 'F', label: getElementLabel('F'), type: 'straight' },
-    G: { x: centerX + radius * cos45, y: centerY - radius * sin45, id: 'G', label: getElementLabel('G'), type: 'straight' },
-    H: { x: centerX + radius * cos45, y: centerY + radius * sin45, id: 'H', label: getElementLabel('H'), type: 'straight' },
-    I: { x: centerX - radius * cos45, y: centerY + radius * sin45, id: 'I', label: getElementLabel('I'), type: 'straight' },
-    
+    F: {
+      x: centerX - radius * cos45,
+      y: centerY - radius * sin45,
+      id: "F",
+      label: getElementLabel("F"),
+      type: "straight",
+    },
+    G: {
+      x: centerX + radius * cos45,
+      y: centerY - radius * sin45,
+      id: "G",
+      label: getElementLabel("G"),
+      type: "straight",
+    },
+    H: {
+      x: centerX + radius * cos45,
+      y: centerY + radius * sin45,
+      id: "H",
+      label: getElementLabel("H"),
+      type: "straight",
+    },
+    I: {
+      x: centerX - radius * cos45,
+      y: centerY + radius * sin45,
+      id: "I",
+      label: getElementLabel("I"),
+      type: "straight",
+    },
+
     // Centers
-    E: { x: centerX, y: centerY, id: 'E', label: getElementLabel('E'), type: 'center' },
-    J: { x: centerX, y: centerY, id: 'J', label: getElementLabel('J'), type: 'center' },
-    
+    E: {
+      x: centerX,
+      y: centerY,
+      id: "E",
+      label: getElementLabel("E"),
+      type: "center",
+    },
+    J: {
+      x: centerX,
+      y: centerY,
+      id: "J",
+      label: getElementLabel("J"),
+      type: "center",
+    },
+
     // Male/Female Generational Line Inner Circles - positioned along diagonal lines
-    F1: { x: centerX - 160, y: centerY - 160, id: 'F1', label: 'Male Line F1', type: 'center' },
-    F2: { x: centerX - 106, y: centerY - 106, id: 'F2', label: 'Male Line F2', type: 'center' },
-    G1: { x: centerX + 160, y: centerY - 160, id: 'G1', label: 'Female Line G1', type: 'center' },
-    G2: { x: centerX + 106, y: centerY - 106, id: 'G2', label: 'Female Line G2', type: 'center' },
-    H1: { x: centerX - 160, y: centerY + 160, id: 'H1', label: 'Male Line H1', type: 'center' },
-    H2: { x: centerX - 106, y: centerY + 106, id: 'H2', label: 'Male Line H2', type: 'center' },
-    I1: { x: centerX + 160, y: centerY + 160, id: 'I1', label: 'Female Line I1', type: 'center' },
-    I2: { x: centerX + 106, y: centerY + 106, id: 'I2', label: 'Female Line I2', type: 'center' }
+    F1: {
+      x: centerX - 160,
+      y: centerY - 160,
+      id: "F1",
+      label: "Dad's Talents",
+      type: "center",
+    },
+    F2: {
+      x: centerX - 106,
+      y: centerY - 106,
+      id: "F2",
+      label: "Dad's Talents",
+      type: "center",
+    },
+    G1: {
+      x: centerX + 160,
+      y: centerY - 160,
+      id: "G1",
+      label: "Mom's Talents",
+      type: "center",
+    },
+    G2: {
+      x: centerX + 106,
+      y: centerY - 106,
+      id: "G2",
+      label: "Mom's Talents",
+      type: "center",
+    },
+    H1: {
+      x: centerX - 160,
+      y: centerY + 160,
+      id: "H1",
+      label: "Mom's Karma",
+      type: "center",
+    },
+    H2: {
+      x: centerX - 106,
+      y: centerY + 106,
+      id: "H2",
+      label: "Mom's Karma",
+      type: "center",
+    },
+    I1: {
+      x: centerX + 160,
+      y: centerY + 160,
+      id: "I1",
+      label: "Dad's Karma",
+      type: "center",
+    },
+    I2: {
+      x: centerX + 106,
+      y: centerY + 106,
+      id: "I2",
+      label: "Dad's Karma",
+      type: "center",
+    },
   };
 };
 
@@ -54,21 +162,36 @@ export const calculateMatrixPositions = (
  */
 export const MATRIX_POSITION_CONFIG = {
   diagonal: {
-    A: { label: 'Day Energy', description: 'Natural character and talents' },
-    B: { label: 'Month Energy', description: 'Emotional nature and inner world' },
-    C: { label: 'Year Energy', description: 'Life purpose and destiny path' },
-    D: { label: 'Karmic Number', description: 'Lessons to learn in this lifetime' }
+    A: { label: "Reputation", description: "Natural character and talents" },
+    B: {
+      label: "Inspiration",
+      description: "Emotional nature and inner world",
+    },
+    C: { label: "Money Block", description: "Life purpose and destiny path" },
+    D: {
+      label: "Biggest Obstacle in Life",
+      description: "Lessons to learn in this lifetime",
+    },
   },
   straight: {
-    F: { label: 'Past Heritage', description: 'Ancestral influences and gifts' },
-    G: { label: 'Talents', description: 'Natural abilities and skills' },
-    H: { label: 'Material Karma', description: 'Lessons related to material world' },
-    I: { label: 'Spiritual Task', description: 'Spiritual growth and evolution' }
+    F: {
+      label: "Dad's Talents",
+      description: "Ancestral influences and gifts",
+    },
+    G: { label: "Mom's Talents", description: "Natural abilities and skills" },
+    H: {
+      label: "Mom's Karma",
+      description: "Lessons related to material world",
+    },
+    I: { label: "Dad's Karma", description: "Spiritual growth and evolution" },
   },
   centers: {
-    E: { label: 'Personal Center', description: 'Core essence and identity' },
-    J: { label: 'Family Center', description: 'Family dynamics and heritage' }
-  }
+    E: { label: "Comfort Zone", description: "Core essence and identity" },
+    J: {
+      label: "Past Life Mistakes",
+      description: "Family dynamics and heritage",
+    },
+  },
 } as const;
 
 /**
@@ -78,7 +201,7 @@ export const getPositionConfig = (key: string) => {
   const allConfigs = {
     ...MATRIX_POSITION_CONFIG.diagonal,
     ...MATRIX_POSITION_CONFIG.straight,
-    ...MATRIX_POSITION_CONFIG.centers
+    ...MATRIX_POSITION_CONFIG.centers,
   };
   return allConfigs[key as keyof typeof allConfigs];
 };

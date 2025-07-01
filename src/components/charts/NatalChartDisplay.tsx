@@ -209,6 +209,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                         showPlanetInfo={true}
                         showAspects={true}
                         showAngularMarkers={true}
+                        showPlanetCircles={false}
                         className="w-full h-full"
                       />
                     ) : (

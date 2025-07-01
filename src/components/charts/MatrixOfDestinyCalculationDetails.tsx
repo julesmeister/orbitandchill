@@ -26,12 +26,12 @@ const MatrixOfDestinyCalculationDetails: React.FC<MatrixOfDestinyCalculationDeta
           <p>Day: {new Date(birthData.dateOfBirth).getDate()} → A = {matrixData.positions.A}</p>
           <p>Month: {new Date(birthData.dateOfBirth).getMonth() + 1} → B = {matrixData.positions.B}</p>
           <p>Year: {new Date(birthData.dateOfBirth).getFullYear()} → C = {matrixData.positions.C}</p>
-          <p>Karma: A+B+C → D = {matrixData.positions.D}</p>
-          <p>Personal Center: A+B+C+D → E = {matrixData.positions.E}</p>
+          <p>Biggest Obstacle: A+B+C → D = {matrixData.positions.D}</p>
+          <p>Comfort Zone: A+B+C+D → E = {matrixData.positions.E}</p>
           
           <p className="mt-2 border-t border-gray-600 pt-2">Primary Inner Elements:</p>
           <p>Heart/Wishes: E+G → {matrixData.innerElements.heart}</p>
-          <p>Talent: B+C → {matrixData.innerElements.talent}</p>
+          <p>Heart's Desire: B+C → {matrixData.innerElements.talent}</p>
           <p>Guard/Blockage: A+E → {matrixData.innerElements.guard}</p>
           <p>Earth Purpose: A+C → {matrixData.innerElements.earthPurpose}</p>
           

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { db, initializeDatabase } from '@/db/index';
 import { natalCharts } from '@/db/schema';
 import { generateId } from '@/utils/idGenerator';
 import { createResilientService } from '@/db/resilience';
-import { executeRawSelectOne, executeRawSelect, executeRawUpdate, executeRawDelete, RawSqlPatterns, transformDatabaseRow } from '@/db/rawSqlUtils';
+// Raw SQL utilities no longer needed - all methods now use Drizzle ORM consistently
 
 export interface ChartData {
   id: string;
@@ -98,26 +98,25 @@ export class ChartService {
    */
   static async getChartById(id: string, userId?: string): Promise<ChartData | null> {
     return resilient.item(db, 'getChartById', async () => {
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      const conditions = [{ column: 'id', value: id }];
-      if (userId) {
-        conditions.push({ column: 'user_id', value: userId });
-      }
-
-      const chart = await executeRawSelectOne(db, {
-        table: 'natal_charts',
-        conditions
-      });
+      // Use the same database approach as createChart for consistency
+      const whereConditions = userId 
+        ? and(eq(natalCharts.id, id), eq(natalCharts.userId, userId))
+        : eq(natalCharts.id, id);
+      
+      const [chart] = await db
+        .select()
+        .from(natalCharts)
+        .where(whereConditions)
+        .limit(1);
       
       if (!chart) return null;
 
-      // Transform snake_case to camelCase and parse metadata
-      const transformedChart = transformDatabaseRow(chart);
       return {
-        ...transformedChart,
+        ...chart,
         metadata: JSON.parse(chart.metadata),
-        createdAt: new Date(chart.created_at),
-        updatedAt: new Date(chart.updated_at),
+        // Timestamps are already Date objects from Drizzle
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
       };
     });
   }
@@ -127,24 +126,26 @@ export class ChartService {
    */
   static async getChartByShareToken(shareToken: string): Promise<ChartData | null> {
     return resilient.item(db, 'getChartByShareToken', async () => {
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      const chart = await executeRawSelectOne(db, {
-        table: 'natal_charts',
-        conditions: [
-          { column: 'share_token', value: shareToken },
-          { column: 'is_public', value: 1 } // Boolean true = 1 in SQLite
-        ]
-      });
+      // Use the same database approach as createChart for consistency
+      const [chart] = await db
+        .select()
+        .from(natalCharts)
+        .where(
+          and(
+            eq(natalCharts.shareToken, shareToken),
+            eq(natalCharts.isPublic, true)
+          )
+        )
+        .limit(1);
       
       if (!chart) return null;
 
-      // Transform snake_case to camelCase and parse metadata
-      const transformedChart = transformDatabaseRow(chart);
       return {
-        ...transformedChart,
+        ...chart,
         metadata: JSON.parse(chart.metadata),
-        createdAt: new Date(chart.created_at),
-        updatedAt: new Date(chart.updated_at),
+        // Timestamps are already Date objects from Drizzle
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
       };
     });
   }
@@ -154,22 +155,20 @@ export class ChartService {
    */
   static async getUserCharts(userId: string): Promise<ChartData[]> {
     return resilient.array(db, 'getUserCharts', async () => {
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      const charts = await executeRawSelect(db, {
-        table: 'natal_charts',
-        conditions: [{ column: 'user_id', value: userId }],
-        orderBy: [{ column: 'created_at', direction: 'DESC' }]
-      });
+      // Use the same database approach as createChart for consistency
+      const charts = await db
+        .select()
+        .from(natalCharts)
+        .where(eq(natalCharts.userId, userId))
+        .orderBy(desc(natalCharts.createdAt));
 
-      return charts.map((chart: any) => {
-        const transformedChart = transformDatabaseRow(chart);
-        return {
-          ...transformedChart,
-          metadata: JSON.parse(chart.metadata),
-          createdAt: new Date(chart.created_at),
-          updatedAt: new Date(chart.updated_at),
-        };
-      });
+      return charts.map((chart: any) => ({
+        ...chart,
+        metadata: JSON.parse(chart.metadata),
+        // Timestamps are already Date objects from Drizzle
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
+      }));
     });
   }
 
@@ -188,11 +187,16 @@ export class ChartService {
         updateData.metadata = JSON.stringify(updates.metadata);
       }
 
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      await executeRawUpdate(db, 'natal_charts', updateData, [
-        { column: 'id', value: id },
-        { column: 'user_id', value: userId }
-      ]);
+      // Use the same database approach as createChart for consistency
+      await db
+        .update(natalCharts)
+        .set(updateData)
+        .where(
+          and(
+            eq(natalCharts.id, id),
+            eq(natalCharts.userId, userId)
+          )
+        );
 
       return await this.getChartById(id, userId);
     });
@@ -203,11 +207,15 @@ export class ChartService {
    */
   static async deleteChart(id: string, userId: string): Promise<boolean> {
     return resilient.boolean(db, 'deleteChart', async () => {
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      await executeRawDelete(db, 'natal_charts', [
-        { column: 'id', value: id },
-        { column: 'user_id', value: userId }
-      ]);
+      // Use the same database approach as createChart for consistency
+      await db
+        .delete(natalCharts)
+        .where(
+          and(
+            eq(natalCharts.id, id),
+            eq(natalCharts.userId, userId)
+          )
+        );
 
       return true;
     });
@@ -244,8 +252,9 @@ export class ChartService {
       return {
         ...chart,
         metadata: JSON.parse(chart.metadata),
-        createdAt: new Date(chart.createdAt),
-        updatedAt: new Date(chart.updatedAt),
+        // Timestamps are already Date objects from Drizzle
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
       };
     });
   }
@@ -270,15 +279,20 @@ export class ChartService {
       // Generate new share token
       const shareToken = generateId();
       
-      // Update the chart with the new token
-      await executeRawUpdate(db, 'natal_charts', {
-          share_token: shareToken,
-          is_public: true,
-          updated_at: new Date()
-        }, [
-          { column: 'id', value: id },
-          { column: 'user_id', value: userId }
-        ]);
+      // Use the same database approach as createChart for consistency
+      await db
+        .update(natalCharts)
+        .set({
+          shareToken: shareToken,
+          isPublic: true,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(natalCharts.id, id),
+            eq(natalCharts.userId, userId)
+          )
+        );
 
       return shareToken;
     }, null); // Return null if database unavailable
@@ -289,26 +303,27 @@ export class ChartService {
    */
   static async getRecentSharedCharts(limit: number = 10): Promise<ChartData[]> {
     return resilient.array(db, 'getRecentSharedCharts', async () => {
-      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      const charts = await executeRawSelect(db, {
-        table: 'natal_charts',
-        conditions: [
-          { column: 'is_public', value: 1 }, // Boolean true = 1 in SQLite
-          { column: 'share_token', operator: 'IS NOT NULL', value: null } // Has a share token
-        ],
-        orderBy: [{ column: 'created_at', direction: 'DESC' }],
-        limit
-      });
+      // Use the same database approach as createChart for consistency
+      const charts = await db
+        .select()
+        .from(natalCharts)
+        .where(
+          and(
+            eq(natalCharts.isPublic, true),
+            // Check for non-null share_token using SQL function
+            sql`${natalCharts.shareToken} IS NOT NULL`
+          )
+        )
+        .orderBy(desc(natalCharts.createdAt))
+        .limit(limit);
 
-      return charts.map((chart: any) => {
-        const transformedChart = transformDatabaseRow(chart);
-        return {
-          ...transformedChart,
-          metadata: JSON.parse(chart.metadata),
-          createdAt: new Date(chart.created_at),
-          updatedAt: new Date(chart.updated_at),
-        };
-      });
+      return charts.map((chart: any) => ({
+        ...chart,
+        metadata: JSON.parse(chart.metadata),
+        // Timestamps are already Date objects from Drizzle
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
+      }));
     });
   }
 }

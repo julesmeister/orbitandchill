@@ -407,12 +407,148 @@ if (key === 'A') {         // Left
 ```
 
 ### Design Principles
-1. **10-Year Intervals**: Clean decade-based progression from 0 to 70
-2. **80-Year Lifecycle**: Complete life span with 9 intermediate ages per decade
-3. **Intelligent Alignment**: Age labels positioned optimally based on direction
-4. **Visual Hierarchy**: Bold age markers (11px) with intermediate age dots
-5. **Non-intrusive Dots**: Small black dots that don't interfere with main chart
-6. **Clear Separation**: 150% buffer ensures no overlap with position circles
+1. **Age Bracket System**: Authentic 7-bracket progression per decade starting from age 1
+2. **77-Year Lifecycle**: Complete life span matching the authentic DestinyMatrix system
+3. **Dual Label System**: Destiny arcana numbers positioned outward (prominent), age brackets inward (subtle)
+4. **Visual Hierarchy**: Bold destiny arcana (clear visibility) with smaller age bracket labels
+5. **Authentic Formatting**: Age brackets displayed as ranges (e.g., "1-2.5", "2.5-3.5")
+6. **Sacred Geometry**: 7 unique destiny points per decade following the traditional pattern
+
+## Age Destiny Arcana System
+
+### Overview
+The Age Destiny system represents one of the most sophisticated features of the Russian Matrix of Destiny, providing unique Major Arcana numbers for each age bracket throughout a person's life. This system reveals the specific spiritual lessons, challenges, and opportunities that activate at different life stages.
+
+### Mathematical Foundation
+Each age bracket receives a unique destiny arcana number calculated through a complex algorithm that combines the base matrix points (A, B, C, D, F, G, H, I) in specific patterns corresponding to the sacred geometry of the octagram.
+
+#### Core Calculation Algorithm
+```typescript
+const calculateAgeDestinyArcana = (basePoints: BaseMatrixPoints): Record<number, number> => {
+  const ageDestinyMap: Record<number, number> = {};
+
+  // Edge A-F: Ages 1-7 (7 unique destiny points)
+  const afpoint = reduceNumber(basePoints.aPoint + basePoints.fPoint);
+  const af1point = reduceNumber(basePoints.aPoint + afpoint);
+  const af2point = reduceNumber(af1point + afpoint);
+  // ... continues for all 7 points
+  
+  // Assign to age codes 1-7
+  ageDestinyMap[1] = basePoints.aPoint;
+  ageDestinyMap[2] = af1point;
+  ageDestinyMap[3] = af2point;
+  // ... pattern continues
+  
+  return ageDestinyMap;
+};
+```
+
+### Age Bracket Structure
+The authentic DestinyMatrix uses 7 age brackets per decade, starting from age 1:
+
+#### Decade Progression Pattern
+```typescript
+// Example: First decade (Ages 1-10.5)
+const firstDecadeBrackets = [
+  { code: 1, display: "1-2.5" },      // Early childhood foundation
+  { code: 2, display: "2.5-3.5" },   // Initial social development
+  { code: 3, display: "3.5-4.5" },   // Creative expression emergence
+  { code: 4, display: "4.5-5.5" },   // Learning and curiosity phase
+  { code: 5, display: "5.5-6.5" },   // Social structure understanding
+  { code: 6, display: "6.5-8.5" },   // Responsibility development
+  { code: 7, display: "8.5-10.5" }   // Independence building
+];
+```
+
+### Connection Line Mapping
+Each of the 8 connection lines in the octagram corresponds to a specific decade of life:
+
+#### Line-to-Decade Correspondence
+```typescript
+const connectionLineMapping = {
+  "A-F": { ageRange: "1-10.5", direction: "West to Northwest" },
+  "F-B": { ageRange: "11-20.5", direction: "Northwest to North" },
+  "B-G": { ageRange: "21-30.5", direction: "North to Northeast" },
+  "G-C": { ageRange: "31-40.5", direction: "Northeast to East" },
+  "C-H": { ageRange: "41-50.5", direction: "East to Southeast" },
+  "H-D": { ageRange: "51-60.5", direction: "Southeast to South" },
+  "D-I": { ageRange: "61-70.5", direction: "South to Southwest" },
+  "I-A": { ageRange: "71-77", direction: "Southwest to West" }
+};
+```
+
+### Visual Implementation
+The age destiny system uses a dual-label approach for maximum clarity and authenticity:
+
+#### Label Positioning Strategy
+```typescript
+// Destiny arcana numbers: Positioned outward (prominent display)
+const destinyArcanaPosition = {
+  distance: "1.5 * radius + 20px",  // Further from center
+  fontSize: "12px",                 // Clear, readable size
+  fontWeight: "bold",               // Strong visual presence
+  color: "#000000",                 // High contrast
+  placement: "outward from center"
+};
+
+// Age brackets: Positioned inward (subtle reference)
+const ageBracketPosition = {
+  distance: "1.2 * radius + 10px",  // Closer to center
+  fontSize: "8px",                  // Smaller, non-intrusive
+  fontWeight: "normal",             // Subtle presence
+  color: "#666666",                 // Muted color
+  placement: "inward toward center"
+};
+```
+
+#### Responsive Scaling
+```typescript
+// Age destiny labels scale across screen sizes
+const responsiveDestinyLabels = {
+  sm: { destinyFontSize: 10, bracketFontSize: 6 },
+  md: { destinyFontSize: 11, bracketFontSize: 7 },
+  lg: { destinyFontSize: 12, bracketFontSize: 8 },
+  xl: { destinyFontSize: 13, bracketFontSize: 8 },
+  "2xl": { destinyFontSize: 14, bracketFontSize: 9 }
+};
+```
+
+### Spiritual Significance
+Each age destiny arcana represents specific themes and lessons that become prominent during that life period:
+
+#### Interpretive Framework
+- **Ages 1-10.5**: Foundation building and early karma activation
+- **Ages 11-20.5**: Heritage integration and talent discovery
+- **Ages 21-30.5**: Creative expression and relationship formation
+- **Ages 31-40.5**: Career manifestation and material development
+- **Ages 41-50.5**: Spiritual maturation and wisdom integration
+- **Ages 51-60.5**: Teaching phase and karmic resolution
+- **Ages 61-70.5**: Legacy creation and soul purpose fulfillment
+- **Ages 71-77**: Completion and transcendence preparation
+
+### Technical Implementation
+The age destiny system is implemented through several key files:
+
+#### Core Calculation Engine (`/src/utils/ageDestinyCalculations.ts`)
+- Complete algorithm implementation with all 77 unique destiny numbers
+- Recursive number reduction ensuring Major Arcana range (1-22)
+- Edge-to-edge calculations following authentic DestinyMatrix patterns
+
+#### Integration with Matrix Component
+```typescript
+// Usage in MatrixOfDestiny.tsx
+const ageDestinyMap = calculateAgeDestinyArcana(matrixCalculation.basePoints);
+
+connection.ageBrackets?.forEach((ageBracket, ageIndex) => {
+  const destinyArcana = ageDestinyMap[ageBracket.code];
+  
+  // Render destiny arcana (outward)
+  <text className="destiny-arcana-label">{destinyArcana}</text>
+  
+  // Render age bracket (inward)  
+  <text className="age-bracket-label">{ageBracket.display}</text>
+});
+```
 
 ## Generational Lines System
 
@@ -1047,10 +1183,18 @@ Guard ●------● Earth Purpose ------● Personal Center ------● Heart
 - ✅ Type-safe interfaces
 
 #### 2. **Age Connections** (`/src/utils/ageConnections.ts`)
-- ✅ 80-year lifecycle with 10-year intervals
-- ✅ 8 life phases with detailed descriptions
-- ✅ Main circle age markers (0, 10, 20, 30, 40, 50, 60, 70)
-- ✅ Utility functions for age-based queries
+- ✅ Authentic 77-year lifecycle with 7 age brackets per decade
+- ✅ 8 connection lines with 7 unique age progression points each
+- ✅ Age bracket interface with display formatting ("1-2.5", "2.5-3.5", etc.)
+- ✅ Starting from age 1 (not 0) matching traditional DestinyMatrix
+- ✅ Utility functions for bracket-based age queries
+
+#### 3. **Age Destiny Calculations** (`/src/utils/ageDestinyCalculations.ts`) 🆕
+- ✅ Complete age destiny arcana algorithm implementation
+- ✅ 77 unique destiny numbers calculated from base matrix points
+- ✅ Recursive reduction algorithm ensuring 1-22 Major Arcana range
+- ✅ Edge-to-edge calculations following authentic DestinyMatrix pattern
+- ✅ Age-specific destiny mapping for life progression insights
 
 #### 3. **Age Labels** (`/src/utils/ageLabels.ts`)
 - ✅ Intelligent positioning algorithms for all 8 outer positions
@@ -1109,16 +1253,16 @@ Matrix of Destiny Chart Structure
 │
 ├── Outer Ring Elements (Main Octagram)
 │   ├── Cardinal Positions
-│   │   ├── A (West) - Day Energy - Position: (-140, 0) - Ages: 0
-│   │   ├── B (North) - Month Energy - Position: (0, -140) - Ages: 20
-│   │   ├── C (East) - Year Energy - Position: (140, 0) - Ages: 40
-│   │   └── D (South) - Karmic Number - Position: (0, 140) - Ages: 60
+│   │   ├── A (West) - Day Energy - Position: (-140, 0) - Age Brackets: 7 per line (1-10.5)
+│   │   ├── B (North) - Month Energy - Position: (0, -140) - Age Brackets: 7 per line (21-30.5)
+│   │   ├── C (East) - Year Energy - Position: (140, 0) - Age Brackets: 7 per line (41-50.5)
+│   │   └── D (South) - Karmic Number - Position: (0, 140) - Age Brackets: 7 per line (61-70.5)
 │   │
 │   └── Diagonal Positions (45° rotated)
-│       ├── F (Northwest) - Past Heritage - Position: (-99, -99) - Ages: 10
-│       ├── G (Northeast) - Talents - Position: (99, -99) - Ages: 30
-│       ├── H (Southeast) - Material Karma - Position: (99, 99) - Ages: 50
-│       └── I (Southwest) - Spiritual Task - Position: (-99, 99) - Ages: 70
+│       ├── F (Northwest) - Past Heritage - Position: (-99, -99) - Age Brackets: 7 per line (11-20.5)
+│       ├── G (Northeast) - Talents - Position: (99, -99) - Age Brackets: 7 per line (31-40.5)
+│       ├── H (Southeast) - Material Karma - Position: (99, 99) - Age Brackets: 7 per line (51-60.5)
+│       └── I (Southwest) - Spiritual Task - Position: (-99, 99) - Age Brackets: 7 per line (71-77)
 │
 ├── Center Elements
 │   ├── E (Personal Center) - Position: (0, 0) - Radius: 36px

@@ -9,6 +9,7 @@ import { calculateSVGAngle } from "../../utils/horaryCalculations";
 interface PlanetMarkerProps {
   planet: PlanetPosition;
   ascendantLongitude: number; // Pass the ascendant longitude for proper rotation
+  showCircles?: boolean; // Option to show/hide the dashed circles
   onMouseEnter?: (event: React.MouseEvent, data: any) => void;
   onMouseLeave?: () => void;
 }
@@ -52,6 +53,7 @@ const SIGN_RULERS = {
 export const PlanetMarker: React.FC<PlanetMarkerProps> = ({
   planet,
   ascendantLongitude,
+  showCircles = true,
   onMouseEnter,
   onMouseLeave
 }) => {
@@ -118,7 +120,7 @@ export const PlanetMarker: React.FC<PlanetMarkerProps> = ({
   return (
     <g>
       {/* Combust indicator - red glow - matching _Old.tsx */}
-      {planetIsCombust && (
+      {showCircles && planetIsCombust && (
         <circle
           cx={position.x}
           cy={position.y}
@@ -132,7 +134,7 @@ export const PlanetMarker: React.FC<PlanetMarkerProps> = ({
       )}
 
       {/* Highlight circle for significators - matching _Old.tsx */}
-      {isSignificator && (
+      {showCircles && isSignificator && (
         <circle
           cx={position.x}
           cy={position.y}
