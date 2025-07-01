@@ -202,7 +202,7 @@ export async function POST() {
     return NextResponse.json({
       success: false,
       error: 'Failed to seed database',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : String(error)
     }, {
       status: 500
     });
