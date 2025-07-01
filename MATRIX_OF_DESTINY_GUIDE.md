@@ -271,7 +271,7 @@ const handleMouseEnter = (key: string, pos: Position, event: React.MouseEvent) =
 ## Age Progression System
 
 ### Overview
-The Matrix of Destiny features a comprehensive age progression system that maps life phases to the octagram structure. This system divides a person's life into 8 phases of 10 years each, with major karmic activation points at each outer position.
+The Matrix of Destiny features an authentic age bracket system that maps life phases to the octagram structure using the exact algorithm from the Russian DestinyMatrix system. This system divides a person's life into 8 connection lines, each displaying 7 unique age brackets with their corresponding destiny arcana numbers.
 
 ### Main Circle Age System (10-Year Intervals)
 Each outer position represents a major life transition point:
@@ -289,20 +289,42 @@ const mainCircleAges = {
 };
 ```
 
-### Age Connection Lines (80-Year Lifecycle)
-Each connection line spans exactly 10 years with intermediate age markers:
+### Authentic Age Bracket System (7 Brackets Per Decade)
+Each connection line displays exactly 7 age brackets following the DestinyMatrix pattern:
 
 ```typescript
-const ageConnections = [
-  { from: positions.A, to: positions.F, ages: [1,2,3,4,5,6,7,8,9] },      // 0-10
-  { from: positions.F, to: positions.B, ages: [11,12,13,14,15,16,17,18,19] }, // 10-20
-  { from: positions.B, to: positions.G, ages: [21,22,23,24,25,26,27,28,29] }, // 20-30
-  { from: positions.G, to: positions.C, ages: [31,32,33,34,35,36,37,38,39] }, // 30-40
-  { from: positions.C, to: positions.H, ages: [41,42,43,44,45,46,47,48,49] }, // 40-50
-  { from: positions.H, to: positions.D, ages: [51,52,53,54,55,56,57,58,59] }, // 50-60
-  { from: positions.D, to: positions.I, ages: [61,62,63,64,65,66,67,68,69] }, // 60-70
-  { from: positions.I, to: positions.A, ages: [71,72,73,74,75,76,77,78,79] }  // 70-80
+const ageBracketConnections = [
+  { from: 'A', to: 'F', ageBrackets: ["1-2.5", "2.5-3.5", "3.5-4", "4-5", "6-7.5", "7.5-8.5", "8.5-9"] },
+  { from: 'F', to: 'B', ageBrackets: ["11-12.5", "12.5-13.5", "13.5-14", "14-15", "16-17.5", "17.5-18.5", "18.5-19"] },
+  { from: 'B', to: 'G', ageBrackets: ["21-22.5", "22.5-23.5", "23.5-24", "24-25", "26-27.5", "27.5-28.5", "28.5-29"] },
+  { from: 'G', to: 'C', ageBrackets: ["31-32.5", "32.5-33.5", "33.5-34", "34-35", "36-37.5", "37.5-38.5", "38.5-39"] },
+  { from: 'C', to: 'H', ageBrackets: ["41-42.5", "42.5-43.5", "43.5-44", "44-45", "46-47.5", "47.5-48.5", "48.5-49"] },
+  { from: 'H', to: 'D', ageBrackets: ["51-52.5", "52.5-53.5", "53.5-54", "54-55", "56-57.5", "57.5-58.5", "58.5-59"] },
+  { from: 'D', to: 'I', ageBrackets: ["61-62.5", "62.5-63.5", "63.5-64", "64-65", "66-67.5", "67.5-68.5", "68.5-69"] },
+  { from: 'I', to: 'A', ageBrackets: ["71-72.5", "72.5-73.5", "73.5-74", "74-75", "76-77.5", "77.5-78.5", "78.5-79"] }
 ];
+```
+
+### Age Destiny Arcana Calculation System
+The authentic DestinyMatrix algorithm calculates unique destiny arcana for each age bracket:
+
+```typescript
+// Edge A-F: Ages 1-7 (7 unique destiny points)
+const afpoint = reduceNumber(aPoint + fPoint);
+const af1point = reduceNumber(aPoint + afpoint);
+const af2point = reduceNumber(aPoint + af1point);
+const af3point = reduceNumber(afpoint + af1point);
+const af4point = reduceNumber(afpoint + fPoint);
+const af5point = reduceNumber(afpoint + af4point);
+const af6point = reduceNumber(af4point + fPoint);
+
+ageDestinyMap[1] = af2point;  // Age bracket "1-2.5"
+ageDestinyMap[2] = af1point;  // Age bracket "2.5-3.5"
+ageDestinyMap[3] = af3point;  // Age bracket "3.5-4"
+ageDestinyMap[4] = afpoint;   // Age bracket "4-5"
+ageDestinyMap[5] = af4point;  // Age bracket "6-7.5"
+ageDestinyMap[6] = af5point;  // Age bracket "7.5-8.5"
+ageDestinyMap[7] = af6point;  // Age bracket "8.5-9"
 ```
 
 ### Visual Implementation

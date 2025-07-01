@@ -58,7 +58,12 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --fix --max-warnings 500)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/utils/ageDestinyCalculations.ts src/utils/ageConnections.ts src/components/charts/MatrixOfDestiny.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/ageDestinyCalculations.ts src/utils/ageConnections.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/utils/ageDestinyCalculations.ts src/utils/ageConnections.ts src/components/charts/MatrixOfDestiny.tsx --max-warnings 10)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --max-warnings 50)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/db/services/chartService.ts src/utils/memoryPressure.ts --max-warnings 10)"
     ],
     "deny": []
   }

@@ -268,9 +268,9 @@ class MemoryPressureManager {
         // Clear global timers and intervals (be careful not to break app)
         if (typeof global !== 'undefined') {
           // Clear any custom global variables we might have set
-          delete global.__MEMORY_SNAPSHOTS__;
-          delete global.__CACHE_STATS__;
-          delete global.__CONNECTION_POOL__;
+          delete (global as any).__MEMORY_SNAPSHOTS__;
+          delete (global as any).__CACHE_STATS__;
+          delete (global as any).__CONNECTION_POOL__;
         }
         console.error('📊 Memory snapshots cleared');
       } catch (error) {

@@ -294,7 +294,7 @@ export class ChartService {
         table: 'natal_charts',
         conditions: [
           { column: 'is_public', value: 1 }, // Boolean true = 1 in SQLite
-          { column: 'share_token', operator: 'IS NOT NULL' } // Has a share token
+          { column: 'share_token', operator: 'IS NOT NULL', value: null } // Has a share token
         ],
         orderBy: [{ column: 'created_at', direction: 'DESC' }],
         limit
