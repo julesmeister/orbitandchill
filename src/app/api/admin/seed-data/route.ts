@@ -13,6 +13,7 @@ export async function POST() {
     disabled: true 
   });
   
+  /* Unreachable code commented out
   try {
     await initializeDatabase();
     
@@ -207,4 +208,5 @@ export async function POST() {
       status: 500
     });
   }
+  */
 }
