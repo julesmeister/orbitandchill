@@ -19,7 +19,7 @@ export default function Home() {
   const { user, hasStoredData, loadProfile, isProfileComplete } = useUserStore();
   const { cachedChart, generateChart, isGenerating } = useNatalChart();
   const [showingForm, setShowingForm] = useState(false);
-  
+
   // Use status toast hook
   const { toast: statusToast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
 
@@ -84,8 +84,8 @@ export default function Home() {
     const element = document.getElementById(sectionId);
     if (element) {
       // Center the section in the viewport
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
+      element.scrollIntoView({
+        behavior: 'smooth',
         block: 'center' // This centers the section vertically
       });
     }
@@ -235,7 +235,7 @@ export default function Home() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => scrollToSection('planetary-alignment-section')}
-                    className="flex-1 bg-[#51bd94] border border-black p-3 hover:bg-[#46a884] transition-all duration-300 flex items-center gap-3"
+                    className="flex-1 bg-[#26efa2] border border-black p-3 hover:bg-[#26e59f] transition-all duration-300 flex items-center gap-3"
                   >
                     <div className="w-10 h-10 bg-black flex items-center justify-center flex-shrink-0">
                       <span className="text-xl">🌌</span>
@@ -291,7 +291,7 @@ export default function Home() {
                             <span className="font-inter text-xs lg:text-sm xl:text-sm 2xl:text-base text-black/60">
                               {post.author} • {post.readTime}
                             </span>
-                            <button 
+                            <button
                               onClick={() => router.push(`/blog/${post.slug}`)}
                               className="font-space-grotesk text-xs lg:text-sm xl:text-sm 2xl:text-base font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                             >
@@ -406,16 +406,16 @@ export default function Home() {
 
                 <div className="flex items-start space-x-4">
                   <div className="w-12 h-12 bg-white flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">🔗</span>
+                    <span className="text-2xl">🔢</span>
                   </div>
                   <div>
-                    <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">Planetary Aspects</h3>
+                    <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">Matrix Destiny</h3>
                     <p className="font-inter text-white/80 text-sm leading-relaxed mb-2">
-                      Understand how planets interact with each other, creating harmony, tension, and unique personality patterns.
+                      Discover your life purpose and karmic patterns through ancient numerological wisdom combined with modern psychology.
                     </p>
                     <p className="font-inter text-white/60 text-xs leading-relaxed">
-                      Aspects are the geometric angles between planets. Harmonious aspects (trines, sextiles) bring ease,
-                      while challenging aspects (squares, oppositions) create growth opportunities.
+                      Matrix Destiny uses your birth date to reveal your soul's mission, energy centers, and personal
+                      development path through a unique 22-arcana system based on Tarot symbolism.
                     </p>
                   </div>
                 </div>
@@ -471,7 +471,7 @@ export default function Home() {
       <div id="electional-astrology-section" className="mt-12 scroll-mt-20">
         <ElectionalAstrologyShowcase />
       </div>
-      
+
       {/* Status Toast */}
       <StatusToast
         title={statusToast.title}

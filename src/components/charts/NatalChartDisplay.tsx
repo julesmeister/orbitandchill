@@ -240,7 +240,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
               );
             } else if (activeTab === 'matrix-destiny') {
               return (
-                // Matrix of Destiny View
+                // Matrix of Destiny View - Use event data for event charts
                 <div>
                   {stableBirthData ? (
                     <MatrixOfDestiny 

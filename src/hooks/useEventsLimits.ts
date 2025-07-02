@@ -67,11 +67,11 @@ export function useEventsLimits() {
     
     const userIsPremium = user.subscriptionTier === 'premium';
     
-    // Set limits based on premium status
-    const dailyGenerationLimit = userIsPremium ? 999 : 5;
-    const monthlyGenerationLimit = userIsPremium ? 999 : 50;
-    const maxStoredEvents = userIsPremium ? 999 : 100;
-    const maxBookmarks = userIsPremium ? 999 : 20;
+    // Set limits based on premium status (DISABLED FOR DEVELOPMENT)
+    const dailyGenerationLimit = 999; // userIsPremium ? 999 : 5;
+    const monthlyGenerationLimit = 999; // userIsPremium ? 999 : 50;
+    const maxStoredEvents = 999; // userIsPremium ? 999 : 100;
+    const maxBookmarks = 999; // userIsPremium ? 999 : 20;
     
     // Calculate used generations (from events created today/this month)
     const now = new Date();
@@ -110,31 +110,32 @@ export function useEventsLimits() {
     let canBookmarkMore = true;
     let limitMessage: string | undefined;
     
-    if (!userIsPremium) {
-      // Check generation limits
-      if (dailyGenerationUsed >= dailyGenerationLimit) {
-        canGenerateEvents = false;
-        const hoursUntilReset = Math.ceil((nextResetDaily.getTime() - now.getTime()) / (1000 * 60 * 60));
-        limitMessage = `Daily generation limit reached (${dailyGenerationLimit}). Resets in ${hoursUntilReset} hours.`;
-      } else if (monthlyGenerationUsed >= monthlyGenerationLimit) {
-        canGenerateEvents = false;
-        const daysUntilReset = Math.ceil((nextResetMonthly.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        limitMessage = `Monthly generation limit reached (${monthlyGenerationLimit}). Resets in ${daysUntilReset} days.`;
-      }
-      
-      // Check storage limits
-      if (currentStoredEvents >= maxStoredEvents) {
-        canAddMoreEvents = false;
-        if (!limitMessage) {
-          limitMessage = `Storage limit reached (${maxStoredEvents} events). Delete some events or upgrade.`;
-        }
-      }
-      
-      // Check bookmark limits
-      if (currentBookmarks >= maxBookmarks) {
-        canBookmarkMore = false;
-      }
-    }
+    // DEVELOPMENT: All limits disabled
+    // if (!userIsPremium) {
+    //   // Check generation limits
+    //   if (dailyGenerationUsed >= dailyGenerationLimit) {
+    //     canGenerateEvents = false;
+    //     const hoursUntilReset = Math.ceil((nextResetDaily.getTime() - now.getTime()) / (1000 * 60 * 60));
+    //     limitMessage = `Daily generation limit reached (${dailyGenerationLimit}). Resets in ${hoursUntilReset} hours.`;
+    //   } else if (monthlyGenerationUsed >= monthlyGenerationLimit) {
+    //     canGenerateEvents = false;
+    //     const daysUntilReset = Math.ceil((nextResetMonthly.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    //     limitMessage = `Monthly generation limit reached (${monthlyGenerationLimit}). Resets in ${daysUntilReset} days.`;
+    //   }
+    //   
+    //   // Check storage limits
+    //   if (currentStoredEvents >= maxStoredEvents) {
+    //     canAddMoreEvents = false;
+    //     if (!limitMessage) {
+    //       limitMessage = `Storage limit reached (${maxStoredEvents} events). Delete some events or upgrade.`;
+    //     }
+    //   }
+    //   
+    //   // Check bookmark limits
+    //   if (currentBookmarks >= maxBookmarks) {
+    //     canBookmarkMore = false;
+    //   }
+    // }
     
     setLimits({
       dailyGenerationLimit,

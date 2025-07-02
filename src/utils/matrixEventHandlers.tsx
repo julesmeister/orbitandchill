@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { getArcanaInfo } from './arcanaInfo';
+import { getMatrixInterpretation } from './matrixInterpretations';
 
 export interface Position {
   x: number;
@@ -48,20 +49,53 @@ export const createMatrixMouseEnterHandler = (
     else position = "top-left";
     
     setHoveredPosition(key);
-    setTooltip({
-      visible: true,
-      title: pos.label,
-      content: (
-        <div className="space-y-2">
-          <div className="font-semibold text-sm">Arcana {number}: {arcana.name}</div>
-          <div className="text-xs text-gray-600">{arcana.description}</div>
-        </div>
-      ),
-      x: x,
-      y: y,
-      color: arcana.color,
-      position: position
-    });
+    
+    // Special handling for age destiny positions
+    if (key.startsWith('AGE_')) {
+      const destinyInterpretation = getMatrixInterpretation('destiny', number);
+      
+      setTooltip({
+        visible: true,
+        title: pos.label,
+        content: (
+          <div className="space-y-3">
+            <div className="font-semibold text-sm">Arcana {number}: {arcana.name}</div>
+            {destinyInterpretation && (
+              <div className="space-y-2">
+                <div className="font-medium text-xs text-purple-700">Destiny at This Age:</div>
+                <div className="text-xs text-gray-700 leading-relaxed">
+                  {destinyInterpretation.general.substring(0, 200)}
+                  {destinyInterpretation.general.length > 200 ? '...' : ''}
+                </div>
+                <div className="text-xs text-gray-500 italic">
+                  Click any matrix position for full interpretation
+                </div>
+              </div>
+            )}
+          </div>
+        ),
+        x: x,
+        y: y,
+        color: arcana.color,
+        position: position
+      });
+    } else {
+      // Default handling for regular positions
+      setTooltip({
+        visible: true,
+        title: pos.label,
+        content: (
+          <div className="space-y-2">
+            <div className="font-semibold text-sm">Arcana {number}: {arcana.name}</div>
+            <div className="text-xs text-gray-600">{arcana.description}</div>
+          </div>
+        ),
+        x: x,
+        y: y,
+        color: arcana.color,
+        position: position
+      });
+    }
   };
 };
 

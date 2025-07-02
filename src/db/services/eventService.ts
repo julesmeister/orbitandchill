@@ -226,11 +226,11 @@ export class EventService {
       }
       
       if (filters.dateFrom) {
-        conditions.push({ column: 'date', value: filters.dateFrom, operator: '>=' });
+        conditions.push({ column: 'date', value: filters.dateFrom, operator: '>=' as const });
       }
       
       if (filters.dateTo) {
-        conditions.push({ column: 'date', value: filters.dateTo, operator: '<=' });
+        conditions.push({ column: 'date', value: filters.dateTo, operator: '<=' as const });
       }
       
       // Handle search term with raw SQL LIKE queries
@@ -852,7 +852,7 @@ export class EventService {
           total: allGeneratedEventsResult.rows.length,
           bookmarked: allGeneratedEventsResult.rows.filter((r: { is_bookmarked: number; }) => r.is_bookmarked === 1).length,
           notBookmarked: allGeneratedEventsResult.rows.filter((r: { is_bookmarked: number; }) => r.is_bookmarked === 0).length,
-          unique_user_ids: [...new Set(allGeneratedEventsResult.rows.map((r: { user_id: any; }) => r.user_id))],
+          unique_user_ids: Array.from(new Set(allGeneratedEventsResult.rows.map((r: { user_id: any; }) => r.user_id))),
           sample_events: allGeneratedEventsResult.rows.slice(0, 5).map((r: { title: string; is_generated: any; user_id: any; is_bookmarked: any; }) => ({ 
             title: r.title?.substring(0, 30), 
             is_generated: r.is_generated, 
@@ -1075,9 +1075,9 @@ export class EventService {
             : 0,
         },
         usageStats: {
-          activeUsers: [...new Set(allEvents.map((e: { userId: any; }) => e.userId))].length,
+          activeUsers: Array.from(new Set(allEvents.map((e: { userId: any; }) => e.userId))).length,
           eventsPerUser: allEvents.length > 0 
-            ? Math.round((allEvents.length / [...new Set(allEvents.map((e: { userId: any; }) => e.userId))].length) * 10) / 10
+            ? Math.round((allEvents.length / Array.from(new Set(allEvents.map((e: { userId: any; }) => e.userId))).length) * 10) / 10
             : 0,
         }
       };

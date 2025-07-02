@@ -31,21 +31,21 @@ export default function EventsLimitBanner() {
   
   return (
     <div className="mb-6">
-      {/* Limit Reached Banner */}
+      {/* Limit Reached Banner - Synapsas Style */}
       {(!limits.canGenerateEvents || !limits.canAddMoreEvents) && (
-        <div className="bg-yellow-50 border-2 border-yellow-300 p-4 mb-4">
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-yellow-500 flex items-center justify-center mt-0.5">
-              <span className="text-white text-sm">⚠</span>
+        <div className="bg-white border-2 border-black mb-4" style={{ backgroundColor: '#f2e356' }}>
+          <div className="flex items-start gap-4 p-6">
+            <div className="w-10 h-10 bg-black flex items-center justify-center">
+              <span className="text-white text-lg">⚠</span>
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">Limit Reached</h3>
-              <p className="text-sm text-gray-700 mb-3">{limits.limitMessage}</p>
-              <div className="flex items-center gap-4">
-                <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-sm hover:from-purple-700 hover:to-pink-700 transition-colors">
+              <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">Limit Reached</h3>
+              <p className="font-inter text-sm text-black mb-4">{limits.limitMessage}</p>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <button className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-inter font-semibold text-sm border-2 border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25">
                   🚀 Upgrade to Premium
                 </button>
-                <span className="text-sm text-gray-600">
+                <span className="font-inter text-sm text-black font-medium">
                   Get unlimited event generation & storage
                 </span>
               </div>
@@ -54,26 +54,32 @@ export default function EventsLimitBanner() {
         </div>
       )}
       
-      {/* Usage Stats */}
-      <div className="bg-white border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">Your Event Limits</h3>
-          <span className="text-xs text-gray-500 uppercase tracking-wide">Free Plan</span>
+      {/* Usage Stats - Synapsas Grid Style */}
+      <div className="bg-white border-2 border-black">
+        <div className="p-6 border-b-2 border-black">
+          <div className="flex items-center justify-between">
+            <h3 className="font-space-grotesk text-xl font-bold text-black">Your Event Limits</h3>
+            <div className="px-3 py-1 bg-black border-2 border-black">
+              <span className="font-inter text-xs text-white font-bold uppercase tracking-wide">Free Plan</span>
+            </div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t-2 border-black">
           {/* Daily Generation Limit */}
-          <div>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700">Daily Generations</span>
-                <span className="text-xs text-gray-500">🔮</span>
+          <div className="p-6 border-black md:border-r-2" style={{ backgroundColor: '#f0e3ff' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black flex items-center justify-center">
+                  <span className="text-white text-sm">🔮</span>
+                </div>
+                <span className="font-inter text-sm text-black font-medium">Daily Generations</span>
               </div>
-              <span className="font-medium text-gray-900">
+              <span className="font-space-grotesk text-xl font-bold text-black">
                 {limits.dailyGenerationUsed} / {limits.dailyGenerationLimit}
               </span>
             </div>
-            <div className="w-full bg-gray-200 h-2 overflow-hidden">
+            <div className="w-full bg-white border-2 border-black h-4 overflow-hidden">
               <div 
                 className={`h-full transition-all duration-500 ${
                   dailyPercentage >= 100 ? 'bg-red-500' : 
@@ -83,7 +89,7 @@ export default function EventsLimitBanner() {
                 style={{ width: `${Math.min(100, dailyPercentage)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="font-inter text-xs text-black/70 mt-2">
               {dailyRemaining > 0 
                 ? `${dailyRemaining} generation${dailyRemaining !== 1 ? 's' : ''} remaining today`
                 : `Resets in ${formatTimeUntilReset(limits.nextResetDaily)}`
@@ -92,17 +98,19 @@ export default function EventsLimitBanner() {
           </div>
           
           {/* Monthly Generation Limit */}
-          <div>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700">Monthly Generations</span>
-                <span className="text-xs text-gray-500">📅</span>
+          <div className="p-6 border-black border-b-2 md:border-b-0" style={{ backgroundColor: '#4ade80' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black flex items-center justify-center">
+                  <span className="text-white text-sm">📅</span>
+                </div>
+                <span className="font-inter text-sm text-black font-medium">Monthly Generations</span>
               </div>
-              <span className="font-medium text-gray-900">
+              <span className="font-space-grotesk text-xl font-bold text-black">
                 {limits.monthlyGenerationUsed} / {limits.monthlyGenerationLimit}
               </span>
             </div>
-            <div className="w-full bg-gray-200 h-2 overflow-hidden">
+            <div className="w-full bg-white border-2 border-black h-4 overflow-hidden">
               <div 
                 className={`h-full transition-all duration-500 ${
                   monthlyPercentage >= 100 ? 'bg-red-500' : 
@@ -112,7 +120,7 @@ export default function EventsLimitBanner() {
                 style={{ width: `${Math.min(100, monthlyPercentage)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="font-inter text-xs text-black/70 mt-2">
               {monthlyRemaining > 0 
                 ? `${monthlyRemaining} generation${monthlyRemaining !== 1 ? 's' : ''} remaining this month`
                 : `Resets in ${formatTimeUntilReset(limits.nextResetMonthly)}`
@@ -121,17 +129,19 @@ export default function EventsLimitBanner() {
           </div>
           
           {/* Storage Limit */}
-          <div>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700">Stored Events</span>
-                <span className="text-xs text-gray-500">💾</span>
+          <div className="p-6 border-black md:border-r-2 border-b-2" style={{ backgroundColor: '#f2e356' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black flex items-center justify-center">
+                  <span className="text-white text-sm">💾</span>
+                </div>
+                <span className="font-inter text-sm text-black font-medium">Stored Events</span>
               </div>
-              <span className="font-medium text-gray-900">
+              <span className="font-space-grotesk text-xl font-bold text-black">
                 {limits.currentStoredEvents} / {limits.maxStoredEvents}
               </span>
             </div>
-            <div className="w-full bg-gray-200 h-2 overflow-hidden">
+            <div className="w-full bg-white border-2 border-black h-4 overflow-hidden">
               <div 
                 className={`h-full transition-all duration-500 ${
                   storagePercentage >= 100 ? 'bg-red-500' : 
@@ -141,7 +151,7 @@ export default function EventsLimitBanner() {
                 style={{ width: `${Math.min(100, storagePercentage)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="font-inter text-xs text-black/70 mt-2">
               {limits.canAddMoreEvents 
                 ? `${limits.maxStoredEvents - limits.currentStoredEvents} slots remaining`
                 : 'Storage full - delete events or upgrade'
@@ -150,17 +160,19 @@ export default function EventsLimitBanner() {
           </div>
           
           {/* Bookmark Limit */}
-          <div>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700">Bookmarks</span>
-                <span className="text-xs text-gray-500">⭐</span>
+          <div className="p-6 border-b-2 border-black" style={{ backgroundColor: '#6bdbff' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-black flex items-center justify-center">
+                  <span className="text-white text-sm">⭐</span>
+                </div>
+                <span className="font-inter text-sm text-black font-medium">Bookmarks</span>
               </div>
-              <span className="font-medium text-gray-900">
+              <span className="font-space-grotesk text-xl font-bold text-black">
                 {limits.currentBookmarks} / {limits.maxBookmarks}
               </span>
             </div>
-            <div className="w-full bg-gray-200 h-2 overflow-hidden">
+            <div className="w-full bg-white border-2 border-black h-4 overflow-hidden">
               <div 
                 className={`h-full transition-all duration-500 ${
                   bookmarkPercentage >= 100 ? 'bg-red-500' : 
@@ -170,7 +182,7 @@ export default function EventsLimitBanner() {
                 style={{ width: `${Math.min(100, bookmarkPercentage)}%` }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="font-inter text-xs text-black/70 mt-2">
               {limits.canBookmarkMore 
                 ? `${limits.maxBookmarks - limits.currentBookmarks} bookmark${limits.maxBookmarks - limits.currentBookmarks !== 1 ? 's' : ''} remaining`
                 : 'Bookmark limit reached'
@@ -179,29 +191,34 @@ export default function EventsLimitBanner() {
           </div>
         </div>
         
-        {/* Premium Features Preview */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <p className="text-xs text-gray-600 mb-2">
-            Premium features locked:
-          </p>
-          <div className="flex flex-wrap gap-2">
+        {/* Premium Features Preview - Synapsas Style */}
+        <div className="p-6 border-t-2 border-black">
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-inter text-sm text-black font-medium">
+              Premium features locked:
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3 mb-4">
             {!limits.canAccessTimeWindows && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-xs text-gray-600">
-                🕐 Time Windows
-              </span>
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-black">
+                <span className="text-sm">🕐</span>
+                <span className="font-inter text-xs text-black font-medium">Time Windows</span>
+              </div>
             )}
             {!limits.canAccessElectionalData && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-xs text-gray-600">
-                📊 Electional Data
-              </span>
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-black">
+                <span className="text-sm">📊</span>
+                <span className="font-inter text-xs text-black font-medium">Electional Data</span>
+              </div>
             )}
             {!limits.canExportEvents && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-xs text-gray-600">
-                📤 Export Events
-              </span>
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-black">
+                <span className="text-sm">📤</span>
+                <span className="font-inter text-xs text-black font-medium">Export Events</span>
+              </div>
             )}
           </div>
-          <button className="mt-2 text-sm font-medium text-purple-600 hover:text-purple-700">
+          <button className="inline-flex items-center gap-2 px-4 py-2 bg-transparent text-black font-inter font-semibold text-sm border-2 border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15">
             View Premium Benefits →
           </button>
         </div>

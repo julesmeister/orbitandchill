@@ -63,7 +63,13 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/ageDestinyCalculations.ts src/utils/ageConnections.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/utils/ageDestinyCalculations.ts src/utils/ageConnections.ts src/components/charts/MatrixOfDestiny.tsx --max-warnings 10)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --max-warnings 50)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/db/services/chartService.ts src/utils/memoryPressure.ts --max-warnings 10)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/db/services/chartService.ts src/utils/memoryPressure.ts --max-warnings 10)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/admin/seo-settings/route.ts src/app/api/admin/generate-robots/route.ts src/app/api/admin/generate-sitemap/route.ts src/components/admin/SEOTab.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/admin/seo-settings/route.ts src/app/api/admin/generate-robots/route.ts src/app/api/admin/generate-sitemap/route.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/api/admin/seo-settings/route.ts src/app/api/admin/generate-robots/route.ts src/app/api/admin/generate-sitemap/route.ts src/components/admin/SEOTab.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/eventService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/eventService.ts 2 >& 1)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck 2 >& 1)"
     ],
     "deny": []
   }

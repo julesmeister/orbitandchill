@@ -55,8 +55,8 @@ export default function EventsPage() {
   const { toast: statusToast, showLoading, showSuccess, showError, showInfo, updateProgress, hideStatus } = useStatusToast();
 
   // Use shared location hook
-  const { 
-    isLocationToastVisible, 
+  const {
+    isLocationToastVisible,
     locationDisplay,
     requestLocationPermission,
     showLocationToast,
@@ -286,7 +286,7 @@ export default function EventsPage() {
         onEventsGenerated: async (newEvents) => {
           updateProgress(70, `Generated ${newEvents.length} optimal timing events...`);
           updateProgress(75, "Validating event data...");
-          
+
           // Add detailed logging for debugging the validation issue
           console.log(`📋 About to save ${newEvents.length} events to database:`, {
             eventCount: newEvents.length,
@@ -299,27 +299,27 @@ export default function EventsPage() {
             } : null,
             allEventsValid: newEvents.every(e => e.userId && e.title && e.date && e.type && e.description)
           });
-          
+
           updateProgress(80, "Saving events to database...");
-          
+
           try {
             await addEvents(newEvents);
             updateProgress(95, "Events saved successfully...");
-            
+
             setShowCalendar(true);
             setSelectedPriorities([]);
             setShowTimingOptions(false);
-            
+
             updateProgress(100, "Complete!");
-            
+
             // Check if there's a database warning from the store
             const { error: storeError } = useEventsStore.getState();
-            
+
             // Show appropriate success/warning message
             setTimeout(() => {
               if (storeError && storeError.includes('database is unavailable')) {
                 showInfo(
-                  "Events Generated (Local Only)", 
+                  "Events Generated (Local Only)",
                   `Successfully generated ${newEvents.length} optimal timing events for ${new Date(currentDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}. Note: Database is temporarily unavailable, so events are stored locally and may not persist between sessions.`,
                   8000 // Show longer for important info
                 );
@@ -327,7 +327,7 @@ export default function EventsPage() {
                 setError(null);
               } else {
                 showSuccess(
-                  "Generation Complete!", 
+                  "Generation Complete!",
                   `Successfully generated ${newEvents.length} optimal timing events for ${new Date(currentDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`,
                   4000 // Show for 4 seconds
                 );
@@ -336,11 +336,11 @@ export default function EventsPage() {
           } catch (saveError) {
             console.error('Error saving events to database:', saveError);
             updateProgress(85, "Warning: Events generated but not fully saved...");
-            
+
             // Still show partial success but with warning
             setTimeout(() => {
               showError(
-                "Partial Success", 
+                "Partial Success",
                 `Events were generated but may not be fully saved: ${saveError instanceof Error ? saveError.message : 'Unknown error'}. Events are visible locally but may disappear on refresh.`,
                 8000 // Show longer for important warning
               );
@@ -351,7 +351,7 @@ export default function EventsPage() {
     } catch (error) {
       console.error('Error in optimal timing generation:', error);
       showError(
-        "Generation Failed", 
+        "Generation Failed",
         error instanceof Error ? error.message : 'Error calculating electional recommendations. Please try again.',
         6000 // Show error longer
       );
@@ -413,27 +413,27 @@ export default function EventsPage() {
       });
 
       await addEvent(eventWithUserId);
-      
+
       console.log('✅ Event saved successfully, now updating UI...');
-      
+
       // Reset form and hide it
       setNewEvent({ title: '', date: '', time: '', description: '' });
       setShowAddForm(false);
-      
+
       // Hide calendar
       setShowCalendar(false);
-      
+
       // Switch to manual events tab to show the newly added event
       console.log('🔄 Switching to manual tab and reloading events...');
       setSelectedTab('manual');
-      
+
       // Force reload events after a short delay to ensure database save is complete
       setTimeout(async () => {
         if (user?.id) {
           console.log('🔄 Force reloading events after manual event creation...');
           await useEventsStore.getState().loadEvents(user.id);
           console.log('📊 Events after reload:', useEventsStore.getState().events.length);
-          
+
           // Scroll to EventsTable
           const eventsTable = document.querySelector('[data-events-table]');
           if (eventsTable) {
@@ -441,7 +441,7 @@ export default function EventsPage() {
           }
         }
       }, 500);
-      
+
     } catch (error) {
       console.error('❌ Error creating event:', error);
       // Fallback to basic event if analysis fails
@@ -467,27 +467,27 @@ export default function EventsPage() {
       });
 
       await addEvent(basicEvent);
-      
+
       console.log('✅ Fallback event saved successfully, now updating UI...');
-      
+
       // Reset form and hide it
       setNewEvent({ title: '', date: '', time: '', description: '' });
       setShowAddForm(false);
-      
+
       // Hide calendar
       setShowCalendar(false);
-      
+
       // Switch to manual events tab to show the newly added event
       console.log('🔄 Switching to manual tab and reloading events...');
       setSelectedTab('manual');
-      
+
       // Force reload events after a short delay to ensure database save is complete
       setTimeout(async () => {
         if (user?.id) {
           console.log('🔄 Force reloading events after fallback event creation...');
           await useEventsStore.getState().loadEvents(user.id);
           console.log('📊 Events after reload:', useEventsStore.getState().events.length);
-          
+
           // Scroll to EventsTable
           const eventsTable = document.querySelector('[data-events-table]');
           if (eventsTable) {
@@ -517,14 +517,14 @@ export default function EventsPage() {
       confirmButtonColor: "red",
       onConfirm: async () => {
         console.log('🗑️ Deleting event:', id);
-        
+
         // Show loading status
         showLoading("Deleting Event", "Removing event from your calendar...");
-        
+
         try {
           await deleteEvent(id, user.id);
           console.log('✅ Event deleted successfully');
-          
+
           // Show success message
           showSuccess(
             "Event Deleted",
@@ -546,7 +546,7 @@ export default function EventsPage() {
   const handleToggleBookmark = async (id: string) => {
     if (!user?.id) {
       showInfo(
-        "Sign In Required", 
+        "Sign In Required",
         "Please complete your profile or sign in to bookmark events. Your bookmarks will be saved and synced across devices.",
         5000
       );
@@ -559,19 +559,19 @@ export default function EventsPage() {
       showError("Bookmark Limit Reached", "You have reached your bookmark limit. Remove some bookmarks or upgrade to premium for unlimited bookmarks.");
       return;
     }
-    
+
     try {
       await toggleBookmark(id, user.id);
-      
+
       // Find the event to provide specific feedback
       const event = events.find(e => e.id === id);
       const eventTitle = event?.title || 'event';
       const isBookmarked = event?.isBookmarked;
-      
+
       // Show success feedback
       showSuccess(
         isBookmarked ? "Bookmark Removed" : "Bookmark Added",
-        isBookmarked 
+        isBookmarked
           ? `"${eventTitle}" has been removed from your bookmarks.`
           : `"${eventTitle}" has been bookmarked. Find it in the Bookmarked tab.`,
         3000
@@ -600,13 +600,13 @@ export default function EventsPage() {
 
   const handleClearAllEvents = () => {
     console.log('🔄 handleClearAllEvents called, user:', user?.id);
-    
+
     if (!user?.id) {
       console.error('❌ No user ID available for clearing events');
       showError("No User", "Please ensure you have a valid user session before clearing events.");
       return;
     }
-    
+
     showConfirmation({
       title: "Clear Generated Events",
       message: "This will remove all AI-generated astrological events from your calendar, including those with planetary names (Jupiter, Venus, etc.) in the title. Your manually created events and bookmarked events will be preserved. This action cannot be undone.",
@@ -615,33 +615,33 @@ export default function EventsPage() {
       confirmButtonColor: "red",
       onConfirm: async () => {
         console.log('🔄 Confirmation accepted, clearing events for user:', user?.id);
-        
+
         // Show loading status
         showLoading("Clearing Events", "Removing generated events from your calendar...");
-        
+
         if (user?.id) {
           try {
             console.log('🔄 About to call clearGeneratedEvents...');
             await clearGeneratedEvents(user.id);
             console.log('✅ clearGeneratedEvents completed successfully');
-            
+
             // Force reload current month after clearing
             console.log('🔄 Reloading current month events after clear...');
             console.log('🔍 About to reload month events for user ID:', user.id);
             await loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
             console.log('✅ Month events reloaded after clear');
             console.log('📊 Events count after reload:', events.length);
-            
+
             // Show success message with more detail
             showSuccess(
-              "Events Cleared Successfully", 
+              "Events Cleared Successfully",
               "All generated astrological events have been removed from your calendar. Your manual events and bookmarks are still safe.",
               4000
             );
           } catch (error) {
             console.error('❌ clearGeneratedEvents failed:', error);
             showError(
-              "Clear Failed", 
+              "Clear Failed",
               `Failed to clear events: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
               6000
             );
@@ -675,128 +675,130 @@ export default function EventsPage() {
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       <main className="bg-white">
-        {/* Hero Section */}
-        <section className="px-6 md:px-12 lg:px-20 py-12">
-          <div className="max-w-4xl mx-auto">
-            
-            {/* Header with Location */}
-            <div className="text-center mb-8">
-              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-4">
-                Electional Astrology
-              </h1>
-              <p className="font-inter text-lg text-black/70 leading-relaxed mb-6">
-                Find the most auspicious times for your important life events. Generate personalized timing recommendations based on your birth chart and current planetary conditions.
-              </p>
-              
-              {/* Location Display */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-                <span>
-                  {locationDisplay.source === 'current' ? '📍' : 
-                   locationDisplay.source === 'birth' ? '🏠' : '🏙️'}
-                </span>
-                <span className="text-black/70">
-                  Location: <span className="font-medium text-black">
-                    {locationDisplay.shortName}
-                  </span>
-                </span>
-                {locationDisplay.source !== 'current' && (
-                  <span className="text-xs text-black/40">
-                    ({locationDisplay.source === 'birth' ? 'birth' : 'default'})
-                  </span>
-                )}
-                <button
-                  onClick={showLocationToast}
-                  className="ml-1 p-1 text-black/40 hover:text-black hover:bg-gray-200 rounded transition-all duration-200"
-                  title="Change location"
-                >
-                  ⚙️
-                </button>
+        {/* Compact Header Section */}
+        <section className="px-6 md:px-12 lg:px-20 py-4 border-b border-gray-200">
+          <div className="max-w-6xl mx-auto">
+
+            {/* Header Layout */}
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+
+              {/* Title */}
+              <div>
+                <h1 className="font-space-grotesk text-xl md:text-2xl font-bold text-black">
+                  Electional Astrology
+                </h1>
+                <p className="font-inter text-xs text-black/50 max-w-xl mt-1">
+                  Plan your wedding, launch your business, schedule important meetings, or make major decisions when the stars are most favorable for success.
+                </p>
+              </div>
+
+              {/* Right Side: Buttons + Location */}
+              <div className="flex flex-col gap-2">
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      setShowTimingOptions(!showTimingOptions);
+                      if (!showTimingOptions) {
+                        setTimeout(() => {
+                          const element = document.querySelector('[data-timing-options]');
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }
+                    }}
+                    disabled={isTimingGenerating}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-300 transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${showTimingOptions
+                      ? 'bg-transparent text-black hover:bg-black hover:text-white hover:border-black'
+                      : 'bg-black text-white border-black hover:shadow-lg'
+                      }`}
+                  >
+                    <span className="text-sm">✨</span>
+                    {showTimingOptions ? 'Hide' : 'Generate'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowAddForm(!showAddForm);
+                      if (!showAddForm) {
+                        setTimeout(() => {
+                          const element = document.querySelector('[data-add-form]');
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-300 transition-all duration-300 hover:-translate-y-0.5 ${showAddForm
+                      ? 'bg-black text-white border-black hover:shadow-lg'
+                      : 'bg-transparent text-black hover:bg-black hover:text-white hover:border-black'
+                      }`}
+                  >
+                    <span className="text-sm">📅</span>
+                    Add Event
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowCalendar(!showCalendar);
+                      if (!showCalendar) {
+                        setTimeout(() => {
+                          const element = document.querySelector('[data-calendar]');
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-300 transition-all duration-300 hover:-translate-y-0.5 ${showCalendar
+                      ? 'bg-black text-white border-black hover:shadow-lg'
+                      : 'bg-transparent text-black hover:bg-black hover:text-white hover:border-black'
+                      }`}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="flex items-center gap-0.5">
+                          <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.3s]"></div>
+                          <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.15s]"></div>
+                          <div className="w-1 h-1 bg-current animate-bounce"></div>
+                        </div>
+                        Loading
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-sm">📅</span>
+                        {showCalendar ? 'Hide' : 'Calendar'}
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Location Display - Under Buttons */}
+                <div className="flex items-center gap-2 justify-end">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-200 text-xs">
+                    <span className="text-sm">
+                      {locationDisplay.source === 'current' ? '📍' :
+                        locationDisplay.source === 'birth' ? '🏠' : '🏙️'}
+                    </span>
+                    <span className="font-medium text-black">
+                      {locationDisplay.shortName}
+                    </span>
+                    <button
+                      onClick={showLocationToast}
+                      className="p-0.5 text-black/40 hover:text-black hover:bg-gray-200 transition-all duration-200"
+                      title="Change location"
+                    >
+                      ⚙️
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 justify-center mb-6">
-              <button
-                onClick={() => {
-                  setShowTimingOptions(!showTimingOptions);
-                  if (!showTimingOptions) {
-                    setTimeout(() => {
-                      const element = document.querySelector('[data-timing-options]');
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }, 100);
-                  }
-                }}
-                disabled={isTimingGenerating}
-                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${showTimingOptions
-                    ? 'bg-transparent text-black hover:bg-black hover:text-white'
-                    : 'bg-black text-white hover:shadow-lg'
-                  }`}
-              >
-                <span>✨</span>
-                {showTimingOptions ? 'Hide' : 'Generate'} Optimal Times
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowAddForm(!showAddForm);
-                  if (!showAddForm) {
-                    setTimeout(() => {
-                      const element = document.querySelector('[data-add-form]');
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }, 100);
-                  }
-                }}
-                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 ${showAddForm
-                    ? 'bg-black text-white hover:shadow-lg'
-                    : 'bg-transparent text-black hover:bg-black hover:text-white'
-                  }`}
-              >
-                <span>📅</span>
-                {showAddForm ? 'Hide' : 'Add'} Manual Event
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowCalendar(!showCalendar);
-                  if (!showCalendar) {
-                    setTimeout(() => {
-                      const element = document.querySelector('[data-calendar]');
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }, 100);
-                  }
-                }}
-                className={`inline-flex items-center gap-2 px-6 py-3 font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 ${showCalendar
-                    ? 'bg-black text-white hover:shadow-lg'
-                    : 'bg-transparent text-black hover:bg-black hover:text-white'
-                  }`}
-              >
-                {isLoading ? (
-                  <>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-current animate-bounce [animation-delay:-0.3s]"></div>
-                      <div className="w-2 h-2 bg-current animate-bounce [animation-delay:-0.15s]"></div>
-                      <div className="w-2 h-2 bg-current animate-bounce"></div>
-                    </div>
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <span>📅</span>
-                    {showCalendar ? 'Hide' : 'Show'} Calendar
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Next Bookmarked Event Countdown */}
-            <NextBookmarkedEventCountdown 
-              events={events} 
+            {/* Next Bookmarked Event Countdown - Compact */}
+            <NextBookmarkedEventCountdown
+              events={events}
               currentLocationData={locationDisplay.isUserSet ? {
                 name: locationDisplay.name,
                 coordinates: locationDisplay.coordinates
@@ -808,13 +810,13 @@ export default function EventsPage() {
               onEditLocation={showLocationToast}
             />
 
-            {/* Error Display */}
+            {/* Error Display - Subtle */}
             {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-inter text-sm">{error}</p>
+              <div className="mt-2 p-2 bg-red-50 border border-red-300">
+                <p className="text-red-800 font-inter text-xs">{error}</p>
                 <button
                   onClick={() => setError(null)}
-                  className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
+                  className="mt-1 text-red-600 hover:text-red-800 text-xs underline"
                 >
                   Dismiss
                 </button>
@@ -867,8 +869,8 @@ export default function EventsPage() {
                         key={priority.id}
                         onClick={() => togglePriority(priority.id)}
                         className={`inline-flex items-center gap-2 px-4 py-2 border border-black transition-all duration-200 font-inter text-sm font-medium hover:shadow-sm ${selectedPriorities.includes(priority.id)
-                            ? 'bg-black text-white'
-                            : 'bg-white text-black hover:bg-gray-50'
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:bg-gray-50'
                           }`}
                       >
                         <span className="text-lg">{priority.icon}</span>
@@ -1078,19 +1080,19 @@ export default function EventsPage() {
             {/* Events Table */}
             <div data-events-table>
               <EventsTable
-              filteredEvents={filteredEvents}
-              selectedTab={selectedTab}
-              selectedType={selectedType}
-              hideChallengingDates={hideChallengingDates}
-              showCombosOnly={showCombosOnly}
-              events={events}
-              currentUserId={user?.id}
-              setSelectedTab={setSelectedTab}
-              setSelectedType={setSelectedType}
-              toggleBookmark={handleToggleBookmark}
-              deleteEvent={handleDeleteEvent}
-              renameEvent={handleRenameEvent}
-              handleEventClick={handleEventClick}
+                filteredEvents={filteredEvents}
+                selectedTab={selectedTab}
+                selectedType={selectedType}
+                hideChallengingDates={hideChallengingDates}
+                showCombosOnly={showCombosOnly}
+                events={events}
+                currentUserId={user?.id}
+                setSelectedTab={setSelectedTab}
+                setSelectedType={setSelectedType}
+                toggleBookmark={handleToggleBookmark}
+                deleteEvent={handleDeleteEvent}
+                renameEvent={handleRenameEvent}
+                handleEventClick={handleEventClick}
               />
             </div>
 

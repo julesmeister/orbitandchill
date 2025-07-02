@@ -2,7 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BRAND } from '@/config/brand';
 
 interface SEOSettings {
@@ -66,6 +66,7 @@ interface SEOTabProps {
 
 export default function SEOTab({ isLoading }: SEOTabProps) {
   const [activeSection, setActiveSection] = useState('global');
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const [seoSettings, setSeoSettings] = useState<SEOSettings>({
     siteName: BRAND.name,
     defaultTitle: `${BRAND.name} - Professional Astrology Charts & Insights`,
@@ -113,9 +114,9 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
     
     pageSettings: {
       '/': {
-        title: `Professional Astrology Charts & Insights | ${BRAND.name}`,
-        description: 'Generate accurate natal charts with professional-grade calculations. Explore astrology insights and connect with our community.',
-        keywords: ['astrology', 'natal chart', 'birth chart', 'horoscope'],
+        title: `Professional Astrology Charts & Matrix Destiny | ${BRAND.name}`,
+        description: 'Generate accurate natal charts with professional-grade calculations. Discover your Matrix Destiny and life purpose through numerology and astrology.',
+        keywords: ['astrology', 'natal chart', 'birth chart', 'horoscope', 'matrix destiny', 'numerology', 'astrocartography', 'planetary alignment'],
         ogImage: '/images/og-home.jpg',
         noindex: false,
         nofollow: false
@@ -135,11 +136,59 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
         ogImage: '/images/og-guides.jpg',
         noindex: false,
         nofollow: false
+      },
+      '/astrocartography': {
+        title: `Astrocartography Map & Location Analysis | ${BRAND.name}`,
+        description: 'Find your ideal locations around the world with astrocartography. Discover where your planetary lines create opportunities for love, career, and personal growth.',
+        keywords: ['astrocartography', 'relocation astrology', 'planetary lines', 'travel astrology'],
+        ogImage: '/images/og-astrocartography.jpg',
+        noindex: false,
+        nofollow: false
+      },
+      '/blog': {
+        title: `Astrology Blog & Insights | ${BRAND.name}`,
+        description: 'Read the latest astrology insights, cosmic events analysis, and spiritual guidance. Expert articles on planetary movements, zodiac trends, and celestial wisdom.',
+        keywords: ['astrology blog', 'cosmic insights', 'planetary movements', 'zodiac trends', 'spiritual guidance', 'celestial events'],
+        ogImage: '/images/og-blog.jpg',
+        noindex: false,
+        nofollow: false
+      },
+      '/discussions': {
+        title: `Astrology Community Discussions | ${BRAND.name}`,
+        description: 'Join our vibrant astrology community. Share experiences, ask questions, and connect with fellow astrology enthusiasts. Get chart readings and cosmic guidance.',
+        keywords: ['astrology community', 'astrology forum', 'chart readings', 'astrology discussions', 'cosmic community', 'zodiac forum'],
+        ogImage: '/images/og-discussions.jpg',
+        noindex: false,
+        nofollow: false
       }
     }
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  // Load existing SEO settings from database
+  useEffect(() => {
+    const loadSeoSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/seo-settings');
+        const result = await response.json();
+
+        if (result.success && result.settings) {
+          setSeoSettings(prev => ({
+            ...prev,
+            ...result.settings
+          }));
+          console.log('✅ SEO settings loaded successfully');
+        }
+      } catch (error) {
+        console.warn('Failed to load SEO settings, using defaults:', error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    loadSeoSettings();
+  }, []);
 
   const sections = [
     { id: 'global', label: 'Global Meta', icon: '🌐' },
@@ -168,11 +217,25 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Save SEO settings to database/API
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      console.log('SEO settings saved:', seoSettings);
+      // Save SEO settings to Turso database via API
+      const response = await fetch('/api/admin/seo-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(seoSettings)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ SEO settings saved successfully');
+        // Could show success toast here
+      } else {
+        console.error('❌ Failed to save SEO settings:', result.error);
+        // Could show error toast here
+      }
     } catch (error) {
       console.error('Error saving SEO settings:', error);
+      // Could show error toast here
     } finally {
       setIsSaving(false);
     }
@@ -180,10 +243,64 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
 
   const generateSitemap = async () => {
     try {
-      // Trigger sitemap generation
-      console.log('Generating sitemap...');
+      const response = await fetch('/api/admin/generate-sitemap', {
+        method: 'POST'
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Sitemap generated successfully');
+        // Could show success toast here
+      } else {
+        console.error('❌ Failed to generate sitemap:', result.error);
+      }
     } catch (error) {
       console.error('Error generating sitemap:', error);
+    }
+  };
+
+  const generateRobotsTxt = async () => {
+    try {
+      const response = await fetch('/api/admin/generate-robots', {
+        method: 'POST'
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Robots.txt generated successfully');
+        // Could show success toast here
+      } else {
+        console.error('❌ Failed to generate robots.txt:', result.error);
+      }
+    } catch (error) {
+      console.error('Error generating robots.txt:', error);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm('Are you sure you want to reset all SEO settings to defaults? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/admin/seo-settings', {
+        method: 'DELETE'
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ SEO settings reset successfully');
+        // Reload the page to fetch default settings
+        window.location.reload();
+      } else {
+        console.error('❌ Failed to reset SEO settings:', result.error);
+      }
+    } catch (error) {
+      console.error('Error resetting SEO settings:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -196,7 +313,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingSettings) {
     return (
       <div className="bg-white border border-black p-8">
         <div className="animate-pulse">
@@ -396,6 +513,125 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
     </div>
   );
 
+  const renderPageSettingsSection = () => (
+    <div className="space-y-8">
+      {Object.entries(seoSettings.pageSettings).map(([path, settings]) => (
+        <div key={path} className="bg-white border border-black p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="font-space-grotesk text-lg font-bold text-black">
+              Page: {path === '/' ? 'Homepage' : path}
+            </h4>
+            <span className="px-3 py-1 bg-black text-white text-sm font-inter">{path}</span>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+              <label className="block font-inter text-sm font-medium text-black mb-2">
+                Page Title
+              </label>
+              <input
+                type="text"
+                value={settings.title}
+                onChange={(e) => updateSettings(`pageSettings.${path}.title`, e.target.value)}
+                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                placeholder="Page title"
+              />
+              <p className="mt-1 text-sm text-black/60 font-inter">
+                {settings.title.length}/60 characters
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-inter text-sm font-medium text-black mb-2">
+                Meta Description
+              </label>
+              <textarea
+                value={settings.description}
+                onChange={(e) => updateSettings(`pageSettings.${path}.description`, e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                placeholder="Page meta description"
+              />
+              <p className="mt-1 text-sm text-black/60 font-inter">
+                {settings.description.length}/160 characters
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-inter text-sm font-medium text-black mb-2">
+                Keywords
+              </label>
+              <input
+                type="text"
+                value={settings.keywords.join(', ')}
+                onChange={(e) => updateSettings(`pageSettings.${path}.keywords`, e.target.value.split(', ').filter(k => k.trim()))}
+                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                placeholder="keyword1, keyword2, keyword3"
+              />
+              <p className="mt-1 text-sm text-black/60 font-inter">
+                {settings.keywords.length} keywords
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block font-inter text-sm font-medium text-black mb-2">
+                  Open Graph Image
+                </label>
+                <input
+                  type="text"
+                  value={settings.ogImage}
+                  onChange={(e) => updateSettings(`pageSettings.${path}.ogImage`, e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                  placeholder="/images/og-page.jpg"
+                />
+              </div>
+
+              <div className="flex items-center space-x-4 pt-6">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.noindex}
+                    onChange={(e) => updateSettings(`pageSettings.${path}.noindex`, e.target.checked)}
+                    className="w-4 h-4 border-2 border-black"
+                  />
+                  <span className="font-inter text-sm text-black">No Index</span>
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-6">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.nofollow}
+                    onChange={(e) => updateSettings(`pageSettings.${path}.nofollow`, e.target.checked)}
+                    className="w-4 h-4 border-2 border-black"
+                  />
+                  <span className="font-inter text-sm text-black">No Follow</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Add New Page Button */}
+      <div className="bg-white border border-black p-6" style={{ backgroundColor: '#f0e3ff' }}>
+        <h4 className="font-space-grotesk text-lg font-bold text-black mb-4">Add New Page SEO</h4>
+        <div className="flex gap-4">
+          <input
+            type="text"
+            placeholder="/new-page-path"
+            className="flex-1 px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          />
+          <button className="px-6 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25">
+            Add Page
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderSEOToolsSection = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -469,12 +705,352 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
     </div>
   );
 
+  const renderSchemaSection = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block font-inter text-sm font-medium text-black mb-2">
+          Organization Type
+        </label>
+        <select
+          value={seoSettings.organizationType}
+          onChange={(e) => updateSettings('organizationType', e.target.value)}
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+        >
+          <option value="Organization">Organization</option>
+          <option value="Corporation">Corporation</option>
+          <option value="LocalBusiness">Local Business</option>
+          <option value="ProfessionalService">Professional Service</option>
+          <option value="WebSite">Website</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block font-inter text-sm font-medium text-black mb-2">
+          Organization Name
+        </label>
+        <input
+          type="text"
+          value={seoSettings.organizationName}
+          onChange={(e) => updateSettings('organizationName', e.target.value)}
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          placeholder="Your organization name"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block font-inter text-sm font-medium text-black mb-2">
+            Organization Logo URL
+          </label>
+          <input
+            type="text"
+            value={seoSettings.organizationLogo}
+            onChange={(e) => updateSettings('organizationLogo', e.target.value)}
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            placeholder="/images/logo.png"
+          />
+        </div>
+
+        <div>
+          <label className="block font-inter text-sm font-medium text-black mb-2">
+            Organization Email
+          </label>
+          <input
+            type="email"
+            value={seoSettings.organizationEmail}
+            onChange={(e) => updateSettings('organizationEmail', e.target.value)}
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            placeholder="contact@example.com"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block font-inter text-sm font-medium text-black mb-2">
+          Organization Phone
+        </label>
+        <input
+          type="tel"
+          value={seoSettings.organizationPhone}
+          onChange={(e) => updateSettings('organizationPhone', e.target.value)}
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          placeholder="+1-555-123-4567"
+        />
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="font-space-grotesk text-lg font-bold text-black">Organization Address</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block font-inter text-sm font-medium text-black mb-2">
+              Street Address
+            </label>
+            <input
+              type="text"
+              value={seoSettings.organizationAddress.streetAddress}
+              onChange={(e) => updateSettings('organizationAddress.streetAddress', e.target.value)}
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              placeholder="123 Main Street"
+            />
+          </div>
+
+          <div>
+            <label className="block font-inter text-sm font-medium text-black mb-2">
+              City
+            </label>
+            <input
+              type="text"
+              value={seoSettings.organizationAddress.addressLocality}
+              onChange={(e) => updateSettings('organizationAddress.addressLocality', e.target.value)}
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              placeholder="New York"
+            />
+          </div>
+
+          <div>
+            <label className="block font-inter text-sm font-medium text-black mb-2">
+              State/Region
+            </label>
+            <input
+              type="text"
+              value={seoSettings.organizationAddress.addressRegion}
+              onChange={(e) => updateSettings('organizationAddress.addressRegion', e.target.value)}
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              placeholder="NY"
+            />
+          </div>
+
+          <div>
+            <label className="block font-inter text-sm font-medium text-black mb-2">
+              Postal Code
+            </label>
+            <input
+              type="text"
+              value={seoSettings.organizationAddress.postalCode}
+              onChange={(e) => updateSettings('organizationAddress.postalCode', e.target.value)}
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              placeholder="10001"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block font-inter text-sm font-medium text-black mb-2">
+            Country
+          </label>
+          <select
+            value={seoSettings.organizationAddress.addressCountry}
+            onChange={(e) => updateSettings('organizationAddress.addressCountry', e.target.value)}
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          >
+            <option value="US">United States</option>
+            <option value="CA">Canada</option>
+            <option value="GB">United Kingdom</option>
+            <option value="AU">Australia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="ES">Spain</option>
+            <option value="IT">Italy</option>
+            <option value="JP">Japan</option>
+            <option value="CN">China</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-white border border-black p-6" style={{ backgroundColor: '#f0e3ff' }}>
+        <h4 className="font-space-grotesk text-lg font-bold text-black mb-4">Schema.org Preview</h4>
+        <pre className="font-mono text-xs text-black bg-gray-100 p-4 border border-gray-300 overflow-x-auto">
+{`{
+  "@context": "https://schema.org",
+  "@type": "${seoSettings.organizationType}",
+  "name": "${seoSettings.organizationName}",
+  "email": "${seoSettings.organizationEmail}",
+  "telephone": "${seoSettings.organizationPhone}",
+  "logo": "${seoSettings.canonicalBaseURL}${seoSettings.organizationLogo}",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "${seoSettings.organizationAddress.streetAddress}",
+    "addressLocality": "${seoSettings.organizationAddress.addressLocality}",
+    "addressRegion": "${seoSettings.organizationAddress.addressRegion}",
+    "postalCode": "${seoSettings.organizationAddress.postalCode}",
+    "addressCountry": "${seoSettings.organizationAddress.addressCountry}"
+  }
+}`}
+        </pre>
+      </div>
+    </div>
+  );
+
+  const renderTechnicalSEOSection = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="block font-inter text-sm font-medium text-black mb-2">
+          Canonical Base URL
+        </label>
+        <input
+          type="url"
+          value={seoSettings.canonicalBaseURL}
+          onChange={(e) => updateSettings('canonicalBaseURL', e.target.value)}
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          placeholder="https://your-domain.com"
+        />
+        <p className="mt-1 text-sm text-black/60 font-inter">
+          Used for canonical URLs and absolute links
+        </p>
+      </div>
+
+      <div>
+        <label className="block font-inter text-sm font-medium text-black mb-2">
+          Robots.txt Content
+        </label>
+        <textarea
+          value={seoSettings.robotsTxt}
+          onChange={(e) => updateSettings('robotsTxt', e.target.value)}
+          rows={8}
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter font-mono text-sm focus:outline-none focus:border-black"
+          placeholder="User-agent: *&#10;Allow: /&#10;Disallow: /admin/"
+        />
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-sm text-black/60 font-inter">
+            Configure search engine crawler behavior
+          </p>
+          <a
+            href="/robots.txt"
+            target="_blank"
+            className="text-sm text-blue-600 hover:text-blue-800 font-inter"
+          >
+            View Current →
+          </a>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="font-space-grotesk text-lg font-bold text-black">Sitemap Configuration</h4>
+        
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={seoSettings.sitemapSettings.enabled}
+              onChange={(e) => updateSettings('sitemapSettings.enabled', e.target.checked)}
+              className="w-4 h-4 border-2 border-black"
+            />
+            <span className="font-inter text-sm text-black">Enable XML Sitemap</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block font-inter text-sm font-medium text-black mb-2">
+              Default Priority
+            </label>
+            <select
+              value={seoSettings.sitemapSettings.priority}
+              onChange={(e) => updateSettings('sitemapSettings.priority', parseFloat(e.target.value))}
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            >
+              <option value={1.0}>1.0 (Highest)</option>
+              <option value={0.9}>0.9</option>
+              <option value={0.8}>0.8 (High)</option>
+              <option value={0.7}>0.7</option>
+              <option value={0.6}>0.6</option>
+              <option value={0.5}>0.5 (Medium)</option>
+              <option value={0.4}>0.4</option>
+              <option value={0.3}>0.3</option>
+              <option value={0.2}>0.2</option>
+              <option value={0.1}>0.1 (Lowest)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-inter text-sm font-medium text-black mb-2">
+              Change Frequency
+            </label>
+            <select
+              value={seoSettings.sitemapSettings.changefreq}
+              onChange={(e) => updateSettings('sitemapSettings.changefreq', e.target.value)}
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            >
+              <option value="always">Always</option>
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="never">Never</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h5 className="font-space-grotesk font-semibold text-black">Include in Sitemap:</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={seoSettings.sitemapSettings.includePosts}
+                onChange={(e) => updateSettings('sitemapSettings.includePosts', e.target.checked)}
+                className="w-4 h-4 border-2 border-black"
+              />
+              <span className="font-inter text-sm text-black">Blog Posts</span>
+            </label>
+            
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={seoSettings.sitemapSettings.includeGuides}
+                onChange={(e) => updateSettings('sitemapSettings.includeGuides', e.target.checked)}
+                className="w-4 h-4 border-2 border-black"
+              />
+              <span className="font-inter text-sm text-black">Guides</span>
+            </label>
+            
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={seoSettings.sitemapSettings.includeUserPages}
+                onChange={(e) => updateSettings('sitemapSettings.includeUserPages', e.target.checked)}
+                className="w-4 h-4 border-2 border-black"
+              />
+              <span className="font-inter text-sm text-black">User Pages</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-black p-6" style={{ backgroundColor: '#6bdbff' }}>
+        <h4 className="font-space-grotesk text-lg font-bold text-black mb-4">Generate Files</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={generateRobotsTxt}
+            className="w-full px-4 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+          >
+            Generate robots.txt
+          </button>
+          <button
+            onClick={generateSitemap}
+            className="w-full px-4 py-3 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-black hover:text-white"
+          >
+            Generate sitemap.xml
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'global':
         return renderGlobalMetaSection();
+      case 'schema':
+        return renderSchemaSection();
+      case 'technical':
+        return renderTechnicalSEOSection();
       case 'analytics':
         return renderAnalyticsSection();
+      case 'pages':
+        return renderPageSettingsSection();
       case 'tools':
         return renderSEOToolsSection();
       default:
@@ -499,13 +1075,22 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
               Manage search engine optimization and analytics
             </p>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-6 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 disabled:opacity-50"
-          >
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleReset}
+              disabled={isSaving}
+              className="px-6 py-3 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-red-50 hover:border-red-600 hover:text-red-600 disabled:opacity-50"
+            >
+              Reset to Defaults
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-6 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
       </div>
 
