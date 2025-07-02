@@ -55,21 +55,21 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
           </div>
           <div>
             <h4 className="font-space-grotesk font-bold text-black text-lg">{discussion.author}</h4>
-            <p className="text-sm text-black/60 font-inter">Discussion Author</p>
+            <p className="text-sm text-black/60 font-open-sans">Discussion Author</p>
           </div>
         </div>
         <div className="space-y-3 text-sm">
           <div className="flex items-start justify-between border-b border-black pb-2 gap-4">
-            <span className="text-black/60 font-inter flex-shrink-0">Created</span>
-            <span className="text-black font-medium font-inter text-right leading-relaxed">{formatDate(discussion.createdAt || discussion.lastActivity)}</span>
+            <span className="text-black/60 font-open-sans flex-shrink-0">Created</span>
+            <span className="text-black font-medium font-open-sans text-right leading-relaxed">{formatDate(discussion.createdAt || discussion.lastActivity)}</span>
           </div>
           <div className="flex items-start justify-between border-b border-black pb-2 gap-4">
-            <span className="text-black/60 font-inter flex-shrink-0">Reading time</span>
-            <span className="text-black font-medium font-inter text-right">{estimateReadingTime(discussion.content || discussion.excerpt)}</span>
+            <span className="text-black/60 font-open-sans flex-shrink-0">Reading time</span>
+            <span className="text-black font-medium font-open-sans text-right">{estimateReadingTime(discussion.content || discussion.excerpt)}</span>
           </div>
           <div className="flex items-start justify-between gap-4">
-            <span className="text-black/60 font-inter flex-shrink-0">Last activity</span>
-            <span className="text-black font-medium font-inter text-right leading-relaxed">{formatDate(discussion.lastActivity)}</span>
+            <span className="text-black/60 font-open-sans flex-shrink-0">Last activity</span>
+            <span className="text-black font-medium font-open-sans text-right leading-relaxed">{formatDate(discussion.lastActivity)}</span>
           </div>
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
               </svg>
             </div>
             <div className="text-lg font-bold text-black font-space-grotesk">{discussion.views.toLocaleString()}</div>
-            <div className="text-xs text-black/60 font-inter">Views</div>
+            <div className="text-xs text-black/60 font-open-sans">Views</div>
           </div>
 
           {/* Replies */}
@@ -101,7 +101,7 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
               </svg>
             </div>
             <div className="text-lg font-bold text-black font-space-grotesk">{discussion.replies}</div>
-            <div className="text-xs text-black/60 font-inter">Replies</div>
+            <div className="text-xs text-black/60 font-open-sans">Replies</div>
           </div>
 
           {/* Upvotes */}
@@ -112,7 +112,7 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
               </svg>
             </div>
             <div className="text-lg font-bold text-black font-space-grotesk">{discussion.upvotes}</div>
-            <div className="text-xs text-black/60 font-inter">Upvotes</div>
+            <div className="text-xs text-black/60 font-open-sans">Upvotes</div>
           </div>
 
           {/* Engagement */}
@@ -123,7 +123,7 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
               </svg>
             </div>
             <div className="text-lg font-bold text-black font-space-grotesk">{Math.round(((discussion.replies + discussion.upvotes) / discussion.views) * 100)}%</div>
-            <div className="text-xs text-black/60 font-inter">Engagement</div>
+            <div className="text-xs text-black/60 font-open-sans">Engagement</div>
           </div>
         </div>
 
@@ -145,11 +145,11 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
           />
         </div>
         {showAuthPrompt ? (
-          <p className="text-xs text-black font-inter text-center mt-3 px-2">
+          <p className="text-xs text-black font-open-sans text-center mt-3 px-2">
             Creating anonymous user session... Please try voting again.
           </p>
         ) : (
-          <p className="text-xs text-black/60 font-inter text-center mt-3">
+          <p className="text-xs text-black/60 font-open-sans text-center mt-3">
             Help the community by rating this discussion
           </p>
         )}
@@ -172,18 +172,18 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-black group-hover:text-white transition-colors leading-relaxed font-inter">
+                  <p className="text-sm font-medium text-black group-hover:text-white transition-colors leading-relaxed font-open-sans">
                     {related.title.length > 50 ? related.title.substring(0, 50) + '...' : related.title}
                   </p>
                   <div className="flex items-center space-x-4 mt-2 text-xs text-black/60 group-hover:text-white/60 transition-colors">
-                    <span className="flex items-center font-inter">
+                    <span className="flex items-center font-open-sans">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                       {related.views}
                     </span>
-                    <span className="flex items-center font-inter">
+                    <span className="flex items-center font-open-sans">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>

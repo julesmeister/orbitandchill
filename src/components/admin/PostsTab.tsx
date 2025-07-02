@@ -6,6 +6,7 @@ import { useAdminStore } from '@/store/adminStore';
 import DiscussionForm from '../forms/DiscussionForm';
 import ConfirmationModal from '../reusable/ConfirmationModal';
 import { stripHtmlTags } from '@/utils/textUtils';
+import { extractFirstImageFromContent, createImageChartObject } from '@/utils/extractImageFromContent';
 
 // Thread interface from adminStore
 interface Thread {
@@ -30,6 +31,8 @@ interface Thread {
   replies: number;
   featuredImage?: string;
   category: string;
+  embeddedChart?: any;
+  embeddedVideo?: any;
 }
 
 interface PostsTabProps {
@@ -45,6 +48,8 @@ interface PostFormData {
   isBlogPost?: boolean;
   isPublished?: boolean;
   isPinned?: boolean;
+  embeddedChart?: any;
+  embeddedVideo?: any;
 }
 
 export default function PostsTab({ isLoading }: PostsTabProps) {
@@ -62,8 +67,18 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   }, [loadThreads]);
 
   const handleFormSubmit = async (formData: PostFormData) => {
+    // Extract the first image from content to use as thumbnail
+    const firstImage = extractFirstImageFromContent(formData.content);
+    let embeddedChart = formData.embeddedChart;
+    
+    // If no embedded chart but we found an image in content, create an image chart object
+    if (!embeddedChart && firstImage) {
+      embeddedChart = createImageChartObject(firstImage, formData.title);
+    }
+
     const postData = {
       ...formData,
+      embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
       authorId: 'admin_1',
       authorName: 'Admin User',
       excerpt: formData.excerpt || stripHtmlTags(formData.content).substring(0, 150) + '...',
@@ -99,12 +114,22 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       return;
     }
 
+    // Extract the first image from content to use as thumbnail
+    const firstImage = extractFirstImageFromContent(currentThread.content);
+    let embeddedChart = currentThread.embeddedChart;
+    
+    // If no embedded chart but we found an image in content, create an image chart object
+    if (!embeddedChart && firstImage) {
+      embeddedChart = createImageChartObject(firstImage, currentThread.title);
+    }
+
     const postData = {
       title: currentThread.title,
       content: currentThread.content,
       excerpt: currentThread.excerpt,
       category: currentThread.category,
       tags: currentThread.tags,
+      embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
       isBlogPost: formData.isBlogPost ?? currentThread.isBlogPost,
       isPublished: formData.isPublished ?? currentThread.isPublished,
       isPinned: formData.isPinned ?? currentThread.isPinned,
@@ -310,7 +335,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     tags: Array.isArray(thread.tags) ? thread.tags : [],
                     isBlogPost: thread.isBlogPost ?? false,
                     isPublished: thread.isPublished ?? false,
-                    isPinned: thread.isPinned ?? false
+                    isPinned: thread.isPinned ?? false,
+                    embeddedChart: thread.embeddedChart,
+                    embeddedVideo: thread.embeddedVideo
                   };
                 })() : {
                   title: '',

@@ -28,6 +28,7 @@ interface Discussion {
   createdAt: Date;
   updatedAt: Date;
   lastActivity: Date;
+  embeddedChart?: any; // For image thumbnails extracted from content
 }
 
 interface DiscussionCardProps {
@@ -57,6 +58,9 @@ const formatCompactNumber = (num: number): string => {
 const getCategoryColor = () => '#19181a'; // Synapsas black
 
 export default function DiscussionCard({ discussion, onVoteSuccess }: DiscussionCardProps) {
+  // Check if we have a thumbnail image from extracted content
+  const thumbnailImage = discussion.embeddedChart?.chartType === 'image' ? discussion.embeddedChart.imageUrl : null;
+
   return (
     <div className="relative p-4 md:p-6 hover:bg-gray-50 transition-all duration-300 group">
       {/* Category indicator */}
@@ -65,6 +69,22 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
       <div className="pl-4 md:pl-6">
         {/* Mobile/Tablet Layout */}
         <div className="lg:hidden">
+          {/* Thumbnail image for mobile */}
+          {thumbnailImage && (
+            <div className="mb-3">
+              <Link href={`/discussions/${discussion.slug}`}>
+                <img 
+                  src={thumbnailImage} 
+                  alt={discussion.title}
+                  className="w-full h-32 object-cover border border-black hover:opacity-90 transition-opacity"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </Link>
+            </div>
+          )}
+          
           {/* Title and badges */}
           <div className="flex items-start gap-2 mb-3">
             {Boolean(discussion.isPinned) && (
@@ -148,6 +168,21 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
         <div className="hidden lg:block">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
+              {/* Thumbnail image for desktop */}
+              {thumbnailImage && (
+                <div className="float-right ml-4 mb-2">
+                  <Link href={`/discussions/${discussion.slug}`}>
+                    <img 
+                      src={thumbnailImage} 
+                      alt={discussion.title}
+                      className="w-24 h-24 object-cover border border-black hover:opacity-90 transition-opacity"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </Link>
+                </div>
+              )}
               <div className="flex items-center gap-2 mb-2">
                 {Boolean(discussion.isPinned) && (
                   <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24">

@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
       // Determine publication status: drafts=true shows unpublished, otherwise show published
       const isPublished = !drafts;
 
-      // Fetch discussions from database with timeout
+      // Fetch discussions from database with increased timeout
+      console.log('🔍 Fetching discussions with params:', { category, isBlogPost, isPublished, drafts, userId, limit, sortBy });
       
       const discussions = await Promise.race([
         DiscussionService.getAllDiscussions({
@@ -29,14 +30,16 @@ export async function GET(request: NextRequest) {
           isBlogPost,
           isPublished,
           authorId: drafts ? userId : undefined, // Only filter by user for drafts
-          currentUserId: userId, // Pass userId to get vote data
+          currentUserId: userId, // Pass userId to get vote data (but now skipped for performance)
           limit,
           sortBy
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Database query timeout')), 5000)
+          setTimeout(() => reject(new Error('Database query timeout')), 10000)
         )
       ]) as any[];
+      
+      console.log('✅ Successfully fetched', discussions.length, 'discussions');
 
       // Filter discussions received from database
       
@@ -51,19 +54,8 @@ export async function GET(request: NextRequest) {
         };
       });
 
-      // OPTIMIZED: Track analytics asynchronously (non-blocking)
-      const today = new Date().toISOString().split('T')[0];
-      Promise.allSettled([
-        AnalyticsService.incrementDailyCounter('pageViews', today),
-        enhancedDiscussions.length > 0 ? AnalyticsService.recordEngagementData({
-          date: today,
-          popularDiscussions: enhancedDiscussions.slice(0, 5).map((d: any) => ({
-            id: d.id,
-            title: d.title,
-            engagement: d.upvotes + d.replies + d.views
-          }))
-        }) : Promise.resolve()
-      ]).catch(err => console.warn('Analytics failed:', err));
+      // PERFORMANCE: Skip analytics to prevent connection pool exhaustion
+      // Analytics should be handled in a separate background process
 
       // Generate cache key based on parameters
       const cacheKey = `discussions-${category || 'all'}-${sortBy}-${isBlogPost}-${drafts}-${limit}`;

@@ -16,7 +16,7 @@ export default function DiscussionsHero({
         <h1 className="font-space-grotesk text-5xl lg:text-6xl font-bold text-black mb-6">
           {title}
         </h1>
-        <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+        <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
           {description}
         </p>
       </div>

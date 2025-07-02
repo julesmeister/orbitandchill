@@ -14,7 +14,7 @@ export default function DiscussionsErrorState({ error, onRetry }: DiscussionsErr
           <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
             Astrology Discussions
           </h1>
-          <p className="font-inter text-xl text-red-600 leading-relaxed max-w-3xl mx-auto">
+          <p className="font-open-sans text-xl text-red-600 leading-relaxed max-w-3xl mx-auto">
             Error loading discussions: {error}
           </p>
           {onRetry && (

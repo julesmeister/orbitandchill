@@ -41,12 +41,12 @@ class TursoConnectionPool {
     this.databaseUrl = databaseUrl;
     this.authToken = authToken;
     this.config = {
-      minConnections: 1,
-      maxConnections: 4,      // Reduced from 10 to 4
-      acquireTimeoutMs: 5000, // Reduced from 10s to 5s
-      idleTimeoutMs: 60000,   // Reduced from 5m to 1m
-      maxLifetimeMs: 600000,  // Reduced from 1h to 10m
-      retryAttempts: 2,       // Reduced from 3 to 2
+      minConnections: 2,
+      maxConnections: 8,       // Increased to handle more concurrent requests
+      acquireTimeoutMs: 10000, // Increased timeout for acquiring connections
+      idleTimeoutMs: 120000,   // 2 minutes idle timeout
+      maxLifetimeMs: 1800000,  // 30 minutes max lifetime
+      retryAttempts: 3,        // More retry attempts
       ...config
     };
 

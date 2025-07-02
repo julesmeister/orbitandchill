@@ -108,7 +108,7 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-6 font-inter prose-headings:font-space-grotesk prose-headings:font-bold prose-headings:text-black prose-p:text-black prose-p:leading-relaxed prose-strong:text-black prose-blockquote:border-l-4 prose-blockquote:border-black prose-blockquote:bg-gray-50 prose-blockquote:italic prose-code:bg-gray-100 prose-code:px-1 sm:prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-xs sm:prose-code:text-sm prose-pre:bg-gray-900 prose-pre:text-white prose-pre:overflow-x-auto prose-pre:-mx-2 sm:prose-pre:mx-0 prose-a:text-black prose-a:underline prose-img:rounded prose-img:border prose-img:border-black prose-img:max-w-full',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-6 font-open-sans prose-headings:font-space-grotesk prose-headings:font-bold prose-headings:text-black prose-p:text-black prose-p:leading-relaxed prose-strong:text-black prose-blockquote:border-l-4 prose-blockquote:border-black prose-blockquote:bg-gray-50 prose-blockquote:italic prose-code:bg-gray-100 prose-code:px-1 sm:prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-xs sm:prose-code:text-sm prose-pre:bg-gray-900 prose-pre:text-white prose-pre:overflow-x-auto prose-pre:-mx-2 sm:prose-pre:mx-0 prose-a:text-black prose-a:underline prose-img:rounded prose-img:border prose-img:border-black prose-img:max-w-full',
       },
       handleKeyDown: (view, event) => {
         // Auto-focus editor when typing
@@ -125,18 +125,60 @@ export default function RichTextEditor({
   });
 
   const addImage = useCallback(() => {
-    const url = window.prompt('Enter image URL or paste a link:');
-    if (url && editor) {
-      // Basic URL validation
-      try {
-        const imageUrl = new URL(url);
-        if (imageUrl.protocol === 'http:' || imageUrl.protocol === 'https:') {
-          editor.chain().focus().setImage({ src: url, alt: 'Uploaded image' }).run();
-        } else {
-          alert('Please enter a valid HTTP or HTTPS URL');
+    if (!editor) return;
+
+    // Create a hidden file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      // Check file size (limit to 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        editor.chain().focus().setImage({ 
+          src: base64, 
+          alt: file.name,
+          title: file.name 
+        }).run();
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // Show option dialog
+    const choice = window.confirm('Click OK to upload an image file, or Cancel to enter an image URL');
+    
+    if (choice) {
+      // Upload file
+      input.click();
+    } else {
+      // Enter URL
+      const url = window.prompt('Enter image URL:');
+      if (url) {
+        try {
+          const imageUrl = new URL(url);
+          if (imageUrl.protocol === 'http:' || imageUrl.protocol === 'https:') {
+            editor.chain().focus().setImage({ 
+              src: url, 
+              alt: 'Image',
+              title: 'Image'
+            }).run();
+          } else {
+            alert('Please enter a valid HTTP or HTTPS URL');
+          }
+        } catch {
+          alert('Please enter a valid URL');
         }
-      } catch {
-        alert('Please enter a valid URL');
       }
     }
   }, [editor]);
@@ -460,14 +502,14 @@ export default function RichTextEditor({
         {isPreviewMode ? (
           /* Preview Mode */
           <div className={`p-6 ${isFullscreen ? 'h-full overflow-y-auto' : 'min-h-[400px]'} bg-gray-50`}>
-            <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-inter">
+            <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-open-sans">
               {content ? (
                 <div 
                   className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_code]:bg-gray-100 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-4 [&_pre]:rounded [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_ul]:list-disc [&_ol]:list-decimal [&_li]:mb-2"
                   dangerouslySetInnerHTML={{ __html: content }}
                 />
               ) : (
-                <div className="text-black/50 font-inter italic">
+                <div className="text-black/50 font-open-sans italic">
                   {placeholder}
                 </div>
               )}
@@ -478,10 +520,10 @@ export default function RichTextEditor({
           <>
             <EditorContent 
               editor={editor}
-              className={`prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus-within:outline-none font-inter ${isFullscreen ? 'h-full overflow-y-auto' : ''}`}
+              className={`prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus-within:outline-none font-open-sans ${isFullscreen ? 'h-full overflow-y-auto' : ''}`}
             />
             {content === '' && (
-              <div className="absolute top-3 sm:top-6 left-3 sm:left-6 text-black/40 pointer-events-none font-inter text-sm sm:text-base italic">
+              <div className="absolute top-3 sm:top-6 left-3 sm:left-6 text-black/40 pointer-events-none font-open-sans text-sm sm:text-base italic">
                 {placeholder}
               </div>
             )}
@@ -496,7 +538,7 @@ export default function RichTextEditor({
           <div className="px-3 sm:px-6 py-3 sm:py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               {/* Left: Writing Statistics */}
-              <div className="flex items-center gap-6 font-inter">
+              <div className="flex items-center gap-6 font-open-sans">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-black"></div>
                   <span className="text-sm font-medium text-black">
@@ -531,7 +573,7 @@ export default function RichTextEditor({
                         ? 'bg-white' 
                         : 'bg-black'
                     }`}></div>
-                    <span className="text-xs font-medium font-inter">
+                    <span className="text-xs font-medium font-open-sans">
                       {textStats.words >= minWords ? 'Words ✓' : `${minWords - textStats.words} more words`}
                     </span>
                   </div>
@@ -547,7 +589,7 @@ export default function RichTextEditor({
                         ? 'bg-white' 
                         : 'bg-black'
                     }`}></div>
-                    <span className="text-xs font-medium font-inter">
+                    <span className="text-xs font-medium font-open-sans">
                       {textStats.characters >= minCharacters ? 'Length ✓' : `${minCharacters - textStats.characters} more chars`}
                     </span>
                   </div>
@@ -563,7 +605,7 @@ export default function RichTextEditor({
                 <div className="w-5 h-5 bg-black flex items-center justify-center flex-shrink-0">
                   <FontAwesomeIcon icon={faInfoCircle} className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm text-black font-inter">
+                <span className="text-sm text-black font-open-sans">
                   {validation.errors.join(' • ')}
                 </span>
               </div>

@@ -226,52 +226,9 @@ export class DiscussionService {
       };
     });
     
-    // Optionally populate user votes if currentUserId is provided (non-blocking)
-    if (currentUserId && finalResults.length > 0) {
-      console.log('🔍 Fetching votes for user:', currentUserId, 'discussions:', finalResults.length);
-      try {
-        const discussionIds = finalResults.map(d => d.id);
-        const placeholders = discussionIds.map(() => '?').join(',');
-        const votesQuery = `
-          SELECT discussion_id, vote_type 
-          FROM votes 
-          WHERE user_id = ? AND discussion_id IN (${placeholders})
-        `;
-        
-        console.log('🗃️ Votes query:', votesQuery);
-        console.log('🗃️ Query args:', [currentUserId, ...discussionIds]);
-        
-        const votesResult = await client.execute({
-          sql: votesQuery,
-          args: [currentUserId, ...discussionIds]
-        });
-        
-        console.log('📊 Votes result:', votesResult.rows?.length || 0, 'rows');
-        
-        // Create a map of discussion ID to vote type
-        const votesMap = new Map();
-        if (votesResult.rows) {
-          votesResult.rows.forEach((row: any) => {
-            console.log('✅ Found vote:', row.discussion_id, '->', row.vote_type);
-            votesMap.set(row.discussion_id, row.vote_type);
-          });
-        }
-        
-        // Update the results with user votes
-        finalResults.forEach(discussion => {
-          const userVote = votesMap.get(discussion.id) || null;
-          discussion.userVote = userVote;
-          if (userVote) {
-            console.log('🗳️ Applied vote to discussion:', discussion.id, '->', userVote);
-          }
-        });
-      } catch (error) {
-        console.error('❌ Failed to fetch user votes:', error);
-        // Continue without user votes - this is non-blocking
-      }
-    } else {
-      console.log('⚠️ Skipping vote lookup - currentUserId:', currentUserId, 'discussions:', finalResults.length);
-    }
+    // PERFORMANCE FIX: Skip user votes lookup to prevent database timeouts
+    // User votes will be loaded separately on the client side if needed
+    console.log('⚡ Skipping votes lookup for performance - returning discussions without user votes');
     
     return finalResults;
   }

@@ -6,141 +6,133 @@ import { UserActivityService } from '@/db/services/userActivityService';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if request has a body
-    const contentLength = request.headers.get('content-length');
-    if (!contentLength || contentLength === '0') {
-      return NextResponse.json(
-        { success: false, error: 'Request body is required' },
-        { status: 400 }
-      );
-    }
+    // PERFORMANCE: Return success immediately and process analytics in background
+    // This prevents analytics from blocking the main request flow
+    
+    // Spawn background task (non-blocking)
+    process.nextTick(async () => {
+      try {
+        // Check if request has a body
+        const contentLength = request.headers.get('content-length');
+        if (!contentLength || contentLength === '0') {
+          console.warn('Analytics: Empty request body');
+          return;
+        }
 
-    // Check content type
-    const contentType = request.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      return NextResponse.json(
-        { success: false, error: 'Content-Type must be application/json' },
-        { status: 400 }
-      );
-    }
+        let body;
+        try {
+          const text = await request.text();
+          if (!text || text.trim() === '') {
+            console.warn('Analytics: Empty request text');
+            return;
+          }
+          body = JSON.parse(text);
+        } catch (jsonError) {
+          console.warn('Analytics: JSON parsing error', jsonError);
+          return;
+        }
 
-    let body;
-    try {
-      // Try to get the raw text first to debug
-      const text = await request.text();
-      if (!text || text.trim() === '') {
-        console.warn('Empty request body received for analytics tracking');
-        return NextResponse.json(
-          { success: false, error: 'Empty request body' },
-          { status: 400 }
+        const { event, data } = body;
+        if (!event) {
+          console.warn('Analytics: Missing event type');
+          return;
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get client information for user activity tracking
+        const ipAddress = request.headers.get('x-forwarded-for') || 
+                         request.headers.get('x-real-ip') || 
+                         'unknown';
+        const userAgent = request.headers.get('user-agent') || 'unknown';
+        const context = { ipAddress, userAgent, sessionId: data?.sessionId };
+        
+        // Add timeout to prevent analytics from consuming connection pool
+        const analyticsTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Analytics timeout')), 3000)
         );
+        
+        const analyticsWork = async () => {
+          switch (event) {
+            case 'page_view':
+              await handlePageView(data, today, context);
+              break;
+              
+            case 'chart_generated':
+              await handleChartGenerated(data, today, context);
+              break;
+              
+            case 'discussion_viewed':
+              await handleDiscussionViewed(data, today, context);
+              break;
+              
+            case 'discussion_created':
+              await handleDiscussionCreated(data, today, context);
+              break;
+              
+            case 'reply_posted':
+              await handleReplyPosted(data, today, context);
+              break;
+              
+            case 'user_session':
+              await handleUserSession(data, today, context);
+              break;
+              
+            case 'user_login':
+              await handleUserLogin(data, today, context);
+              break;
+              
+            case 'user_logout':
+              await handleUserLogout(data, today, context);
+              break;
+              
+            case 'event_bookmarked':
+              await handleEventBookmarked(data, today, context);
+              break;
+              
+            case 'vote_cast':
+              await handleVoteCast(data, today, context);
+              break;
+              
+            case 'settings_changed':
+              await handleSettingsChanged(data, today, context);
+              break;
+              
+            case 'location_analytics':
+              await handleLocationAnalytics(data, today, context);
+              break;
+              
+            case 'session_end':
+              await handleSessionEnd(data, today, context);
+              break;
+              
+            case 'custom_event':
+              await handleCustomEvent(data, today, context);
+              break;
+              
+            case 'discussion_interaction':
+              await handleDiscussionInteraction(data, today, context);
+              break;
+              
+            case 'horary_question_submitted':
+              await handleHoraryQuestion(data, today, context);
+              break;
+              
+            default:
+              console.warn('Analytics: Unknown event type:', event);
+          }
+        };
+        
+        // Run analytics with timeout protection
+        await Promise.race([analyticsWork(), analyticsTimeout]).catch(err => {
+          console.warn('Analytics processing failed (non-critical):', err.message);
+        });
+      } catch (error) {
+        console.warn('Analytics background task error:', error);
       }
-      
-      body = JSON.parse(text);
-    } catch (jsonError) {
-      console.error('JSON parsing error:', {
-        error: jsonError,
-        userAgent: request.headers.get('user-agent'),
-        origin: request.headers.get('origin'),
-        contentLength: request.headers.get('content-length'),
-        referer: request.headers.get('referer')
-      });
-      return NextResponse.json(
-        { success: false, error: 'Invalid JSON format' },
-        { status: 400 }
-      );
-    }
-
-    const { event, data } = body;
-
-    if (!event) {
-      return NextResponse.json(
-        { success: false, error: 'Event type is required' },
-        { status: 400 }
-      );
-    }
-
-    const today = new Date().toISOString().split('T')[0];
+    });
     
-    // Get client information for user activity tracking
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-    const context = { ipAddress, userAgent, sessionId: data?.sessionId };
-    
-    switch (event) {
-      case 'page_view':
-        await handlePageView(data, today, context);
-        break;
-        
-      case 'chart_generated':
-        await handleChartGenerated(data, today, context);
-        break;
-        
-      case 'discussion_viewed':
-        await handleDiscussionViewed(data, today, context);
-        break;
-        
-      case 'discussion_created':
-        await handleDiscussionCreated(data, today, context);
-        break;
-        
-      case 'reply_posted':
-        await handleReplyPosted(data, today, context);
-        break;
-        
-      case 'user_session':
-        await handleUserSession(data, today, context);
-        break;
-        
-      case 'user_login':
-        await handleUserLogin(data, today, context);
-        break;
-        
-      case 'user_logout':
-        await handleUserLogout(data, today, context);
-        break;
-        
-      case 'event_bookmarked':
-        await handleEventBookmarked(data, today, context);
-        break;
-        
-      case 'vote_cast':
-        await handleVoteCast(data, today, context);
-        break;
-        
-      case 'settings_changed':
-        await handleSettingsChanged(data, today, context);
-        break;
-        
-      case 'location_analytics':
-        await handleLocationAnalytics(data, today, context);
-        break;
-        
-      case 'session_end':
-        await handleSessionEnd(data, today, context);
-        break;
-        
-      case 'custom_event':
-        await handleCustomEvent(data, today, context);
-        break;
-        
-      case 'discussion_interaction':
-        await handleDiscussionInteraction(data, today, context);
-        break;
-        
-      case 'horary_question_submitted':
-        await handleHoraryQuestion(data, today, context);
-        break;
-        
-      default:
-        return NextResponse.json(
-          { success: false, error: 'Unknown event type' },
-          { status: 400 }
-        );
-    }
-
+    // Return success immediately without waiting for analytics
     return NextResponse.json({ success: true });
     
   } catch (error) {

@@ -55,7 +55,7 @@ export default function ReplyForm({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
               </svg>
             </div>
-            <span className="text-sm text-black font-medium font-inter">Replying to {replyingToAuthor}</span>
+            <span className="text-sm text-black font-medium font-open-sans">Replying to {replyingToAuthor}</span>
           </div>
         </div>
       )}
@@ -75,12 +75,12 @@ export default function ReplyForm({
             <textarea
               value={newReply}
               onChange={(e) => onReplyChange(e.target.value)}
-              className="w-full p-4 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 resize-none font-inter"
+              className="w-full p-4 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 resize-none font-open-sans"
               rows={6}
               placeholder={replyingTo ? `Reply to ${replyingToAuthor}...` : "Share your thoughts and insights..."}
             />
             <div className="flex justify-between items-center mt-4">
-              <span className="text-sm text-black/60 font-inter">
+              <span className="text-sm text-black/60 font-open-sans">
                 Posting as: <span className="font-medium text-black">{displayName}</span>
               </span>
               <div className="flex gap-0">
@@ -88,7 +88,7 @@ export default function ReplyForm({
                   <button
                     type="button"
                     onClick={onCancel}
-                    className="px-6 py-3 bg-white text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter font-medium"
+                    className="px-6 py-3 bg-white text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-open-sans font-medium"
                   >
                     Cancel
                   </button>
@@ -96,7 +96,7 @@ export default function ReplyForm({
                 <button
                   type="submit"
                   disabled={!newReply.trim() || isSubmitting}
-                  className={`px-8 py-3 font-medium transition-all duration-300 border border-black font-inter ${
+                  className={`px-8 py-3 font-medium transition-all duration-300 border border-black font-open-sans ${
                     !newReply.trim() || isSubmitting
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-black text-white hover:bg-gray-800'

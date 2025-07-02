@@ -41,7 +41,7 @@ export default function MobileSearchFilters({
             placeholder="Search discussions..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 text-black placeholder-black/50 focus:outline-none border-2 border-black bg-transparent font-inter text-base"
+            className="w-full pl-10 pr-4 py-3 text-black placeholder-black/50 focus:outline-none border-2 border-black bg-transparent font-open-sans text-base"
           />
         </div>
 

@@ -126,7 +126,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
         {/* Modern loading indicator with dots animation */}
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-2">
-            <span className="font-inter text-black/60 text-sm">Loading replies</span>
+            <span className="font-open-sans text-black/60 text-sm">Loading replies</span>
             <div className="flex space-x-1">
               <div className="w-1.5 h-1.5 bg-black/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
               <div className="w-1.5 h-1.5 bg-black/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -148,10 +148,10 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
           </h2>
         </header>
         <div className="text-center py-12">
-          <p className="text-black/60 font-inter">{error}</p>
+          <p className="text-black/60 font-open-sans">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors font-inter"
+            className="mt-4 px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors font-open-sans"
           >
             Try Again
           </button>
@@ -195,10 +195,10 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
             <h3 className="font-space-grotesk text-2xl font-bold text-black mb-4">
               Start the Conversation
             </h3>
-            <p className="text-black/70 font-inter text-lg leading-relaxed mb-2">
+            <p className="text-black/70 font-open-sans text-lg leading-relaxed mb-2">
               No replies yet. Be the first to share your thoughts and join the discussion!
             </p>
-            <p className="text-black/50 font-inter text-sm">
+            <p className="text-black/50 font-open-sans text-sm">
               Your insights could spark an amazing conversation about astrology.
             </p>
           </div>
@@ -207,15 +207,15 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
           <div className="flex items-center justify-center space-x-8 text-sm text-black/40">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-black/40 rounded-full"></div>
-              <span className="font-inter">Share your experience</span>
+              <span className="font-open-sans">Share your experience</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-black/40 rounded-full"></div>
-              <span className="font-inter">Ask questions</span>
+              <span className="font-open-sans">Ask questions</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-black/40 rounded-full"></div>
-              <span className="font-inter">Connect with others</span>
+              <span className="font-open-sans">Connect with others</span>
             </div>
           </div>
           
@@ -238,7 +238,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
         </h2>
         <button 
           onClick={() => refreshReplies()}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-open-sans"
           title="Refresh replies"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,12 +262,12 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
                 <div className="flex-1">
                   <header className="flex items-center space-x-3 mb-3">
                     <span className="font-space-grotesk font-bold text-black" itemProp="author">{reply.author}</span>
-                    <time className="text-black/60 text-sm font-inter" itemProp="dateCreated">
+                    <time className="text-black/60 text-sm font-open-sans" itemProp="dateCreated">
                       {reply.timestamp}
                     </time>
                   </header>
                   <div itemProp="text">
-                    <p className="text-black mb-4 leading-relaxed font-inter">{reply.content}</p>
+                    <p className="text-black mb-4 leading-relaxed font-open-sans">{reply.content}</p>
                   </div>
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center space-x-4">
@@ -283,7 +283,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
                       
                       <button
                         onClick={() => onReplyToComment(reply.id, reply.author)}
-                        className="inline-flex items-center gap-2 px-6 py-2 bg-transparent text-black font-semibold border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/15 font-inter"
+                        className="inline-flex items-center gap-2 px-6 py-2 bg-transparent text-black font-semibold border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/15 font-open-sans"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -316,14 +316,14 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
                         <div className="flex-1">
                           <header className="flex items-center space-x-2 mb-2">
                             <span className="font-space-grotesk font-bold text-black">{childReply.author}</span>
-                            <span className="text-black/40 text-sm font-inter">replying to</span>
-                            <span className="text-black font-medium text-sm font-inter">{childReply.replyToAuthor}</span>
-                            <time className="text-black/60 text-sm font-inter">
+                            <span className="text-black/40 text-sm font-open-sans">replying to</span>
+                            <span className="text-black font-medium text-sm font-open-sans">{childReply.replyToAuthor}</span>
+                            <time className="text-black/60 text-sm font-open-sans">
                               {childReply.timestamp}
                             </time>
                           </header>
                           <div>
-                            <p className="text-black mb-3 leading-relaxed font-inter">{childReply.content}</p>
+                            <p className="text-black mb-3 leading-relaxed font-open-sans">{childReply.content}</p>
                           </div>
                           <div className="flex items-center space-x-3 mt-3">
                             <VoteButtons
@@ -338,7 +338,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
                             
                             <button
                               onClick={() => onReplyToComment(childReply.id, childReply.author)}
-                              className="inline-flex items-center gap-1 px-4 py-1 bg-transparent text-black font-medium text-xs border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 font-inter"
+                              className="inline-flex items-center gap-1 px-4 py-1 bg-transparent text-black font-medium text-xs border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 font-open-sans"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

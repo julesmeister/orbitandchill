@@ -13,6 +13,7 @@ const config: Config = {
         'epilogue': ['var(--font-epilogue)', 'sans-serif'],
         'space-grotesk': ['var(--font-space-grotesk)', 'sans-serif'],
         'inter': ['var(--font-inter)', 'sans-serif'],
+        'open-sans': ['var(--font-open-sans)', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

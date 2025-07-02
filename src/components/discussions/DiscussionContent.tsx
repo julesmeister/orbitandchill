@@ -39,7 +39,7 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
       itemType="https://schema.org/DiscussionForumPosting"
     >
       <header className="mb-4">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-black/60 mb-4 font-inter">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-black/60 mb-4 font-open-sans">
           <time 
             dateTime={formattedDate}
             itemProp="datePublished"
@@ -71,7 +71,7 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
       </header>
       
       <div 
-        className="prose prose-black max-w-none font-inter"
+        className="prose prose-black max-w-none font-open-sans"
         itemProp="text"
       >
         {discussion.content?.includes('<') ? (
@@ -233,7 +233,7 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
               {discussion.tags.map((tag, index) => (
                 <span 
                   key={index}
-                  className="inline-flex items-center px-2 sm:px-3 py-1 bg-black text-white text-xs sm:text-sm border border-black font-inter hover:bg-gray-800 transition-colors cursor-pointer min-h-[44px] sm:min-h-auto"
+                  className="inline-flex items-center px-2 sm:px-3 py-1 bg-black text-white text-xs sm:text-sm border border-black font-open-sans hover:bg-gray-800 transition-colors cursor-pointer min-h-[44px] sm:min-h-auto"
                   itemProp="keywords"
                   title={`View more discussions about ${tag}`}
                 >

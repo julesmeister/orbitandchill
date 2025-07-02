@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Epilogue, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Epilogue, Inter, Open_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import Layout from "@/components/Layout"; // Import the Layout component
@@ -64,6 +64,12 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "600", "700"], // Reduced from 6 to 3 weights
+});
+
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 const arvo = localFont({
@@ -169,7 +175,7 @@ export default function RootLayout({
         <script src="https://accounts.google.com/gsi/client" async defer></script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${arvo.variable} ${epilogue.variable} ${spaceGrotesk.variable} ${inter.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${arvo.variable} ${epilogue.variable} ${spaceGrotesk.variable} ${inter.variable} ${openSans.variable} antialiased`}
       >
         <ErrorBoundary>
           <Layout>{children}</Layout> {/* Wrap children with Layout */}
