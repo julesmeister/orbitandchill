@@ -72,6 +72,23 @@ export default function DiscussionsPage() {
     cacheAge,
   } = useDiscussions();
 
+  // Log discussions to check for blog posts
+  useEffect(() => {
+    if (discussions.length > 0) {
+      console.log('🔍 Discussions loaded:', discussions.length);
+      discussions.forEach((discussion, index) => {
+        console.log(`Discussion ${index + 1}:`, {
+          id: discussion.id,
+          title: discussion.title,
+          isBlogPost: discussion.isBlogPost,
+          category: discussion.category,
+          author: discussion.author,
+          type: discussion.isBlogPost ? '📝 BLOG POST' : '💬 DISCUSSION'
+        });
+      });
+    }
+  }, [discussions]);
+
   // Toast state for background refresh notifications
   const [showToast, setShowToast] = useState(false);
 

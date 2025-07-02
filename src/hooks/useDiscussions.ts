@@ -90,22 +90,24 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
     const { data, isFromCache, timestamp } = DiscussionsCache.getCached();
     
     if (data && data.length > 0) {
-      const transformedDiscussions = data.map((d: Discussion) => {
-        const convertTimestamp = (timestamp: number | string | Date) => {
-          if (typeof timestamp === 'number') {
-            return new Date(timestamp * 1000);
-          }
-          return new Date(timestamp);
-        };
-        
-        return {
-          ...d,
-          slug: d.slug || generateSEOSlug(d.title),
-          createdAt: convertTimestamp(d.createdAt),
-          updatedAt: convertTimestamp(d.updatedAt),
-          lastActivity: convertTimestamp(d.lastActivity),
-        };
-      });
+      const transformedDiscussions = data
+        .filter((d: Discussion) => !d.isBlogPost) // Filter out blog posts from cache too
+        .map((d: Discussion) => {
+          const convertTimestamp = (timestamp: number | string | Date) => {
+            if (typeof timestamp === 'number') {
+              return new Date(timestamp * 1000);
+            }
+            return new Date(timestamp);
+          };
+          
+          return {
+            ...d,
+            slug: d.slug || generateSEOSlug(d.title),
+            createdAt: convertTimestamp(d.createdAt),
+            updatedAt: convertTimestamp(d.updatedAt),
+            lastActivity: convertTimestamp(d.lastActivity),
+          };
+        });
 
       setState(prev => ({
         ...prev,
@@ -156,25 +158,27 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
       const data = await response.json();
       
       if (data.success) {
-        const transformedDiscussions = data.discussions.map((d: Discussion) => {
-          const convertTimestamp = (timestamp: number | string | Date) => {
-            if (typeof timestamp === 'number') {
-              return new Date(timestamp * 1000);
-            }
-            return new Date(timestamp);
-          };
-          
-          const transformed = {
-            ...d,
-            slug: d.slug || generateSEOSlug(d.title),
-            createdAt: convertTimestamp(d.createdAt),
-            updatedAt: convertTimestamp(d.updatedAt),
-            lastActivity: convertTimestamp(d.lastActivity),
-          };
-          
-          
-          return transformed;
-        });
+        const transformedDiscussions = data.discussions
+          .filter((d: Discussion) => !d.isBlogPost) // Filter out blog posts - they should only appear in /blog
+          .map((d: Discussion) => {
+            const convertTimestamp = (timestamp: number | string | Date) => {
+              if (typeof timestamp === 'number') {
+                return new Date(timestamp * 1000);
+              }
+              return new Date(timestamp);
+            };
+            
+            const transformed = {
+              ...d,
+              slug: d.slug || generateSEOSlug(d.title),
+              createdAt: convertTimestamp(d.createdAt),
+              updatedAt: convertTimestamp(d.updatedAt),
+              lastActivity: convertTimestamp(d.lastActivity),
+            };
+            
+            
+            return transformed;
+          });
         
         // Save to cache
         DiscussionsCache.setCached(transformedDiscussions, user?.id);
