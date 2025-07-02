@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     const isGenerated = searchParams.get('isGenerated');
     const isBookmarked = searchParams.get('isBookmarked');
     const searchTerm = searchParams.get('searchTerm');
+    const month = searchParams.get('month'); // 0-based month (0-11)
+    const year = searchParams.get('year');
 
     if (!userId) {
       return NextResponse.json(
@@ -63,6 +65,23 @@ export async function GET(request: NextRequest) {
     
     if (searchTerm) {
       filters.searchTerm = searchTerm;
+    }
+    
+    // Add month/year filtering for optimized loading
+    if (month !== null && year !== null) {
+      const monthNum = parseInt(month);
+      const yearNum = parseInt(year);
+      
+      if (!isNaN(monthNum) && !isNaN(yearNum)) {
+        // Create date range for the specific month
+        const startDate = new Date(yearNum, monthNum, 1);
+        const endDate = new Date(yearNum, monthNum + 1, 0); // Last day of month
+        
+        filters.dateFrom = startDate.toISOString().split('T')[0];
+        filters.dateTo = endDate.toISOString().split('T')[0];
+        
+        console.log(`🗓️ Filtering events for month ${monthNum + 1}/${yearNum}: ${filters.dateFrom} to ${filters.dateTo}`);
+      }
     }
 
     // Get events based on filters

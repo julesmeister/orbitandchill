@@ -64,6 +64,11 @@ export default function ChartPage() {
 
   // Check for existing charts and auto-generate if needed
   useEffect(() => {
+    // Early return if cache is still loading - wait for it to complete
+    if (isLoadingCache) {
+      return;
+    }
+
     // Early return if we already have a cached chart - no need to do anything
     if (cachedChart) {
       return;
@@ -123,7 +128,7 @@ export default function ChartPage() {
     };
 
     loadOrGenerateChart();
-  }, []); // Empty dependency array - only run once on mount to prevent chart loss
+  }, [isLoadingCache, cachedChart, isGenerating, user, isProfileComplete]); // Add proper dependencies to prevent unnecessary regeneration
 
   // Track page view analytics
   useEffect(() => {

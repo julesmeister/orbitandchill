@@ -226,7 +226,11 @@ export class EventService {
       }
       
       if (filters.dateFrom) {
-        conditions.push({ column: 'date', value: filters.dateFrom });
+        conditions.push({ column: 'date', value: filters.dateFrom, operator: '>=' });
+      }
+      
+      if (filters.dateTo) {
+        conditions.push({ column: 'date', value: filters.dateTo, operator: '<=' });
       }
       
       // Handle search term with raw SQL LIKE queries

@@ -73,7 +73,10 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
         setHasExistingChart(true); // We have complete data, so a chart should exist or can be generated
         
         const personId = activePerson?.id || user.id;
-        const cacheKey = `natal_chart_${personId}_${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${activePersonData.coordinates.lat}_${activePersonData.coordinates.lon}`;
+        // Normalize coordinates to prevent precision issues causing cache misses
+        const normalizedLat = parseFloat(activePersonData.coordinates.lat).toFixed(4);
+        const normalizedLon = parseFloat(activePersonData.coordinates.lon).toFixed(4);
+        const cacheKey = `natal_chart_${personId}_${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${normalizedLat}_${normalizedLon}`;
         
         try {
           const cached = await db.getCache<NatalChartData>(cacheKey);
@@ -248,7 +251,10 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
 
       // Cache the result locally for 24 hours
       const personId = activePerson?.id || user.id;
-      const cacheKey = `natal_chart_${personId}_${dataToUse.dateOfBirth}_${dataToUse.timeOfBirth}_${dataToUse.coordinates.lat}_${dataToUse.coordinates.lon}`;
+      // Normalize coordinates to match cache key generation in loadCachedChart
+      const normalizedLat = parseFloat(dataToUse.coordinates.lat).toFixed(4);
+      const normalizedLon = parseFloat(dataToUse.coordinates.lon).toFixed(4);
+      const cacheKey = `natal_chart_${personId}_${dataToUse.dateOfBirth}_${dataToUse.timeOfBirth}_${normalizedLat}_${normalizedLon}`;
       await db.setCache(cacheKey, chartData, 1440);
 
       setCachedChart(chartData);

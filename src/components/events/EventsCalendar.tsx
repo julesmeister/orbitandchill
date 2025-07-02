@@ -39,6 +39,8 @@ interface EventsCalendarProps {
   handleEventClick: (event: AstrologicalEvent) => void;
   toggleBookmark: (eventId: string) => void;
   onClearAllEvents?: () => void;
+  userId?: string; // Add userId for month-specific loading
+  onMonthChange?: (month: number, year: number) => void; // Add callback for month changes
 }
 
 export default function EventsCalendar({
@@ -64,7 +66,9 @@ export default function EventsCalendar({
   setShowElectionalOnly,
   handleEventClick,
   toggleBookmark,
-  onClearAllEvents
+  onClearAllEvents,
+  userId,
+  onMonthChange
 }: EventsCalendarProps) {
   // Local state for time controls
   const [aspectTimeOfDay, setAspectTimeOfDay] = React.useState<'morning' | 'noon' | 'evening' | 'custom'>('noon');
@@ -93,6 +97,14 @@ export default function EventsCalendar({
   const handleFiltersChange = React.useCallback((filters: AdvancedFilterState) => {
     setAdvancedFilters(filters);
   }, []);
+
+  // Handle month changes to trigger month-specific loading
+  const handleDateChange = React.useCallback((newDate: Date) => {
+    setCurrentDate(newDate);
+    if (onMonthChange && userId) {
+      onMonthChange(newDate.getMonth(), newDate.getFullYear());
+    }
+  }, [setCurrentDate, onMonthChange, userId]);
   
   if (!showCalendar) return null;
 
@@ -110,7 +122,7 @@ export default function EventsCalendar({
       {/* Calendar Header */}
       <CalendarHeader 
         currentDate={currentDate}
-        setCurrentDate={setCurrentDate}
+        setCurrentDate={handleDateChange}
         onClearAllEvents={onClearAllEvents}
       />
 

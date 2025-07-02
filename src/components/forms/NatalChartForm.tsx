@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { BirthData } from '../../types/user';
 import { Person, PersonFormData } from '../../types/people';
@@ -63,6 +63,10 @@ const NatalChartForm = ({
   const [timeInput, setTimeInput] = useState({ hours: '', minutes: '', period: 'AM' });
   const [dateInput, setDateInput] = useState({ month: '', day: '', year: '' });
   const [isUserTypingTime, setIsUserTypingTime] = useState(false);
+  const [isUserTypingLocation, setIsUserTypingLocation] = useState(false);
+  
+  // Debounced birth data update to prevent API calls on every keystroke
+  const debouncedUpdateRef = useRef<NodeJS.Timeout | null>(null);
   
   // Use status toast hook
   const { toast: statusToast, showError, showSuccess } = useStatusToast();
@@ -110,17 +114,31 @@ const NatalChartForm = ({
     };
   }, []);
 
+  // Debounced birth data update to prevent API calls on every keystroke
+  const debouncedUpdateBirthData = useCallback((birthData: Partial<BirthData>) => {
+    if (debouncedUpdateRef.current) {
+      clearTimeout(debouncedUpdateRef.current);
+    }
+    
+    debouncedUpdateRef.current = setTimeout(() => {
+      updateBirthData(birthData);
+    }, 1000); // Wait 1 second after user stops typing
+  }, [updateBirthData]);
+
   // Consolidated form update handler
   const updateFormData = useCallback((updates: Partial<NatalChartFormData>) => {
-    const newFormData = { ...formData, ...updates };
-    setFormData(newFormData);
-
-    // Only update user birth data in user mode
-    if (mode === 'user') {
-      const { name: _name, ...birthData } = newFormData;
-      updateBirthData(birthData);
-    }
-  }, [formData, updateBirthData, mode]);
+    setFormData(prevFormData => {
+      const newFormData = { ...prevFormData, ...updates };
+      
+      // Only update user birth data in user mode (debounced to prevent API spam)
+      if (mode === 'user') {
+        const { name: _name, ...birthData } = newFormData;
+        debouncedUpdateBirthData(birthData);
+      }
+      
+      return newFormData;
+    });
+  }, [mode, debouncedUpdateBirthData]);
 
   // Load saved data when user changes or when editing a person
   useEffect(() => {
@@ -133,16 +151,30 @@ const NatalChartForm = ({
         coordinates: user.birthData.coordinates || { lat: '', lon: '' },
       });
       
-      if (user.birthData.locationOfBirth) {
+      if (user.birthData.locationOfBirth && !isUserTypingLocation) {
         setLocationQuery(user.birthData.locationOfBirth);
       }
       if (user.birthData.timeOfBirth && !isUserTypingTime) {
-        const time12 = convertTo12Hour(user.birthData.timeOfBirth);
-        setTimeInput(time12);
+        // Convert 24-hour to 12-hour inline to avoid function dependency
+        const [hours, minutes] = user.birthData.timeOfBirth.split(':');
+        const hour24 = parseInt(hours);
+        const period = hour24 >= 12 ? 'PM' : 'AM';
+        let hour12 = hour24 % 12;
+        if (hour12 === 0) hour12 = 12;
+        setTimeInput({
+          hours: hour12.toString(),
+          minutes: minutes,
+          period: period
+        });
       }
       if (user.birthData.dateOfBirth) {
-        const dateComponents = convertFromDateString(user.birthData.dateOfBirth);
-        setDateInput(dateComponents);
+        // Convert date string inline to avoid function dependency
+        const [year, month, day] = user.birthData.dateOfBirth.split('-');
+        setDateInput({
+          month: parseInt(month).toString(),
+          day: parseInt(day).toString(),
+          year: year
+        });
       }
     } else if (mode === 'person' && editingPerson) {
       setFormData({
@@ -156,16 +188,30 @@ const NatalChartForm = ({
       setNotes(editingPerson.notes || '');
       setIsDefault(editingPerson.isDefault || false);
 
-      if (editingPerson.birthData.locationOfBirth) {
+      if (editingPerson.birthData.locationOfBirth && !isUserTypingLocation) {
         setLocationQuery(editingPerson.birthData.locationOfBirth);
       }
       if (editingPerson.birthData.timeOfBirth && !isUserTypingTime) {
-        const time12 = convertTo12Hour(editingPerson.birthData.timeOfBirth);
-        setTimeInput(time12);
+        // Convert 24-hour to 12-hour inline
+        const [hours, minutes] = editingPerson.birthData.timeOfBirth.split(':');
+        const hour24 = parseInt(hours);
+        const period = hour24 >= 12 ? 'PM' : 'AM';
+        let hour12 = hour24 % 12;
+        if (hour12 === 0) hour12 = 12;
+        setTimeInput({
+          hours: hour12.toString(),
+          minutes: minutes,
+          period: period
+        });
       }
       if (editingPerson.birthData.dateOfBirth) {
-        const dateComponents = convertFromDateString(editingPerson.birthData.dateOfBirth);
-        setDateInput(dateComponents);
+        // Convert date string inline
+        const [year, month, day] = editingPerson.birthData.dateOfBirth.split('-');
+        setDateInput({
+          month: parseInt(month).toString(),
+          day: parseInt(day).toString(),
+          year: year
+        });
       }
     } else if (mode === 'person' && !editingPerson) {
       setFormData({
@@ -182,7 +228,16 @@ const NatalChartForm = ({
       setTimeInput({ hours: '', minutes: '', period: 'AM' });
       setDateInput({ month: '', day: '', year: '' });
     }
-  }, [user, convertTo12Hour, convertFromDateString, mode, editingPerson, isUserTypingTime]);
+  }, [user?.id, mode, editingPerson?.id]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debouncedUpdateRef.current) {
+        clearTimeout(debouncedUpdateRef.current);
+      }
+    };
+  }, []);
 
   const {
     locationQuery,
@@ -195,13 +250,28 @@ const NatalChartForm = ({
     dropdownRef,
     handleLocationSelect: onLocationSelect,
   } = useLocationSearch((location) => {
-    updateFormData({
+    setIsUserTypingLocation(false); // User selected a location, so they're done typing
+    
+    // Clear any pending debounced update
+    if (debouncedUpdateRef.current) {
+      clearTimeout(debouncedUpdateRef.current);
+    }
+    
+    const newFormData = {
       locationOfBirth: location.display_name,
       coordinates: {
         lat: location.lat,
         lon: location.lon
       }
-    });
+    };
+    
+    setFormData(prevFormData => ({ ...prevFormData, ...newFormData }));
+    
+    // Immediately update birth data for location selection (no debounce)
+    if (mode === 'user') {
+      updateBirthData(newFormData);
+    }
+    
     setIsLocationFocused(false);
   });
 
@@ -210,9 +280,15 @@ const NatalChartForm = ({
   }, [updateFormData]);
 
   const handleLocationInputChange = useCallback((value: string) => {
+    setIsUserTypingLocation(true);
     setLocationQuery(value);
     updateFormData({ locationOfBirth: value });
-  }, [setLocationQuery, updateFormData]);
+    
+    // Reset typing flag after user stops typing
+    setTimeout(() => {
+      setIsUserTypingLocation(false);
+    }, 500);
+  }, [updateFormData]);
 
   const handleTimeInputChange = useCallback((field: 'hours' | 'minutes' | 'period', value: string) => {
     setIsUserTypingTime(true);
@@ -268,6 +344,17 @@ const NatalChartForm = ({
     }
 
     if (!isFormValid) return;
+
+    // Clear any pending debounced updates and immediately save data
+    if (debouncedUpdateRef.current) {
+      clearTimeout(debouncedUpdateRef.current);
+    }
+    
+    // Ensure latest data is saved before generating chart
+    if (mode === 'user') {
+      const { name: _name, ...birthData } = formData;
+      await updateBirthData(birthData);
+    }
 
     try {
       if (mode === 'person') {

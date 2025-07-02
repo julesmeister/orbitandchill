@@ -95,6 +95,7 @@ export default function EventsPage() {
     error,
     setEvents,
     loadEvents,
+    loadMonthEvents,
     addEvent,
     addEvents,
     updateEvent,
@@ -128,30 +129,28 @@ export default function EventsPage() {
     description: ''
   });
 
-  // Track if we've loaded events to prevent multiple loads
-  const hasLoadedEvents = useRef(false);
+  // Note: Month-based loading now handles preventing duplicate loads via caching
 
   // Set document title and meta tags for SEO
   useEffect(() => {
     document.title = `Astrological Events Dashboard | ${BRAND.name}`;
   }, []);
 
-  // Load events when user is available (only once per session)
+  // Load events for current month when user is available
   useEffect(() => {
-    if (user?.id && !hasLoadedEvents.current && events.length === 0 && !isLoading) {
-      hasLoadedEvents.current = true;
-      // Call loadEvents directly from store to avoid dependency issues
-      useEventsStore.getState().loadEvents(user.id);
+    if (user?.id && !isLoading) {
+      // Load events for the current month being displayed
+      loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
     }
-  }, [user?.id]); // Only user ID in dependencies to keep array stable
+  }, [user?.id, loadMonthEvents]); // Load when user changes
 
   // Reload events when tab changes to get properly filtered results
   useEffect(() => {
-    if (user?.id && hasLoadedEvents.current) {
-      // Call loadEvents directly from store to reload with new tab filter
-      useEventsStore.getState().loadEvents(user.id);
+    if (user?.id) {
+      // Load month events with new tab filter
+      loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
     }
-  }, [selectedTab, user?.id]); // Reload when tab or user changes
+  }, [selectedTab, user?.id, loadMonthEvents, currentDate]); // Reload when tab or user changes
 
   // Calculate challenging events count
   const challengingEventsCount = events.filter(event => {
@@ -591,6 +590,14 @@ export default function EventsPage() {
     await updateEvent(id, { title: newTitle });
   };
 
+  // Handle month changes from calendar navigation
+  const handleMonthChange = useCallback(async (month: number, year: number) => {
+    if (user?.id) {
+      console.log(`📅 Month changed to ${month + 1}/${year}, loading events...`);
+      await loadMonthEvents(user.id, month, year);
+    }
+  }, [user?.id, loadMonthEvents]);
+
   const handleClearAllEvents = () => {
     console.log('🔄 handleClearAllEvents called, user:', user?.id);
     
@@ -618,14 +625,11 @@ export default function EventsPage() {
             await clearGeneratedEvents(user.id);
             console.log('✅ clearGeneratedEvents completed successfully');
             
-            // Reset the loaded events flag to allow fresh data loading
-            hasLoadedEvents.current = false;
-            
-            // Force reload events after clearing
-            console.log('🔄 Reloading events after clear...');
-            console.log('🔍 About to reload events for user ID:', user.id);
-            await loadEvents(user.id);
-            console.log('✅ Events reloaded after clear');
+            // Force reload current month after clearing
+            console.log('🔄 Reloading current month events after clear...');
+            console.log('🔍 About to reload month events for user ID:', user.id);
+            await loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
+            console.log('✅ Month events reloaded after clear');
             console.log('📊 Events count after reload:', events.length);
             
             // Show success message with more detail
@@ -1066,6 +1070,8 @@ export default function EventsPage() {
                 handleEventClick={handleEventClick}
                 toggleBookmark={handleToggleBookmark}
                 onClearAllEvents={handleClearAllEvents}
+                userId={user?.id}
+                onMonthChange={handleMonthChange}
               />
             </div>
 

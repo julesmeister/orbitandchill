@@ -50,6 +50,13 @@ export interface AstrologicalEvent {
 interface EventsState {
   // State
   events: AstrologicalEvent[];
+  // Month-based caching: key is "YYYY-MM" format
+  cachedMonths: Map<string, { 
+    events: AstrologicalEvent[]; 
+    loadedAt: number; // timestamp
+    tab: 'all' | 'bookmarked' | 'manual'; // which tab was active when loaded
+  }>;
+  loadedMonths: Set<string>; // Track which months have been loaded
   showCalendar: boolean;
   currentDate: Date;
   selectedType: 'all' | 'benefic' | 'challenging' | 'neutral';
@@ -70,6 +77,8 @@ interface EventsState {
   // Actions
   setEvents: (events: AstrologicalEvent[]) => void;
   loadEvents: (userId: string, filters?: any) => Promise<void>;
+  loadMonthEvents: (userId: string, month: number, year: number) => Promise<void>;
+  getMonthKey: (month: number, year: number) => string;
   addEvent: (event: AstrologicalEvent) => Promise<void>;
   addEvents: (events: AstrologicalEvent[]) => Promise<void>;
   updateEvent: (id: string, updates: Partial<AstrologicalEvent>) => Promise<void>;
@@ -102,6 +111,8 @@ export const useEventsStore = create<EventsState>()(
     (set, get) => ({
       // Initial state
       events: [],
+      cachedMonths: new Map(),
+      loadedMonths: new Set(),
       showCalendar: true, // Show calendar by default so users can see toggles
       currentDate: new Date(),
       selectedType: 'all',
@@ -123,6 +134,82 @@ export const useEventsStore = create<EventsState>()(
       setEvents: (events) => set({ events }),
       setError: (error) => set({ error }),
       setIsLoading: (loading) => set({ isLoading: loading }),
+
+      // Helper function to generate month key
+      getMonthKey: (month: number, year: number) => `${year}-${String(month + 1).padStart(2, '0')}`,
+
+      // Load events for specific month from API
+      loadMonthEvents: async (userId: string, month: number, year: number) => {
+        const { getMonthKey, cachedMonths, selectedTab } = get();
+        const monthKey = getMonthKey(month, year);
+        
+        // Check if we have cached data for this month and tab
+        const cached = cachedMonths.get(monthKey);
+        const cacheExpiry = 10 * 60 * 1000; // 10 minutes cache
+        
+        if (cached && cached.tab === selectedTab && (Date.now() - cached.loadedAt < cacheExpiry)) {
+          console.log(`📋 Using cached events for ${monthKey} (${cached.events.length} events)`);
+          set({ events: cached.events });
+          return;
+        }
+
+        try {
+          set({ isLoading: true, error: null });
+          console.log(`🔄 Loading events for ${monthKey} (month: ${month}, year: ${year})`);
+          
+          const params = new URLSearchParams({
+            userId,
+            tab: selectedTab,
+            month: month.toString(),
+            year: year.toString()
+          });
+          
+          const response = await fetch(`/api/events?${params}`);
+          if (!response.ok) {
+            console.error('❌ Failed to load month events:', {
+              status: response.status,
+              statusText: response.statusText,
+              url: response.url
+            });
+            
+            try {
+              const errorData = await response.json();
+              console.error('❌ Server error:', errorData);
+              throw new Error(errorData.error || `HTTP ${response.status}: Failed to load events`);
+            } catch (jsonError) {
+              throw new Error(`HTTP ${response.status}: Failed to load events`);
+            }
+          }
+          
+          const data = await response.json();
+          if (data.success) {
+            // Cache the loaded data
+            const newCachedMonths = new Map(cachedMonths);
+            newCachedMonths.set(monthKey, {
+              events: data.events,
+              loadedAt: Date.now(),
+              tab: selectedTab
+            });
+            
+            set({ 
+              events: data.events, 
+              isLoading: false,
+              cachedMonths: newCachedMonths,
+              loadedMonths: new Set([...get().loadedMonths, monthKey])
+            });
+            
+            console.log(`✅ Loaded and cached ${data.events.length} events for ${monthKey}`);
+          } else {
+            throw new Error(data.error || 'Failed to load month events');
+          }
+        } catch (error) {
+          console.error('Error loading month events:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to load month events',
+            isLoading: false 
+          });
+        }
+      },
 
       // Load events from API
       loadEvents: async (userId: string, filters = {}) => {
@@ -601,9 +688,9 @@ export const useEventsStore = create<EventsState>()(
     }),
     {
       name: "luckstrology-events-storage",
-      // Serialize Date objects properly - EXCLUDE events from persistence
+      // Serialize Date objects properly - EXCLUDE events and caching data from persistence
       partialize: (state) => {
-        const { events, isLoading, error, ...persistableState } = state;
+        const { events, isLoading, error, cachedMonths, loadedMonths, ...persistableState } = state;
         return {
           ...persistableState,
           currentDate: state.currentDate.toISOString(),
@@ -617,8 +704,10 @@ export const useEventsStore = create<EventsState>()(
             state.currentDate = new Date(state.currentDate);
           }
           
-          // Ensure events are always empty on rehydration (they come from database)
+          // Ensure events and cache are always empty on rehydration (they come from database)
           state.events = [];
+          state.cachedMonths = new Map();
+          state.loadedMonths = new Set();
           state.isLoading = false;
           state.error = null;
           
