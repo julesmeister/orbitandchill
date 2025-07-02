@@ -2,6 +2,7 @@
 
 import { BlogPost } from '@/types/blog';
 import { stripHtmlTags, estimateReadingTime } from '@/utils/textUtils';
+import { getAvatarByIdentifier } from '@/utils/avatarUtils';
 
 /**
  * Convert Thread data from admin store to BlogPost format
@@ -21,7 +22,7 @@ export function convertThreadToBlogPost(thread: any): BlogPost {
     content: thread.content || '',
     author: thread.authorName || 'Admin User',
     authorId: thread.authorId || 'admin',
-    authorAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(thread.authorName || 'Admin')}`,
+    authorAvatar: thread.preferredAvatar || getAvatarByIdentifier(thread.authorName || thread.authorId || 'Admin'),
     category: thread.category || 'General',
     tags: Array.isArray(thread.tags) ? thread.tags : [],
     publishedAt: new Date(thread.createdAt),
@@ -30,8 +31,22 @@ export function convertThreadToBlogPost(thread: any): BlogPost {
     viewCount: thread.views || 0,
     // No imageUrl - will trigger AnimatedZodiacCard
     isFeatured: thread.isPinned || false,
-    slug: generateSlug(thread.title, thread.id)
+    slug: thread.slug || generateCleanSlug(thread.title)
   };
+}
+
+/**
+ * Generate clean SEO-friendly slug from title only (no ID suffix)
+ */
+export function generateCleanSlug(title: string): string {
+  if (!title) return 'untitled';
+  
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+    
+  return slug || 'untitled';
 }
 
 /**

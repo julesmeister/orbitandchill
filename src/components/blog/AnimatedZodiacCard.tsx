@@ -90,6 +90,7 @@ export default function AnimatedZodiacCard({ image, category = 'General', classN
   return (
     <div 
       className={`relative overflow-hidden flex items-center justify-center ${className}`}
+      style={{ background: gradient }}
     >
       {/* Animated Orbit */}
       <div className={`relative ${containerSize}`}>

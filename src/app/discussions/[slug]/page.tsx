@@ -509,7 +509,7 @@ export default function DiscussionDetailPage({
                   {discussion.category}
                 </span>
               </div>
-              <h1 className="font-space-grotesk text-2xl md:text-3xl font-bold text-black mb-2 text-right">
+              <h1 className="font-space-grotesk text-2xl md:text-3xl font-bold text-black mb-2 text-right max-w-md ml-auto">
                 {discussion.title}
               </h1>
              

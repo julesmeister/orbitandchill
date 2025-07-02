@@ -128,10 +128,10 @@ const UserProfile = ({
         align="right"
         trigger={(isOpen) => (
           <div className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors">
-            {user?.profilePictureUrl ? (
+            {user?.preferredAvatar || user?.profilePictureUrl ? (
               <div className="w-8 h-8 rounded-full overflow-hidden">
                 <Image
-                  src={user.profilePictureUrl}
+                  src={user?.preferredAvatar || user?.profilePictureUrl || getAvatarByIdentifier(displayName)}
                   alt={displayName}
                   width={32}
                   height={32}
@@ -171,7 +171,7 @@ const UserProfile = ({
           </div>
           <div className="w-8 h-8 xl:w-10 xl:h-10 rounded-full overflow-hidden">
             <Image
-              src={user?.profilePictureUrl || getAvatarByIdentifier(displayName)}
+              src={user?.preferredAvatar || user?.profilePictureUrl || getAvatarByIdentifier(displayName)}
               alt={displayName}
               width={40}
               height={40}

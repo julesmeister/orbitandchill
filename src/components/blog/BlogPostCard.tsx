@@ -21,7 +21,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   return (
     <article className="bg-white border border-black rounded-none overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {/* Image Section */}
-      <Link href={`/blog/${post.slug}`} className="block relative h-48 overflow-hidden">
+      <Link href={`/discussions/${post.slug}`} className="block relative h-48 overflow-hidden">
         {post.imageUrl ? (
           <Image
             src={post.imageUrl}
@@ -50,7 +50,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         {/* Title */}
         <h3 className="mb-3">
           <Link 
-            href={`/blog/${post.slug}`}
+            href={`/discussions/${post.slug}`}
             className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200 line-clamp-2"
           >
             {post.title}
@@ -83,12 +83,15 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         {/* Author */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Image
+            <img
               src={post.authorAvatar}
               alt={post.author}
               width={32}
               height={32}
-              className="rounded-full mr-3"
+              className="mr-3 object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/images/default-avatar.svg';
+              }}
             />
             <span className="text-sm font-medium text-gray-700">
               {post.author}
@@ -97,7 +100,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
 
           {/* Read More Link */}
           <Link
-            href={`/blog/${post.slug}`}
+            href={`/discussions/${post.slug}`}
             className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
           >
             Read More →

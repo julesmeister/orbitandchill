@@ -20,6 +20,7 @@ export interface UpdateUserData {
   username?: string;
   email?: string;
   profilePictureUrl?: string;
+  preferredAvatar?: string;
   dateOfBirth?: string;
   timeOfBirth?: string;
   locationOfBirth?: string;

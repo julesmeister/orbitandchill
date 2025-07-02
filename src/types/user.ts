@@ -24,6 +24,7 @@ export interface User {
   username: string; // public display name (Google display name or "Anonymous")
   email?: string; // optional, provided by Google login
   profilePictureUrl?: string; // optional URL to profile picture, provided by Google
+  preferredAvatar?: string; // optional path to user's chosen avatar
   authProvider: "google" | "anonymous"; // To know how the user is authenticated
   createdAt: Date;
   updatedAt: Date;

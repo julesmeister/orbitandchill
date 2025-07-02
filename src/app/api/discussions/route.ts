@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
 import { AnalyticsService } from '@/db/services/analyticsService';
 import { initializeDatabase } from '@/db/index';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     // Try to use database first
     try {
-      await initializeDatabase();
+      const { db } = await initializeDatabase();
       const searchParams = request.nextUrl.searchParams;
       const category = searchParams.get('category') || undefined;
       const sortBy = searchParams.get('sortBy') as 'recent' | 'popular' | 'replies' | 'views' || 'recent';
@@ -43,16 +44,33 @@ export async function GET(request: NextRequest) {
 
       // Filter discussions received from database
       
-      // Enhance with author information (use stored authorName if available)
-      const enhancedDiscussions = discussions.map((discussion: any) => {
+      // Enhance with author information and preferred avatar
+      const enhancedDiscussions = await Promise.all(discussions.map(async (discussion: any) => {
         const authorName = discussion.authorName || 'Anonymous User';
+        
+        // Fetch user's preferred avatar if authorId exists
+        let preferredAvatar = null;
+        if (discussion.authorId) {
+          try {
+            const { users } = await import('@/db/index');
+            const userResult = await db?.select({ preferredAvatar: users.preferredAvatar })
+              .from(users)
+              .where(eq(users.id, discussion.authorId))
+              .limit(1);
+            
+            preferredAvatar = userResult?.[0]?.preferredAvatar || null;
+          } catch (error) {
+            console.warn('Failed to fetch user avatar for', discussion.authorId, error);
+          }
+        }
         
         return {
           ...discussion,
           author: authorName,
           avatar: authorName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+          preferredAvatar: preferredAvatar,
         };
-      });
+      }));
 
       // PERFORMANCE: Skip analytics to prevent connection pool exhaustion
       // Analytics should be handled in a separate background process

@@ -128,7 +128,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
             {popularPosts.map((post, index) => (
               <li key={post.id} className="pb-3 border-b border-gray-200 last:border-0 last:pb-0">
                 <a
-                  href={`/blog/${post.slug}`}
+                  href={`/discussions/${post.slug}`}
                   className="group"
                 >
                   <span className="text-sm font-bold text-gray-500 mr-2">
@@ -158,7 +158,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
             {recentPosts.map((post) => (
               <li key={post.id} className="pb-3 border-b border-gray-200 last:border-0 last:pb-0">
                 <a
-                  href={`/blog/${post.slug}`}
+                  href={`/discussions/${post.slug}`}
                   className="block group"
                 >
                   <span className="text-sm text-gray-700 group-hover:text-blue-600 transition-colors duration-200">

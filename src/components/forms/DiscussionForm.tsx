@@ -8,6 +8,7 @@ import ChartAttachmentButton from '../charts/ChartAttachmentButton';
 import VideoAttachmentButton from '../videos/VideoAttachmentButton';
 import EmbeddedChartDisplay from '../charts/EmbeddedChartDisplay';
 import EmbeddedVideoDisplay from '../videos/EmbeddedVideoDisplay';
+import { generateSlug } from '../../utils/slugify';
 
 interface DiscussionFormProps {
   initialData?: Partial<DiscussionFormData>;
@@ -21,6 +22,7 @@ interface DiscussionFormProps {
   showPublishToggle?: boolean;
   showExcerpt?: boolean;
   showPinToggle?: boolean;
+  showSubmitButton?: boolean; // Option to hide the large submit button
   mode?: 'create' | 'edit';
 }
 
@@ -51,6 +53,7 @@ export default function DiscussionForm({
   showPublishToggle = false,
   showExcerpt = false,
   showPinToggle = false,
+  showSubmitButton = true,
   mode = 'create'
 }: DiscussionFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -71,7 +74,12 @@ export default function DiscussionForm({
     handleRemoveTag,
     handleTagInputKeyDown,
     updateFormData,
-    validateForm
+    validateForm,
+    isEditingSlug,
+    hasManuallyEditedSlug,
+    handleSlugEdit,
+    handleSlugBlur,
+    resetSlugFromTitle
   } = useDiscussionForm(initialData);
 
   // Fallback data in case API fails
@@ -209,7 +217,10 @@ export default function DiscussionForm({
       return;
     }
     
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      slug: formData.slug || generateSlug(formData.title)
+    });
   };
 
   const handleDraftSave = () => {
@@ -253,10 +264,46 @@ export default function DiscussionForm({
               value={formData.title}
               onChange={handleInputChange}
               placeholder={`What would you like to ${showBlogPostToggle ? 'write about' : 'discuss'}?`}
-              className={`w-full px-4 py-4 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 text-lg placeholder-black/50 font-inter ${(showBlogPostToggle || showPublishToggle || showPinToggle) ? 'border-b-0' : ''
-                }`}
+              className="w-full px-4 py-4 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 text-lg placeholder-black/50 font-inter border-b-0"
               required
             />
+            
+            {/* Slug Editor */}
+            <div className="border-l border-r border-b border-black bg-gray-50 p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-inter text-black/60">URL:</span>
+                <span className="text-xs font-mono text-black/40">/discussions/</span>
+                {isEditingSlug ? (
+                  <input
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleInputChange}
+                    onBlur={handleSlugBlur}
+                    className="flex-1 text-xs font-mono px-2 py-1 border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black/20"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSlugEdit}
+                    className="flex-1 text-left text-xs font-mono text-black hover:bg-black/5 px-2 py-1 rounded transition-colors"
+                  >
+                    {formData.slug || 'url-will-appear-here'}
+                  </button>
+                )}
+                {hasManuallyEditedSlug && (
+                  <button
+                    type="button"
+                    onClick={resetSlugFromTitle}
+                    className="text-xs font-inter text-black/60 hover:text-black underline"
+                    title="Reset URL from title"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
             {/* Admin Options - Connected to Title Field */}
             {(showBlogPostToggle || showPublishToggle || showPinToggle) && (
               <div className=" pb-6">
@@ -716,72 +763,74 @@ export default function DiscussionForm({
           </div>
         </div>
 
-        {/* Actions Footer */}
-        <div className="-mx-8 -mb-8 border-t border-black">
-          <div className={`grid gap-0 ${mode === 'create' && onSaveDraft ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            {mode === 'create' && onSaveDraft && (
+        {/* Actions Footer - Only show if showSubmitButton is true */}
+        {showSubmitButton && (
+          <div className="-mx-8 -mb-8 border-t border-black">
+            <div className={`grid gap-0 ${mode === 'create' && onSaveDraft ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {mode === 'create' && onSaveDraft && (
+                <button
+                  type="button"
+                  onClick={handleDraftSave}
+                  disabled={isLoading}
+                  className={`group relative p-6 text-center font-space-grotesk font-semibold border-r border-black bg-white transition-all duration-300 overflow-hidden ${!isLoading
+                    ? 'text-black hover:bg-black hover:text-white'
+                    : 'text-gray-400 cursor-not-allowed bg-gray-50'
+                    }`}
+                >
+                  {/* Animated background on hover */}
+                  {!isLoading && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-200/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+                  )}
+
+                  <div className="relative flex items-center justify-center">
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Saving Draft...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Save Draft
+                      </>
+                    )}
+                  </div>
+                </button>
+              )}
               <button
-                type="button"
-                onClick={handleDraftSave}
+                type="submit"
                 disabled={isLoading}
-                className={`group relative p-6 text-center font-space-grotesk font-semibold border-r border-black bg-white transition-all duration-300 overflow-hidden ${!isLoading
-                  ? 'text-black hover:bg-black hover:text-white'
-                  : 'text-gray-400 cursor-not-allowed bg-gray-50'
+                className={`group relative p-6 text-center font-space-grotesk font-semibold transition-all duration-300 overflow-hidden ${!isLoading
+                  ? 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/25 hover:-translate-y-0.5'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
               >
-                {/* Animated background on hover */}
+                {/* Success gradient animation on hover */}
                 {!isLoading && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-200/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-l from-transparent via-green-300/20 to-transparent translate-x-[100%] group-hover:translate-x-[-100%] transition-transform duration-500"></div>
                 )}
 
                 <div className="relative flex items-center justify-center">
                   {isLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Saving Draft...
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Publishing...
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
-                      Save Draft
+                      {submitText}
                     </>
                   )}
                 </div>
               </button>
-            )}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`group relative p-6 text-center font-space-grotesk font-semibold transition-all duration-300 overflow-hidden ${!isLoading
-                ? 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/25 hover:-translate-y-0.5'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-            >
-              {/* Success gradient animation on hover */}
-              {!isLoading && (
-                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-green-300/20 to-transparent translate-x-[100%] group-hover:translate-x-[-100%] transition-transform duration-500"></div>
-              )}
-
-              <div className="relative flex items-center justify-center">
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Publishing...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    {submitText}
-                  </>
-                )}
-              </div>
-            </button>
+            </div>
           </div>
-        </div>
+        )}
       </form>
       
       {/* Validation Toast */}

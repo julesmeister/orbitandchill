@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { stripHtmlTags } from '@/utils/textUtils';
 
 interface Discussion {
   id: string;
@@ -143,10 +144,10 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
                     </span>
                   </div>
                   <p className="font-inter text-xs text-black/60 mb-2 line-clamp-2">
-                    {discussion.excerpt}
+                    {stripHtmlTags(discussion.excerpt)}
                   </p>
                   <div className="flex items-center space-x-4 text-xs text-black/60">
-                    <span>{formatDistanceToNow(new Date(discussion.createdAt))} ago</span>
+                    <span>{formatDistanceToNow(new Date(typeof discussion.createdAt === 'number' ? discussion.createdAt * 1000 : discussion.createdAt))} ago</span>
                     <span>{discussion.replies} replies</span>
                     <span>{discussion.views} views</span>
                     <span>{discussion.upvotes} upvotes</span>
@@ -181,10 +182,10 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
                     </h4>
                   </div>
                   <p className="font-inter text-xs text-black/60 mb-2 line-clamp-2">
-                    {reply.content}
+                    {stripHtmlTags(reply.content)}
                   </p>
                   <div className="flex items-center space-x-4 text-xs text-black/60">
-                    <span>{formatDistanceToNow(new Date(reply.createdAt))} ago</span>
+                    <span>{formatDistanceToNow(new Date(typeof reply.createdAt === 'number' ? reply.createdAt * 1000 : reply.createdAt))} ago</span>
                     <span>{reply.upvotes} upvotes</span>
                   </div>
                 </Link>

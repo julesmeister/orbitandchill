@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { getTextStats, validateTextLength, extractExcerpt, type TextStats } from '@/utils/textUtils';
 import { EmbeddedChart, EmbeddedVideo } from '../types/threads';
+import { generateSlug } from '@/utils/slugify';
 
 export interface DiscussionFormData {
   title: string;
@@ -10,6 +11,7 @@ export interface DiscussionFormData {
   excerpt: string;
   category: string;
   tags: string[];
+  slug?: string;
   isBlogPost?: boolean;
   isPublished?: boolean;
   isPinned?: boolean;
@@ -24,6 +26,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     excerpt: '',
     category: '',
     tags: [],
+    slug: '',
     isBlogPost: false,
     isPublished: false,
     isPinned: false,
@@ -32,6 +35,8 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     ...initialData
   });
   const [tagInput, setTagInput] = useState('');
+  const [isEditingSlug, setIsEditingSlug] = useState(false);
+  const [hasManuallyEditedSlug, setHasManuallyEditedSlug] = useState(false);
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -63,11 +68,32 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     initialData?.embeddedVideo
   ]);
 
+  // Auto-generate slug from title when title changes (if not manually edited)
+  useEffect(() => {
+    if (!hasManuallyEditedSlug && formData.title) {
+      setFormData(prev => ({
+        ...prev,
+        slug: generateSlug(formData.title)
+      }));
+    }
+  }, [formData.title, hasManuallyEditedSlug]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    
+    if (name === 'slug') {
+      // Mark slug as manually edited when user types in it
+      setHasManuallyEditedSlug(true);
+      setFormData({
+        ...formData,
+        slug: generateSlug(value) // Ensure slug is always URL-safe
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
   const handleContentChange = (content: string) => {
@@ -157,6 +183,22 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     return errors;
   };
 
+  const handleSlugEdit = () => {
+    setIsEditingSlug(true);
+  };
+
+  const handleSlugBlur = () => {
+    setIsEditingSlug(false);
+  };
+
+  const resetSlugFromTitle = () => {
+    setHasManuallyEditedSlug(false);
+    setFormData(prev => ({
+      ...prev,
+      slug: generateSlug(prev.title)
+    }));
+  };
+
   return {
     formData,
     tagInput,
@@ -172,6 +214,12 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     contentStats,
     titleStats,
     autoExcerpt,
-    getValidationErrors
+    getValidationErrors,
+    // Slug editing
+    isEditingSlug,
+    hasManuallyEditedSlug,
+    handleSlugEdit,
+    handleSlugBlur,
+    resetSlugFromTitle
   };
 }

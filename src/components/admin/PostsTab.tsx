@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAdminStore } from '@/store/adminStore';
+import { useUserStore } from '@/store/userStore';
 import DiscussionForm from '../forms/DiscussionForm';
 import ConfirmationModal from '../reusable/ConfirmationModal';
 import { stripHtmlTags } from '@/utils/textUtils';
@@ -16,6 +17,8 @@ interface Thread {
   excerpt: string;
   authorId: string;
   authorName: string;
+  preferredAvatar?: string; // User's chosen avatar
+  slug?: string;
   isBlogPost: boolean;
   isPublished: boolean;
   isPinned: boolean;
@@ -45,6 +48,7 @@ interface PostFormData {
   excerpt: string;
   category: string;
   tags: string[];
+  slug?: string;
   isBlogPost?: boolean;
   isPublished?: boolean;
   isPinned?: boolean;
@@ -54,6 +58,7 @@ interface PostFormData {
 
 export default function PostsTab({ isLoading }: PostsTabProps) {
   const { threads, loadThreads, createThread, updateThread, deleteThread } = useAdminStore();
+  const { user } = useUserStore();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPost, setEditingPost] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'blog' | 'forum' | 'featured'>('all');
@@ -79,8 +84,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     const postData = {
       ...formData,
       embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
-      authorId: 'admin_1',
-      authorName: 'Admin User',
+      authorId: user?.id || 'admin_1',
+      authorName: user?.username || 'Admin User',
+      preferredAvatar: user?.preferredAvatar, // Include user's preferred avatar
       excerpt: formData.excerpt || stripHtmlTags(formData.content).substring(0, 150) + '...',
       isBlogPost: formData.isBlogPost ?? true,
       isPublished: formData.isPublished ?? false,
@@ -129,6 +135,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       excerpt: currentThread.excerpt,
       category: currentThread.category,
       tags: currentThread.tags,
+      authorId: currentThread.authorId,
+      authorName: currentThread.authorName,
+      preferredAvatar: currentThread.preferredAvatar, // Preserve existing preferred avatar
       embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
       isBlogPost: formData.isBlogPost ?? currentThread.isBlogPost,
       isPublished: formData.isPublished ?? currentThread.isPublished,
@@ -180,6 +189,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       excerpt: thread.excerpt,
       category: thread.category,
       tags: thread.tags,
+      authorId: thread.authorId,
+      authorName: thread.authorName,
+      preferredAvatar: thread.preferredAvatar, // Preserve preferred avatar
       isBlogPost: thread.isBlogPost,
       isPublished: thread.isPublished,
       isPinned: !thread.isPinned,
@@ -333,6 +345,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     excerpt: thread.excerpt || '',
                     category: thread.category || 'Natal Charts',
                     tags: Array.isArray(thread.tags) ? thread.tags : [],
+                    slug: thread.slug,
                     isBlogPost: thread.isBlogPost ?? false,
                     isPublished: thread.isPublished ?? false,
                     isPinned: thread.isPinned ?? false,
@@ -358,6 +371,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 showPublishToggle={true}
                 showExcerpt={true}
                 showPinToggle={true}
+                showSubmitButton={false}
                 mode={editingPost ? 'edit' : 'create'}
               />
             </div>
@@ -381,6 +395,10 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     excerpt: currentThread?.excerpt || '',
                     category: currentThread?.category || 'Natal Charts',
                     tags: currentThread?.tags || [],
+                    slug: currentThread?.slug, // Include slug
+                    authorId: currentThread?.authorId,
+                    authorName: currentThread?.authorName,
+                    preferredAvatar: currentThread?.preferredAvatar, // Include preferred avatar
                     isBlogPost: currentThread?.isBlogPost ?? true,
                     isPinned: currentThread?.isPinned ?? false,
                     isLocked: currentThread?.isLocked ?? false,
@@ -404,6 +422,10 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     excerpt: currentThread?.excerpt || '',
                     category: currentThread?.category || 'Natal Charts',
                     tags: currentThread?.tags || [],
+                    slug: currentThread?.slug, // Include slug
+                    authorId: currentThread?.authorId,
+                    authorName: currentThread?.authorName,
+                    preferredAvatar: currentThread?.preferredAvatar, // Include preferred avatar
                     isBlogPost: currentThread?.isBlogPost ?? true,
                     isPinned: currentThread?.isPinned ?? false,
                     isLocked: currentThread?.isLocked ?? false,
@@ -418,6 +440,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 <span className="relative">{editingPost ? 'Update & Publish' : 'Create & Publish'}</span>
               </button>
             </div>
+
           </div>
         </section>
       )}
@@ -543,6 +566,20 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                   </div>
 
                   <div className="flex gap-0 ml-4 border border-black overflow-hidden">
+                    {/* Visit/View button */}
+                    <a
+                      href={`/discussions/${thread.slug || thread.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative px-4 py-3 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-all duration-300 overflow-hidden"
+                      title={`View ${thread.isBlogPost ? 'blog post' : 'discussion'}`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-200/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                      <svg className="relative w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+
                     {/* Pin button - shows for all blog posts */}
                     {Boolean(thread.isBlogPost) && (
                       <button

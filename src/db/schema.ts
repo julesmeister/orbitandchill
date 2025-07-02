@@ -9,6 +9,7 @@ export const users = sqliteTable('users', {
   username: text('username').notNull(),
   email: text('email'),
   profilePictureUrl: text('profile_picture_url'),
+  preferredAvatar: text('preferred_avatar'), // User's chosen avatar from local collection
   authProvider: text('auth_provider', { enum: ['google', 'anonymous'] }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),

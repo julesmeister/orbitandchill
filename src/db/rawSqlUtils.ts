@@ -312,6 +312,7 @@ export function camelToSnakeCase(camelField: string): string {
     'showBirthInfoPublicly': 'show_birth_info_publicly',
     'allowDirectMessages': 'allow_direct_messages',
     'showOnlineStatus': 'show_online_status',
+    'preferredAvatar': 'preferred_avatar',
     // Current location fields for void moon calculations
     'currentLocationName': 'current_location_name',
     'currentLatitude': 'current_latitude',

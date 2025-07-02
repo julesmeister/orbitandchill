@@ -20,6 +20,8 @@ interface Thread {
   excerpt: string;
   authorId: string;
   authorName: string;
+  preferredAvatar?: string; // User's chosen avatar
+  slug?: string;
   isBlogPost: boolean;
   isPublished: boolean;
   isPinned: boolean;
@@ -35,6 +37,8 @@ interface Thread {
   replies: number;
   featuredImage?: string;
   category: string;
+  embeddedChart?: any; // Embedded chart data
+  embeddedVideo?: any; // Embedded video data
 }
 
 interface EventsAnalytics {
@@ -587,30 +591,38 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
       
       if (data.success && data.discussions) {
         // Transform to match Thread interface
-        const threads: Thread[] = data.discussions.map((discussion: any) => ({
-          id: discussion.id,
-          title: discussion.title,
-          content: discussion.content,
-          excerpt: discussion.excerpt,
-          authorId: discussion.authorId || 'unknown',
-          authorName: discussion.authorName || 'Unknown Author',
-          // Proper boolean handling - SQLite returns 0/1, need to convert to boolean
-          isBlogPost: Boolean(discussion.isBlogPost || discussion.is_blog_post),
-          isPublished: Boolean(discussion.isPublished ?? discussion.is_published ?? true),
-          isPinned: Boolean(discussion.isPinned || discussion.is_pinned),
-          isLocked: Boolean(discussion.isLocked || discussion.is_locked),
-          createdAt: discussion.createdAt ? new Date(discussion.createdAt * 1000).toISOString() : new Date().toISOString(),
-          updatedAt: discussion.updatedAt ? new Date(discussion.updatedAt * 1000).toISOString() : new Date().toISOString(),
-          tags: Array.isArray(discussion.tags) ? discussion.tags : [],
-          views: discussion.views || 0,
-          likes: discussion.upvotes || 0, // Map upvotes to likes
-          comments: discussion.replies || 0,
-          upvotes: discussion.upvotes || 0,
-          downvotes: discussion.downvotes || 0,
-          replies: discussion.replies || 0,
-          category: discussion.category || 'General',
-          featuredImage: undefined
-        }));
+        const threads: Thread[] = data.discussions.map((discussion: any) => {
+          // Import generateSlug to create slug if not provided
+          const { generateSlug } = require('@/utils/slugify');
+          return {
+            id: discussion.id,
+            title: discussion.title,
+            content: discussion.content,
+            excerpt: discussion.excerpt,
+            authorId: discussion.authorId || 'unknown',
+            authorName: discussion.authorName || 'Unknown Author',
+            preferredAvatar: discussion.preferredAvatar, // Include user's preferred avatar
+            slug: discussion.slug || generateSlug(discussion.title),
+            // Proper boolean handling - SQLite returns 0/1, need to convert to boolean
+            isBlogPost: Boolean(discussion.isBlogPost || discussion.is_blog_post),
+            isPublished: Boolean(discussion.isPublished ?? discussion.is_published ?? true),
+            isPinned: Boolean(discussion.isPinned || discussion.is_pinned),
+            isLocked: Boolean(discussion.isLocked || discussion.is_locked),
+            createdAt: discussion.createdAt ? new Date(discussion.createdAt * 1000).toISOString() : new Date().toISOString(),
+            updatedAt: discussion.updatedAt ? new Date(discussion.updatedAt * 1000).toISOString() : new Date().toISOString(),
+            tags: Array.isArray(discussion.tags) ? discussion.tags : [],
+            views: discussion.views || 0,
+            likes: discussion.upvotes || 0, // Map upvotes to likes
+            comments: discussion.replies || 0,
+            upvotes: discussion.upvotes || 0,
+            downvotes: discussion.downvotes || 0,
+            replies: discussion.replies || 0,
+            category: discussion.category || 'General',
+            featuredImage: undefined,
+            embeddedChart: discussion.embeddedChart, // Include embedded chart
+            embeddedVideo: discussion.embeddedVideo  // Include embedded video
+          };
+        });
 
         set({
           threads,
@@ -645,6 +657,7 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
           authorName: threadData.authorName,
           category: threadData.category,
           tags: threadData.tags,
+          slug: threadData.slug,
           isBlogPost: threadData.isBlogPost,
           isPublished: threadData.isPublished,
         })
@@ -654,6 +667,7 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
       
       if (data.success && data.discussion) {
         // Transform to match Thread interface
+        const { generateSlug } = require('@/utils/slugify');
         const newThread: Thread = {
           id: data.discussion.id,
           title: data.discussion.title,
@@ -661,6 +675,7 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
           excerpt: data.discussion.excerpt,
           authorId: data.discussion.authorId || threadData.authorId,
           authorName: data.discussion.authorName || threadData.authorName,
+          slug: data.discussion.slug || threadData.slug || generateSlug(data.discussion.title),
           isBlogPost: data.discussion.isBlogPost || false,
           isPublished: data.discussion.isPublished ?? true,
           isPinned: data.discussion.isPinned || threadData.isPinned || false,
@@ -734,6 +749,7 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
       
       if (data.success && data.discussion) {
         // Transform the response to match Thread interface
+        const { generateSlug } = require('@/utils/slugify');
         const updatedThread: Thread = {
           id: data.discussion.id,
           title: data.discussion.title,
@@ -741,6 +757,8 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
           excerpt: data.discussion.excerpt,
           authorId: data.discussion.authorId || 'unknown',
           authorName: data.discussion.authorName || 'Unknown Author',
+          preferredAvatar: data.discussion.preferredAvatar, // Preserve avatar
+          slug: data.discussion.slug || generateSlug(data.discussion.title),
           // Proper boolean handling - SQLite returns 0/1, need to convert to boolean
           isBlogPost: Boolean(data.discussion.isBlogPost || data.discussion.is_blog_post),
           isPublished: Boolean(data.discussion.isPublished ?? data.discussion.is_published ?? true),
@@ -756,7 +774,9 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
           downvotes: data.discussion.downvotes || 0,
           replies: data.discussion.replies || 0,
           category: data.discussion.category || 'General',
-          featuredImage: undefined
+          featuredImage: undefined,
+          embeddedChart: data.discussion.embeddedChart, // Preserve embedded chart
+          embeddedVideo: data.discussion.embeddedVideo  // Preserve embedded video
         };
 
         // Update local state

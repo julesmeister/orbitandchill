@@ -28,7 +28,7 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
 
       <div className="grid md:grid-cols-2 gap-0">
         {/* Image Section */}
-        <Link href={`/blog/${post.slug}`} className="block relative h-64 md:h-full overflow-hidden">
+        <Link href={`/discussions/${post.slug}`} className="block relative h-64 md:h-full overflow-hidden">
           {post.imageUrl ? (
             <Image
               src={post.imageUrl}
@@ -57,7 +57,7 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
           {/* Title */}
           <h2 className="mb-4">
             <Link 
-              href={`/blog/${post.slug}`}
+              href={`/discussions/${post.slug}`}
               className="text-2xl md:text-3xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200 line-clamp-2"
             >
               {post.title}
@@ -88,12 +88,15 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
           {/* Author */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <Image
+              <img
                 src={post.authorAvatar}
                 alt={post.author}
                 width={40}
                 height={40}
-                className="rounded-full mr-3"
+                className="mr-3 object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/default-avatar.svg';
+                }}
               />
               <div>
                 <span className="text-sm font-medium text-gray-700 block">
@@ -107,7 +110,7 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
 
             {/* Read More Button */}
             <Link
-              href={`/blog/${post.slug}`}
+              href={`/discussions/${post.slug}`}
               className="px-6 py-2 bg-black text-white font-medium hover:bg-gray-800 transition-colors duration-200 border border-black"
             >
               Read Full Article

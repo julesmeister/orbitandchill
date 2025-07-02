@@ -89,8 +89,27 @@ export const useUserStore = create<UserState>()(
 
         set({ user: updatedUser });
 
-        // Note: For Google auth users, database persistence is handled by the auth hook
-        // For other updates, we could add database sync here if needed
+        // Save to database if user exists and we're updating important fields
+        if (currentUser?.id && (data.preferredAvatar !== undefined || data.username || data.email)) {
+          try {
+            const response = await fetch('/api/users/profile', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: currentUser.id,
+                username: data.username,
+                email: data.email,
+                preferredAvatar: data.preferredAvatar
+              })
+            });
+            
+            if (!response.ok) {
+              console.error('Failed to update user profile:', response.statusText);
+            }
+          } catch (error) {
+            console.error('Error updating user profile:', error);
+          }
+        }
       },
 
       updateBirthData: async (data) => {
@@ -125,6 +144,7 @@ export const useUserStore = create<UserState>()(
                 ...result.user,
                 createdAt: new Date(result.user.createdAt),
                 updatedAt: new Date(result.user.updatedAt),
+                preferredAvatar: result.user.preferredAvatar, // Include preferred avatar
                 birthData: result.user.dateOfBirth ? {
                   dateOfBirth: result.user.dateOfBirth,
                   timeOfBirth: result.user.timeOfBirth || '',
@@ -213,6 +233,7 @@ export const useUserStore = create<UserState>()(
                   ...result.user,
                   createdAt: new Date(result.user.createdAt),
                   updatedAt: new Date(result.user.updatedAt),
+                  preferredAvatar: result.user.preferredAvatar, // Include preferred avatar
                   birthData: result.user.dateOfBirth ? {
                     dateOfBirth: result.user.dateOfBirth,
                     timeOfBirth: result.user.timeOfBirth || '',
@@ -267,6 +288,7 @@ export const useUserStore = create<UserState>()(
                       ...createResult.user,
                       createdAt: new Date(createResult.user.createdAt),
                       updatedAt: new Date(createResult.user.updatedAt),
+                      preferredAvatar: createResult.user.preferredAvatar, // Include preferred avatar
                       birthData: createResult.user.dateOfBirth ? {
                         dateOfBirth: createResult.user.dateOfBirth,
                         timeOfBirth: createResult.user.timeOfBirth || '',
@@ -370,6 +392,7 @@ export const useUserStore = create<UserState>()(
               username: state.user.username,
               email: state.user.email,
               profilePictureUrl: state.user.profilePictureUrl,
+              preferredAvatar: state.user.preferredAvatar, // Include preferred avatar in persistence
               authProvider: state.user.authProvider,
               createdAt: state.user.createdAt,
               updatedAt: state.user.updatedAt,

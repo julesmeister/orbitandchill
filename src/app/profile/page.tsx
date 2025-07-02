@@ -10,6 +10,46 @@ import UserActivitySection from '../../components/profile/UserActivitySection';
 import UserDiscussionsSection from '../../components/profile/UserDiscussionsSection';
 import ProfileStelliums from '../../components/profile/ProfileStelliums';
 
+// Avatar options (matching avatarUtils.ts)
+const avatarPaths: string[] = [
+  "/avatars/Avatar-1.png",
+  "/avatars/Avatar-2.png",
+  "/avatars/Avatar-3.png",
+  "/avatars/Avatar-4.png",
+  "/avatars/Avatar-5.png",
+  "/avatars/Avatar-6.png",
+  "/avatars/Avatar-7.png",
+  "/avatars/Avatar-8.png",
+  "/avatars/Avatar-9.png",
+  "/avatars/Avatar-10.png",
+  "/avatars/Avatar-11.png",
+  "/avatars/Avatar-12.png",
+  "/avatars/Avatar-13.png",
+  "/avatars/Avatar-14.png",
+  "/avatars/Avatar-15.png",
+  "/avatars/Avatar-16.png",
+  "/avatars/Avatar-17.png",
+  "/avatars/Avatar-18.png",
+  "/avatars/Avatar-19.png",
+  "/avatars/Avatar-20.png",
+  "/avatars/Avatar-21.png",
+  "/avatars/Avatar-22.png",
+  "/avatars/Avatar-23.png",
+  "/avatars/Avatar-24.png",
+  "/avatars/Avatar-25.png",
+  "/avatars/Avatar-26.png",
+  "/avatars/Avatar-27.png",
+  "/avatars/Avatar-28.png",
+  "/avatars/Avatar-29.png",
+  "/avatars/Avatar-30.png",
+  "/avatars/Avatar-31.png",
+  "/avatars/Avatar-32.png",
+  "/avatars/Avatar-33.png",
+  "/avatars/Avatar-34.png",
+  "/avatars/Avatar-35.png",
+  "/avatars/Avatar-36.png",
+];
+
 export default function ProfilePage() {
   const { user, updateUser, updateBirthData } = useUserStore();
   const { getUserCharts } = useNatalChart();
@@ -17,6 +57,8 @@ export default function ProfilePage() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState(user?.username || '');
   const [chartCount, setChartCount] = useState(0);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   
   // Activity tabs state - default to forum activity
   const [activeActivityTab, setActiveActivityTab] = useState<'forum' | 'recent'>('forum');
@@ -82,6 +124,31 @@ export default function ProfilePage() {
     }));
   };
 
+  const handleAvatarSelect = (avatarPath: string) => {
+    setSelectedAvatar(avatarPath);
+  };
+
+  const handleAvatarSave = async () => {
+    if (selectedAvatar) {
+      await updateUser({ preferredAvatar: selectedAvatar });
+      setShowAvatarModal(false);
+      setSelectedAvatar(null);
+    }
+  };
+
+  const handleAvatarCancel = () => {
+    setShowAvatarModal(false);
+    setSelectedAvatar(null);
+  };
+
+  // Get current avatar (preferred or deterministic)
+  const getCurrentAvatar = () => {
+    if (user?.preferredAvatar) {
+      return user.preferredAvatar;
+    }
+    return user?.profilePictureUrl || getAvatarByIdentifier(user?.username || '');
+  };
+
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-white">
       {/* Compact Hero Section */}
@@ -90,14 +157,25 @@ export default function ProfilePage() {
             {/* Profile Info Section */}
             <div className="lg:col-span-3 p-8" style={{ backgroundColor: '#6bdbff' }}>
               <div className="flex items-center space-x-4 mb-4">
-                <div className="w-16 h-16 border-2 border-black bg-white p-1">
-                  <Image
-                    src={user.profilePictureUrl || getAvatarByIdentifier(user.username)}
-                    alt={user.username}
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="relative">
+                  <div className="w-16 h-16 border-2 border-black bg-white p-1">
+                    <Image
+                      src={getCurrentAvatar()}
+                      alt={user.username}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowAvatarModal(true)}
+                    className="absolute -bottom-1 -right-1 w-6 h-6 bg-black text-white border border-black hover:bg-gray-800 transition-colors flex items-center justify-center"
+                    title="Change avatar"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
                 </div>
                 <div>
                   <h1 className="font-space-grotesk text-3xl font-bold text-black">
@@ -404,6 +482,92 @@ export default function ProfilePage() {
 
         </div>
       </section>
+
+      {/* Avatar Selection Modal - Bottom Right */}
+      {showAvatarModal && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={handleAvatarCancel}
+          />
+          
+          {/* Modal */}
+          <div className="fixed bottom-4 right-4 z-50 w-96 max-h-[70vh] bg-white border-2 border-black shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-black">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-space-grotesk text-lg font-bold text-black">Choose Avatar</h2>
+                  <p className="font-inter text-xs text-black/70 mt-1">Select your preferred profile picture</p>
+                </div>
+                <button
+                  onClick={handleAvatarCancel}
+                  className="p-1 bg-white text-black border border-black hover:bg-black hover:text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Avatar Grid */}
+            <div className="p-4 max-h-80 overflow-y-auto">
+              <div className="grid grid-cols-6 gap-2">
+                {avatarPaths.map((avatarPath, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAvatarSelect(avatarPath)}
+                    className={`relative w-12 h-12 border-2 transition-all duration-200 ${
+                      selectedAvatar === avatarPath 
+                        ? 'border-black bg-black p-1' 
+                        : getCurrentAvatar() === avatarPath
+                        ? 'border-blue-500 bg-blue-50 p-1'
+                        : 'border-gray-300 hover:border-black p-1'
+                    }`}
+                  >
+                    <Image
+                      src={avatarPath}
+                      alt={`Avatar ${index + 1}`}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                    />
+                    {getCurrentAvatar() === avatarPath && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full"></div>
+                    )}
+                    {selectedAvatar === avatarPath && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-black border border-white rounded-full"></div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-black flex">
+              <button
+                onClick={handleAvatarCancel}
+                className="flex-1 px-4 py-3 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-colors font-inter font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAvatarSave}
+                disabled={!selectedAvatar}
+                className={`flex-1 px-4 py-3 font-inter font-medium text-sm transition-colors ${
+                  selectedAvatar
+                    ? 'bg-black text-white hover:bg-gray-800'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

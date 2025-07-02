@@ -50,8 +50,8 @@ export default function BlogPage() {
 
           {/* Featured Posts Carousel */}
           {shouldShowCarousel(featuredPosts, filters) && (
-            <section className="px-[5%] py-12 border-b border-gray-200">
-              <div className="max-w-7xl mx-auto">
+            <section className="px-[2%] py-12 border-b border-gray-200">
+              <div className="w-full">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold text-gray-900">Featured Articles</h2>
 
@@ -108,12 +108,12 @@ export default function BlogPage() {
           )}
 
           {/* Main Content Area */}
-          <section className="px-[5%] py-12">
-            <div className="max-w-7xl mx-auto">
+          <section className="px-[2%] py-12">
+            <div className="w-full">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* Main Content */}
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-9">
                   {/* Section Header */}
                   <div className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -168,7 +168,7 @@ export default function BlogPage() {
                   {/* Blog Posts Grid */}
                   {!isLoading && !error && posts.length > 0 && (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                         {posts.map((post) => (
                           <BlogPostCard key={post.id} post={post} />
                         ))}
@@ -186,7 +186,7 @@ export default function BlogPage() {
                 </div>
 
                 {/* Sidebar */}
-                <aside className="lg:col-span-4">
+                <aside className="lg:col-span-3">
                   <BlogSidebar
                     filters={filters}
                     onFiltersChange={setFilters}
