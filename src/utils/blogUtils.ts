@@ -15,6 +15,7 @@ export function convertThreadToBlogPost(thread: any): BlogPost {
   // Clean excerpt with fallback
   const excerpt = thread.excerpt || stripHtmlTags(thread.content || '').substring(0, 150) + '...';
 
+
   return {
     id: thread.id,
     title: thread.title || 'Untitled Post',
@@ -29,7 +30,7 @@ export function convertThreadToBlogPost(thread: any): BlogPost {
     updatedAt: new Date(thread.updatedAt),
     readTime,
     viewCount: thread.views || 0,
-    // No imageUrl - will trigger AnimatedZodiacCard
+    imageUrl: thread.featuredImage, // Use featuredImage from thread as blog post thumbnail
     isFeatured: thread.isPinned || false,
     slug: thread.slug || generateCleanSlug(thread.title)
   };

@@ -128,15 +128,13 @@ export default function BlogPage() {
 
                   {/* Loading State */}
                   {isLoading && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                          <div className="w-4 h-4 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                          <div className="w-4 h-4 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                          <div className="w-4 h-4 bg-black rounded-full animate-bounce"></div>
-                        </div>
-                        <p className="text-gray-600 font-inter">Loading articles...</p>
+                    <div className="text-center py-12 px-6">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="w-4 h-4 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+                        <div className="w-4 h-4 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-4 h-4 bg-black animate-bounce"></div>
                       </div>
+                      <p className="text-gray-600 font-inter">Loading articles...</p>
                     </div>
                   )}
 

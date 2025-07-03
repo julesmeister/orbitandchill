@@ -18,6 +18,7 @@ export interface DiscussionFormData {
   isPinned?: boolean;
   embeddedChart?: EmbeddedChart;
   embeddedVideo?: EmbeddedVideo;
+  thumbnailUrl?: string; // Automatically extracted from first image in content
 }
 
 export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {}) {
@@ -34,6 +35,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     isPinned: false,
     embeddedChart: undefined,
     embeddedVideo: undefined,
+    thumbnailUrl: undefined,
     ...initialData
   });
   const [tagInput, setTagInput] = useState('');
@@ -69,7 +71,8 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     initialData?.isPublished,
     initialData?.isPinned,
     initialData?.embeddedChart,
-    initialData?.embeddedVideo
+    initialData?.embeddedVideo,
+    initialData?.thumbnailUrl
   ]);
 
   // Auto-generate slug from title when title changes (if not manually edited)

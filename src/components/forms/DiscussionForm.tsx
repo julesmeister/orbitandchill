@@ -10,6 +10,7 @@ import EmbeddedChartDisplay from '../charts/EmbeddedChartDisplay';
 import EmbeddedVideoDisplay from '../videos/EmbeddedVideoDisplay';
 import AuthorAutocomplete from './AuthorAutocomplete';
 import { generateSlug } from '../../utils/slugify';
+import { extractFirstImageFromContent } from '../../utils/extractImageFromContent';
 
 interface DiscussionFormProps {
   initialData?: Partial<DiscussionFormData>;
@@ -72,7 +73,7 @@ export default function DiscussionForm({
     tagInput,
     setTagInput,
     handleInputChange,
-    handleContentChange,
+    handleContentChange: originalHandleContentChange,
     handleAddTag,
     handleRemoveTag,
     handleTagInputKeyDown,
@@ -87,6 +88,22 @@ export default function DiscussionForm({
     handleAuthorEdit,
     handleAuthorBlur
   } = useDiscussionForm(initialData);
+
+  // Enhanced content change handler that extracts first image for thumbnail
+  const handleContentChange = (content: string) => {
+    // Call the original handler first
+    originalHandleContentChange(content);
+    
+    // Extract first image from content to use as thumbnail
+    const extractedImageUrl = extractFirstImageFromContent(content);
+    
+    if (extractedImageUrl) {
+      updateFormData({ thumbnailUrl: extractedImageUrl });
+    } else if (formData.thumbnailUrl) {
+      // Only clear thumbnail if we previously had one from content extraction
+      updateFormData({ thumbnailUrl: undefined });
+    }
+  };
 
   // Fallback data in case API fails
   const getFallbackCategories = (): Category[] => [
@@ -237,11 +254,6 @@ export default function DiscussionForm({
       delete (window as any).__shouldPublish;
     }
     
-    console.log('🔍 DiscussionForm handleSubmit - Final submission data:', submissionData);
-    console.log('🔍 DiscussionForm handleSubmit - authorName:', submissionData.authorName);
-    console.log('🔍 DiscussionForm handleSubmit - isBlogPost:', submissionData.isBlogPost);
-    console.log('🔍 DiscussionForm handleSubmit - isPinned:', submissionData.isPinned);
-    console.log('🔍 DiscussionForm handleSubmit - isPublished:', submissionData.isPublished);
     
     onSubmit(submissionData);
   };

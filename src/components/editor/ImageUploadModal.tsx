@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faUpload, faLink, faImage, faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faLink, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface ImageUploadModalProps {
   isOpen: boolean;
@@ -16,51 +16,10 @@ export default function ImageUploadModal({
   onClose, 
   onImageSelect 
 }: ImageUploadModalProps) {
-  const [activeTab, setActiveTab] = useState<'upload' | 'url' | 'canva'>('url');
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size (limit to 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size should be less than 5MB');
-      return;
-    }
-
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
-        onImageSelect(base64, fileName);
-        onClose();
-      };
-      reader.onerror = () => {
-        setError('Failed to read file');
-        setIsLoading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      setError('Failed to process image');
-      setIsLoading(false);
-    }
-  }, [onImageSelect, onClose]);
 
   const handleUrlSubmit = useCallback(() => {
     if (!imageUrl.trim()) {
@@ -80,7 +39,7 @@ export default function ImageUploadModal({
       const hasImageExtension = imageExtensions.some(ext => url.pathname.toLowerCase().endsWith(ext));
       
       // Also accept URLs from known image hosting services
-      const knownImageHosts = ['imgur.com', 'cloudinary.com', 'unsplash.com', 'pexels.com', 'canva.com', 'cdn.discordapp.com'];
+      const knownImageHosts = ['imgur.com', 'cloudinary.com', 'unsplash.com', 'pexels.com', 'imgbb.com', 'i.ibb.co', 'cdn.discordapp.com'];
       const isKnownHost = knownImageHosts.some(host => url.hostname.includes(host));
 
       if (!hasImageExtension && !isKnownHost) {
@@ -99,7 +58,6 @@ export default function ImageUploadModal({
     setImageUrl('');
     setImageAlt('');
     setError(null);
-    setActiveTab('url');
     onClose();
   }, [onClose]);
 
@@ -129,45 +87,35 @@ export default function ImageUploadModal({
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-black">
-          <button
-            onClick={() => setActiveTab('url')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'url'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            <FontAwesomeIcon icon={faLink} className="w-4 h-4 mr-2" />
-            From URL
-          </button>
-          <button
-            onClick={() => setActiveTab('upload')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-l border-black ${
-              activeTab === 'upload'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            <FontAwesomeIcon icon={faUpload} className="w-4 h-4 mr-2" />
-            Upload
-          </button>
-          <button
-            onClick={() => setActiveTab('canva')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors border-l border-black ${
-              activeTab === 'canva'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            <FontAwesomeIcon icon={faCloudUploadAlt} className="w-4 h-4 mr-2" />
-            Canva
-          </button>
-        </div>
 
         {/* Content */}
         <div className="p-6">
+          {/* ImgBB Recommendation - Synapsas Style */}
+          <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-black hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-white border border-black flex items-center justify-center">
+                <FontAwesomeIcon icon={faExternalLinkAlt} className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-space-grotesk text-lg font-bold text-black mb-2">
+                  Need to upload an image?
+                </h4>
+                <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                  Upload your image to ImgBB first to get a permanent URL that works everywhere
+                </p>
+                <a
+                  href="https://imgbb.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-black text-white font-medium hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300"
+                >
+                  Go to ImgBB.com
+                  <FontAwesomeIcon icon={faExternalLinkAlt} className="w-4 h-4 ml-2" />
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 text-sm">
@@ -175,118 +123,56 @@ export default function ImageUploadModal({
             </div>
           )}
 
-          {/* URL Tab */}
-          {activeTab === 'url' && (
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="imageUrl" className="block text-sm font-medium text-black mb-2">
-                  Image URL <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="imageUrl"
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => {
-                    setImageUrl(e.target.value);
-                    setError(null);
-                  }}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleUrlSubmit();
-                    }
-                  }}
-                />
-              </div>
-              <div>
-                <label htmlFor="imageAlt" className="block text-sm font-medium text-black mb-2">
-                  Alt Text (optional)
-                </label>
-                <input
-                  id="imageAlt"
-                  type="text"
-                  value={imageAlt}
-                  onChange={(e) => setImageAlt(e.target.value)}
-                  placeholder="Describe the image"
-                  className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleUrlSubmit();
-                    }
-                  }}
-                />
-              </div>
-              <div className="pt-2">
-                <button
-                  onClick={handleUrlSubmit}
-                  className="w-full px-4 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
-                >
-                  Add Image
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Upload Tab */}
-          {activeTab === 'upload' && (
+          {/* URL Form */}
+          <div className="space-y-4">
             <div>
+              <label htmlFor="imageUrl" className="block text-sm font-medium text-black mb-2">
+                Image URL <span className="text-red-500">*</span>
+              </label>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
+                id="imageUrl"
+                type="url"
+                value={imageUrl}
+                onChange={(e) => {
+                  setImageUrl(e.target.value);
+                  setError(null);
+                }}
+                placeholder="https://i.ibb.co/example/image.jpg"
+                className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleUrlSubmit();
+                  }
+                }}
               />
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-black p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                <FontAwesomeIcon icon={faImage} className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-black font-medium mb-2">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-sm text-gray-600">
-                  PNG, JPG, GIF up to 5MB
-                </p>
-              </div>
-              {isLoading && (
-                <div className="mt-4 text-center">
-                  <div className="inline-flex items-center">
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Processing...
-                  </div>
-                </div>
-              )}
             </div>
-          )}
-
-          {/* Canva Tab */}
-          {activeTab === 'canva' && (
-            <div className="space-y-4">
-              <div className="p-6 bg-gray-50 border border-gray-300 text-center">
-                <FontAwesomeIcon icon={faCloudUploadAlt} className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h4 className="font-medium text-black mb-2">
-                  Canva Integration Tips
-                </h4>
-                <ol className="text-sm text-gray-700 text-left space-y-2 max-w-sm mx-auto">
-                  <li>1. Create your design in Canva</li>
-                  <li>2. Click "Share" → "More" → "View only link"</li>
-                  <li>3. Copy the sharing link</li>
-                  <li>4. Use the "From URL" tab with your Canva link</li>
-                </ol>
-                <p className="text-xs text-gray-600 mt-4">
-                  Note: Make sure your Canva design is set to public or has link sharing enabled
-                </p>
-              </div>
+            <div>
+              <label htmlFor="imageAlt" className="block text-sm font-medium text-black mb-2">
+                Alt Text (optional)
+              </label>
+              <input
+                id="imageAlt"
+                type="text"
+                value={imageAlt}
+                onChange={(e) => setImageAlt(e.target.value)}
+                placeholder="Describe the image"
+                className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleUrlSubmit();
+                  }
+                }}
+              />
+            </div>
+            <div className="pt-2">
               <button
-                onClick={() => setActiveTab('url')}
+                onClick={handleUrlSubmit}
                 className="w-full px-4 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium"
               >
-                Go to URL Tab
+                Add Image
               </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </>

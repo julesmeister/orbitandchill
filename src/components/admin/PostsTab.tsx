@@ -56,6 +56,7 @@ interface PostFormData {
   isPinned?: boolean;
   embeddedChart?: any;
   embeddedVideo?: any;
+  thumbnailUrl?: string;
 }
 
 export default function PostsTab({ isLoading }: PostsTabProps) {
@@ -85,8 +86,6 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   }, [loadThreads]);
 
   const handleFormSubmit = async (formData: PostFormData) => {
-    console.log('🔍 PostsTab handleFormSubmit - Received formData:', formData);
-    console.log('🔍 PostsTab handleFormSubmit - authorName from form:', formData.authorName);
     
     // Show loading toast
     setToast({
@@ -96,18 +95,19 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       status: 'loading'
     });
     
-    // Extract the first image from content to use as thumbnail
-    const firstImage = extractFirstImageFromContent(formData.content);
+    // Use thumbnailUrl from form data (extracted by DiscussionForm) or extract from content as fallback
+    const thumbnailUrl = formData.thumbnailUrl || extractFirstImageFromContent(formData.content);
     let embeddedChart = formData.embeddedChart;
     
     // If no embedded chart but we found an image in content, create an image chart object
-    if (!embeddedChart && firstImage) {
-      embeddedChart = createImageChartObject(firstImage, formData.title);
+    if (!embeddedChart && thumbnailUrl) {
+      embeddedChart = createImageChartObject(thumbnailUrl, formData.title);
     }
 
     const postData = {
       ...formData,
       embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
+      featuredImage: thumbnailUrl || undefined, // Set the extracted/provided image as featured image for blog display
       authorId: user?.id || 'admin_1',
       authorName: formData.authorName || user?.username || 'Admin User', // Use form's authorName or fallback
       preferredAvatar: user?.preferredAvatar, // Include user's preferred avatar
@@ -118,14 +118,10 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       isLocked: false, // Default to unlocked for new posts
     };
     
-    console.log('🔍 PostsTab handleFormSubmit - Final postData:', postData);
-    console.log('🔍 PostsTab handleFormSubmit - Final authorName:', postData.authorName);
 
     try {
       if (editingPost) {
-        console.log('🔍 About to update thread with ID:', editingPost);
         await updateThread(editingPost, postData);
-        console.log('🔍 Thread updated successfully, closing form');
         setEditingPost(null);
         
         // Show success toast
@@ -149,9 +145,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         });
       }
 
-      console.log('🔍 Setting showCreateForm to false');
       setShowCreateForm(false);
-      console.log('🔍 Form should now be closed');
     } catch (error) {
       console.error('❌ Error saving post:', error);
       

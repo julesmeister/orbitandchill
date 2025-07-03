@@ -137,6 +137,7 @@ export const discussions = sqliteTable('discussions', {
   tags: text('tags'), // JSON array
   embeddedChart: text('embedded_chart'), // JSON object for attached chart
   embeddedVideo: text('embedded_video'), // JSON object for attached video
+  featuredImage: text('featured_image'), // URL of the first image from content for thumbnails
   replies: integer('replies').default(0),
   views: integer('views').default(0),
   upvotes: integer('upvotes').default(0),

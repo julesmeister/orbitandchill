@@ -134,14 +134,10 @@ export async function PATCH(
     
     const updates = await request.json();
     
-    console.log('🔍 PATCH API received updates:', updates);
-    console.log('🔍 Author name in updates:', updates.authorName);
     
     // Update the discussion
     const updatedDiscussion = await DiscussionService.updateDiscussion(discussionId, updates, db);
     
-    console.log('🔍 Updated discussion result:', updatedDiscussion ? 'success' : 'failed');
-    console.log('🔍 Updated author name:', updatedDiscussion?.authorName);
     
     if (!updatedDiscussion) {
       return NextResponse.json(

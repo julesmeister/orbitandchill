@@ -225,6 +225,7 @@ export class DiscussionService {
         createdAt: discussion.created_at || discussion.createdAt,
         updatedAt: discussion.updated_at || discussion.updatedAt,
         lastActivity: discussion.last_activity || discussion.lastActivity,
+        featuredImage: discussion.featured_image || discussion.featuredImage,
       };
     });
     
@@ -295,6 +296,7 @@ export class DiscussionService {
               createdAt: row.created_at,
               updatedAt: row.updated_at,
               lastActivity: row.last_activity,
+              featuredImage: row.featured_image,
             };
         }
       
@@ -365,6 +367,7 @@ export class DiscussionService {
           createdAt: row.created_at,
           updatedAt: row.updated_at,
           lastActivity: row.last_activity,
+          featuredImage: row.featured_image,
         };
       }
     } catch (rawError) {
@@ -376,6 +379,7 @@ export class DiscussionService {
   }
 
   static async updateDiscussion(id: string, data: Partial<CreateDiscussionData>, dbInstance?: any) {
+    
     const db = dbInstance || (await import('../index')).db;
     if (!db) {
       
@@ -398,6 +402,11 @@ export class DiscussionService {
     // Handle tags
     if (data.tags !== undefined) {
       updateData.tags = JSON.stringify(data.tags);
+    }
+    
+    // Handle featuredImage
+    if ((data as any).featuredImage !== undefined) {
+      updateData.featuredImage = (data as any).featuredImage;
     }
     
     // Map boolean fields to correct database column names (using camelCase as Drizzle handles the mapping)
@@ -431,7 +440,7 @@ export class DiscussionService {
     // Filter out any fields that don't exist in the schema
     // Using the exact Drizzle column names as defined in the schema
     const validFields = [
-      'title', 'content', 'excerpt', 'category', 'authorName', 'tags',
+      'title', 'content', 'excerpt', 'category', 'authorName', 'tags', 'featuredImage',
       'isBlogPost', 'isPublished', 'isPinned', 'isLocked', 
       'views', 'upvotes', 'downvotes', 'replies', 'updatedAt'
     ];
@@ -442,6 +451,7 @@ export class DiscussionService {
         filteredUpdateData[field] = updateData[field];
       }
     }
+    
 
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
     try {
@@ -464,7 +474,6 @@ export class DiscussionService {
         .set(filteredUpdateData as any)
         .where(eq(discussions.id, id))
         .returning();
-      
       if (!updatedDiscussion) return null;
       const result = updatedDiscussion;
       
@@ -483,6 +492,7 @@ export class DiscussionService {
       // Manual field mapping to database column names
       const columnMapping: Record<string, string> = {
         'authorName': 'author_name',
+        'featuredImage': 'featured_image',
         'isBlogPost': 'is_blog_post', 
         'isPinned': 'is_pinned',
         'isLocked': 'is_locked',
@@ -514,6 +524,7 @@ export class DiscussionService {
       const sql = `UPDATE discussions SET ${mappedUpdates.join(', ')} WHERE id = ?`;
       params.push(id);
       
+      
       const result = await client.execute({ sql, args: params });
       
       // Return the updated discussion
@@ -525,6 +536,7 @@ export class DiscussionService {
       if (!selectResult.rows || selectResult.rows.length === 0) return null;
       
       const updatedRow = selectResult.rows[0] as any;
+      
       return {
         ...updatedRow,
         tags: updatedRow.tags ? JSON.parse(updatedRow.tags) : [],
@@ -533,6 +545,8 @@ export class DiscussionService {
         isPublished: Boolean(updatedRow.is_published),
         isPinned: Boolean(updatedRow.is_pinned),
         isLocked: Boolean(updatedRow.is_locked),
+        // Ensure featuredImage is properly mapped from snake_case
+        featuredImage: updatedRow.featured_image,
       };
     }
   }
