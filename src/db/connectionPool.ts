@@ -41,12 +41,12 @@ class TursoConnectionPool {
     this.databaseUrl = databaseUrl;
     this.authToken = authToken;
     this.config = {
-      minConnections: 2,
-      maxConnections: 8,       // Increased to handle more concurrent requests
-      acquireTimeoutMs: 10000, // Increased timeout for acquiring connections
-      idleTimeoutMs: 120000,   // 2 minutes idle timeout
+      minConnections: 1,
+      maxConnections: 12,      // Increased to handle more concurrent requests
+      acquireTimeoutMs: 15000, // Increased timeout for acquiring connections
+      idleTimeoutMs: 180000,   // 3 minutes idle timeout
       maxLifetimeMs: 1800000,  // 30 minutes max lifetime
-      retryAttempts: 3,        // More retry attempts
+      retryAttempts: 5,        // More retry attempts
       ...config
     };
 
@@ -178,14 +178,32 @@ class TursoConnectionPool {
    */
   private async waitForConnection(): Promise<PooledConnection> {
     return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
       const timeout = setTimeout(() => {
         // Remove from queue
         const index = this.waitingQueue.findIndex(item => item.resolve === resolve);
         if (index !== -1) {
           this.waitingQueue.splice(index, 1);
         }
+        const waitTime = Date.now() - startTime;
+        console.warn(`⏱️ Connection acquisition timeout after ${waitTime}ms. Queue length: ${this.waitingQueue.length}, Active connections: ${Array.from(this.connections.values()).filter(c => c.isInUse).length}/${this.connections.size}`);
         reject(new Error('Connection acquisition timeout'));
       }, this.config.acquireTimeoutMs);
+
+      // Try to create a new connection if we haven't reached the limit
+      if (this.connections.size < this.config.maxConnections) {
+        this.createConnection()
+          .then(connection => {
+            clearTimeout(timeout);
+            connection.isInUse = true;
+            resolve(connection);
+          })
+          .catch(error => {
+            // If connection creation fails, fall back to waiting
+            console.warn('Failed to create new connection, falling back to waiting:', error.message);
+          });
+      }
 
       this.waitingQueue.push({
         resolve: (connection) => {

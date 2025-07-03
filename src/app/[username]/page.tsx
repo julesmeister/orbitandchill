@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useUserStore } from '../../store/userStore';
 import { useNatalChart } from '../../hooks/useNatalChart';
@@ -225,12 +226,12 @@ export default function UserProfilePage() {
                 ? `No user found with username "${username}"`
                 : 'Unable to load this profile. Please try again.'}
             </p>
-            <a 
+            <Link 
               href="/"
               className="inline-block px-6 py-3 bg-black text-white hover:bg-gray-800 transition-colors font-medium border border-black"
             >
               Go Home
-            </a>
+            </Link>
           </div>
         </section>
       </div>

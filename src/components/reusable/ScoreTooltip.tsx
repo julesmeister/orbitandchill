@@ -185,13 +185,18 @@ export default function ScoreTooltip({
 
                   {/* Divider */}
                   <div className="border-t border-gray-100 my-3"></div>
+                  
+                  {/* Title Section */}
+                  <div className="mb-3">
+                    <div className="text-sm font-semibold text-gray-900 text-left max-w-[250px] break-words">{event.title}</div>
+                  </div>
                 </>
               )}
 
               {/* Bookmark button for simplified tooltips */}
               {simplified && onToggleBookmark && (
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-sm font-semibold text-gray-900">{event.title}</div>
+                  <div className="text-sm font-semibold text-gray-900 text-left max-w-[200px] truncate">{event.title}</div>
                   <div
                     onClick={(e) => {
                       e.stopPropagation();

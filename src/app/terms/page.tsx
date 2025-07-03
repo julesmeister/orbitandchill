@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { BRAND } from '@/config/brand';
 
 export default function TermsPage() {
@@ -300,7 +301,7 @@ export default function TermsPage() {
                 If you have questions about these terms or need to report a violation, please contact us:
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <a 
+                <Link 
                   href="/contact" 
                   className="inline-flex items-center space-x-2 bg-black text-white px-8 py-4 border-2 border-black font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
                 >
@@ -308,7 +309,7 @@ export default function TermsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <span>Contact Form</span>
-                </a>
+                </Link>
                 <a 
                   href={`mailto:${BRAND.email}`} 
                   className="inline-flex items-center space-x-2 bg-transparent text-black px-8 py-4 border-2 border-black font-semibold transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"

@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import ThreadingLines from '@/components/threading/ThreadingLines';
 
 interface StatItem {
   label: string;
   value: string;
+  color: string;
 }
 
 interface CommunityStatsProps {
@@ -26,11 +26,11 @@ export default function CommunityStats({
   className = ''
 }: CommunityStatsProps) {
   const [stats, setStats] = useState<StatItem[]>([
-    { label: 'Active Members', value: '...' },
-    { label: 'Total Discussions', value: '...' },
-    { label: 'Total Replies', value: '...' },
-    { label: 'Total Views', value: '...' },
-    { label: 'This Week', value: '...' }
+    { label: 'Active Members', value: '...', color: '#6bdbff' },
+    { label: 'Discussions', value: '...', color: '#51bd94' },
+    { label: 'Total Replies', value: '...', color: '#ff91e9' },
+    { label: 'Total Views', value: '...', color: '#f2e356' },
+    { label: 'This Week', value: '...', color: '#19181a' }
   ]);
   const [loading, setLoading] = useState(true);
 
@@ -66,33 +66,36 @@ export default function CommunityStats({
               const weekAgo = new Date();
               weekAgo.setDate(weekAgo.getDate() - 7);
               
-              // console.log('Raw date:', rawDate, 'Parsed date:', createdAt, 'Week ago:', weekAgo, 'Include?', createdAt > weekAgo);
               return createdAt > weekAgo;
             }).length
           };
-
 
           // Create stats array with real data
           const realStats: StatItem[] = [
             {
               label: 'Active Members',
-              value: discussionStats.uniqueAuthors.size.toString()
+              value: discussionStats.uniqueAuthors.size.toString(),
+              color: '#6bdbff'
             },
             {
-              label: 'Total Discussions',
-              value: discussionStats.totalDiscussions.toString()
+              label: 'Discussions',
+              value: discussionStats.totalDiscussions.toString(),
+              color: '#51bd94'
             },
             {
               label: 'Total Replies',
-              value: discussionStats.totalReplies.toString()
+              value: discussionStats.totalReplies.toString(),
+              color: '#ff91e9'
             },
             {
               label: 'Total Views',
-              value: discussionStats.totalViews.toString()
+              value: discussionStats.totalViews.toString(),
+              color: '#f2e356'
             },
             {
               label: 'This Week',
-              value: discussionStats.recentActivity.toString()
+              value: discussionStats.recentActivity.toString(),
+              color: '#19181a'
             }
           ];
 
@@ -100,22 +103,22 @@ export default function CommunityStats({
         } else {
           // Fallback to default stats if API fails
           setStats([
-            { label: 'Active Members', value: '1' },
-            { label: 'Total Discussions', value: '1' },
-            { label: 'Total Replies', value: '10' },
-            { label: 'Total Views', value: '9' },
-            { label: 'This Week', value: '0' }
+            { label: 'Active Members', value: '1', color: '#6bdbff' },
+            { label: 'Discussions', value: '1', color: '#51bd94' },
+            { label: 'Total Replies', value: '10', color: '#ff91e9' },
+            { label: 'Total Views', value: '9', color: '#f2e356' },
+            { label: 'This Week', value: '0', color: '#19181a' }
           ]);
         }
       } catch (error) {
         console.error('Error fetching community stats:', error);
         // Fallback to default stats
         setStats([
-          { label: 'Active Members', value: '1' },
-          { label: 'Total Discussions', value: '1' },
-          { label: 'Total Replies', value: '10' },
-          { label: 'Total Views', value: '9' },
-          { label: 'This Week', value: '0' }
+          { label: 'Active Members', value: '1', color: '#6bdbff' },
+          { label: 'Discussions', value: '1', color: '#51bd94' },
+          { label: 'Total Replies', value: '10', color: '#ff91e9' },
+          { label: 'Total Views', value: '9', color: '#f2e356' },
+          { label: 'This Week', value: '0', color: '#19181a' }
         ]);
       } finally {
         setLoading(false);
@@ -124,36 +127,37 @@ export default function CommunityStats({
 
     fetchStats();
   }, []);
+
   return (
     <div className={`border-t border-black ${className}`}>
-      <div className="p-3">
-        <h3 className="font-space-grotesk text-sm font-bold text-black mb-3">Community Stats</h3>
-        
-        {/* Horizontal Bar Layout */}
-        <div className="space-y-1">
-          {stats.map((stat, index) => (
-            <div key={`${stat.label}-${index}`} className="relative">
-              <div className={`flex border border-black ${loading ? 'animate-pulse' : ''}`}>
-                {/* Left accent bar */}
-                <div className="w-1 bg-gray-300"></div>
-                
-                {/* Middle section - Label (flex grows) */}
-                <div className="flex-1 bg-white px-3 py-1 flex items-center">
-                  <span className={`text-xs text-black font-medium ${loading ? 'bg-gray-200 text-transparent' : ''}`}>
-                    {stat.label}
-                  </span>
-                </div>
-                
-                {/* Right section - Value (fixed width) */}
-                <div className="w-12 bg-black text-white flex items-center justify-center">
-                  <span className={`text-xs font-bold ${loading ? 'bg-gray-200 text-transparent' : ''}`}>
-                    {stat.value}
-                  </span>
-                </div>
-              </div>
+      <div className="p-4 border-b border-black">
+        <h3 className="font-space-grotesk text-base font-bold text-black">Community Stats</h3>
+      </div>
+      
+      <div className="grid grid-cols-2">
+        {stats.map((stat, index) => (
+          <div key={`${stat.label}-${index}`} className="group relative">
+            <div className={`flex flex-col items-center justify-center px-3 py-4 border-r border-b border-black transition-all duration-200 hover:pl-5 ${loading ? 'animate-pulse' : ''} ${
+              index % 2 === 1 ? 'border-r-0' : ''
+            } ${
+              index >= stats.length - 2 ? 'border-b-0' : ''
+            }`}>
+              {/* Animated accent bar on hover */}
+              <div
+                className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300"
+                style={{ backgroundColor: stat.color }}
+              />
+              
+              <span className={`text-xs px-2 py-1 border border-black text-black font-bold mb-2 ${loading ? 'bg-gray-200 text-transparent rounded' : ''}`}>
+                {stat.value}
+              </span>
+              
+              <span className={`font-medium text-xs text-black text-center ${loading ? 'bg-gray-200 text-transparent rounded' : ''}`}>
+                {stat.label}
+              </span>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

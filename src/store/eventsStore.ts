@@ -81,6 +81,7 @@ interface EventsState {
   getMonthKey: (month: number, year: number) => string;
   addEvent: (event: AstrologicalEvent) => Promise<void>;
   addEvents: (events: AstrologicalEvent[]) => Promise<void>;
+  addEventsLocal: (events: AstrologicalEvent[]) => void;
   updateEvent: (id: string, updates: Partial<AstrologicalEvent>) => Promise<void>;
   deleteEvent: (id: string, userId?: string) => Promise<void>;
   toggleBookmark: (id: string, userId?: string) => Promise<void>;
@@ -140,14 +141,14 @@ export const useEventsStore = create<EventsState>()(
 
       // Load events for specific month from API
       loadMonthEvents: async (userId: string, month: number, year: number) => {
-        const { getMonthKey, cachedMonths, selectedTab } = get();
+        const { getMonthKey, cachedMonths } = get();
         const monthKey = getMonthKey(month, year);
         
-        // Check if we have cached data for this month and tab
+        // Check if we have cached data for this month (tabs are just UI filters)
         const cached = cachedMonths.get(monthKey);
         const cacheExpiry = 10 * 60 * 1000; // 10 minutes cache
         
-        if (cached && cached.tab === selectedTab && (Date.now() - cached.loadedAt < cacheExpiry)) {
+        if (cached && (Date.now() - cached.loadedAt < cacheExpiry)) {
           console.log(`📋 Using cached events for ${monthKey} (${cached.events.length} events)`);
           set({ events: cached.events });
           return;
@@ -159,7 +160,6 @@ export const useEventsStore = create<EventsState>()(
           
           const params = new URLSearchParams({
             userId,
-            tab: selectedTab,
             month: month.toString(),
             year: year.toString()
           });
@@ -183,12 +183,12 @@ export const useEventsStore = create<EventsState>()(
           
           const data = await response.json();
           if (data.success) {
-            // Cache the loaded data
+            // Cache the loaded data (tabs are just UI filters, not server data)
             const newCachedMonths = new Map(cachedMonths);
             newCachedMonths.set(monthKey, {
               events: data.events,
               loadedAt: Date.now(),
-              tab: selectedTab
+              tab: 'all'
             });
             
             set({ 
@@ -295,6 +295,46 @@ export const useEventsStore = create<EventsState>()(
         }
       },
       
+      // Add multiple events locally only (for generated events)
+      addEventsLocal: (newEvents: AstrologicalEvent[]) => {
+        if (newEvents.length === 0) return;
+        
+        // Deduplicate events based on key characteristics
+        const { events: existingEvents } = get();
+        const createEventHash = (event: AstrologicalEvent) => 
+          `${event.date}-${event.time}-${event.title}-${event.score}-${event.type}`;
+        
+        const existingHashes = new Set(existingEvents.map(createEventHash));
+        const uniqueNewEvents = newEvents.filter(event => {
+          const hash = createEventHash(event);
+          return !existingHashes.has(hash);
+        });
+        
+        const duplicateCount = newEvents.length - uniqueNewEvents.length;
+        if (duplicateCount > 0) {
+          console.log(`🔄 Deduplicated ${duplicateCount} duplicate events out of ${newEvents.length}`);
+        }
+        
+        if (uniqueNewEvents.length === 0) {
+          console.log('✅ No new unique events to add locally');
+          return;
+        }
+        
+        // Generate local IDs for unique events
+        const eventsWithLocalIds = uniqueNewEvents.map((event: AstrologicalEvent, index: number) => ({
+          ...event,
+          id: event.id || `local_${Date.now()}_${index}` // Use existing ID or generate local ID
+        }));
+        
+        // Add to local state only
+        set((state) => ({ 
+          events: [...eventsWithLocalIds, ...state.events] 
+        }));
+        
+        console.log(`✅ Added ${eventsWithLocalIds.length} events to local state (no database save)`);
+        console.log(`📊 Total events in store after local add: ${get().events.length}`);
+      },
+
       // Add multiple events via API using bulk endpoint
       addEvents: async (newEvents: AstrologicalEvent[]) => {
         set({ error: null });
@@ -568,79 +608,124 @@ export const useEventsStore = create<EventsState>()(
             params.set('year', targetDate.getFullYear().toString());
           }
           
-          // Use the bulk delete API endpoint with month filtering
-          const response = await fetch(`/api/events?${params.toString()}`, {
-            method: 'DELETE'
-          });
+          // Use the bulk delete API endpoint with month filtering and timeout handling
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
           
-          if (!response.ok) {
-            // Try to get detailed error information
-            let errorMessage = `HTTP ${response.status}: Failed to clear generated events`;
-            try {
-              const errorData = await response.json();
-              errorMessage = errorData.error || errorMessage;
-            } catch (jsonError) {
-              // Fallback to status-based message
-              console.warn('Could not parse error response:', jsonError);
+          let response;
+          try {
+            response = await fetch(`/api/events?${params.toString()}`, {
+              method: 'DELETE',
+              signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              // Try to get detailed error information
+              let errorMessage = `HTTP ${response.status}: Failed to clear generated events`;
+              try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+              } catch (jsonError) {
+                // Fallback to status-based message
+                console.warn('Could not parse error response:', jsonError);
+              }
+              
+              // If it's a timeout or connection error, handle gracefully
+              if (response.status >= 500 || errorMessage.includes('timeout') || errorMessage.includes('Connection acquisition timeout')) {
+                console.warn('⚠️ Database timeout during clear, proceeding with local cleanup only');
+                // Don't throw error, just continue with local cleanup
+                set((state) => ({
+                  events: state.events.filter(e => {
+                    // Keep bookmarked events and manual events
+                    if (e.isBookmarked || !e.isGenerated) return true;
+                    // Remove generated events
+                    return false;
+                  })
+                }));
+                return; // Exit successfully with local cleanup
+              }
+              
+              throw new Error(errorMessage);
             }
-            throw new Error(errorMessage);
-          }
-          
-          const data = await response.json();
-          console.log(`🔄 API Response:`, data);
-          
-          if (data.success) {
-            console.log(`✅ Successfully cleared ${data.deletedCount} generated events from database`);
             
-            // Get current state for before/after comparison
-            const currentState = get();
-            const beforeCount = currentState.events.length;
+            const data = await response.json();
+            console.log(`🔄 API Response:`, data);
             
-            // Immediately update local state to remove generated events and pattern-matching events
-            set((state) => ({
-              events: state.events.filter(e => {
-                // Keep bookmarked events
-                if (e.isBookmarked) return true;
-                
-                // Remove events marked as generated
-                if (e.isGenerated) return false;
-                
-                // Remove events that match generated patterns (aggressive cleanup)
-                const title = e.title || '';
-                const isGeneratedPattern = (
-                  title.includes('Jupiter') || 
-                  title.includes('Venus') || 
-                  title.includes('&') ||
-                  title.includes('exalted') ||
-                  title.includes('House') ||
-                  title.includes('Moon') ||
-                  title.includes('Mars') ||
-                  title.includes('Mercury') ||
-                  title.includes('Saturn') ||
-                  title.includes('Sun') ||
-                  title.includes('Pluto') ||
-                  title.includes('Neptune') ||
-                  title.includes('Uranus')
-                );
-                
-                return !isGeneratedPattern;
-              })
-            }));
+            if (data.success) {
+              console.log(`✅ Successfully cleared ${data.deletedCount} generated events from database`);
+              
+              // Get current state for before/after comparison
+              const currentState = get();
+              const beforeCount = currentState.events.length;
+              
+              // Immediately update local state to remove generated events and pattern-matching events
+              set((state) => ({
+                events: state.events.filter(e => {
+                  // Keep bookmarked events
+                  if (e.isBookmarked) return true;
+                  
+                  // Remove events marked as generated
+                  if (e.isGenerated) return false;
+                  
+                  // Remove events that match generated patterns (aggressive cleanup)
+                  const title = e.title || '';
+                  const isGeneratedPattern = (
+                    title.includes('Jupiter') || 
+                    title.includes('Venus') || 
+                    title.includes('&') ||
+                    title.includes('exalted') ||
+                    title.includes('House') ||
+                    title.includes('Moon') ||
+                    title.includes('Mars') ||
+                    title.includes('Mercury') ||
+                    title.includes('Saturn') ||
+                    title.includes('Sun') ||
+                    title.includes('Pluto') ||
+                    title.includes('Neptune') ||
+                    title.includes('Uranus')
+                  );
+                  
+                  return !isGeneratedPattern;
+                })
+              }));
+              
+              // Show immediate feedback
+              const afterState = get();
+              const afterCount = afterState.events.length;
+              const localRemovedCount = beforeCount - afterCount;
+              
+              console.log(`🔄 Local state updated: ${beforeCount} → ${afterCount} events (removed ${localRemovedCount} locally)`);
+              
+              // Reload events from database to ensure consistency
+              console.log('🔄 Reloading events from database to ensure consistency...');
+              const { loadEvents } = get();
+              await loadEvents(userId);
+              
+            } else {
+              throw new Error(data.error || 'Failed to clear generated events');
+            }
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
             
-            // Show immediate feedback
-            const afterState = get();
-            const afterCount = afterState.events.length;
-            const localRemovedCount = beforeCount - afterCount;
+            // Handle AbortError (timeout) or network errors gracefully
+            if (fetchError instanceof Error && (fetchError.name === 'AbortError' || fetchError.message.includes('timeout'))) {
+              console.warn('⚠️ Clear operation timed out, proceeding with local cleanup only');
+              // Don't throw error, just continue with local cleanup
+              set((state) => ({
+                events: state.events.filter(e => {
+                  // Keep bookmarked events and manual events
+                  if (e.isBookmarked || !e.isGenerated) return true;
+                  // Remove generated events
+                  return false;
+                })
+              }));
+              return; // Exit successfully with local cleanup
+            }
             
-            console.log(`🔄 Local state updated: ${beforeCount} → ${afterCount} events (removed ${localRemovedCount} locally)`);
-            
-            // Reload events from database to ensure consistency
-            console.log('🔄 Reloading events from database to ensure consistency...');
-            const { loadEvents } = get();
-            await loadEvents(userId);
-            
-          } else {
-            throw new Error(data.error || 'Failed to clear generated events');
+            // Re-throw other errors
+            throw fetchError;
           }
           
         } catch (error) {

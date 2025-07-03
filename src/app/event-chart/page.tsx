@@ -24,10 +24,10 @@ import {
 } from '../../utils/eventUtils';
 import { getDefaultTimeOptions } from '../../utils/timeOptions';
 import { parseEventParams } from '../../utils/urlParams';
-import { 
-  buildChartParameters, 
-  createChartShareData, 
-  generateBirthDataForChart 
+import {
+  buildChartParameters,
+  createChartShareData,
+  generateBirthDataForChart
 } from '../../utils/chartGeneration';
 import { createLoadingContent, validateEventChartProps } from '../../utils/uiHelpers';
 import EventHeader from '../../components/events/EventHeader';
@@ -53,7 +53,7 @@ function EventChartContent() {
 
   const [selectedTime, setSelectedTime] = useState(eventTime);
   const [chartData, setChartData] = useState<{ svg: string; metadata?: { chartData?: import('../../utils/natalChart').NatalChartData } } | null>(null);
-  
+
   // Error handling state
   const [errorToast, setErrorToast] = useState({
     isVisible: false,
@@ -108,21 +108,21 @@ function EventChartContent() {
 
       const chartResult = await generateChart(chartParams, true); // Force regeneration for different times
       setChartData(chartResult);
-      
+
       // Clear any previous errors
       if (errorToast.isVisible) {
         setErrorToast({ isVisible: false, title: '', message: '' });
       }
     } catch (error) {
       console.error('Error generating event chart:', error);
-      
+
       // Show error toast
       setErrorToast({
         isVisible: true,
         title: 'Chart Generation Failed',
         message: error instanceof Error ? error.message : 'Unable to generate chart. Please check your birth data and try again.'
       });
-      
+
       // Clear the chart data to show the placeholder
       setChartData(null);
     }
@@ -153,7 +153,7 @@ function EventChartContent() {
             {/* Visual Indicator Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-0 bg-white border border-black mb-12">
               {/* Missing Data Indicator */}
-              <div 
+              <div
                 style={{ backgroundColor: '#ff91e9' }}
                 className="p-8 text-center relative"
               >
@@ -171,7 +171,7 @@ function EventChartContent() {
               </div>
 
               {/* Configuration Indicator */}
-              <div 
+              <div
                 style={{ backgroundColor: '#f2e356' }}
                 className="p-8 text-center relative border-l border-r border-black"
               >
@@ -189,7 +189,7 @@ function EventChartContent() {
               </div>
 
               {/* Action Needed Indicator */}
-              <div 
+              <div
                 style={{ backgroundColor: '#6bdbff' }}
                 className="p-8 text-center relative"
               >
@@ -209,8 +209,8 @@ function EventChartContent() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link 
-                href="/settings" 
+              <Link
+                href="/settings"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -218,9 +218,9 @@ function EventChartContent() {
                 </svg>
                 <span className="font-space-grotesk">Complete Profile</span>
               </Link>
-              
-              <Link 
-                href="/events" 
+
+              <Link
+                href="/events"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-transparent text-black font-semibold border-2 border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ function EventChartContent() {
         </section>
 
         {/* Help Section */}
-        <section 
+        <section
           className="px-[5%] py-16"
           style={{ backgroundColor: '#f0e3ff' }}
         >
@@ -241,7 +241,7 @@ function EventChartContent() {
             <h2 className="font-space-grotesk text-3xl font-bold text-black text-center mb-12">
               Getting Started with Event Charts
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Step 1 */}
               <div className="p-6 bg-white border border-black">
@@ -335,64 +335,55 @@ function EventChartContent() {
           </div>
         ) : chartData ? (
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-0 border border-black bg-white">
-              {/* Main Chart */}
-              <div className="lg:col-span-4 border-black lg:border-r">
-                <NatalChartDisplay
-                  svgContent={chartData.svg}
-                  chartName={generateEventChartName(eventTitle, validEventDate, selectedTime)}
-                  birthData={generateBirthDataForChart(validEventDate, selectedTime, user?.birthData)}
-                  chartData={chartData.metadata?.chartData}
-                  onShare={() => {
-                    const shareData = createChartShareData(eventTitle, validEventDate);
-                    navigator.share?.(shareData);
-                  }}
-                />
-              </div>
-
-              {/* Sidebar */}
-              <div className="lg:col-span-2 bg-white">
-                {/* Event Info */}
-                <div className="p-6 border-b border-black">
-                  <h4 className="font-space-grotesk text-lg font-bold text-black mb-3">
-                    Event Details
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <svg className="w-4 h-4 mr-2 text-black" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                      </svg>
-                      <span className="font-inter text-black">
-                        {formatEventDate(validEventDate)} at {formatTime12Hour(selectedTime)}
-                      </span>
-                    </div>
-                    {isOptimal && optimalScore && (
-                      <div className="flex items-center text-sm">
-                        <svg className="w-4 h-4 mr-2 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                        <span className="font-inter text-green-600">
-                          Optimal Score: {optimalScore}%
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Interpretation Sidebar - Only show when interpretation tab is active */}
-                {activeTab === 'interpretation' && (
-                  <InterpretationSidebar
-                    onSectionClick={(sectionId) => {
-                      // Scroll to section or handle section navigation
-                      const element = document.getElementById(`section-${sectionId}`);
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }}
-                    className="border-t border-black"
-                  />
-                )}
-              </div>
+            {/* Main Chart */}
+            <div className="lg:col-span-4 border-black lg:border-r">
+              <NatalChartDisplay
+                svgContent={chartData.svg}
+                chartName={generateEventChartName(eventTitle, validEventDate, selectedTime)}
+                birthData={generateBirthDataForChart(validEventDate, selectedTime, user?.birthData)}
+                chartData={chartData.metadata?.chartData}
+                onShare={() => {
+                  const shareData = createChartShareData(eventTitle, validEventDate);
+                  navigator.share?.(shareData);
+                }}
+              />
             </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-2 bg-white">
+              {/* Event Info */}
+              <div className="p-6 border-b border-black">
+                <h4 className="font-space-grotesk text-lg font-bold text-black mb-3">
+                  Event Details
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <svg className="w-4 h-4 mr-2 text-black" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    <span className="font-inter text-black">
+                      {formatEventDate(validEventDate)} at {formatTime12Hour(selectedTime)}
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Interpretation Sidebar - Only show when interpretation tab is active */}
+              {activeTab === 'interpretation' && (
+                <InterpretationSidebar
+                  onSectionClick={(sectionId) => {
+                    // Scroll to section or handle section navigation
+                    const element = document.getElementById(`section-${sectionId}`);
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="border-t border-black"
+                />
+              )}
+            </div>
+          </div>
         ) : (
           <div className="bg-white border border-black p-12">
             <div className="text-center">

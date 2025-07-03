@@ -88,7 +88,7 @@ export default function AuthorAutocomplete({
         setSuggestions(filteredUsers);
         setIsOpen(filteredUsers.length > 0);
         if (filteredUsers.length > 0) {
-          console.log('🔍 First few suggestions:', filteredUsers.slice(0, 3).map(u => u.username));
+          console.log('🔍 First few suggestions:', filteredUsers.slice(0, 3).map((u: any) => u.username));
         }
         setHighlightedIndex(-1);
       } catch (error) {

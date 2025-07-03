@@ -1,44 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, Users, Star, Trash2, Edit3, Bookmark, Clock, Filter, Download, MoreVertical } from 'lucide-react';
-
-interface EventsAnalytics {
-  totalEvents: number;
-  eventsThisMonth: number;
-  eventsByType: {
-    benefic: number;
-    challenging: number;
-    neutral: number;
-  };
-  generationStats: {
-    generated: number;
-    manual: number;
-  };
-  engagementStats: {
-    bookmarked: number;
-    averageScore: number;
-  };
-  usageStats: {
-    activeUsers: number;
-    eventsPerUser: number;
-  };
-}
-
-interface AstrologicalEvent {
-  id: string;
-  userId: string;
-  title: string;
-  date: string;
-  time: string;
-  type: 'benefic' | 'challenging' | 'neutral';
-  description: string;
-  score: number;
-  isGenerated: boolean;
-  isBookmarked: boolean;
-  createdAt: string;
-  timingMethod?: 'electional' | 'aspects' | 'houses';
-  planetsInvolved?: string[];
-}
+import { Search, Plus, Calendar, Star, Trash2, Edit3, Bookmark } from 'lucide-react';
+import { useAdminEvents } from '@/hooks/useAdminEvents';
 
 interface EventFormData {
   title: string;
@@ -54,17 +17,29 @@ interface EventsTabProps {
 }
 
 export default function EventsTab({ isLoading }: EventsTabProps) {
-  const [analytics, setAnalytics] = useState<EventsAnalytics | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [events, setEvents] = useState<AstrologicalEvent[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<AstrologicalEvent[]>([]);
+  // Use the custom hook for data management
+  const {
+    events,
+    analytics,
+    isLoadingEvents,
+    isLoadingAnalytics,
+    eventsError,
+    analyticsError,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    bulkDeleteEvents,
+    refreshData
+  } = useAdminEvents();
+
+  // Local state for UI
+  const [filteredEvents, setFilteredEvents] = useState<typeof events>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<'all' | 'benefic' | 'challenging' | 'neutral'>('all');
   const [selectedSource, setSelectedSource] = useState<'all' | 'generated' | 'manual'>('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<AstrologicalEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<typeof events[0] | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     date: '',
@@ -73,93 +48,6 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     description: '',
     timingMethod: 'electional'
   });
-
-  useEffect(() => {
-    const loadEventsAnalytics = async () => {
-      try {
-        const response = await fetch('/api/admin/metrics');
-        const data = await response.json();
-        
-        if (data.success && data.metrics.events) {
-          setAnalytics(data.metrics.events);
-          setError(null);
-        } else {
-          setError('Failed to load events analytics');
-        }
-      } catch (error) {
-        console.error('Error loading events analytics:', error);
-        setError('Failed to load events analytics');
-      }
-    };
-
-    const loadEvents = async () => {
-      setIsLoadingEvents(true);
-      try {
-        const response = await fetch('/api/admin/events');
-        const data = await response.json();
-        
-        if (data.success && data.events) {
-          setEvents(data.events);
-        } else {
-          // Mock data for development
-          setEvents([
-            {
-              id: '1',
-              userId: 'user1',
-              title: 'Jupiter Trine Venus - Love & Prosperity',
-              date: '2024-01-15',
-              time: '14:30',
-              type: 'benefic',
-              description: 'Excellent time for relationships and financial decisions',
-              score: 9,
-              isGenerated: true,
-              isBookmarked: true,
-              createdAt: '2024-01-10T10:00:00Z',
-              timingMethod: 'aspects',
-              planetsInvolved: ['Jupiter', 'Venus']
-            },
-            {
-              id: '2',
-              userId: 'user2',
-              title: 'Mars Square Saturn - Challenges Ahead',
-              date: '2024-01-20',
-              time: '09:15',
-              type: 'challenging',
-              description: 'Exercise caution in business and personal matters',
-              score: 3,
-              isGenerated: true,
-              isBookmarked: false,
-              createdAt: '2024-01-10T11:00:00Z',
-              timingMethod: 'aspects',
-              planetsInvolved: ['Mars', 'Saturn']
-            },
-            {
-              id: '3',
-              userId: 'user1',
-              title: 'Wedding Ceremony',
-              date: '2024-02-14',
-              time: '16:00',
-              type: 'benefic',
-              description: 'Manually planned wedding ceremony',
-              score: 8,
-              isGenerated: false,
-              isBookmarked: true,
-              createdAt: '2024-01-05T15:30:00Z',
-              timingMethod: 'electional'
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
-        setError('Failed to load events');
-      } finally {
-        setIsLoadingEvents(false);
-      }
-    };
-
-    loadEventsAnalytics();
-    loadEvents();
-  }, []);
 
   // Filter events based on search and filters
   useEffect(() => {
@@ -180,40 +68,28 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/admin/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          userId: 'admin',
-          score: formData.type === 'benefic' ? 8 : formData.type === 'challenging' ? 3 : 5,
-          isGenerated: false,
-          isBookmarked: false,
-          createdAt: new Date().toISOString()
-        })
+      await createEvent({
+        ...formData,
+        score: formData.type === 'benefic' ? 8 : formData.type === 'challenging' ? 3 : 5,
       });
       
-      if (response.ok) {
-        const eventsResponse = await fetch('/api/admin/events');
-        const eventsData = await eventsResponse.json();
-        if (eventsData.success) setEvents(eventsData.events);
-        
-        setFormData({
-          title: '',
-          date: '',
-          time: '12:00',
-          type: 'neutral',
-          description: '',
-          timingMethod: 'electional'
-        });
-        setShowCreateForm(false);
-      }
+      // Reset form
+      setFormData({
+        title: '',
+        date: '',
+        time: '12:00',
+        type: 'neutral',
+        description: '',
+        timingMethod: 'electional'
+      });
+      setShowCreateForm(false);
     } catch (error) {
       console.error('Error creating event:', error);
+      alert('Failed to create event. Please try again.');
     }
   };
 
-  const handleEditEvent = (event: AstrologicalEvent) => {
+  const handleEditEvent = (event: typeof events[0]) => {
     setEditingEvent(event);
     setFormData({
       title: event.title,
@@ -231,32 +107,22 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     if (!editingEvent) return;
     
     try {
-      const response = await fetch(`/api/admin/events/${editingEvent.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      await updateEvent(editingEvent.id, formData);
       
-      if (response.ok) {
-        setEvents(events.map(event => 
-          event.id === editingEvent.id 
-            ? { ...event, ...formData }
-            : event
-        ));
-        
-        setFormData({
-          title: '',
-          date: '',
-          time: '12:00',
-          type: 'neutral',
-          description: '',
-          timingMethod: 'electional'
-        });
-        setEditingEvent(null);
-        setShowCreateForm(false);
-      }
+      // Reset form
+      setFormData({
+        title: '',
+        date: '',
+        time: '12:00',
+        type: 'neutral',
+        description: '',
+        timingMethod: 'electional'
+      });
+      setEditingEvent(null);
+      setShowCreateForm(false);
     } catch (error) {
       console.error('Error updating event:', error);
+      alert('Failed to update event. Please try again.');
     }
   };
 
@@ -264,15 +130,10 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     if (!confirm('Are you sure you want to delete this event?')) return;
     
     try {
-      const response = await fetch(`/api/admin/events/${eventId}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        setEvents(events.filter(event => event.id !== eventId));
-      }
+      await deleteEvent(eventId);
     } catch (error) {
       console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
     }
   };
 
@@ -281,14 +142,11 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     if (!confirm(`Are you sure you want to delete ${selectedEvents.length} events?`)) return;
     
     try {
-      await Promise.all(selectedEvents.map(id => 
-        fetch(`/api/admin/events/${id}`, { method: 'DELETE' })
-      ));
-      
-      setEvents(events.filter(event => !selectedEvents.includes(event.id)));
+      await bulkDeleteEvents(selectedEvents);
       setSelectedEvents([]);
     } catch (error) {
       console.error('Error bulk deleting events:', error);
+      alert('Failed to delete some events. Please try again.');
     }
   };
 
@@ -308,11 +166,20 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     setSelectedEvents([]);
   };
 
-  if (error && !analytics && events.length === 0) {
+  // Show error only if both data sources fail
+  if ((eventsError || analyticsError) && !analytics && events.length === 0) {
     return (
       <div className="space-y-8">
         <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-          <p className="text-red-800 font-inter text-sm">{error}</p>
+          <p className="text-red-800 font-inter text-sm mb-2">
+            {eventsError || analyticsError || 'Failed to load data'}
+          </p>
+          <button 
+            onClick={refreshData}
+            className="text-red-600 hover:text-red-800 underline text-sm"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );

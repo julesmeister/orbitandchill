@@ -15,7 +15,7 @@ interface EventsTableProps {
   showCombosOnly: boolean;
   events: AstrologicalEvent[];
   currentUserId?: string; // To identify shared events
-  setSelectedTab: (tab: 'all' | 'bookmarked' | 'manual') => void;
+  setSelectedTab: (tab: 'all' | 'bookmarked' | 'manual' | 'generated') => void;
   setSelectedType: (type: 'benefic' | 'challenging' | 'neutral' | 'all') => void;
   toggleBookmark: (eventId: string) => void;
   deleteEvent: (eventId: string) => void;
@@ -185,6 +185,22 @@ export default function EventsTable({
               </span>
             </button>
             <button
+              onClick={() => setSelectedTab('generated')}
+              className={`px-6 py-4 h-full flex items-center font-space-grotesk font-semibold transition-all duration-200 border-black ${
+                selectedTab === 'generated'
+                  ? 'bg-black text-white border-r'
+                  : 'text-black hover:bg-gray-50 border-r'
+              }`}
+            >
+              <div className="w-3 h-3 bg-blue-500 border border-black inline-block mr-2 -mt-0.5"></div>
+              Generated Events
+              <span className={`ml-2 px-2 py-0.5 text-xs font-inter border border-black ${
+                selectedTab === 'generated' ? 'bg-white text-black' : 'bg-black text-white'
+              }`}>
+                {events.filter(e => e.isGenerated).length}
+              </span>
+            </button>
+            <button
               onClick={() => setSelectedTab('bookmarked')}
               className={`px-6 py-4 h-full flex items-center font-space-grotesk font-semibold transition-all duration-200 border-black ${
                 selectedTab === 'bookmarked'
@@ -245,7 +261,8 @@ export default function EventsTable({
               <div>
                 <h2 className="font-space-grotesk text-xl font-bold text-black">
                   {selectedTab === 'bookmarked' ? 'Bookmarked Events' : 
-                   selectedTab === 'manual' ? 'Manual Events' : 'Events Overview'}
+                   selectedTab === 'manual' ? 'Manual Events' : 
+                   selectedTab === 'generated' ? 'Generated Events' : 'Events Overview'}
                 </h2>
                 <div className="w-16 h-0.5 bg-black mt-1"></div>
               </div>

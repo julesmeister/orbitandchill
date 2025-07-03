@@ -75,5 +75,7 @@ export interface UseOptimalTimingOptions {
   currentDate: Date;
   selectedPriorities: string[];
   userId: string; // Required for saving events to database
-  onEventsGenerated: (events: any[]) => void;
+  onEventGenerated?: (event: any) => Promise<void>; // NEW: Real-time individual event callback
+  onEventsGenerated: (events: any[]) => void; // EXISTING: Final completion callback
+  onProgress?: (progress: number, message: string) => void; // NEW: Real-time progress updates
 }

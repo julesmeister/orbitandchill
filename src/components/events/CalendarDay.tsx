@@ -29,13 +29,18 @@ export default function CalendarDay({
 
   // Create a day tooltip component for showing events and aspects
   const DayTooltip = ({ children }: { children: React.ReactNode }) => {
-    // Only show day tooltip if there are no individual aspect tooltips
-    if (day.events.length === 0 && day.dailyAspects.length === 0) {
+    // Don't show day tooltip if there are events (they have their own tooltips)
+    if (day.events.length > 0) {
       return <>{children}</>;
     }
 
-    // If there are aspects with individual tooltips, don't add a day tooltip to avoid duplication
+    // Don't show day tooltip if there are aspects (they have their own tooltips)
     if (day.dailyAspects.length > 0) {
+      return <>{children}</>;
+    }
+
+    // Only show day tooltip if there are no events and no aspects
+    if (day.events.length === 0 && day.dailyAspects.length === 0) {
       return <>{children}</>;
     }
 

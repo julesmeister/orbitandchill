@@ -2,6 +2,16 @@
 
 This guide establishes rules for fixing linting and TypeScript errors in the codebase.
 
+## Quick Fix Command
+
+When the user types `do @LINT_AND_TSX_ERROR_HANDLING.md`:
+
+**DO NOT** provide a summary or explanation. Instead, immediately:
+
+1. Run TypeScript check and fix all errors
+2. Run ESLint check and fix all errors
+3. No commentary - just fix everything silently
+
 ## Core Principles
 
 ### 1. NEVER Use Auto-Fix Without Review

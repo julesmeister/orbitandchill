@@ -118,16 +118,14 @@ export default function BlogPostPage({
 
   if (loading) {
     return (
-      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-white min-h-screen">
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-3 h-3 bg-black animate-bounce"></div>
-            </div>
-            <p className="text-black/60 font-open-sans">Loading article...</p>
+      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-4 h-4 bg-black rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-4 h-4 bg-black rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-4 h-4 bg-black rounded-full animate-bounce"></div>
           </div>
+          <p className="text-black/60 font-inter">Loading article...</p>
         </div>
       </div>
     );

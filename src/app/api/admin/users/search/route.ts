@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       args: [`%${query}%`, limit]
     });
 
-    const users = results.rows.map(row => ({
+    const users = results.rows.map((row: any) => ({
       id: row.id,
       username: row.username,
       email: row.email,
