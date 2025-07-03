@@ -1,12 +1,20 @@
+import React from 'react';
 import { DiscussionTemp } from '../../types/threads';
 import EmbeddedChartDisplay from '../charts/EmbeddedChartDisplay';
 import EmbeddedVideoDisplay from '../videos/EmbeddedVideoDisplay';
 
-interface DiscussionContentProps {
-  discussion: DiscussionTemp;
+// Pass first image to parent component via context or props
+export interface FirstImageData {
+  url: string;
+  alt?: string;
 }
 
-export default function DiscussionContent({ discussion }: DiscussionContentProps) {
+interface DiscussionContentProps {
+  discussion: DiscussionTemp;
+  onFirstImageExtracted?: (imageData: FirstImageData | null) => void;
+}
+
+export default function DiscussionContent({ discussion, onFirstImageExtracted }: DiscussionContentProps) {
   // Safely format date for better SEO
   const getValidDate = (dateValue: string | Date | number) => {
     try {
@@ -31,6 +39,68 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
     month: 'short',
     day: 'numeric'
   });
+
+  // Extract first image from content
+  const extractFirstImage = (content: string) => {
+    if (!content) return null;
+    
+    // Check for HTML img tags
+    const imgTagMatch = content.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+    if (imgTagMatch) {
+      return imgTagMatch[1];
+    }
+    
+    // Check for markdown images
+    const markdownMatch = content.match(/!\[[^\]]*\]\(([^)]+)\)/);
+    if (markdownMatch) {
+      return markdownMatch[1];
+    }
+    
+    return null;
+  };
+
+  // Remove first image from content if it exists
+  const removeFirstImage = (content: string) => {
+    if (!content) return content;
+    
+    // Find and remove the first img tag, preserving everything else
+    const imgMatch = content.match(/<img[^>]+>/i);
+    if (imgMatch) {
+      const imgTag = imgMatch[0];
+      const imgIndex = content.indexOf(imgTag);
+      
+      // Remove just the image tag, keeping content before and after
+      const beforeImg = content.substring(0, imgIndex);
+      const afterImg = content.substring(imgIndex + imgTag.length);
+      
+      return (beforeImg + afterImg).trim();
+    }
+    
+    // Remove markdown image if present
+    const markdownMatch = content.match(/!\[[^\]]*\]\([^)]+\)/);
+    if (markdownMatch) {
+      const markdownImg = markdownMatch[0];
+      const imgIndex = content.indexOf(markdownImg);
+      
+      // Remove just the markdown image, keeping content before and after
+      const beforeImg = content.substring(0, imgIndex);
+      const afterImg = content.substring(imgIndex + markdownImg.length);
+      
+      return (beforeImg + afterImg).trim();
+    }
+    
+    return content;
+  };
+
+  const firstImageUrl = extractFirstImage(discussion.content || '');
+  const contentWithoutFirstImage = firstImageUrl ? removeFirstImage(discussion.content || '') : discussion.content;
+
+  // Notify parent component about the first image
+  React.useEffect(() => {
+    if (onFirstImageExtracted) {
+      onFirstImageExtracted(firstImageUrl ? { url: firstImageUrl } : null);
+    }
+  }, [firstImageUrl, onFirstImageExtracted]);
   
   return (
     <article 
@@ -74,7 +144,7 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
         className="prose prose-black max-w-none font-open-sans"
         itemProp="text"
       >
-        {discussion.content?.includes('<') ? (
+        {contentWithoutFirstImage?.includes('<') ? (
           // Render HTML content with enhanced styling
           <div 
             className={`
@@ -110,12 +180,12 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
               /* Horizontal rules */
               [&_hr]:border-black [&_hr]:my-6 sm:[&_hr]:my-8
             `}
-            dangerouslySetInnerHTML={{ __html: discussion.content }}
+            dangerouslySetInnerHTML={{ __html: contentWithoutFirstImage }}
           />
         ) : (
           // Render plain text with enhanced markdown-like parsing
           <div className="space-y-4">
-            {discussion.content?.split('\n').map((paragraph, index) => {
+            {contentWithoutFirstImage?.split('\n').map((paragraph, index) => {
               // Skip empty lines
               if (!paragraph.trim()) {
                 return <div key={index} className="h-4" />;

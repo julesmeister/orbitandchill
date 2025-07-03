@@ -3,14 +3,17 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DiscussionTemp } from '../../types/threads';
 import VoteButtons from '../reusable/VoteButtons';
+import { FirstImageData } from './DiscussionContent';
 
 interface DiscussionSidebarProps {
   discussion: DiscussionTemp;
   relatedDiscussions: DiscussionTemp[];
+  firstImage?: FirstImageData | null;
 }
 
-export default function DiscussionSidebar({ discussion, relatedDiscussions }: DiscussionSidebarProps) {
+export default function DiscussionSidebar({ discussion, relatedDiscussions, firstImage }: DiscussionSidebarProps) {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Format date for display
   const formatDate = (dateValue: string | Date | number) => {
@@ -45,6 +48,26 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
 
   return (
     <div className="sticky top-6 space-y-0">
+      {/* Featured Image */}
+      {firstImage && (
+        <div className="bg-white border-b border-black relative group cursor-pointer" onClick={() => setShowImageModal(true)}>
+          <img 
+            src={firstImage.url} 
+            alt={firstImage.alt || "Discussion featured image"} 
+            className="w-full h-auto object-cover"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowImageModal(true);
+            }}
+            className="absolute bottom-2 right-2 bg-black text-white px-3 py-1 text-xs font-open-sans hover:bg-gray-800 transition-colors opacity-0 group-hover:opacity-100"
+          >
+            View Full
+          </button>
+        </div>
+      )}
+
       {/* Author Info Card */}
       <div className="bg-white border-b border-black p-4">
         <div className="flex items-center space-x-3 mb-4">
@@ -196,6 +219,32 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions }: Di
           ))}
         </div>
       </div>
+
+      {/* Image Modal */}
+      {showImageModal && firstImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative max-w-6xl max-h-[90vh]">
+            <img 
+              src={firstImage.url} 
+              alt={firstImage.alt || "Discussion featured image"} 
+              className="max-w-full max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 bg-black text-white p-2 hover:bg-gray-800 transition-colors"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

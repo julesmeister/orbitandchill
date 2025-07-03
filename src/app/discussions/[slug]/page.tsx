@@ -12,7 +12,7 @@ import { useDiscussionMeta } from "../../../hooks/useDiscussionMeta";
 import { useUserStore } from "../../../store/userStore";
 import { trackDiscussionViewed, trackPageView } from "../../../utils/analytics";
 import { trackDiscussionInteraction } from "../../../hooks/usePageTracking";
-import DiscussionContent from "../../../components/discussions/DiscussionContent";
+import DiscussionContent, { FirstImageData } from "../../../components/discussions/DiscussionContent";
 import ReplyForm from "../../../components/discussions/ReplyForm";
 import RepliesSection from "../../../components/discussions/RepliesSection";
 import DiscussionSidebar from "../../../components/discussions/DiscussionSidebar";
@@ -53,6 +53,7 @@ export default function DiscussionDetailPage({
   const [repliesCount, setRepliesCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [firstImage, setFirstImage] = useState<FirstImageData | null>(null);
 
   // User store integration
   const { user, ensureAnonymousUser, loadProfile } = useUserStore();
@@ -523,7 +524,10 @@ export default function DiscussionDetailPage({
             {/* Main Content */}
             <div className="lg:col-span-3 border border-black bg-white">
               <div className="divide-y divide-black">
-                <DiscussionContent discussion={discussion} />
+                <DiscussionContent 
+                  discussion={discussion} 
+                  onFirstImageExtracted={setFirstImage}
+                />
 
                 <ReplyForm
                   formState={formState}
@@ -547,6 +551,7 @@ export default function DiscussionDetailPage({
               <DiscussionSidebar
                 discussion={discussion}
                 relatedDiscussions={relatedDiscussions}
+                firstImage={firstImage}
               />
             </div>
           </div>
