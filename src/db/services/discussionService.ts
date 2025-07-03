@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 
 export interface CreateDiscussionData {
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
   authorId: string;
@@ -36,6 +37,7 @@ export class DiscussionService {
     const discussion = await db.insert(discussions).values({
       id: nanoid(12),
       title: data.title,
+      slug: data.slug,
       excerpt: data.excerpt,
       content: data.content,
       authorId: data.authorId,
@@ -242,9 +244,6 @@ export class DiscussionService {
       return null;
     }
     
-    // Import slugify utility
-    const { generateSlug } = await import('@/utils/slugify');
-    
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
     const dbObj = db as any;
     const client = dbObj.client;
@@ -255,31 +254,28 @@ export class DiscussionService {
     }
     
     try {
-      // Get all published discussions and find the one with matching slug
+      // Get discussion by slug directly from database
       const rawResult = await client.execute({
-        sql: 'SELECT * FROM discussions WHERE is_published = 1',
-        args: []
+        sql: 'SELECT * FROM discussions WHERE slug = ? AND is_published = 1',
+        args: [slug]
       });
       
       console.log('🔍 Searching for slug:', slug);
       console.log('🔍 Raw SQL result rows:', rawResult.rows?.length || 0);
       
       if (rawResult.rows && rawResult.rows.length > 0) {
-        // Find discussion where generated slug matches the requested slug
-        for (const row of rawResult.rows) {
-          const generatedSlug = generateSlug(row.title);
-          console.log('🔍 Checking title:', row.title, 'Generated slug:', generatedSlug);
-          
-          if (generatedSlug === slug) {
-            console.log('🔍 Found matching discussion:', { 
-              id: row.id, 
-              title: row.title,
-              slug: generatedSlug
-            });
+        // Found discussion with matching slug
+        const row = rawResult.rows[0];
+        console.log('🔍 Found matching discussion:', { 
+          id: row.id, 
+          title: row.title,
+          slug: row.slug
+        });
             
             return {
               id: row.id,
               title: row.title,
+              slug: row.slug,
               excerpt: row.excerpt,
               content: row.content,
               authorId: row.author_id,
@@ -299,11 +295,8 @@ export class DiscussionService {
               createdAt: row.created_at,
               updatedAt: row.updated_at,
               lastActivity: row.last_activity,
-              slug: generatedSlug, // Add the generated slug to the response
             };
-          }
         }
-      }
       
       console.log('🔍 No discussion found with slug:', slug);
       return null;
@@ -352,6 +345,7 @@ export class DiscussionService {
         return {
           id: row.id,
           title: row.title,
+          slug: row.slug,
           excerpt: row.excerpt,
           content: row.content,
           authorId: row.author_id,
@@ -395,6 +389,7 @@ export class DiscussionService {
 
     // Only include fields that exist in the database schema
     if (data.title !== undefined) updateData.title = data.title;
+    if (data.slug !== undefined) updateData.slug = data.slug;
     if (data.content !== undefined) updateData.content = data.content;
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
     if (data.category !== undefined) updateData.category = data.category;

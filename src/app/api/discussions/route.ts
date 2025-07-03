@@ -46,27 +46,38 @@ export async function GET(request: NextRequest) {
       
       // Enhance with author information and preferred avatar
       const enhancedDiscussions = await Promise.all(discussions.map(async (discussion: any) => {
-        const authorName = discussion.authorName || 'Anonymous User';
+        let authorName = discussion.authorName || null;
         
-        // Fetch user's preferred avatar if authorId exists
+        // If no authorName but we have authorId, try to fetch from users table
         let preferredAvatar = null;
         if (discussion.authorId) {
           try {
             const { users } = await import('@/db/index');
-            const userResult = await db?.select({ preferredAvatar: users.preferredAvatar })
+            const userResult = await db?.select({ 
+              username: users.username, 
+              preferredAvatar: users.preferredAvatar 
+            })
               .from(users)
               .where(eq(users.id, discussion.authorId))
               .limit(1);
             
-            preferredAvatar = userResult?.[0]?.preferredAvatar || null;
+            if (userResult?.[0]) {
+              // Use the username from users table if authorName is missing
+              authorName = authorName || userResult[0].username || 'Anonymous User';
+              preferredAvatar = userResult[0].preferredAvatar || null;
+            }
           } catch (error) {
-            console.warn('Failed to fetch user avatar for', discussion.authorId, error);
+            console.warn('Failed to fetch user data for', discussion.authorId, error);
           }
         }
+        
+        // Final fallback
+        authorName = authorName || 'Anonymous User';
         
         return {
           ...discussion,
           author: authorName,
+          authorName: authorName, // Ensure authorName is set for admin compatibility
           avatar: authorName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
           preferredAvatar: preferredAvatar,
         };

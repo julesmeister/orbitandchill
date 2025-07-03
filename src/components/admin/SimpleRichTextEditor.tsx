@@ -10,6 +10,7 @@ import {
   faLink, faImage, faUndo, faRedo, faEye, faEdit,
   faExpand, faCompress, faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
+import ImageUploadModal from '../editor/ImageUploadModal';
 
 interface SimpleRichTextEditorProps {
   content: string;
@@ -39,6 +40,8 @@ export default function SimpleRichTextEditor({
   
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [savedSelection, setSavedSelection] = useState<Range | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Update editor content when prop changes
@@ -56,9 +59,10 @@ export default function SimpleRichTextEditor({
   }, [onChange]);
 
   const execCommand = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value);
+    const result = document.execCommand(command, false, value);
     editorRef.current?.focus();
     handleInput();
+    return result;
   }, [handleInput]);
 
   const formatBlock = useCallback((tag: string) => {
@@ -68,12 +72,31 @@ export default function SimpleRichTextEditor({
     execCommand('formatBlock', tag);
   }, [execCommand]);
 
-  const addImage = useCallback(() => {
-    const url = window.prompt('Enter image URL:');
-    if (url) {
-      execCommand('insertImage', url);
+  const handleImageSelect = useCallback((src: string, alt: string) => {
+    // Focus the editor first
+    editorRef.current?.focus();
+    
+    // Restore saved selection if we have one
+    const selection = window.getSelection();
+    if (savedSelection && selection) {
+      selection.removeAllRanges();
+      selection.addRange(savedSelection);
     }
-  }, [execCommand]);
+    
+    // Insert image with execCommand
+    execCommand('insertImage', src);
+    
+    // Try to add alt attribute to the inserted image
+    const images = editorRef.current?.getElementsByTagName('img');
+    if (images && images.length > 0) {
+      const lastImage = images[images.length - 1];
+      lastImage.alt = alt;
+      lastImage.title = alt;
+    }
+    
+    setShowImageModal(false);
+    setSavedSelection(null);
+  }, [execCommand, savedSelection]);
 
   const addLink = useCallback(() => {
     const url = window.prompt('Enter link URL:');
@@ -225,7 +248,15 @@ export default function SimpleRichTextEditor({
             </ToolbarButton>
             
             <ToolbarButton
-              onClick={addImage}
+              onClick={() => {
+                // Save current selection before opening modal
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                  const range = selection.getRangeAt(0).cloneRange();
+                  setSavedSelection(range);
+                }
+                setShowImageModal(true);
+              }}
               title="Add Image"
             >
               <FontAwesomeIcon icon={faImage} className="w-3 h-3" />
@@ -275,7 +306,7 @@ export default function SimpleRichTextEditor({
             <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-inter">
               {content ? (
                 <div 
-                  className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1"
+                  className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1"
                   dangerouslySetInnerHTML={{ __html: content }}
                 />
               ) : (
@@ -387,6 +418,13 @@ export default function SimpleRichTextEditor({
           )}
         </div>
       )}
+      
+      {/* Image Upload Modal */}
+      <ImageUploadModal
+        isOpen={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        onImageSelect={handleImageSelect}
+      />
     </div>
   );
 }

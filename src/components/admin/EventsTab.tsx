@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
+import { Search, Plus, Calendar, Users, Star, Trash2, Edit3, Bookmark, Clock, Filter, Download, MoreVertical } from 'lucide-react';
 
 interface EventsAnalytics {
   totalEvents: number;
@@ -23,6 +24,31 @@ interface EventsAnalytics {
   };
 }
 
+interface AstrologicalEvent {
+  id: string;
+  userId: string;
+  title: string;
+  date: string;
+  time: string;
+  type: 'benefic' | 'challenging' | 'neutral';
+  description: string;
+  score: number;
+  isGenerated: boolean;
+  isBookmarked: boolean;
+  createdAt: string;
+  timingMethod?: 'electional' | 'aspects' | 'houses';
+  planetsInvolved?: string[];
+}
+
+interface EventFormData {
+  title: string;
+  date: string;
+  time: string;
+  type: 'benefic' | 'challenging' | 'neutral';
+  description: string;
+  timingMethod: 'electional' | 'aspects' | 'houses';
+}
+
 interface EventsTabProps {
   isLoading: boolean;
 }
@@ -30,6 +56,23 @@ interface EventsTabProps {
 export default function EventsTab({ isLoading }: EventsTabProps) {
   const [analytics, setAnalytics] = useState<EventsAnalytics | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [events, setEvents] = useState<AstrologicalEvent[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<AstrologicalEvent[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<'all' | 'benefic' | 'challenging' | 'neutral'>('all');
+  const [selectedSource, setSelectedSource] = useState<'all' | 'generated' | 'manual'>('all');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<AstrologicalEvent | null>(null);
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [formData, setFormData] = useState<EventFormData>({
+    title: '',
+    date: '',
+    time: '12:00',
+    type: 'neutral',
+    description: '',
+    timingMethod: 'electional'
+  });
 
   useEffect(() => {
     const loadEventsAnalytics = async () => {
@@ -49,10 +92,223 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
       }
     };
 
+    const loadEvents = async () => {
+      setIsLoadingEvents(true);
+      try {
+        const response = await fetch('/api/admin/events');
+        const data = await response.json();
+        
+        if (data.success && data.events) {
+          setEvents(data.events);
+        } else {
+          // Mock data for development
+          setEvents([
+            {
+              id: '1',
+              userId: 'user1',
+              title: 'Jupiter Trine Venus - Love & Prosperity',
+              date: '2024-01-15',
+              time: '14:30',
+              type: 'benefic',
+              description: 'Excellent time for relationships and financial decisions',
+              score: 9,
+              isGenerated: true,
+              isBookmarked: true,
+              createdAt: '2024-01-10T10:00:00Z',
+              timingMethod: 'aspects',
+              planetsInvolved: ['Jupiter', 'Venus']
+            },
+            {
+              id: '2',
+              userId: 'user2',
+              title: 'Mars Square Saturn - Challenges Ahead',
+              date: '2024-01-20',
+              time: '09:15',
+              type: 'challenging',
+              description: 'Exercise caution in business and personal matters',
+              score: 3,
+              isGenerated: true,
+              isBookmarked: false,
+              createdAt: '2024-01-10T11:00:00Z',
+              timingMethod: 'aspects',
+              planetsInvolved: ['Mars', 'Saturn']
+            },
+            {
+              id: '3',
+              userId: 'user1',
+              title: 'Wedding Ceremony',
+              date: '2024-02-14',
+              time: '16:00',
+              type: 'benefic',
+              description: 'Manually planned wedding ceremony',
+              score: 8,
+              isGenerated: false,
+              isBookmarked: true,
+              createdAt: '2024-01-05T15:30:00Z',
+              timingMethod: 'electional'
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+        setError('Failed to load events');
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
+
     loadEventsAnalytics();
+    loadEvents();
   }, []);
 
-  if (error) {
+  // Filter events based on search and filters
+  useEffect(() => {
+    let filtered = events.filter(event => {
+      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           event.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = selectedType === 'all' || event.type === selectedType;
+      const matchesSource = selectedSource === 'all' || 
+                           (selectedSource === 'generated' && event.isGenerated) ||
+                           (selectedSource === 'manual' && !event.isGenerated);
+      
+      return matchesSearch && matchesType && matchesSource;
+    });
+    
+    setFilteredEvents(filtered);
+  }, [events, searchQuery, selectedType, selectedSource]);
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('/api/admin/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          userId: 'admin',
+          score: formData.type === 'benefic' ? 8 : formData.type === 'challenging' ? 3 : 5,
+          isGenerated: false,
+          isBookmarked: false,
+          createdAt: new Date().toISOString()
+        })
+      });
+      
+      if (response.ok) {
+        const eventsResponse = await fetch('/api/admin/events');
+        const eventsData = await eventsResponse.json();
+        if (eventsData.success) setEvents(eventsData.events);
+        
+        setFormData({
+          title: '',
+          date: '',
+          time: '12:00',
+          type: 'neutral',
+          description: '',
+          timingMethod: 'electional'
+        });
+        setShowCreateForm(false);
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
+  };
+
+  const handleEditEvent = (event: AstrologicalEvent) => {
+    setEditingEvent(event);
+    setFormData({
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      type: event.type,
+      description: event.description,
+      timingMethod: event.timingMethod || 'electional'
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+    
+    try {
+      const response = await fetch(`/api/admin/events/${editingEvent.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        setEvents(events.map(event => 
+          event.id === editingEvent.id 
+            ? { ...event, ...formData }
+            : event
+        ));
+        
+        setFormData({
+          title: '',
+          date: '',
+          time: '12:00',
+          type: 'neutral',
+          description: '',
+          timingMethod: 'electional'
+        });
+        setEditingEvent(null);
+        setShowCreateForm(false);
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/events/${eventId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        setEvents(events.filter(event => event.id !== eventId));
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedEvents.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedEvents.length} events?`)) return;
+    
+    try {
+      await Promise.all(selectedEvents.map(id => 
+        fetch(`/api/admin/events/${id}`, { method: 'DELETE' })
+      ));
+      
+      setEvents(events.filter(event => !selectedEvents.includes(event.id)));
+      setSelectedEvents([]);
+    } catch (error) {
+      console.error('Error bulk deleting events:', error);
+    }
+  };
+
+  const toggleEventSelection = (eventId: string) => {
+    setSelectedEvents(prev => 
+      prev.includes(eventId) 
+        ? prev.filter(id => id !== eventId)
+        : [...prev, eventId]
+    );
+  };
+
+  const selectAllEvents = () => {
+    setSelectedEvents(filteredEvents.map(event => event.id));
+  };
+
+  const clearSelection = () => {
+    setSelectedEvents([]);
+  };
+
+  if (error && !analytics && events.length === 0) {
     return (
       <div className="space-y-8">
         <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
@@ -72,6 +328,74 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <p className="font-inter text-black/70">
           Monitor and analyze astrological events created by users
         </p>
+      </div>
+
+      {/* Action Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              setEditingEvent(null);
+              setFormData({
+                title: '',
+                date: '',
+                time: '12:00',
+                type: 'neutral',
+                description: '',
+                timingMethod: 'electional'
+              });
+              setShowCreateForm(true);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white border border-black font-medium hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Event
+          </button>
+          
+          {selectedEvents.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white border border-red-600 font-medium hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete ({selectedEvents.length})
+            </button>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:border-black w-64"
+            />
+          </div>
+          
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value as any)}
+            className="px-3 py-2 border border-gray-300 focus:outline-none focus:border-black"
+          >
+            <option value="all">All Types</option>
+            <option value="benefic">Benefic</option>
+            <option value="challenging">Challenging</option>
+            <option value="neutral">Neutral</option>
+          </select>
+          
+          <select
+            value={selectedSource}
+            onChange={(e) => setSelectedSource(e.target.value as any)}
+            className="px-3 py-2 border border-gray-300 focus:outline-none focus:border-black"
+          >
+            <option value="all">All Sources</option>
+            <option value="generated">Generated</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
       </div>
 
       {/* Events Overview Stats */}

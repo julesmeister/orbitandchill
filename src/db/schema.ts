@@ -128,6 +128,7 @@ export const natalCharts = sqliteTable('natal_charts', {
 export const discussions = sqliteTable('discussions', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
+  slug: text('slug').notNull(), // URL-friendly slug for routing
   excerpt: text('excerpt').notNull(),
   content: text('content').notNull(), // Full content
   authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),

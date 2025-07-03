@@ -7,18 +7,7 @@ import DiscussionForm from '../../../components/forms/DiscussionForm';
 import { useUserStore } from '../../../store/userStore';
 import StatusToast from '../../../components/reusable/StatusToast';
 import { generateSlug } from '../../../utils/slugify';
-
-interface DiscussionFormData {
-  title: string;
-  content: string;
-  excerpt: string;
-  category: string;
-  tags: string[];
-  isBlogPost?: boolean;
-  isPublished?: boolean;
-  embeddedChart?: any;
-  embeddedVideo?: any;
-}
+import { DiscussionFormData } from '../../../hooks/useDiscussionForm';
 
 function NewDiscussionContent() {
   const router = useRouter();
@@ -136,7 +125,7 @@ function NewDiscussionContent() {
     try {
       const discussionData = {
         ...formData,
-        slug: formData.slug || generateSlug(formData.title), // Use provided slug or generate one
+        slug: formData.slug ?? generateSlug(formData.title), // Use provided slug or generate one
         excerpt: formData.excerpt || formData.content.substring(0, 150) + '...',
         isBlogPost: false, // Public discussions are forum threads
         isPublished: !isDraft, // Drafts are not published
@@ -178,7 +167,7 @@ function NewDiscussionContent() {
         
         // Redirect to the new discussion using its slug
         if (!isDraft && result.discussion) {
-          const discussionSlug = formData.slug || generateSlug(result.discussion.title || formData.title);
+          const discussionSlug = formData.slug ?? generateSlug(result.discussion.title || formData.title);
           setTimeout(() => router.push(`/discussions/${discussionSlug}`), 2000);
         } else {
           setTimeout(() => router.push('/discussions'), 2000);

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const requestContext = AdminAuditService.extractRequestContext(request, Object.fromEntries(request.headers.entries()));
     
     const body = await request.json();
-    const { title, content, excerpt, category, tags, embeddedChart, embeddedVideo, isBlogPost, isPublished, isDraft, authorId } = body;
+    const { title, slug, content, excerpt, category, tags, embeddedChart, embeddedVideo, isBlogPost, isPublished, isDraft, authorId } = body;
 
     try {
       const { db } = await initializeDatabase();
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
         const fallbackDiscussion = {
           id: nanoid(12),
           title,
+          slug,
           content,
           excerpt: excerpt || content.substring(0, 150) + '...',
           authorId: authorId || `anon_${Date.now()}`,
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
       // Create the discussion with tags directly stored in the discussions table
       const discussion = await DiscussionService.createDiscussion({
         title,
+        slug,
         content,
         excerpt: excerpt || content.substring(0, 150) + '...',
         authorId: user.id,

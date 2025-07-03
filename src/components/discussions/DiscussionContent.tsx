@@ -102,7 +102,7 @@ export default function DiscussionContent({ discussion }: DiscussionContentProps
               /* Links - Mobile Touch Friendly */
               [&_a]:text-black [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:bg-black hover:[&_a]:text-white [&_a]:transition-colors [&_a]:px-1 [&_a]:py-1 [&_a]:min-h-[44px] [&_a]:inline-flex [&_a]:items-center
               /* Images - Mobile Responsive */
-              [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:mb-3 sm:[&_img]:mb-4 [&_img]:max-w-full [&_img]:h-auto [&_img]:w-full [&_img]:object-contain
+              [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:mb-3 sm:[&_img]:mb-4 [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_img]:object-contain
               /* Tables - Mobile Responsive */
               [&_table]:border-collapse [&_table]:border [&_table]:border-black [&_table]:mb-3 sm:[&_table]:mb-4 [&_table]:w-full [&_table]:text-sm [&_table]:overflow-x-auto [&_table]:block sm:[&_table]:table
               [&_th]:border [&_th]:border-black [&_th]:bg-gray-100 [&_th]:px-2 sm:[&_th]:px-4 [&_th]:py-2 [&_th]:font-space-grotesk [&_th]:font-bold [&_th]:text-left [&_th]:text-xs sm:[&_th]:text-sm

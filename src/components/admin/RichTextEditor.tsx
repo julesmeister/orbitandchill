@@ -21,6 +21,7 @@ import {
   faLink, faImage, faUndo, faRedo, faEye, faEdit,
   faExpand, faCompress, faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
+import ImageUploadModal from '../editor/ImageUploadModal';
 
 interface RichTextEditorProps {
   content: string;
@@ -50,6 +51,8 @@ export default function RichTextEditor({
   
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [savedSelection, setSavedSelection] = useState<number | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -108,7 +111,7 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-6 font-open-sans prose-headings:font-space-grotesk prose-headings:font-bold prose-headings:text-black prose-p:text-black prose-p:leading-relaxed prose-strong:text-black prose-blockquote:border-l-4 prose-blockquote:border-black prose-blockquote:bg-gray-50 prose-blockquote:italic prose-code:bg-gray-100 prose-code:px-1 sm:prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-xs sm:prose-code:text-sm prose-pre:bg-gray-900 prose-pre:text-white prose-pre:overflow-x-auto prose-pre:-mx-2 sm:prose-pre:mx-0 prose-a:text-black prose-a:underline prose-img:rounded prose-img:border prose-img:border-black prose-img:max-w-full',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none min-h-[300px] sm:min-h-[400px] p-3 sm:p-6 font-open-sans prose-headings:font-space-grotesk prose-headings:font-bold prose-headings:text-black prose-p:text-black prose-p:leading-relaxed prose-strong:text-black prose-blockquote:border-l-4 prose-blockquote:border-black prose-blockquote:bg-gray-50 prose-blockquote:italic prose-code:bg-gray-100 prose-code:px-1 sm:prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-xs sm:prose-code:text-sm prose-pre:bg-gray-900 prose-pre:text-white prose-pre:overflow-x-auto prose-pre:-mx-2 sm:prose-pre:mx-0 prose-a:text-black prose-a:underline prose-img:rounded prose-img:border prose-img:border-black prose-img:max-w-full prose-img:h-auto prose-img:block prose-img:mx-auto',
       },
       handleKeyDown: (view, event) => {
         // Auto-focus editor when typing
@@ -124,64 +127,27 @@ export default function RichTextEditor({
     immediatelyRender: false,
   });
 
-  const addImage = useCallback(() => {
+  const handleImageSelect = useCallback((src: string, alt: string) => {
     if (!editor) return;
-
-    // Create a hidden file input
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
     
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      // Check file size (limit to 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
-        return;
-      }
-
-      // Convert to base64
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        editor.chain().focus().setImage({ 
-          src: base64, 
-          alt: file.name,
-          title: file.name 
-        }).run();
-      };
-      reader.readAsDataURL(file);
-    };
-
-    // Show option dialog
-    const choice = window.confirm('Click OK to upload an image file, or Cancel to enter an image URL');
-    
-    if (choice) {
-      // Upload file
-      input.click();
+    // Restore the saved cursor position if we have one, otherwise insert at current position
+    if (savedSelection !== null) {
+      editor.commands.focus();
+      editor.commands.setTextSelection(savedSelection);
     } else {
-      // Enter URL
-      const url = window.prompt('Enter image URL:');
-      if (url) {
-        try {
-          const imageUrl = new URL(url);
-          if (imageUrl.protocol === 'http:' || imageUrl.protocol === 'https:') {
-            editor.chain().focus().setImage({ 
-              src: url, 
-              alt: 'Image',
-              title: 'Image'
-            }).run();
-          } else {
-            alert('Please enter a valid HTTP or HTTPS URL');
-          }
-        } catch {
-          alert('Please enter a valid URL');
-        }
-      }
+      editor.commands.focus();
     }
-  }, [editor]);
+    
+    // Insert the image
+    editor.chain().focus().setImage({ 
+      src, 
+      alt,
+      title: alt 
+    }).run();
+    
+    setShowImageModal(false);
+    setSavedSelection(null);
+  }, [editor, savedSelection]);
 
   const setLink = useCallback(() => {
     if (editor) {
@@ -432,8 +398,12 @@ export default function RichTextEditor({
             
             <ToolbarButton
               onClick={() => {
-                addImage();
-                setTimeout(() => editor.commands.focus(), 10);
+                // Save current cursor position before opening modal
+                if (editor) {
+                  const { from } = editor.state.selection;
+                  setSavedSelection(from);
+                }
+                setShowImageModal(true);
               }}
               title="Add Image"
             >
@@ -505,7 +475,7 @@ export default function RichTextEditor({
             <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-open-sans">
               {content ? (
                 <div 
-                  className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_code]:bg-gray-100 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-4 [&_pre]:rounded [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_ul]:list-disc [&_ol]:list-decimal [&_li]:mb-2"
+                  className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_code]:bg-gray-100 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-4 [&_pre]:rounded [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_ul]:list-disc [&_ol]:list-decimal [&_li]:mb-2"
                   dangerouslySetInnerHTML={{ __html: content }}
                 />
               ) : (
@@ -613,6 +583,13 @@ export default function RichTextEditor({
           )}
         </div>
       )}
+      
+      {/* Image Upload Modal */}
+      <ImageUploadModal
+        isOpen={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        onImageSelect={handleImageSelect}
+      />
     </div>
   );
 }

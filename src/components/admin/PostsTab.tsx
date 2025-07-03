@@ -6,6 +6,7 @@ import { useAdminStore } from '@/store/adminStore';
 import { useUserStore } from '@/store/userStore';
 import DiscussionForm from '../forms/DiscussionForm';
 import ConfirmationModal from '../reusable/ConfirmationModal';
+import StatusToast from '../reusable/StatusToast';
 import { stripHtmlTags } from '@/utils/textUtils';
 import { extractFirstImageFromContent, createImageChartObject } from '@/utils/extractImageFromContent';
 
@@ -49,6 +50,7 @@ interface PostFormData {
   category: string;
   tags: string[];
   slug?: string;
+  authorName?: string;
   isBlogPost?: boolean;
   isPublished?: boolean;
   isPinned?: boolean;
@@ -66,12 +68,34 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   const [postsPerPage] = useState(10);
   const [postToDelete, setPostToDelete] = useState<Thread | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    status: 'loading' | 'success' | 'error' | 'info';
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    status: 'info'
+  });
 
   useEffect(() => {
     loadThreads();
   }, [loadThreads]);
 
   const handleFormSubmit = async (formData: PostFormData) => {
+    console.log('🔍 PostsTab handleFormSubmit - Received formData:', formData);
+    console.log('🔍 PostsTab handleFormSubmit - authorName from form:', formData.authorName);
+    
+    // Show loading toast
+    setToast({
+      show: true,
+      title: editingPost ? 'Updating Post' : 'Creating Post',
+      message: editingPost ? 'Saving your changes...' : 'Publishing your new post...',
+      status: 'loading'
+    });
+    
     // Extract the first image from content to use as thumbnail
     const firstImage = extractFirstImageFromContent(formData.content);
     let embeddedChart = formData.embeddedChart;
@@ -85,32 +109,67 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       ...formData,
       embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
       authorId: user?.id || 'admin_1',
-      authorName: user?.username || 'Admin User',
+      authorName: formData.authorName || user?.username || 'Admin User', // Use form's authorName or fallback
       preferredAvatar: user?.preferredAvatar, // Include user's preferred avatar
-      excerpt: formData.excerpt || stripHtmlTags(formData.content).substring(0, 150) + '...',
+      excerpt: formData.excerpt && formData.excerpt.trim() ? stripHtmlTags(formData.excerpt).substring(0, 150) + (stripHtmlTags(formData.excerpt).length > 150 ? '...' : '') : (formData.content ? stripHtmlTags(formData.content).substring(0, 150) + '...' : 'No description available'),
       isBlogPost: formData.isBlogPost ?? true,
       isPublished: formData.isPublished ?? false,
       isPinned: formData.isPinned ?? false,
       isLocked: false, // Default to unlocked for new posts
     };
+    
+    console.log('🔍 PostsTab handleFormSubmit - Final postData:', postData);
+    console.log('🔍 PostsTab handleFormSubmit - Final authorName:', postData.authorName);
 
     try {
       if (editingPost) {
+        console.log('🔍 About to update thread with ID:', editingPost);
         await updateThread(editingPost, postData);
+        console.log('🔍 Thread updated successfully, closing form');
         setEditingPost(null);
+        
+        // Show success toast
+        setToast({
+          show: true,
+          title: 'Post Updated',
+          message: 'Your changes have been saved successfully.',
+          status: 'success'
+        });
       } else {
+        console.log('🔍 About to create new thread');
         await createThread(postData);
+        console.log('🔍 Thread created successfully, closing form');
+        
+        // Show success toast
+        setToast({
+          show: true,
+          title: 'Post Created',
+          message: 'Your new post has been published successfully.',
+          status: 'success'
+        });
       }
 
+      console.log('🔍 Setting showCreateForm to false');
       setShowCreateForm(false);
+      console.log('🔍 Form should now be closed');
     } catch (error) {
-      console.error('Error saving post:', error);
-      alert('Error saving post. Please try again.');
+      console.error('❌ Error saving post:', error);
+      
+      // Show error toast
+      setToast({
+        show: true,
+        title: 'Save Failed',
+        message: 'There was an error saving your post. Please try again.',
+        status: 'error'
+      });
     }
   };
 
   // Auto-save for admin options when editing
   const handleAdminOptionsSave = async (formData: PostFormData) => {
+    console.log('🔍 handleAdminOptionsSave called with formData:', formData);
+    console.log('🔍 handleAdminOptionsSave - authorName from formData:', formData.authorName);
+    
     if (!editingPost) {
       return; // Only auto-save when editing existing posts
     }
@@ -120,23 +179,37 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       return;
     }
 
+    // Show quick auto-save toast
+    setToast({
+      show: true,
+      title: 'Auto-saving',
+      message: 'Saving changes...',
+      status: 'loading'
+    });
+
     // Extract the first image from content to use as thumbnail
-    const firstImage = extractFirstImageFromContent(currentThread.content);
+    const firstImage = extractFirstImageFromContent(formData.content || currentThread.content);
     let embeddedChart = currentThread.embeddedChart;
     
     // If no embedded chart but we found an image in content, create an image chart object
     if (!embeddedChart && firstImage) {
-      embeddedChart = createImageChartObject(firstImage, currentThread.title);
+      embeddedChart = createImageChartObject(firstImage, formData.title || currentThread.title);
     }
 
+    const contentToUse = formData.content || currentThread.content;
+    const excerptToUse = formData.excerpt && formData.excerpt.trim() 
+      ? stripHtmlTags(formData.excerpt).substring(0, 150) + (stripHtmlTags(formData.excerpt).length > 150 ? '...' : '')
+      : currentThread.excerpt || (contentToUse ? stripHtmlTags(contentToUse).substring(0, 150) + '...' : 'No description available');
+
     const postData = {
-      title: currentThread.title,
-      content: currentThread.content,
-      excerpt: currentThread.excerpt,
-      category: currentThread.category,
-      tags: currentThread.tags,
+      title: formData.title || currentThread.title,
+      slug: formData.slug || currentThread.slug,
+      content: contentToUse,
+      excerpt: excerptToUse,
+      category: formData.category || currentThread.category,
+      tags: formData.tags || currentThread.tags,
       authorId: currentThread.authorId,
-      authorName: currentThread.authorName,
+      authorName: formData.authorName || currentThread.authorName, // ✅ Now uses form data first
       preferredAvatar: currentThread.preferredAvatar, // Preserve existing preferred avatar
       embeddedChart, // Use the image as embedded chart if no chart was explicitly attached
       isBlogPost: formData.isBlogPost ?? currentThread.isBlogPost,
@@ -144,11 +217,36 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       isPinned: formData.isPinned ?? currentThread.isPinned,
       isLocked: currentThread.isLocked ?? false,
     };
+    
+    console.log('🔍 handleAdminOptionsSave - Final postData authorName:', postData.authorName);
 
     try {
+      console.log('🔍 Auto-save: About to update thread');
       await updateThread(editingPost, postData);
+      console.log('🔍 Auto-save: Thread updated successfully');
+      
+      // Show quick success toast for auto-save
+      setToast({
+        show: true,
+        title: 'Auto-saved',
+        message: 'Changes saved automatically.',
+        status: 'success'
+      });
+      
+      // Auto-hide after 2 seconds
+      setTimeout(() => {
+        setToast(prev => ({ ...prev, show: false }));
+      }, 2000);
     } catch (error) {
-      console.error('Error auto-saving admin options:', error);
+      console.error('❌ Error auto-saving admin options:', error);
+      
+      // Show error toast for auto-save failure
+      setToast({
+        show: true,
+        title: 'Auto-save Failed',
+        message: 'Could not save changes automatically.',
+        status: 'error'
+      });
     }
   };
 
@@ -185,6 +283,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   const handleTogglePin = async (thread: Thread) => {
     const updatedData = {
       title: thread.title,
+      slug: thread.slug,
       content: thread.content,
       excerpt: thread.excerpt,
       category: thread.category,
@@ -346,6 +445,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     category: thread.category || 'Natal Charts',
                     tags: Array.isArray(thread.tags) ? thread.tags : [],
                     slug: thread.slug,
+                    authorName: thread.authorName || '',
                     isBlogPost: thread.isBlogPost ?? false,
                     isPublished: thread.isPublished ?? false,
                     isPinned: thread.isPinned ?? false,
@@ -358,6 +458,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                   excerpt: '',
                   category: 'Natal Charts',
                   tags: [],
+                  authorName: user?.username || 'Admin User',
                   isBlogPost: true,
                   isPublished: false,
                   isPinned: false
@@ -372,6 +473,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 showExcerpt={true}
                 showPinToggle={true}
                 showSubmitButton={false}
+                showAuthorField={true}
                 mode={editingPost ? 'edit' : 'create'}
               />
             </div>
@@ -387,24 +489,14 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               </button>
               <button
                 onClick={() => {
-                  // Handle save as draft - preserve current form state
-                  const currentThread = threads.find((t: any) => t.id === editingPost);
-                  const draftData = {
-                    title: currentThread?.title || '',
-                    content: currentThread?.content || '',
-                    excerpt: currentThread?.excerpt || '',
-                    category: currentThread?.category || 'Natal Charts',
-                    tags: currentThread?.tags || [],
-                    slug: currentThread?.slug, // Include slug
-                    authorId: currentThread?.authorId,
-                    authorName: currentThread?.authorName,
-                    preferredAvatar: currentThread?.preferredAvatar, // Include preferred avatar
-                    isBlogPost: currentThread?.isBlogPost ?? true,
-                    isPinned: currentThread?.isPinned ?? false,
-                    isLocked: currentThread?.isLocked ?? false,
-                    isPublished: false
-                  };
-                  handleFormSubmit(draftData);
+                  // Trigger the form's submit with draft state
+                  // This will use the current form state including the updated authorName
+                  const form = document.querySelector('form');
+                  if (form) {
+                    // Set a flag to indicate this should be a draft
+                    (window as any).__shouldPublish = false;
+                    form.requestSubmit();
+                  }
                 }}
                 className="group relative flex-1 p-4 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-all duration-300 overflow-hidden font-space-grotesk font-semibold"
                 disabled={isLoading}
@@ -414,24 +506,14 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               </button>
               <button
                 onClick={() => {
-                  // Handle publish - preserve current form state
-                  const currentThread = threads.find((t: any) => t.id === editingPost);
-                  const publishData = {
-                    title: currentThread?.title || '',
-                    content: currentThread?.content || '',
-                    excerpt: currentThread?.excerpt || '',
-                    category: currentThread?.category || 'Natal Charts',
-                    tags: currentThread?.tags || [],
-                    slug: currentThread?.slug, // Include slug
-                    authorId: currentThread?.authorId,
-                    authorName: currentThread?.authorName,
-                    preferredAvatar: currentThread?.preferredAvatar, // Include preferred avatar
-                    isBlogPost: currentThread?.isBlogPost ?? true,
-                    isPinned: currentThread?.isPinned ?? false,
-                    isLocked: currentThread?.isLocked ?? false,
-                    isPublished: true
-                  };
-                  handleFormSubmit(publishData);
+                  // Trigger the form's submit with published state
+                  // This will use the current form state including the updated authorName
+                  const form = document.querySelector('form');
+                  if (form) {
+                    // Set a flag to indicate this should be published
+                    (window as any).__shouldPublish = true;
+                    form.requestSubmit();
+                  }
                 }}
                 className="group relative flex-1 p-4 bg-black text-white hover:bg-gray-800 transition-all duration-300 overflow-hidden font-space-grotesk font-semibold"
                 disabled={isLoading}
@@ -535,7 +617,10 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       </div>
                     </div>
 
-                    <p className="text-gray-700 text-sm mb-3 line-clamp-2 font-inter">{stripHtmlTags(thread.excerpt)}</p>
+                    <p className="text-gray-700 text-sm mb-3 line-clamp-2 font-inter">
+                      {stripHtmlTags(thread.excerpt || thread.content || 'No description available').substring(0, 150)}
+                      {(thread.excerpt || thread.content) && stripHtmlTags(thread.excerpt || thread.content).length > 150 ? '...' : ''}
+                    </p>
 
                     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 font-inter">
                       <span>by {thread.authorName || 'Unknown Author'}</span>
@@ -748,6 +833,16 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
         autoClose={15}
+      />
+
+      {/* Status Toast */}
+      <StatusToast
+        title={toast.title}
+        message={toast.message}
+        status={toast.status}
+        isVisible={toast.show}
+        onHide={() => setToast(prev => ({ ...prev, show: false }))}
+        duration={toast.status === 'success' ? 3000 : toast.status === 'error' ? 5000 : 0}
       />
     </div>
   );

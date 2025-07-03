@@ -8,6 +8,7 @@ import ChartAttachmentButton from '../charts/ChartAttachmentButton';
 import VideoAttachmentButton from '../videos/VideoAttachmentButton';
 import EmbeddedChartDisplay from '../charts/EmbeddedChartDisplay';
 import EmbeddedVideoDisplay from '../videos/EmbeddedVideoDisplay';
+import AuthorAutocomplete from './AuthorAutocomplete';
 import { generateSlug } from '../../utils/slugify';
 
 interface DiscussionFormProps {
@@ -23,6 +24,7 @@ interface DiscussionFormProps {
   showExcerpt?: boolean;
   showPinToggle?: boolean;
   showSubmitButton?: boolean; // Option to hide the large submit button
+  showAuthorField?: boolean; // Option to show author name field for admin
   mode?: 'create' | 'edit';
 }
 
@@ -54,6 +56,7 @@ export default function DiscussionForm({
   showExcerpt = false,
   showPinToggle = false,
   showSubmitButton = true,
+  showAuthorField = false,
   mode = 'create'
 }: DiscussionFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -79,7 +82,10 @@ export default function DiscussionForm({
     hasManuallyEditedSlug,
     handleSlugEdit,
     handleSlugBlur,
-    resetSlugFromTitle
+    resetSlugFromTitle,
+    isEditingAuthor,
+    handleAuthorEdit,
+    handleAuthorBlur
   } = useDiscussionForm(initialData);
 
   // Fallback data in case API fails
@@ -217,10 +223,27 @@ export default function DiscussionForm({
       return;
     }
     
-    onSubmit({
+    // Check for publish/draft flags from PostsTab buttons
+    const shouldPublish = (window as any).__shouldPublish;
+    let submissionData = {
       ...formData,
       slug: formData.slug || generateSlug(formData.title)
-    });
+    };
+    
+    // Apply publish/draft state if triggered by PostsTab buttons
+    if (typeof shouldPublish === 'boolean') {
+      submissionData.isPublished = shouldPublish;
+      // Clear the flag
+      delete (window as any).__shouldPublish;
+    }
+    
+    console.log('🔍 DiscussionForm handleSubmit - Final submission data:', submissionData);
+    console.log('🔍 DiscussionForm handleSubmit - authorName:', submissionData.authorName);
+    console.log('🔍 DiscussionForm handleSubmit - isBlogPost:', submissionData.isBlogPost);
+    console.log('🔍 DiscussionForm handleSubmit - isPinned:', submissionData.isPinned);
+    console.log('🔍 DiscussionForm handleSubmit - isPublished:', submissionData.isPublished);
+    
+    onSubmit(submissionData);
   };
 
   const handleDraftSave = () => {
@@ -247,6 +270,17 @@ export default function DiscussionForm({
     }
   };
 
+  // Disabled auto-save to prevent infinite loops - rely on manual save instead
+  // useEffect(() => {
+  //   if (mode === 'edit' && onAdminOptionsChange && formData.authorName && formData.authorName !== 'Unknown Author') {
+  //     const timeoutId = setTimeout(() => {
+  //       console.log('🔍 DiscussionForm - Auto-saving form data with authorName:', formData.authorName);
+  //       onAdminOptionsChange(formData);
+  //     }, 300);
+  //     return () => clearTimeout(timeoutId);
+  //   }
+  // }, [formData.authorName, mode, onAdminOptionsChange]);
+
   return (
     <div className="bg-white">
       <form onSubmit={handleSubmit} className="space-y-0">
@@ -270,7 +304,7 @@ export default function DiscussionForm({
             
             {/* Slug Editor */}
             <div className="border-l border-r border-b border-black bg-gray-50 p-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-inter text-black/60">URL:</span>
                 <span className="text-xs font-mono text-black/40">/discussions/</span>
                 {isEditingSlug ? (
@@ -284,19 +318,56 @@ export default function DiscussionForm({
                     autoFocus
                   />
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleSlugEdit}
-                    className="flex-1 text-left text-xs font-mono text-black hover:bg-black/5 px-2 py-1 rounded transition-colors"
-                  >
-                    {formData.slug || 'url-will-appear-here'}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleSlugEdit}
+                      className="flex-1 text-left text-xs font-mono text-black hover:bg-black/5 px-2 py-1 rounded transition-colors"
+                    >
+                      {formData.slug || 'url-will-appear-here'}
+                    </button>
+                    
+                    {/* Author Field (shown when not editing slug) */}
+                    {showAuthorField && (
+                      <>
+                        {isEditingAuthor ? (
+                          <>
+                            <div className="min-w-[200px] ml-4">
+                              <AuthorAutocomplete
+                                value={formData.authorName || ''}
+                                onChange={(value) => {
+                                  console.log('🔍 AuthorAutocomplete onChange called with:', value);
+                                  updateFormData({ authorName: value });
+                                }}
+                                onBlur={handleAuthorBlur}
+                                placeholder="Type to search users..."
+                                className=""
+                                autoFocus={true}
+                              />
+                            </div>
+                            <span className="text-xs font-inter text-black/60">Author</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-xs font-inter text-black/60 ml-4">Author:</span>
+                            <button
+                              type="button"
+                              onClick={handleAuthorEdit}
+                              className="text-left text-xs font-inter text-black hover:bg-black/5 px-2 py-1 rounded transition-colors border border-transparent"
+                            >
+                              {formData.authorName || 'click-to-set-author'}
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </>
                 )}
                 {hasManuallyEditedSlug && (
                   <button
                     type="button"
                     onClick={resetSlugFromTitle}
-                    className="text-xs font-inter text-black/60 hover:text-black underline"
+                    className="text-xs font-inter text-black/60 hover:text-black underline ml-2"
                     title="Reset URL from title"
                   >
                     Reset

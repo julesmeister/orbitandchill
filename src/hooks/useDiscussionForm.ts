@@ -12,6 +12,7 @@ export interface DiscussionFormData {
   category: string;
   tags: string[];
   slug?: string;
+  authorName?: string; // Admin-editable author name
   isBlogPost?: boolean;
   isPublished?: boolean;
   isPinned?: boolean;
@@ -27,6 +28,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     category: '',
     tags: [],
     slug: '',
+    authorName: '',
     isBlogPost: false,
     isPublished: false,
     isPinned: false,
@@ -37,6 +39,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   const [tagInput, setTagInput] = useState('');
   const [isEditingSlug, setIsEditingSlug] = useState(false);
   const [hasManuallyEditedSlug, setHasManuallyEditedSlug] = useState(false);
+  const [isEditingAuthor, setIsEditingAuthor] = useState(false);
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -61,6 +64,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     (initialData as any)?.id,
     initialData?.title,
     initialData?.content,
+    initialData?.authorName,
     initialData?.isBlogPost,
     initialData?.isPublished,
     initialData?.isPinned,
@@ -81,6 +85,8 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
+    console.log('🔍 handleInputChange called:', { name, value });
+    
     if (name === 'slug') {
       // Mark slug as manually edited when user types in it
       setHasManuallyEditedSlug(true);
@@ -89,9 +95,14 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
         slug: generateSlug(value) // Ensure slug is always URL-safe
       });
     } else {
-      setFormData({
-        ...formData,
-        [name]: value
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          [name]: value
+        };
+        console.log('🔍 Form data updated:', newData);
+        console.log('🔍 New authorName value:', newData.authorName);
+        return newData;
       });
     }
   };
@@ -134,7 +145,13 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   };
 
   const updateFormData = (updates: Partial<DiscussionFormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    console.log('🔍 updateFormData called with:', updates);
+    setFormData(prev => {
+      const newData = { ...prev, ...updates };
+      console.log('🔍 updateFormData - New form data:', newData);
+      console.log('🔍 updateFormData - New authorName:', newData.authorName);
+      return newData;
+    });
   };
 
   // Text statistics for content
@@ -199,6 +216,14 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     }));
   };
 
+  const handleAuthorEdit = () => {
+    setIsEditingAuthor(true);
+  };
+
+  const handleAuthorBlur = () => {
+    setIsEditingAuthor(false);
+  };
+
   return {
     formData,
     tagInput,
@@ -220,6 +245,10 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     hasManuallyEditedSlug,
     handleSlugEdit,
     handleSlugBlur,
-    resetSlugFromTitle
+    resetSlugFromTitle,
+    // Author editing
+    isEditingAuthor,
+    handleAuthorEdit,
+    handleAuthorBlur
   };
 }

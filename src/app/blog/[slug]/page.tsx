@@ -159,10 +159,22 @@ export default function BlogPostPage({
 
   const authorAvatar = post.preferredAvatar || post.avatar || '/images/default-avatar.svg';
 
+  // Transform local BlogPost to match BlogSEO expected interface
+  const seoPost = {
+    ...post,
+    author: post.authorName,
+    authorAvatar,
+    publishedAt: new Date(post.createdAt),
+    updatedAt: new Date(post.updatedAt),
+    readTime: Math.ceil(post.content.split(' ').length / 200), // Estimate reading time
+    viewCount: post.views,
+    isFeatured: post.isPinned
+  };
+
   return (
     <>
       <BlogSEO 
-        post={post}
+        post={seoPost}
         isHomePage={false}
       />
 

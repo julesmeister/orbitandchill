@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
+import { generateSlug } from '@/utils/slugify';
 
 // Simulated data interfaces
 interface UserAnalytics {
@@ -592,8 +593,6 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
       if (data.success && data.discussions) {
         // Transform to match Thread interface
         const threads: Thread[] = data.discussions.map((discussion: any) => {
-          // Import generateSlug to create slug if not provided
-          const { generateSlug } = require('@/utils/slugify');
           return {
             id: discussion.id,
             title: discussion.title,
@@ -666,37 +665,8 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
       const data = await response.json();
       
       if (data.success && data.discussion) {
-        // Transform to match Thread interface
-        const { generateSlug } = require('@/utils/slugify');
-        const newThread: Thread = {
-          id: data.discussion.id,
-          title: data.discussion.title,
-          content: data.discussion.content,
-          excerpt: data.discussion.excerpt,
-          authorId: data.discussion.authorId || threadData.authorId,
-          authorName: data.discussion.authorName || threadData.authorName,
-          slug: data.discussion.slug || threadData.slug || generateSlug(data.discussion.title),
-          isBlogPost: data.discussion.isBlogPost || false,
-          isPublished: data.discussion.isPublished ?? true,
-          isPinned: data.discussion.isPinned || threadData.isPinned || false,
-          isLocked: data.discussion.isLocked || threadData.isLocked || false,
-          createdAt: new Date(data.discussion.createdAt * 1000).toISOString(),
-          updatedAt: new Date(data.discussion.updatedAt * 1000).toISOString(),
-          tags: threadData.tags,
-          views: 0,
-          likes: 0,
-          comments: 0,
-          upvotes: 0,
-          downvotes: 0,
-          replies: 0,
-          category: data.discussion.category || threadData.category,
-          featuredImage: threadData.featuredImage
-        };
-
-        set((state) => ({
-          threads: [newThread, ...state.threads],
-          isLoading: false,
-        }));
+        // After successful creation, reload threads to get fresh author data from API
+        await get().loadThreads();
       } else {
         throw new Error(data.error || 'Failed to create discussion');
       }
@@ -738,6 +708,10 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
     set({ isLoading: true });
 
     try {
+      console.log('🔍 Admin store updateThread - ID:', id);
+      console.log('🔍 Admin store updateThread - Updates:', updates);
+      console.log('🔍 Admin store updateThread - authorName:', updates.authorName);
+      
       // Update discussion via API
       const response = await fetch(`/api/discussions/${id}`, {
         method: 'PATCH',
@@ -748,44 +722,10 @@ export const useAdminStore: any = create<AdminState>((set, get) => ({
       const data = await response.json();
       
       if (data.success && data.discussion) {
-        // Transform the response to match Thread interface
-        const { generateSlug } = require('@/utils/slugify');
-        const updatedThread: Thread = {
-          id: data.discussion.id,
-          title: data.discussion.title,
-          content: data.discussion.content,
-          excerpt: data.discussion.excerpt,
-          authorId: data.discussion.authorId || 'unknown',
-          authorName: data.discussion.authorName || 'Unknown Author',
-          preferredAvatar: data.discussion.preferredAvatar, // Preserve avatar
-          slug: data.discussion.slug || generateSlug(data.discussion.title),
-          // Proper boolean handling - SQLite returns 0/1, need to convert to boolean
-          isBlogPost: Boolean(data.discussion.isBlogPost || data.discussion.is_blog_post),
-          isPublished: Boolean(data.discussion.isPublished ?? data.discussion.is_published ?? true),
-          isPinned: Boolean(data.discussion.isPinned || data.discussion.is_pinned),
-          isLocked: Boolean(data.discussion.isLocked || data.discussion.is_locked),
-          createdAt: data.discussion.createdAt ? new Date(data.discussion.createdAt * 1000).toISOString() : new Date().toISOString(),
-          updatedAt: data.discussion.updatedAt ? new Date(data.discussion.updatedAt * 1000).toISOString() : new Date().toISOString(),
-          tags: Array.isArray(data.discussion.tags) ? data.discussion.tags : [],
-          views: data.discussion.views || 0,
-          likes: data.discussion.upvotes || 0,
-          comments: data.discussion.replies || 0,
-          upvotes: data.discussion.upvotes || 0,
-          downvotes: data.discussion.downvotes || 0,
-          replies: data.discussion.replies || 0,
-          category: data.discussion.category || 'General',
-          featuredImage: undefined,
-          embeddedChart: data.discussion.embeddedChart, // Preserve embedded chart
-          embeddedVideo: data.discussion.embeddedVideo  // Preserve embedded video
-        };
-
-        // Update local state
-        set((state) => ({
-          threads: state.threads.map((thread) =>
-            thread.id === id ? updatedThread : thread
-          ),
-          isLoading: false,
-        }));
+        console.log('🔍 Admin store: Update successful, reloading threads...');
+        // After successful update, reload threads to get fresh author data from API
+        await get().loadThreads();
+        console.log('🔍 Admin store: Threads reloaded');
       } else {
         throw new Error(data.error || 'Failed to update discussion');
       }
