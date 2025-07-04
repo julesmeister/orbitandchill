@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { BlogPost } from '@/types/blog';
 import { Clock, Eye, Calendar, Tag } from 'lucide-react';
 import AnimatedZodiacCard from './AnimatedZodiacCard';
+import { trackBlogPost } from '@/lib/analytics';
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -22,7 +23,11 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   return (
     <article className="bg-white border border-black rounded-none overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {/* Image Section */}
-      <Link href={`/discussions/${post.slug}`} className="block relative h-48 overflow-hidden">
+      <Link 
+        href={`/discussions/${post.slug}`} 
+        className="block relative h-48 overflow-hidden"
+        onClick={() => trackBlogPost(post.title, post.category)}
+      >
         {post.imageUrl ? (
           <Image
             src={post.imageUrl}

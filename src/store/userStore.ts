@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { User, BirthData, UserPrivacySettings } from "@/types/user";
+import { trackUserRegistration } from "@/lib/analytics";
 
 interface UserState {
   // State
@@ -362,6 +363,9 @@ export const useUserStore = create<UserState>()(
             
             if (response.ok) {
               const result = await response.json();
+              // Track anonymous user registration
+              trackUserRegistration('anonymous');
+              
               // Update local state with server response
               if (result.user) {
                 set({ user: result.user });

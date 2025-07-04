@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Layout from "@/components/Layout"; // Import the Layout component
 import StructuredData from "@/components/SEO/StructuredData";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { BRAND } from "@/config/brand";
 import { Toaster } from "sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -103,8 +104,8 @@ export const metadata: Metadata = {
     default: `${BRAND.name} - Free Natal Chart Generator & Astrology Community`,
     template: `%s | ${BRAND.name}`
   },
-  description: "Generate your free natal chart and discover your cosmic blueprint. Join our astrology community to explore birth charts, planetary transits, and astrological insights.",
-  keywords: ["natal chart", "astrology", "birth chart", "horoscope", "zodiac", "planetary positions", "astrological calculator", "free birth chart"],
+  description: "Generate your free natal chart and track rare astrological events. Discover your cosmic blueprint with our real-time astronomical event tracker, birth chart generator, and astrology community.",
+  keywords: ["natal chart", "astrology", "birth chart", "horoscope", "zodiac", "planetary positions", "astrological calculator", "free birth chart", "astrological events", "planetary conjunctions", "retrograde planets", "moon phases", "astronomical events", "celestial alignments", "rare astrological events"],
   authors: [{ name: BRAND.name }],
   creator: BRAND.name,
   publisher: BRAND.name,
@@ -121,8 +122,8 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: `${BRAND.name} - Free Natal Chart Generator & Astrology Community`,
-    description: 'Generate your free natal chart and discover your cosmic blueprint. Join our astrology community to explore birth charts, planetary transits, and astrological insights.',
+    title: `${BRAND.name} - Free Natal Chart Generator & Astrological Events Tracker`,
+    description: 'Generate your free natal chart and track rare astrological events in real-time. Discover your cosmic blueprint with our birth chart generator, astronomical event tracker, and astrology community.',
     siteName: BRAND.name,
     images: [
       {
@@ -135,8 +136,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${BRAND.name} - Free Natal Chart Generator & Astrology Community`,
-    description: 'Generate your free natal chart and discover your cosmic blueprint. Join our astrology community.',
+    title: `${BRAND.name} - Free Natal Chart Generator & Astrological Events Tracker`,
+    description: 'Generate your free natal chart and track rare astrological events in real-time. Discover your cosmic blueprint with our astrology community.',
     images: ['/twitter-image.jpg'],
     creator: '@orbit-and-chill',
   },
@@ -173,6 +174,9 @@ export default function RootLayout({
       <head>
         <StructuredData type="website" />
         <script src="https://accounts.google.com/gsi/client" async defer></script>
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        )}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${arvo.variable} ${epilogue.variable} ${spaceGrotesk.variable} ${inter.variable} ${openSans.variable} antialiased`}

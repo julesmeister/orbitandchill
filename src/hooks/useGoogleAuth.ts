@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useUserStore } from '../store/userStore';
 import { UserActivityService } from '@/db/services/userActivityService';
+import { trackUserRegistration } from '@/lib/analytics';
 import { AUTH_CONFIG, isGoogleOAuthReady, DEFAULT_USER_PREFERENCES } from '@/config/auth';
 
 export interface GoogleUser {
@@ -149,6 +150,9 @@ export function useGoogleAuth() {
             userId: googleUser.id,
             userType: 'google'
           });
+          
+          // Track user registration for analytics
+          trackUserRegistration('google');
           
           // Update local store with the user data from server response
           if (result.user) {

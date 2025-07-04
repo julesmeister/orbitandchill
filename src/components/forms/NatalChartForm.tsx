@@ -11,6 +11,7 @@ import { useUserStore } from '../../store/userStore';
 import { usePeopleStore } from '../../store/peopleStore';
 import { useNatalChart } from '../../hooks/useNatalChart';
 import { useStatusToast } from '../../hooks/useStatusToast';
+import { trackChartGeneration, trackUserRegistration } from '../../lib/analytics';
 import StatusToast from '../reusable/StatusToast';
 import DateInput from './DateInput';
 import TimeInput from './TimeInput';
@@ -387,6 +388,9 @@ const NatalChartForm = ({
         const chartData = await generateChart(formData);
         
         if (chartData) {
+          // Track successful chart generation
+          trackChartGeneration('natal');
+          
           // Show brief success message before redirecting
           showSuccess(
             "Chart Generated!",

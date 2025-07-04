@@ -1,0 +1,342 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/**
+ * Astrological Event Detection Utilities
+ * 
+ * This module contains all the logic for detecting various types of astrological events
+ * from planetary positions. Each function takes a date and returns an array of events
+ * detected for that date.
+ */
+
+import { calculatePlanetaryPositions, PlanetPosition } from './natalChart';
+import { 
+  getSignThemes, 
+  getElementFromSign, 
+  getElementThemes, 
+  getConjunctionRarity, 
+  getConjunctionImpact, 
+  getNextSign 
+} from './astrological/eventData';
+
+export interface AstrologicalEvent {
+  id: string;
+  name: string;
+  date: Date;
+  type: 'eclipse' | 'stellium' | 'grandTrine' | 'alignment' | 'retrograde' | 'conjunction' | 'moonPhase' | 'voidMoon';
+  description: string;
+  emoji: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'veryRare';
+  impact: string;
+}
+
+/**
+ * Detects planetary retrogrades for a given date
+ */
+export const detectRetrogrades = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0); // Use Greenwich for global events
+  
+  positions.planets.forEach(planet => {
+    if (planet.retrograde && ['mercury', 'venus', 'mars', 'jupiter', 'saturn'].includes(planet.name.toLowerCase())) {
+      events.push({
+        id: `retro_${planet.name}_${date.getTime()}`,
+        name: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} Retrograde in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+        date: new Date(date),
+        type: 'retrograde',
+        description: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} appears to move backward through ${planet.sign}`,
+        emoji: planet.name.toLowerCase() === 'mercury' ? '⏪' : '🌀',
+        rarity: planet.name.toLowerCase() === 'mercury' ? 'common' : 'uncommon',
+        impact: planet.name.toLowerCase() === 'mercury' 
+          ? 'Review communications, back up data, reconnect with the past'
+          : `Reassess ${planet.name.toLowerCase()} themes in your life`
+      });
+    }
+  });
+  
+  return events;
+};
+
+/**
+ * Detects stelliums (3+ planets in the same sign) for a given date
+ */
+export const detectStelliums = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  // Group planets by sign
+  const planetsBySign: { [sign: string]: PlanetPosition[] } = {};
+  positions.planets.forEach(planet => {
+    if (!planetsBySign[planet.sign]) planetsBySign[planet.sign] = [];
+    planetsBySign[planet.sign].push(planet);
+  });
+  
+  // Find stelliums (3+ planets in same sign)
+  Object.entries(planetsBySign).forEach(([sign, planets]) => {
+    if (planets.length >= 3) {
+      const planetNames = planets.map(p => p.name).join(', ');
+      events.push({
+        id: `stellium_${sign}_${date.getTime()}`,
+        name: `Stellium in ${sign.charAt(0).toUpperCase() + sign.slice(1)}`,
+        date: new Date(date),
+        type: 'stellium',
+        description: `${planets.length} planets gather in ${sign}: ${planetNames}`,
+        emoji: '✨',
+        rarity: planets.length >= 4 ? 'rare' : 'uncommon',
+        impact: `Intense focus on ${sign} themes: ${getSignThemes(sign)}`
+      });
+    }
+  });
+  
+  return events;
+};
+
+/**
+ * Detects grand trines (3 planets ~120° apart) for a given date
+ */
+export const detectGrandTrines = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  // Check for grand trines (3 planets ~120° apart)
+  const planets = positions.planets;
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      for (let k = j + 1; k < planets.length; k++) {
+        const angle1 = Math.abs(planets[i].longitude - planets[j].longitude);
+        const angle2 = Math.abs(planets[j].longitude - planets[k].longitude);
+        const angle3 = Math.abs(planets[k].longitude - planets[i].longitude);
+        
+        // Check if angles are close to 120° (within 8° orb)
+        if ([angle1, angle2, angle3].every(angle => Math.abs(angle - 120) <= 8 || Math.abs(angle - 240) <= 8)) {
+          const element = getElementFromSign(planets[i].sign);
+          events.push({
+            id: `trine_${i}_${j}_${k}_${date.getTime()}`,
+            name: `Grand ${element} Trine`,
+            date: new Date(date),
+            type: 'grandTrine',
+            description: `${planets[i].name}, ${planets[j].name}, and ${planets[k].name} form a perfect triangle`,
+            emoji: '🔺',
+            rarity: 'rare',
+            impact: `Harmonious flow of ${element.toLowerCase()} energy enhancing ${getElementThemes(element)}`
+          });
+          break;
+        }
+      }
+    }
+  }
+  
+  return events;
+};
+
+/**
+ * Detects significant planetary conjunctions for a given date
+ */
+export const detectConjunctions = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  // Check for significant conjunctions (within 5°)
+  const planets = positions.planets;
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const angle = Math.abs(planets[i].longitude - planets[j].longitude);
+      if (angle <= 5 || angle >= 355) {
+        // Skip common moon conjunctions
+        if (planets[i].name.toLowerCase() === 'moon' || planets[j].name.toLowerCase() === 'moon') continue;
+        
+        const rarity = getConjunctionRarity(planets[i].name, planets[j].name);
+        events.push({
+          id: `conj_${i}_${j}_${date.getTime()}`,
+          name: `${planets[i].name}-${planets[j].name} Conjunction`,
+          date: new Date(date),
+          type: 'conjunction',
+          description: `${planets[i].name} and ${planets[j].name} unite in ${planets[i].sign}`,
+          emoji: '🌊',
+          rarity,
+          impact: getConjunctionImpact(planets[i].name, planets[j].name)
+        });
+      }
+    }
+  }
+  
+  return events;
+};
+
+/**
+ * Detects moon phases for a given date
+ */
+export const detectMoonPhases = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  // Find moon and sun positions
+  const moon = positions.planets.find(p => p.name.toLowerCase() === 'moon');
+  const sun = positions.planets.find(p => p.name.toLowerCase() === 'sun');
+  
+  if (!moon || !sun) return events;
+  
+  // Calculate moon phase based on sun-moon angle
+  let moonSunAngle = Math.abs(moon.longitude - sun.longitude);
+  if (moonSunAngle > 180) moonSunAngle = 360 - moonSunAngle;
+  
+  // Detect major moon phases (within 3 degrees)
+  const phaseThreshold = 3;
+  
+  if (moonSunAngle <= phaseThreshold) {
+    // New Moon
+    events.push({
+      id: `new_moon_${date.getTime()}`,
+      name: `New Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
+      date: new Date(date),
+      type: 'moonPhase',
+      description: `The Moon and Sun unite in ${moon.sign}, bringing fresh starts and new intentions`,
+      emoji: '🌑',
+      rarity: 'common',
+      impact: 'Perfect for setting intentions, starting new projects, and planting seeds for future growth'
+    });
+  } else if (Math.abs(moonSunAngle - 180) <= phaseThreshold) {
+    // Full Moon
+    events.push({
+      id: `full_moon_${date.getTime()}`,
+      name: `Full Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
+      date: new Date(date),
+      type: 'moonPhase',
+      description: `The Moon reaches fullness in ${moon.sign}, illuminating emotions and bringing clarity`,
+      emoji: '🌕',
+      rarity: 'common',
+      impact: 'Time for completion, releasing what no longer serves, and emotional breakthroughs'
+    });
+  } else if (Math.abs(moonSunAngle - 90) <= phaseThreshold) {
+    // First Quarter
+    events.push({
+      id: `first_quarter_${date.getTime()}`,
+      name: `First Quarter Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
+      date: new Date(date),
+      type: 'moonPhase',
+      description: `The Moon reaches first quarter in ${moon.sign}, bringing challenges and decisions`,
+      emoji: '🌓',
+      rarity: 'common',
+      impact: 'Time to take action, overcome obstacles, and make important decisions'
+    });
+  } else if (Math.abs(moonSunAngle - 270) <= phaseThreshold || Math.abs(moonSunAngle + 90) <= phaseThreshold) {
+    // Last Quarter
+    events.push({
+      id: `last_quarter_${date.getTime()}`,
+      name: `Last Quarter Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
+      date: new Date(date),
+      type: 'moonPhase',
+      description: `The Moon reaches last quarter in ${moon.sign}, encouraging release and forgiveness`,
+      emoji: '🌗',
+      rarity: 'common',
+      impact: 'Time to let go, forgive, and clear away what no longer serves your growth'
+    });
+  }
+  
+  return events;
+};
+
+/**
+ * Detects void of course moon periods for a given date
+ */
+export const detectVoidMoon = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  const moon = positions.planets.find(p => p.name.toLowerCase() === 'moon');
+  if (!moon) return events;
+  
+  // Calculate if moon is void of course
+  // Moon is void when it makes no more major aspects before changing signs
+  const moonSignBoundary = Math.floor(moon.longitude / 30) * 30;
+  const nextSignBoundary = moonSignBoundary + 30;
+  const degreesToNextSign = nextSignBoundary - moon.longitude;
+  
+  // Simple void detection: if moon is in the last 5 degrees of a sign
+  // In reality, this would require checking future aspects, but this is a simplified version
+  if (degreesToNextSign <= 5) {
+    const nextSign = getNextSign(moon.sign);
+    
+    events.push({
+      id: `void_moon_${date.getTime()}`,
+      name: `Void of Course Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
+      date: new Date(date),
+      type: 'voidMoon',
+      description: `The Moon is void of course in ${moon.sign} before entering ${nextSign}`,
+      emoji: '🌫️',
+      rarity: 'common',
+      impact: 'Avoid making important decisions. Focus on routine tasks, rest, and reflection'
+    });
+  }
+  
+  return events;
+};
+
+/**
+ * Detects moon sign changes for a given date
+ */
+export const detectMoonSignChanges = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  const moon = positions.planets.find(p => p.name.toLowerCase() === 'moon');
+  if (!moon) return events;
+  
+  // Check if moon is near a sign boundary (within 1 degree of entering new sign)
+  const moonSignBoundary = Math.floor(moon.longitude / 30) * 30;
+  const nextSignBoundary = moonSignBoundary + 30;
+  const degreesToNextSign = nextSignBoundary - moon.longitude;
+  
+  if (degreesToNextSign <= 1) {
+    const nextSign = getNextSign(moon.sign);
+    
+    events.push({
+      id: `moon_sign_change_${date.getTime()}`,
+      name: `Moon Enters ${nextSign.charAt(0).toUpperCase() + nextSign.slice(1)}`,
+      date: new Date(date),
+      type: 'moonPhase',
+      description: `The Moon transitions from ${moon.sign} into ${nextSign}`,
+      emoji: '🌙',
+      rarity: 'common',
+      impact: `Shift in emotional energy: ${getSignThemes(nextSign)}`
+    });
+  }
+  
+  return events;
+};
+
+/**
+ * Convenience function to detect all event types for a given date
+ */
+export const detectAllEvents = async (date: Date): Promise<AstrologicalEvent[]> => {
+  try {
+    const [
+      retrogrades,
+      stelliums,
+      grandTrines,
+      conjunctions,
+      moonPhases,
+      voidMoon,
+      moonSignChanges
+    ] = await Promise.all([
+      detectRetrogrades(date),
+      detectStelliums(date),
+      detectGrandTrines(date),
+      detectConjunctions(date),
+      detectMoonPhases(date),
+      detectVoidMoon(date),
+      detectMoonSignChanges(date)
+    ]);
+    
+    return [
+      ...retrogrades,
+      ...stelliums,
+      ...grandTrines,
+      ...conjunctions,
+      ...moonPhases,
+      ...voidMoon,
+      ...moonSignChanges
+    ];
+  } catch (error) {
+    console.warn(`Error detecting events for ${date.toDateString()}:`, error);
+    return [];
+  }
+};

@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import NatalChartForm, { NatalChartFormData } from '@/components/forms/NatalChartForm';
 import ChartPreview from '@/components/charts/ChartPreview';
 import ClientWorldMap from '@/components/ClientWorldMap';
-import PlanetAlignment from '@/components/PlanetAlignment';
 import ElectionalAstrologyShowcase from '@/components/ElectionalAstrologyShowcase';
+import AstrologicalEvents from '@/components/AstrologicalEvents';
 import { BRAND } from '@/config/brand';
 import { useUserStore } from '@/store/userStore';
 import { useNatalChart } from '@/hooks/useNatalChart';
@@ -13,6 +13,8 @@ import { useRouter } from 'next/navigation';
 import { useStatusToast } from '@/hooks/useStatusToast';
 import StatusToast from '@/components/reusable/StatusToast';
 import { useBlogData } from '@/hooks/useBlogData';
+import AstrologicalEventsStructuredData from '@/components/SEO/AstrologicalEventsStructuredData';
+import { useAstrologicalEvents } from '@/hooks/useAstrologicalEvents';
 
 export default function Home() {
   const router = useRouter();
@@ -25,6 +27,9 @@ export default function Home() {
 
   // Get featured blog posts
   const { featuredPosts } = useBlogData();
+
+  // Get astrological events for structured data
+  const { upcomingEvents } = useAstrologicalEvents();
 
   // Load profile is handled by Navbar component, no need to duplicate here
   // useEffect(() => {
@@ -161,20 +166,20 @@ export default function Home() {
                   </div>
                 </button>
 
-                {/* Planetary Alignment */}
+                {/* Astrological Events */}
                 <button
-                  onClick={() => scrollToSection('planetary-alignment-section')}
+                  onClick={() => scrollToSection('astrological-events-section')}
                   className="group relative p-4 xl:p-3 2xl:p-8 transition-all duration-300 border-r border-black hover:bg-gray-50"
                   style={{ backgroundColor: '#51bd94' }}
                 >
                   <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
                   <div className="relative text-center">
                     <div className="w-8 h-8 xl:w-10 xl:h-10 2xl:w-12 2xl:h-12 bg-black flex items-center justify-center mb-2 mx-auto">
-                      <span className="text-lg">🌌</span>
+                      <span className="text-lg">✨</span>
                     </div>
-                    <h3 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Planetary Alignment</h3>
+                    <h3 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Astrological Events</h3>
                     <p className="font-inter text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
-                      View real-time 3D positions
+                      Track rare celestial events
                     </p>
                   </div>
                 </button>
@@ -234,15 +239,15 @@ export default function Home() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => scrollToSection('planetary-alignment-section')}
+                    onClick={() => scrollToSection('astrological-events-section')}
                     className="flex-1 bg-[#26efa2] border border-black p-3 hover:bg-[#26e59f] transition-all duration-300 flex items-center gap-3"
                   >
                     <div className="w-10 h-10 bg-black flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">🌌</span>
+                      <span className="text-xl">✨</span>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-space-grotesk text-base font-bold text-black">Planetary Alignment</h3>
-                      <p className="font-inter text-black/80 text-xs">View real-time 3D positions</p>
+                      <h3 className="font-space-grotesk text-base font-bold text-black">Astrological Events</h3>
+                      <p className="font-inter text-black/80 text-xs">Track rare celestial events</p>
                     </div>
                   </button>
 
@@ -471,12 +476,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="planetary-alignment-section" className="scroll-mt-20">
-        <PlanetAlignment />
-      </section>
 
       <div id="electional-astrology-section" className="mt-12 scroll-mt-20">
         <ElectionalAstrologyShowcase />
+      </div>
+
+      {/* Astrological Events Section */}
+      <div id="astrological-events-section" className="scroll-mt-20">
+        <AstrologicalEvents />
       </div>
 
       {/* Status Toast */}
@@ -489,6 +496,13 @@ export default function Home() {
         duration={statusToast.duration}
         showProgress={statusToast.showProgress}
         progress={statusToast.progress}
+      />
+
+      {/* Structured Data for Astrological Events */}
+      <AstrologicalEventsStructuredData 
+        events={upcomingEvents}
+        siteName={BRAND.name}
+        siteUrl={process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'}
       />
     </>
   );
