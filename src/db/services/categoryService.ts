@@ -2,7 +2,7 @@
 
 import { db } from '@/db/index-turso-http';
 import { categories } from '@/db/schema';
-import { eq, desc, asc, and } from 'drizzle-orm';
+import { eq, desc, asc, and, sql } from 'drizzle-orm';
 import { 
   Category, 
   CategoryEntity, 
@@ -352,13 +352,22 @@ export const incrementCategoryUsage = async (categoryName: string): Promise<Cate
       return { success: true, data: true, fallback: true };
     }
 
-    await db
-      .update(categories)
-      .set({ 
-        usageCount: categories.usageCount + 1,
-        updatedAt: new Date()
-      })
-      .where(and(eq(categories.name, categoryName), eq(categories.isActive, true)));
+    // Get current category first
+    const currentCategory = await db
+      .select({ usageCount: categories.usageCount })
+      .from(categories)
+      .where(and(eq(categories.name, categoryName), eq(categories.isActive, true)))
+      .limit(1);
+
+    if (currentCategory.length > 0) {
+      await db
+        .update(categories)
+        .set({ 
+          usageCount: (currentCategory[0].usageCount || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(and(eq(categories.name, categoryName), eq(categories.isActive, true)));
+    }
 
     return { success: true, data: true };
 
