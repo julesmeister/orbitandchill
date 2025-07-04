@@ -19,6 +19,7 @@ interface DesktopNavProps {
   onNavigate: (href: string) => void;
   onGoogleSignIn: () => void;
   onSignOut: () => void;
+  onHoverSound?: () => void;
 }
 
 const NAVIGATION_LINKS = [
@@ -40,7 +41,8 @@ const DesktopNav = React.memo(({
   isActiveLink,
   onNavigate,
   onGoogleSignIn,
-  onSignOut
+  onSignOut,
+  onHoverSound
 }: DesktopNavProps) => {
   return (
     <div className="hidden lg:block">
@@ -49,7 +51,7 @@ const DesktopNav = React.memo(({
           {/* Left Section - Brand and Main Navigation */}
           <div className="flex items-center space-x-8 xl:space-x-12">
             {/* Brand */}
-            <Link href="/" className="flex items-center space-x-3 group">
+            <Link href="/" className="flex items-center space-x-3 group" onMouseEnter={onHoverSound}>
               <OrbitingLogo
                 size="normal"
                 className="text-black hover:scale-105 transition-transform duration-300"
@@ -69,6 +71,7 @@ const DesktopNav = React.memo(({
                     isActive={isActiveLink(href)}
                     progressWidth={progressWidth}
                     onNavigate={onNavigate}
+                    onHoverSound={onHoverSound}
                   >
                     {label}
                   </NavigationLink>
@@ -93,6 +96,7 @@ const DesktopNav = React.memo(({
               displayName={displayName}
               onGoogleSignIn={onGoogleSignIn}
               onSignOut={onSignOut}
+              onHoverSound={onHoverSound}
             />
           </div>
         </div>

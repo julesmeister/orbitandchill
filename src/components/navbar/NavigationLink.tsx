@@ -11,6 +11,7 @@ interface NavigationLinkProps {
   isActive: boolean;
   progressWidth: number;
   onNavigate: (href: string) => void;
+  onHoverSound?: () => void;
 }
 
 const NavigationLink = React.memo(({
@@ -21,7 +22,8 @@ const NavigationLink = React.memo(({
   isLoading,
   isActive,
   progressWidth,
-  onNavigate
+  onNavigate,
+  onHoverSound
 }: NavigationLinkProps) => {
   const handleClick = () => {
     if (onClick) onClick();
@@ -31,6 +33,7 @@ const NavigationLink = React.memo(({
   return (
     <button
       onClick={handleClick}
+      onMouseEnter={onHoverSound}
       disabled={isLoading}
       className={`relative overflow-hidden group ${className} ${
         isActive

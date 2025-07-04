@@ -59,11 +59,11 @@ export default function BlogCategoryPage({ params }: BlogCategoryPageProps) {
   // Set category filter when component mounts or categoryId changes
   useEffect(() => {
     if (categoryId && categoryId !== 'all') {
-      setFilters((prevFilters) => ({ ...prevFilters, category: categoryId, sortBy: 'newest' }));
+      setFilters({ ...filters, category: categoryId, sortBy: 'newest' });
     } else {
-      setFilters((prevFilters) => ({ ...prevFilters, category: undefined, sortBy: 'newest' }));
+      setFilters({ ...filters, category: undefined, sortBy: 'newest' });
     }
-  }, [categoryId, setFilters]);
+  }, [categoryId, setFilters, filters]);
 
   // Set document title based on category
   useEffect(() => {

@@ -59,12 +59,12 @@ export class AnalyticsNotificationService {
         entityType: 'analytics',
         entityId: `daily_${date}`,
         entityUrl: '/admin?tab=traffic',
-        metadata: JSON.stringify({
+        data: {
           date,
           metrics,
           type: 'daily_aggregation',
           timestamp: new Date().toISOString()
-        })
+        }
       });
 
       console.log(`📊 Analytics notification sent to admin for ${date}`);
@@ -93,12 +93,12 @@ export class AnalyticsNotificationService {
         entityType: 'analytics',
         entityId: `daily_error_${date}`,
         entityUrl: '/admin?tab=traffic',
-        metadata: JSON.stringify({
+        data: {
           date,
           error,
           type: 'daily_aggregation_error',
           timestamp: new Date().toISOString()
-        })
+        }
       });
 
       console.log(`🚨 Analytics error notification sent to admin for ${date}`);
@@ -128,12 +128,12 @@ export class AnalyticsNotificationService {
         entityType: 'system',
         entityId: `cron_${Date.now()}`,
         entityUrl: '/admin?tab=traffic',
-        metadata: JSON.stringify({
+        data: {
           status,
           details,
           type: 'cron_job',
           timestamp: new Date().toISOString()
-        })
+        }
       });
 
       console.log(`${isSuccess ? '✅' : '❌'} Cron job notification sent to admin`);
@@ -161,14 +161,14 @@ export class AnalyticsNotificationService {
         entityType: 'analytics',
         entityId: `spike_${date}`,
         entityUrl: '/admin?tab=traffic',
-        metadata: JSON.stringify({
+        data: {
           date,
           currentVisitors,
           averageVisitors,
           percentage,
           type: 'traffic_spike',
           timestamp: new Date().toISOString()
-        })
+        }
       });
 
       console.log(`📈 Traffic spike notification sent to admin for ${date}`);
@@ -198,11 +198,11 @@ export class AnalyticsNotificationService {
         entityType: 'analytics',
         entityId: `weekly_${Date.now()}`,
         entityUrl: '/admin?tab=traffic',
-        metadata: JSON.stringify({
+        data: {
           weekData,
           type: 'weekly_summary',
           timestamp: new Date().toISOString()
-        })
+        }
       });
 
       console.log('📊 Weekly summary notification sent to admin');
@@ -232,11 +232,11 @@ export class AnalyticsNotificationService {
         entityType: 'system',
         entityId: `health_${Date.now()}`,
         entityUrl: '/admin?tab=traffic',
-        metadata: JSON.stringify({
+        data: {
           healthData,
           type: 'system_health',
           timestamp: new Date().toISOString()
-        })
+        }
       });
 
       console.log(`${isHealthy ? '💚' : '🔴'} System health notification sent to admin`);

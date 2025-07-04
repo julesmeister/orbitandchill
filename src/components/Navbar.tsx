@@ -16,6 +16,7 @@ import { BRAND } from '@/config/brand';
 import { useUserStore } from '../store/userStore';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
 import { useNavigation } from '../hooks/useNavigation';
+import { useSound } from '../hooks/useSound';
 import { generateAnonymousName } from '../utils/usernameGenerator';
 
 export default function Navbar() {
@@ -35,6 +36,7 @@ export default function Navbar() {
   const { user, updateUser, loadProfile, ensureAnonymousUser, clearProfile } = useUserStore();
   const { signInWithGoogle, signOut, isLoading: isAuthLoading } = useGoogleAuth();
   const { loadingLink, progressWidth, isActiveLink, handleNavigation } = useNavigation();
+  const { play: playHoverSound } = useSound('/sounds/hover.mp3', 0.3);
 
   // User display information
   const displayName = user?.username || "Anonymous User";
@@ -160,6 +162,7 @@ export default function Navbar() {
         onNavigate={handleNavigation}
         onGoogleSignIn={handleGoogleSignIn}
         onSignOut={handleSignOut}
+        onHoverSound={playHoverSound}
       />
 
       {/* Mobile/Tablet Layout */}
@@ -167,7 +170,7 @@ export default function Navbar() {
         <div className="bg-white border-b border-black">
           <div className="flex items-center justify-between h-16 px-4">
             {/* Brand - Mobile */}
-            <Link href="/" className="flex items-center space-x-2 group">
+            <Link href="/" className="flex items-center space-x-2 group" onMouseEnter={playHoverSound}>
               <OrbitingLogo 
                 size="small"
                 className="text-black hover:scale-105 transition-transform duration-300"
@@ -192,11 +195,13 @@ export default function Navbar() {
                 onGoogleSignIn={handleGoogleSignIn}
                 onSignOut={handleSignOut}
                 isMobile={true}
+                onHoverSound={playHoverSound}
               />
 
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onMouseEnter={playHoverSound}
                 className="text-black transition-colors p-2 bg-white relative group"
               >
                 {/* Vertex borders on hover - visible corners */}
@@ -233,6 +238,7 @@ export default function Navbar() {
           progressWidth={progressWidth}
           isActiveLink={isActiveLink}
           onNavigate={handleNavigation}
+          onHoverSound={playHoverSound}
         />
       </div>
     </nav>

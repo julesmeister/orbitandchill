@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 
-interface DropdownItem {
+export interface DropdownItem {
   type: 'link' | 'button' | 'divider' | 'header'
   label?: string
   href?: string

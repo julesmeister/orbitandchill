@@ -11,6 +11,7 @@ interface MobileNavProps {
   progressWidth: number;
   isActiveLink: (href: string) => boolean;
   onNavigate: (href: string) => void;
+  onHoverSound?: () => void;
 }
 
 const NAVIGATION_LINKS = [
@@ -31,7 +32,8 @@ const MobileNav = React.memo(({
   loadingLink,
   progressWidth,
   isActiveLink,
-  onNavigate
+  onNavigate,
+  onHoverSound
 }: MobileNavProps) => {
   if (!isOpen) return null;
 
@@ -66,6 +68,7 @@ const MobileNav = React.memo(({
               isActive={isActiveLink(href)}
               progressWidth={progressWidth}
               onNavigate={onNavigate}
+              onHoverSound={onHoverSound}
               onClick={onClose}
             >
               {label}

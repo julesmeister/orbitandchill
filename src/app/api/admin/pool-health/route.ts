@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       status: utilizationPercent > 90 ? 'critical' : 
               utilizationPercent > 70 ? 'warning' : 'healthy',
       utilizationPercent: utilizationPercent.toFixed(1),
-      recommendations: []
+      recommendations: [] as string[]
     };
     
     // Add recommendations

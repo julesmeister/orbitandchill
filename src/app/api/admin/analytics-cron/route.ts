@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         // Check if data already exists
         if (!force) {
           const existingData = await AnalyticsService.getTrafficData(dateString, dateString);
-          if (existingData.length > 0 && 'visitors' in existingData[0] && existingData[0].visitors > 0) {
+          if (existingData.length > 0 && 'visitors' in existingData[0] && (existingData[0] as any).visitors > 0) {
             console.log(`✅ Data already exists for ${dateString}, skipping`);
             results.push({
               date: dateString,
@@ -92,15 +92,15 @@ export async function POST(request: NextRequest) {
     const successfulDates = results.filter(r => r.status === 'success');
     const totalVisitors = successfulDates.reduce((sum, r) => {
       const data = r.data;
-      return sum + (data && 'visitors' in data ? data.visitors : 0);
+      return sum + (data && 'visitors' in data ? (data as any).visitors : 0);
     }, 0);
     const totalPageViews = successfulDates.reduce((sum, r) => {
       const data = r.data;
-      return sum + (data && 'pageViews' in data ? data.pageViews : 0);
+      return sum + (data && 'pageViews' in data ? (data as any).pageViews : 0);
     }, 0);
     const totalCharts = successfulDates.reduce((sum, r) => {
       const data = r.data;
-      return sum + (data && 'chartsGenerated' in data ? data.chartsGenerated : 0);
+      return sum + (data && 'chartsGenerated' in data ? (data as any).chartsGenerated : 0);
     }, 0);
     
     const summary = {
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
     const yesterdayString = yesterday.toISOString().split('T')[0];
     
     const recentData = await AnalyticsService.getTrafficData(yesterdayString, yesterdayString);
-    const hasYesterdayData = recentData.length > 0 && 'visitors' in recentData[0] && recentData[0].visitors > 0;
+    const hasYesterdayData = recentData.length > 0 && 'visitors' in recentData[0] && (recentData[0] as any).visitors > 0;
     
     // Check data freshness for last 7 days
     const weekData = [];
@@ -191,8 +191,8 @@ export async function GET(request: NextRequest) {
       const dayData = await AnalyticsService.getTrafficData(dateString, dateString);
       weekData.push({
         date: dateString,
-        hasData: dayData.length > 0 && 'visitors' in dayData[0] && dayData[0].visitors > 0,
-        visitors: dayData.length > 0 && 'visitors' in dayData[0] ? dayData[0].visitors : 0
+        hasData: dayData.length > 0 && 'visitors' in dayData[0] && (dayData[0] as any).visitors > 0,
+        visitors: dayData.length > 0 && 'visitors' in dayData[0] ? (dayData[0] as any).visitors : 0
       });
     }
     

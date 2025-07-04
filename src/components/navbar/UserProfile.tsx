@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import Dropdown from '../reusable/Dropdown';
+import Dropdown, { DropdownItem } from '../reusable/Dropdown';
 import { User } from '@/types/user';
 import { getAvatarByIdentifier } from '@/utils/avatarUtils';
 import { getUserInitials } from '@/utils/usernameGenerator';
@@ -13,6 +13,7 @@ interface UserProfileProps {
   onGoogleSignIn: () => void;
   onSignOut: () => void;
   isMobile?: boolean;
+  onHoverSound?: () => void;
 }
 
 const UserProfile = ({
@@ -21,7 +22,8 @@ const UserProfile = ({
   displayName,
   onGoogleSignIn,
   onSignOut,
-  isMobile = false
+  isMobile = false,
+  onHoverSound
 }: UserProfileProps) => {
   const userInitials = getUserInitials(displayName);
 
@@ -29,7 +31,7 @@ const UserProfile = ({
   const isGoogleUser = user?.authProvider === "google";
 
   const profileDropdownItems = useMemo(() => {
-    const items = [
+    const items: DropdownItem[] = [
       {
         type: "link" as const,
         label: "My Profile",
@@ -100,10 +102,9 @@ const UserProfile = ({
     }
 
     items.push({
-      type: "link" as const,
+      type: "button" as const,
       label: isAnonymousUser ? (isLoading ? "Signing in..." : "Sign in with Google") : "Sign Out",
       onClick: isAnonymousUser ? onGoogleSignIn : onSignOut,
-      disabled: isAnonymousUser ? isLoading : false,
       icon: isAnonymousUser ? (
         isLoading ? (
           <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
@@ -136,7 +137,7 @@ const UserProfile = ({
         items={profileDropdownItems}
         align="right"
         trigger={(isOpen) => (
-          <div className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors">
+          <div className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors" onMouseEnter={onHoverSound}>
             {user?.preferredAvatar || user?.profilePictureUrl ? (
               <div className="w-8 h-8 rounded-full overflow-hidden">
                 <Image
@@ -171,7 +172,7 @@ const UserProfile = ({
       items={profileDropdownItems}
       align="right"
       trigger={(isOpen) => (
-        <div className="flex items-center space-x-2 xl:space-x-3 text-black hover:text-gray-600 transition-colors cursor-pointer">
+        <div className="flex items-center space-x-2 xl:space-x-3 text-black hover:text-gray-600 transition-colors cursor-pointer" onMouseEnter={onHoverSound}>
           <div className="hidden xl:block">
             <div className="text-right">
               <div className="text-xs text-gray-500 font-inter">Welcome</div>
