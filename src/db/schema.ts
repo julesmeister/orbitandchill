@@ -174,18 +174,7 @@ export const votes = sqliteTable('votes', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-// Categories for discussions
-export const categories = sqliteTable('categories', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  description: text('description'),
-  icon: text('icon'), // Icon name or SVG path
-  sortOrder: integer('sort_order').notNull().default(0),
-  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-  discussionCount: integer('discussion_count').notNull().default(0),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-});
+// Categories for discussions - REMOVED: duplicate declaration, see line 624
 
 // Tags for discussions
 export const tags = sqliteTable('tags', {
@@ -616,6 +605,22 @@ export const notificationTemplates = sqliteTable('notification_templates', {
   availablePlaceholders: text('available_placeholders'), // JSON array of available placeholder keys
   validationRules: text('validation_rules'), // JSON object with validation rules
   
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Discussion/Forum Categories - centralized category management
+export const categories = sqliteTable('categories', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  color: text('color').notNull(), // Hex color code for UI styling
+  icon: text('icon'), // Icon name or SVG path
+  sortOrder: integer('sort_order').notNull().default(0),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false), // Cannot be deleted
+  usageCount: integer('usage_count').notNull().default(0), // Track how often it's used
+  discussionCount: integer('discussion_count').notNull().default(0), // Legacy field
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });

@@ -10,14 +10,15 @@ export type NotificationType =
   | 'discussion_reply' | 'discussion_like' | 'discussion_mention'
   | 'chart_shared' | 'chart_comment' | 'chart_like'
   | 'event_reminder' | 'event_bookmark'
-  | 'system_announcement' | 'system_maintenance' | 'system_update'
+  | 'system_announcement' | 'system_maintenance' | 'system_update' | 'system_health'
   | 'admin_message' | 'admin_warning'
   | 'premium_upgrade' | 'premium_expiry'
-  | 'welcome' | 'newsletter';
+  | 'welcome' | 'newsletter'
+  | 'analytics_success' | 'analytics_failure' | 'cron_success' | 'cron_failure' | 'traffic_spike';
 
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type NotificationCategory = 'social' | 'system' | 'admin' | 'premium' | 'reminder' | 'achievement';
-export type EntityType = 'discussion' | 'reply' | 'chart' | 'event' | 'user' | 'system';
+export type EntityType = 'discussion' | 'reply' | 'chart' | 'event' | 'user' | 'system' | 'analytics';
 export type DeliveryMethod = 'in_app' | 'email' | 'push' | 'sms';
 
 export interface CreateNotificationData {

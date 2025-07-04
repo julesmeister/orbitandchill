@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAdminStore } from '@/store/adminStore';
+import { useCategories } from '@/hooks/useCategories';
 import { BlogPost, BlogFilters, BlogCategory, BlogPaginationInfo } from '@/types/blog';
-import { POSTS_PER_PAGE, BLOG_CATEGORIES } from '@/constants/blog';
+import { POSTS_PER_PAGE } from '@/constants/blog';
 import { convertThreadToBlogPost } from '@/utils/blogUtils';
 
 interface UseBlogDataReturn {
@@ -47,6 +48,14 @@ export function useBlogData(): UseBlogDataReturn {
 
   // Use admin store for real blog data
   const { threads, loadThreads, isLoading } = useAdminStore();
+  
+  // Use database-backed categories
+  const {
+    categories: dbCategories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+    fallback: categoriesFallback
+  } = useCategories();
 
   // Load blog data on mount
   useEffect(() => {
@@ -69,9 +78,13 @@ export function useBlogData(): UseBlogDataReturn {
 
     // Apply category filter
     if (filters.category) {
-      filtered = filtered.filter(post => 
-        post.category.toLowerCase() === filters.category?.toLowerCase()
-      );
+      // Find the category by ID to get its name
+      const selectedCategory = dbCategories.find(cat => cat.id === filters.category);
+      if (selectedCategory) {
+        filtered = filtered.filter(post => 
+          post.category.toLowerCase() === selectedCategory.name.toLowerCase()
+        );
+      }
     }
 
     // Apply search filter
@@ -158,7 +171,7 @@ export function useBlogData(): UseBlogDataReturn {
       }));
   }, [allBlogPosts]);
 
-  // Calculate category post counts
+  // Calculate category post counts using database categories
   const categories = useMemo<BlogCategory[]>(() => {
     const categoryCounts = new Map<string, number>();
     
@@ -167,29 +180,44 @@ export function useBlogData(): UseBlogDataReturn {
       categoryCounts.set(post.category, count + 1);
     });
 
-    return BLOG_CATEGORIES.map(category => ({
-      ...category,
-      postCount: category.id === 'all' 
-        ? allBlogPosts.length 
-        : categoryCounts.get(category.name) || 0
+    // Convert database categories to blog categories format
+    const blogCategories: BlogCategory[] = dbCategories.map(dbCategory => ({
+      id: dbCategory.id,
+      name: dbCategory.name,
+      description: dbCategory.description || `Articles about ${dbCategory.name}`,
+      postCount: categoryCounts.get(dbCategory.name) || 0
     }));
-  }, [allBlogPosts]);
 
-  // Reset to page 1 when filters change
+    // Add "All Posts" category at the beginning
+    const allCategory: BlogCategory = {
+      id: 'all',
+      name: 'All Posts',
+      description: 'Browse all blog posts',
+      postCount: allBlogPosts.length
+    };
+
+    return [allCategory, ...blogCategories];
+  }, [allBlogPosts, dbCategories]);
+
+  // Reset to page 1 when filters change (except on initial mount)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
+    // Skip on initial mount
+    const isInitialMount = currentPage === 1;
+    if (!isInitialMount) {
+      setCurrentPage(1);
+    }
+  }, [filters.category, filters.searchQuery, filters.tags?.join(','), filters.sortBy]);
 
   // Handle filter and page changes
-  const handleSetFilters = (newFilters: BlogFilters) => {
+  const handleSetFilters = useCallback((newFilters: BlogFilters | ((prev: BlogFilters) => BlogFilters)) => {
     setFilters(newFilters);
-  };
+  }, []);
 
-  const handleSetCurrentPage = (page: number) => {
+  const handleSetCurrentPage = useCallback((page: number) => {
     setCurrentPage(page);
     // Scroll to top of page
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
   return {
     // Data
@@ -205,8 +233,8 @@ export function useBlogData(): UseBlogDataReturn {
     // State
     filters,
     currentPage,
-    isLoading,
-    error,
+    isLoading: isLoading || categoriesLoading,
+    error: error || categoriesError,
 
     // Actions
     setFilters: handleSetFilters,

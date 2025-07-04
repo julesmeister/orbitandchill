@@ -86,13 +86,13 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
             setIsLoadingCache(false);
           } else {
             // Don't clear cached chart immediately - prevents chart loss during transitions
-            console.log('useNatalChart: No cache found, but keeping existing chart to prevent loss');
+            // console.log('useNatalChart: No cache found, but keeping existing chart to prevent loss');
             
             // Try to load from API if no local cache
-            console.log('useNatalChart: No local cache, trying to load existing charts from API');
+            // console.log('useNatalChart: No local cache, trying to load existing charts from API');
             try {
               const charts = await getUserCharts();
-              console.log('useNatalChart: API charts found:', charts.length);
+              // console.log('useNatalChart: API charts found:', charts.length);
               
               if (charts.length > 0) {
                 // Find matching chart or use the latest one

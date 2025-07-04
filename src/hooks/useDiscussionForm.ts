@@ -148,11 +148,11 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   };
 
   const updateFormData = (updates: Partial<DiscussionFormData>) => {
-    console.log('🔍 updateFormData called with:', updates);
+    // console.log('🔍 updateFormData called with:', updates);
     setFormData(prev => {
       const newData = { ...prev, ...updates };
-      console.log('🔍 updateFormData - New form data:', newData);
-      console.log('🔍 updateFormData - New authorName:', newData.authorName);
+      // console.log('🔍 updateFormData - New form data:', newData);
+      // console.log('🔍 updateFormData - New authorName:', newData.authorName);
       return newData;
     });
   };

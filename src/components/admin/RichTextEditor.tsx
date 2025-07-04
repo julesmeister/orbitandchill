@@ -12,7 +12,7 @@ import FontFamily from '@tiptap/extension-font-family';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Blockquote from '@tiptap/extension-blockquote';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { getTextStats, validateTextLength } from '@/utils/textUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -53,6 +53,7 @@ export default function RichTextEditor({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [savedSelection, setSavedSelection] = useState<number | null>(null);
+  const [editorText, setEditorText] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -107,7 +108,15 @@ export default function RichTextEditor({
     ],
     content: content || '<p></p>',
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      const text = editor.getText();
+      console.log('🔍 Editor onUpdate:', {
+        htmlLength: html?.length,
+        textLength: text?.length,
+        textPreview: text?.substring(0, 50)
+      });
+      onChange(html);
+      setEditorText(text); // Update our state to trigger text stats recalculation
     },
     editorProps: {
       attributes: {
@@ -167,19 +176,43 @@ export default function RichTextEditor({
     }
   }, [editor]);
 
+  // Initialize editorText when editor is ready
+  useEffect(() => {
+    if (editor) {
+      const initialText = editor.getText();
+      console.log('🔍 Editor initialized with text:', {
+        contentProp: content?.substring(0, 100),
+        editorHTML: editor.getHTML()?.substring(0, 100),
+        editorText: initialText?.substring(0, 100),
+        textLength: initialText?.length
+      });
+      setEditorText(initialText);
+    }
+  }, [editor, content]);
+
   // Text statistics using our utility functions
   const textStats = useMemo(() => {
-    if (!editor) return { characters: 0, words: 0, readingTime: 0 };
-    const plainText = editor.getText();
-    return getTextStats(plainText);
-  }, [editor, content]);
+    console.log('🔍 Calculating text stats for:', {
+      editorText: editorText?.substring(0, 100),
+      textLength: editorText?.length,
+      hasContent: !!editorText
+    });
+    
+    if (!editorText) {
+      console.log('🔍 No editorText, returning zeros');
+      return { characters: 0, words: 0, readingTime: 0 };
+    }
+    
+    const stats = getTextStats(editorText);
+    console.log('🔍 Text stats calculated:', stats);
+    return stats;
+  }, [editorText]);
 
   // Validation status
   const validation = useMemo(() => {
-    if (!showValidation || !editor) return { isValid: true, errors: [] };
-    const plainText = editor.getText();
-    return validateTextLength(plainText, minWords, minCharacters);
-  }, [editor, content, showValidation, minWords, minCharacters]);
+    if (!showValidation || !editorText) return { isValid: true, errors: [] };
+    return validateTextLength(editorText, minWords, minCharacters);
+  }, [editorText, showValidation, minWords, minCharacters]);
 
   if (!editor) {
     return null;

@@ -276,29 +276,36 @@ export default function Home() {
               {/* Featured Posts List */}
               <div className="space-y-4">
                 {featuredPosts.slice(0, 3).map((post) => (
-                  <div key={post.id} className="border border-black bg-white hover:shadow-lg transition-shadow duration-300">
+                  <div 
+                    key={post.id} 
+                    className="border border-black bg-white hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                    onClick={() => router.push(`/discussions/${post.slug}`)}
+                  >
                     <div className="p-4 xl:p-5 2xl:p-8">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <h3 className="font-space-grotesk font-bold text-black text-sm lg:text-base xl:text-base 2xl:text-lg mb-2 line-clamp-2">
-                            {post.title}
-                          </h3>
-                          <p className="font-inter text-black/70 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed mb-3 line-clamp-2">
-                            {post.excerpt}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="font-inter text-xs lg:text-sm xl:text-sm 2xl:text-base text-black/60">
-                              {post.author} • {post.readTime}
-                            </span>
-                            <button
-                              onClick={() => router.push(`/blog/${post.slug}`)}
-                              className="font-space-grotesk text-xs lg:text-sm xl:text-sm 2xl:text-base font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-                            >
-                              Read More →
-                            </button>
+                      <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                          <div className="flex-1">
+                            <h3 className="font-space-grotesk font-bold text-black text-sm lg:text-base xl:text-base 2xl:text-lg mb-2 line-clamp-2">
+                              {post.title}
+                            </h3>
+                            <p className="font-inter text-black/70 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed mb-3 line-clamp-2">
+                              {post.excerpt}
+                            </p>
+                            <div className="flex items-center">
+                              <span className="font-inter text-xs lg:text-sm xl:text-sm 2xl:text-base text-black/60">
+                                {post.author} • {post.readTime} min read
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        {post.imageUrl && (
+                          <img 
+                            src={post.imageUrl} 
+                            alt={post.title}
+                            className="w-20 h-20 xl:w-24 xl:h-24 2xl:w-28 2xl:h-28 object-cover flex-shrink-0"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

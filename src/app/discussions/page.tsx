@@ -16,35 +16,23 @@ import DiscussionsErrorState from '@/components/discussions/DiscussionsErrorStat
 import CommunityStats from '@/components/discussions/CommunityStats';
 import StatusToast from '@/components/reusable/StatusToast';
 import { BRAND } from '@/config/brand';
-
-const categories = [
-  "All Categories",
-  "Natal Chart Analysis",
-  "Transits & Predictions",
-  "Chart Reading Help",
-  "Synastry & Compatibility",
-  "Mundane Astrology",
-  "Learning Resources",
-  "General Discussion",
-];
-
-// Synapsas color mapping for categories
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'Natal Chart Analysis': return '#6bdbff';
-    case 'Transits & Predictions': return '#f2e356';
-    case 'Chart Reading Help': return '#51bd94';
-    case 'Synastry & Compatibility': return '#ff91e9';
-    case 'Mundane Astrology': return '#19181a';
-    case 'Learning Resources': return '#6bdbff';
-    case 'General Discussion': return '#51bd94';
-    default: return '#6bdbff';
-  }
-};
+import { useCategories } from '@/hooks/useCategories';
+import { getCategoryColor } from '@/utils/categories';
 
 // Remove old cache constants - now handled by useDiscussions hook
 
 export default function DiscussionsPage() {
+  // Database-backed categories management
+  const {
+    categories: dbCategories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+    fallback: categoriesFallback
+  } = useCategories();
+  
+  // Add "All Categories" to the beginning and convert to string array for compatibility
+  const categories = ['All Categories', ...dbCategories.map(cat => cat.name)];
+  
   // Custom hook for discussions data management
   const {
     discussions,

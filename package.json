@@ -59,6 +59,7 @@
     "sql.js": "^1.13.0",
     "three": "^0.177.0",
     "uuid": "^11.1.0",
+    "zod": "^3.25.73",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

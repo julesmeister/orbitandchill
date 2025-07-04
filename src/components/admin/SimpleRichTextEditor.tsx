@@ -107,8 +107,8 @@ export default function SimpleRichTextEditor({
 
   // Text statistics using our utility functions
   const textStats = useMemo(() => {
-    if (!editorRef.current) return { characters: 0, words: 0, readingTime: 0 };
-    const plainText = editorRef.current.textContent || '';
+    // Use content prop directly instead of DOM element to ensure proper initialization
+    const plainText = editorRef.current?.textContent || content.replace(/<[^>]*>/g, '') || '';
     return getTextStats(plainText);
   }, [content]);
 

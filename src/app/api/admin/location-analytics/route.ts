@@ -1,10 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
 import { getLocationAnalytics, getCountryFromCoordinates } from '@/utils/locationAnalytics';
+import { AnalyticsService } from '@/db/services/analyticsService';
+import { initializeDatabase } from '@/db/index';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get real analytics data from locationAnalytics utility
+    await initializeDatabase();
+    
+    console.log('📍 API: Loading real location analytics data...');
+    
+    // Try to get real geographic data from AnalyticsService (database)
+    const realGeoData = await AnalyticsService.getGeographicData(30);
+    
+    // Also get client-side location analytics for additional data
     const locationAnalytics = getLocationAnalytics();
     const analyticsSummary = locationAnalytics.getAnalyticsSummary();
     const allEvents = locationAnalytics.exportData();
@@ -90,21 +99,25 @@ export async function GET(request: NextRequest) {
     const birthLocationEvents = allEvents.filter(e => e.source === 'birth').length;
     const fallbackLocationEvents = allEvents.filter(e => e.source === 'fallback').length;
 
-    // Build comprehensive statistics
+    // Build comprehensive statistics combining real database data with client-side data
     const stats = {
-      totalRequests: analyticsSummary.totalRequests,
-      permissionGranted: analyticsSummary.permissionGranted,
-      permissionDenied: analyticsSummary.permissionDenied,
-      currentLocationUsage: currentLocationEvents,
-      fallbackUsage: analyticsSummary.fallbackUsed,
-      birthLocationUsage: birthLocationEvents,
-      topCountries: topCountries.slice(0, 5), // Top 5 countries
-      errorBreakdown: analyticsSummary.errorBreakdown,
-      // Additional metrics
+      // Prefer real database data where available
+      totalRequests: Math.max(realGeoData.totalRequests, analyticsSummary.totalRequests),
+      permissionGranted: Math.max(realGeoData.permissionGranted, analyticsSummary.permissionGranted),
+      permissionDenied: Math.max(realGeoData.permissionDenied, analyticsSummary.permissionDenied),
+      currentLocationUsage: Math.max(realGeoData.currentLocationUsage, currentLocationEvents),
+      fallbackUsage: Math.max(realGeoData.fallbackUsage, analyticsSummary.fallbackUsed),
+      birthLocationUsage: Math.max(realGeoData.birthLocationUsage, birthLocationEvents),
+      
+      // Use real geographic data if available, otherwise use processed client data
+      topCountries: realGeoData.topCountries.length > 0 ? realGeoData.topCountries : topCountries.slice(0, 5),
+      errorBreakdown: Object.keys(realGeoData.errorBreakdown).length > 0 ? realGeoData.errorBreakdown : analyticsSummary.errorBreakdown,
+      
+      // Additional metrics from client-side data
       locationSources: {
-        current: currentLocationEvents,
-        birth: birthLocationEvents,
-        fallback: fallbackLocationEvents
+        current: Math.max(realGeoData.currentLocationUsage, currentLocationEvents),
+        birth: Math.max(realGeoData.birthLocationUsage, birthLocationEvents),
+        fallback: Math.max(realGeoData.fallbackUsage, fallbackLocationEvents)
       },
       recentActivity: {
         last24Hours: allEvents.filter(e => {
@@ -123,20 +136,27 @@ export async function GET(request: NextRequest) {
     // Add some demo data if we don't have enough real data yet
     if (stats.totalRequests < 10) {
       stats.topCountries = [
-        { country: 'United States', count: Math.max(stats.permissionGranted * 0.6, 10), percentage: 60 },
-        { country: 'United Kingdom', count: Math.max(stats.permissionGranted * 0.2, 3), percentage: 20 },
-        { country: 'Canada', count: Math.max(stats.permissionGranted * 0.1, 2), percentage: 10 },
-        { country: 'Australia', count: Math.max(stats.permissionGranted * 0.1, 2), percentage: 10 }
+        { country: 'United States', count: Math.max(stats.permissionGranted * 0.6, 10) },
+        { country: 'United Kingdom', count: Math.max(stats.permissionGranted * 0.2, 3) },
+        { country: 'Canada', count: Math.max(stats.permissionGranted * 0.1, 2) },
+        { country: 'Australia', count: Math.max(stats.permissionGranted * 0.1, 2) }
       ];
     }
 
+    const dataSource = realGeoData.totalRequests >= 10 ? 'real' : 
+                      (analyticsSummary.totalRequests >= 5 ? 'hybrid' : 'demo');
+    
+    console.log(`✅ API: Location analytics loaded - ${dataSource} data (${stats.totalRequests} total requests)`);
+    
     return NextResponse.json({
       success: true,
       stats,
-      dataSource: analyticsSummary.totalRequests >= 10 ? 'real' : 'hybrid',
-      message: analyticsSummary.totalRequests >= 10 
-        ? 'Real location analytics data' 
-        : 'Hybrid data with demo countries (insufficient real data)'
+      dataSource,
+      message: dataSource === 'real' 
+        ? 'Real location analytics from database' 
+        : dataSource === 'hybrid'
+        ? 'Hybrid data combining database and client-side analytics'
+        : 'Demo data with simulated countries'
     });
 
   } catch (error) {

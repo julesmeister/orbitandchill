@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import React from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, Tag, TrendingUp, Calendar } from 'lucide-react';
 import { BlogCategory, BlogFilters } from '@/types/blog';
-import { BLOG_CATEGORIES, POPULAR_TAGS } from '@/constants/blog';
+import { POPULAR_TAGS } from '@/constants/blog';
+import { createCategoryUrl, extractCategoryIdFromSlug } from '@/utils/categorySlugUtils';
 
 interface BlogSidebarProps {
   filters: BlogFilters;
@@ -30,15 +33,32 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
   popularPosts = [],
   recentPosts = []
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Detect current category from URL
+  const getCurrentCategoryId = (): string => {
+    if (pathname.startsWith('/blog/category/')) {
+      const urlSlug = pathname.replace('/blog/category/', '');
+      const categoryId = extractCategoryIdFromSlug(urlSlug);
+      return categoryId || 'all';
+    }
+    return 'all';
+  };
+
+  const currentCategoryId = getCurrentCategoryId();
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({ ...filters, searchQuery: e.target.value });
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    onFiltersChange({ 
-      ...filters, 
-      category: categoryId === 'all' ? undefined : categoryId 
-    });
+  const handleCategoryClick = (categoryId: string, categoryName: string) => {
+    if (categoryId === 'all') {
+      router.push('/blog');
+    } else {
+      const url = createCategoryUrl(categoryId, categoryName);
+      router.push(url);
+    }
   };
 
   const handleTagClick = (tag: string) => {
@@ -77,9 +97,9 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({
           {categories.map((category) => (
             <li key={category.id}>
               <button
-                onClick={() => handleCategoryChange(category.id)}
+                onClick={() => handleCategoryClick(category.id, category.name)}
                 className={`w-full text-left px-3 py-2 rounded-none border transition-colors duration-200 ${
-                  (filters.category === category.id || (!filters.category && category.id === 'all'))
+                  currentCategoryId === category.id
                     ? 'bg-black text-white border-black'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-black'
                 }`}

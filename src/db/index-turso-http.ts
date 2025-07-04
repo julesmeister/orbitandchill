@@ -6,9 +6,10 @@ import * as schema from './schema';
 
 let client: any = null;
 let db: any = null;
+let pool: TursoConnectionPool | null = null;
 
-// Import connection pool functionality (dynamic import to avoid build issues)
-// import { initializeConnectionPool, getConnectionPool, executePooledQuery } from './connectionPool';
+// Import connection pool functionality
+import { TursoConnectionPool, initializeConnectionPool, getConnectionPool } from './connectionPool';
 
 // Initialize Turso connection with HTTP-only client
 async function initializeTurso() {
@@ -92,6 +93,18 @@ async function initializeTurso() {
         console.warn(`⚠️ Database connection test failed, retrying... (${3 - retries}/3)`);
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
       }
+    }
+    
+    // Initialize connection pool after successful client creation
+    try {
+      pool = await initializeConnectionPool(databaseUrl, authToken, {
+        maxConnections: 20,
+        minConnections: 2,
+        acquireTimeoutMs: 10000
+      });
+      console.log('✅ Connection pool initialized successfully');
+    } catch (poolError) {
+      console.warn('⚠️ Connection pool initialization failed, falling back to single client:', poolError);
     }
     
     return client;
@@ -1476,5 +1489,16 @@ export function closeDatabase() {
     }
     client = null;
     db = null;
+    pool = null;
   }
+}
+
+/**
+ * Get the connection pool instance for monitoring/management
+ */
+export function getPool(): TursoConnectionPool {
+  if (!pool) {
+    throw new Error('Connection pool not initialized');
+  }
+  return pool;
 }

@@ -152,29 +152,31 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
               /* Headings - Mobile Responsive */
               [&_h1]:font-space-grotesk [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-black [&_h1]:mt-6 sm:[&_h1]:mt-8 [&_h1]:mb-4 sm:[&_h1]:mb-6 [&_h1]:border-b [&_h1]:border-black [&_h1]:pb-2 sm:[&_h1]:pb-3
               [&_h2]:font-space-grotesk [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-black [&_h2]:mt-6 sm:[&_h2]:mt-8 [&_h2]:mb-3 sm:[&_h2]:mb-4 [&_h2]:border-b [&_h2]:border-black [&_h2]:pb-2
-              [&_h3]:font-space-grotesk [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-black [&_h3]:mt-4 sm:[&_h3]:mt-6 [&_h3]:mb-2 sm:[&_h3]:mb-3
+              [&_h3]:font-space-grotesk [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-black [&_h3]:mt-4 sm:[&_h3]:mt-6 [&_h3]:mb-2 sm:[&_h3]:mb-3 [&_h3]:text-right [&_h3]:relative [&_h3]:after:content-[''] [&_h3]:after:absolute [&_h3]:after:right-0 [&_h3]:after:bottom-[-8px] [&_h3]:after:w-[100px] [&_h3]:after:h-[4px] [&_h3]:after:bg-black
               /* Paragraphs - Mobile Responsive */
-              [&_p]:text-black [&_p]:leading-relaxed [&_p]:mb-3 sm:[&_p]:mb-4 [&_p]:text-base sm:[&_p]:text-lg
+              [&_p]:text-black [&_p]:leading-relaxed [&_p]:mb-2 sm:[&_p]:mb-3 [&_p]:text-base sm:[&_p]:text-lg
+              /* Empty paragraphs with just line breaks */
+              [&_p:has(br:only-child)]:h-2 [&_p:has(br:only-child)]:mb-1
               /* Text formatting */
               [&_strong]:text-black [&_strong]:font-bold
               [&_em]:text-black [&_em]:italic
               [&_mark]:bg-yellow-200 [&_mark]:px-1 [&_mark]:py-0.5
               /* Lists - Mobile Responsive */
-              [&_ul]:list-disc [&_ul]:ml-4 sm:[&_ul]:ml-6 [&_ul]:pl-2 [&_ul]:mb-3 sm:[&_ul]:mb-4 [&_ul]:space-y-1 sm:[&_ul]:space-y-2
-              [&_ol]:list-decimal [&_ol]:ml-4 sm:[&_ol]:ml-6 [&_ol]:pl-2 [&_ol]:mb-3 sm:[&_ol]:mb-4 [&_ol]:space-y-1 sm:[&_ol]:space-y-2
+              [&_ul]:list-disc [&_ul]:ml-4 sm:[&_ul]:ml-6 [&_ul]:pl-2 [&_ul]:mb-2 sm:[&_ul]:mb-3 [&_ul]:space-y-1 sm:[&_ul]:space-y-2
+              [&_ol]:list-decimal [&_ol]:ml-4 sm:[&_ol]:ml-6 [&_ol]:pl-2 [&_ol]:mb-2 sm:[&_ol]:mb-3 [&_ol]:space-y-1 sm:[&_ol]:space-y-2
               [&_li]:text-black [&_li]:leading-relaxed [&_li]:text-base sm:[&_li]:text-lg [&_li]:ml-0 [&_li]:pl-1
               /* Blockquotes - Mobile Responsive */
-              [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-gray-50 [&_blockquote]:pl-3 sm:[&_blockquote]:pl-6 [&_blockquote]:pr-3 sm:[&_blockquote]:pr-4 [&_blockquote]:py-3 sm:[&_blockquote]:py-4 [&_blockquote]:italic [&_blockquote]:mb-3 sm:[&_blockquote]:mb-4 [&_blockquote]:text-black/80
+              [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-gray-50 [&_blockquote]:pl-3 sm:[&_blockquote]:pl-6 [&_blockquote]:pr-3 sm:[&_blockquote]:pr-4 [&_blockquote]:py-3 sm:[&_blockquote]:py-4 [&_blockquote]:italic [&_blockquote]:mb-2 sm:[&_blockquote]:mb-3 [&_blockquote]:text-black/80
               /* Code - Mobile Responsive */
               [&_code]:bg-gray-100 [&_code]:px-1 sm:[&_code]:px-2 [&_code]:py-0.5 sm:[&_code]:py-1 [&_code]:font-mono [&_code]:text-xs sm:[&_code]:text-sm [&_code]:border [&_code]:border-gray-300 [&_code]:rounded [&_code]:break-words
-              [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-3 sm:[&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs sm:[&_pre]:text-sm [&_pre]:border [&_pre]:border-black [&_pre]:rounded [&_pre]:mb-3 sm:[&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:-mx-2 sm:[&_pre]:mx-0
+              [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-3 sm:[&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs sm:[&_pre]:text-sm [&_pre]:border [&_pre]:border-black [&_pre]:rounded [&_pre]:mb-2 sm:[&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:-mx-2 sm:[&_pre]:mx-0
               [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:border-0 [&_pre_code]:text-white [&_pre_code]:text-xs sm:[&_pre_code]:text-sm
               /* Links - Mobile Touch Friendly */
               [&_a]:text-black [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:bg-black hover:[&_a]:text-white [&_a]:transition-colors [&_a]:px-1 [&_a]:py-1 [&_a]:min-h-[44px] [&_a]:inline-flex [&_a]:items-center
               /* Images - Mobile Responsive */
-              [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:mb-3 sm:[&_img]:mb-4 [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_img]:object-contain
+              [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:mb-2 sm:[&_img]:mb-3 [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_img]:object-contain
               /* Tables - Mobile Responsive */
-              [&_table]:border-collapse [&_table]:border [&_table]:border-black [&_table]:mb-3 sm:[&_table]:mb-4 [&_table]:w-full [&_table]:text-sm [&_table]:overflow-x-auto [&_table]:block sm:[&_table]:table
+              [&_table]:border-collapse [&_table]:border [&_table]:border-black [&_table]:mb-2 sm:[&_table]:mb-3 [&_table]:w-full [&_table]:text-sm [&_table]:overflow-x-auto [&_table]:block sm:[&_table]:table
               [&_th]:border [&_th]:border-black [&_th]:bg-gray-100 [&_th]:px-2 sm:[&_th]:px-4 [&_th]:py-2 [&_th]:font-space-grotesk [&_th]:font-bold [&_th]:text-left [&_th]:text-xs sm:[&_th]:text-sm
               [&_td]:border [&_td]:border-black [&_td]:px-2 sm:[&_td]:px-4 [&_td]:py-2 [&_td]:text-black [&_td]:text-xs sm:[&_td]:text-sm
               /* Horizontal rules */
@@ -184,7 +186,7 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
           />
         ) : (
           // Render plain text with enhanced markdown-like parsing
-          <div className="space-y-4">
+          <div className="space-y-3">
             {contentWithoutFirstImage?.split('\n').map((paragraph, index) => {
               // Skip empty lines
               if (!paragraph.trim()) {
@@ -194,7 +196,7 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
               // Headers
               if (paragraph.startsWith('### ')) {
                 return (
-                  <h3 key={index} className="font-space-grotesk text-xl font-bold text-black mt-6 mb-3">
+                  <h3 key={index} className="font-space-grotesk text-xl font-bold text-black mt-6 mb-3 text-right relative after:content-[''] after:absolute after:right-0 after:bottom-[-8px] after:w-[100px] after:h-[4px] after:bg-black">
                     {paragraph.slice(4)}
                   </h3>
                 );
@@ -217,7 +219,7 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
               // Bold headings (legacy format)
               if (paragraph.startsWith('**') && paragraph.endsWith(':**')) {
                 return (
-                  <h3 key={index} className="font-space-grotesk text-xl font-bold text-black mt-6 mb-3">
+                  <h3 key={index} className="font-space-grotesk text-xl font-bold text-black mt-6 mb-3 text-right relative after:content-[''] after:absolute after:right-0 after:bottom-[-8px] after:w-[100px] after:h-[4px] after:bg-black">
                     {paragraph.slice(2, -3)}
                   </h3>
                 );
@@ -265,7 +267,7 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
               return (
                 <p 
                   key={index} 
-                  className="text-black mb-3 sm:mb-4 leading-relaxed text-base sm:text-lg"
+                  className="text-black mb-2 sm:mb-3 leading-relaxed text-base sm:text-lg"
                   dangerouslySetInnerHTML={{ __html: formattedContent }}
                 />
               );

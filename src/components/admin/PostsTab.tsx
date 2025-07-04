@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAdminStore } from '@/store/adminStore';
 import { useUserStore } from '@/store/userStore';
 import DiscussionForm from '../forms/DiscussionForm';
@@ -9,6 +9,7 @@ import ConfirmationModal from '../reusable/ConfirmationModal';
 import StatusToast from '../reusable/StatusToast';
 import { stripHtmlTags } from '@/utils/textUtils';
 import { extractFirstImageFromContent, createImageChartObject } from '@/utils/extractImageFromContent';
+import { useCategories } from '@/hooks/useCategories';
 
 // Thread interface from adminStore
 interface Thread {
@@ -62,13 +63,33 @@ interface PostFormData {
 export default function PostsTab({ isLoading }: PostsTabProps) {
   const { threads, loadThreads, createThread, updateThread, deleteThread } = useAdminStore();
   const { user } = useUserStore();
+  
+  // Database-backed categories management
+  const {
+    categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+    fallback: categoriesFallback,
+    addCategory,
+    updateCategory: updateCategoryDb,
+    deleteCategory: deleteCategoryDb,
+    refreshCategories
+  } = useCategories();
+  
+  // UI state
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPost, setEditingPost] = useState<string | null>(null);
+  const formDataRef = useRef<PostFormData | null>(null);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'blog' | 'forum' | 'featured'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage] = useState(10);
   const [postToDelete, setPostToDelete] = useState<Thread | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Category management state
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [editingCategory, setEditingCategory] = useState<{id: string, value: string} | null>(null);
   const [toast, setToast] = useState<{
     show: boolean;
     title: string;
@@ -85,7 +106,104 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     loadThreads();
   }, [loadThreads]);
 
-  const handleFormSubmit = async (formData: PostFormData) => {
+  // Database-backed category management functions
+  const handleAddCategory = async () => {
+    if (newCategory.trim() && !categories.some(cat => cat.name === newCategory.trim())) {
+      const success = await addCategory({
+        name: newCategory.trim(),
+        color: '#6bdbff', // Default color
+        description: `Discussion category: ${newCategory.trim()}`
+      });
+      
+      if (success) {
+        setNewCategory('');
+        setToast({
+          show: true,
+          title: 'Category Added',
+          message: 'Category has been created successfully.',
+          status: 'success'
+        });
+      } else {
+        setToast({
+          show: true,
+          title: 'Add Failed',
+          message: 'Failed to create category. Please try again.',
+          status: 'error'
+        });
+      }
+    }
+  };
+
+  const handleEditCategory = async (categoryId: string, newValue: string) => {
+    if (newValue.trim() && !categories.some(cat => cat.name === newValue.trim() && cat.id !== categoryId)) {
+      const success = await updateCategoryDb(categoryId, { name: newValue.trim() });
+      
+      if (success) {
+        setEditingCategory(null);
+        setToast({
+          show: true,
+          title: 'Category Updated',
+          message: 'Category has been updated successfully.',
+          status: 'success'
+        });
+      } else {
+        setToast({
+          show: true,
+          title: 'Update Failed',
+          message: 'Failed to update category. Please try again.',
+          status: 'error'
+        });
+      }
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    if (!category || category.isDefault) {
+      setToast({
+        show: true,
+        title: 'Delete Failed',
+        message: 'Cannot delete default category.',
+        status: 'error'
+      });
+      return;
+    }
+
+    const success = await deleteCategoryDb(categoryId);
+    
+    if (success) {
+      setToast({
+        show: true,
+        title: 'Category Deleted',
+        message: 'Category has been deleted successfully.',
+        status: 'success'
+      });
+    } else {
+      setToast({
+        show: true,
+        title: 'Delete Failed',
+        message: 'Failed to delete category. Please try again.',
+        status: 'error'
+      });
+    }
+  };
+
+  const handleResetCategories = async () => {
+    await refreshCategories();
+    setToast({
+      show: true,
+      title: 'Categories Reset',
+      message: 'Categories have been reset to defaults.',
+      status: 'success'
+    });
+  };
+
+
+  const handleFormSubmit = async (formData: PostFormData, shouldPublish?: boolean) => {
+    // If shouldPublish is not explicitly passed, this might be an auto-submit - ignore it
+    if (shouldPublish === undefined) {
+      return;
+    }
     
     // Show loading toast
     setToast({
@@ -113,16 +231,26 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       preferredAvatar: user?.preferredAvatar, // Include user's preferred avatar
       excerpt: formData.excerpt && formData.excerpt.trim() ? stripHtmlTags(formData.excerpt).substring(0, 150) + (stripHtmlTags(formData.excerpt).length > 150 ? '...' : '') : (formData.content ? stripHtmlTags(formData.content).substring(0, 150) + '...' : 'No description available'),
       isBlogPost: formData.isBlogPost ?? true,
-      isPublished: formData.isPublished ?? false,
+      isPublished: shouldPublish, // Use the shouldPublish flag from button click
       isPinned: formData.isPinned ?? false,
       isLocked: false, // Default to unlocked for new posts
     };
     
+    console.log('🔍 Saving post data:', {
+      title: postData.title,
+      isPublished: postData.isPublished,
+      contentLength: postData.content?.length,
+      contentPreview: postData.content?.substring(0, 100) + '...'
+    });
+    
 
     try {
       if (editingPost) {
+        console.log('🔍 Updating thread ID:', editingPost);
         await updateThread(editingPost, postData);
+        console.log('✅ Thread updated successfully');
         setEditingPost(null);
+        setShowCreateForm(false);
         
         // Show success toast
         setToast({
@@ -132,9 +260,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
           status: 'success'
         });
       } else {
-        console.log('🔍 About to create new thread');
         await createThread(postData);
-        console.log('🔍 Thread created successfully, closing form');
+        console.log('✅ Thread created successfully');
+        setShowCreateForm(false);
         
         // Show success toast
         setToast({
@@ -144,8 +272,6 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
           status: 'success'
         });
       }
-
-      setShowCreateForm(false);
     } catch (error) {
       console.error('❌ Error saving post:', error);
       
@@ -304,6 +430,66 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     setEditingPost(null);
   };
 
+  // Function to handle button-triggered submissions
+  const handleButtonSubmit = async (shouldPublish: boolean) => {
+    console.log('🔍 Button clicked: shouldPublish =', shouldPublish);
+    
+    // Always extract fresh data from the DOM to ensure we have the latest changes
+    const titleInput = document.querySelector('input[name="title"], input[placeholder*="title" i]') as HTMLInputElement;
+    const contentElement = document.querySelector('[contenteditable="true"], .rich-text-editor') as HTMLElement;
+    const excerptElement = document.querySelector('textarea[name="excerpt"], textarea[placeholder*="excerpt" i]') as HTMLTextAreaElement;
+    const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+    const authorNameInput = document.querySelector('input[name="authorName"], input[placeholder*="author" i]') as HTMLInputElement;
+    
+    // Get tags from tag elements
+    const tagElements = document.querySelectorAll('[data-tag], .tag-item');
+    const tags: string[] = Array.from(tagElements).map(el => el.textContent?.trim() || '').filter(Boolean);
+    
+    // Get checkbox states
+    const isBlogPostCheckbox = document.querySelector('input[type="checkbox"][name="isBlogPost"], input[type="checkbox"][id*="blog"]') as HTMLInputElement;
+    const isPinnedCheckbox = document.querySelector('input[type="checkbox"][name="isPinned"], input[type="checkbox"][id*="pin"]') as HTMLInputElement;
+    
+    console.log('🔍 Found form elements:', {
+      titleInput: titleInput?.value,
+      contentLength: contentElement?.innerHTML?.length,
+      excerptLength: excerptElement?.value?.length,
+      category: categorySelect?.value,
+      authorName: authorNameInput?.value,
+      tags,
+      isBlogPost: isBlogPostCheckbox?.checked,
+      isPinned: isPinnedCheckbox?.checked
+    });
+    
+    if (!titleInput || !contentElement) {
+      console.log('❌ Could not find required form elements');
+      return;
+    }
+    
+    const extractedFormData: PostFormData = {
+      title: titleInput.value || formDataRef.current?.title || '',
+      content: contentElement.innerHTML || formDataRef.current?.content || '',
+      excerpt: excerptElement?.value || formDataRef.current?.excerpt || '',
+      category: categorySelect?.value || formDataRef.current?.category || 'Natal Charts',
+      tags: tags.length > 0 ? tags : (formDataRef.current?.tags || []),
+      authorName: authorNameInput?.value || formDataRef.current?.authorName || '',
+      isBlogPost: isBlogPostCheckbox?.checked ?? formDataRef.current?.isBlogPost ?? true,
+      isPinned: isPinnedCheckbox?.checked ?? formDataRef.current?.isPinned ?? false,
+    };
+    
+    console.log('🔍 Extracted form data:', {
+      title: extractedFormData.title,
+      contentLength: extractedFormData.content.length,
+      contentPreview: extractedFormData.content.substring(0, 100) + '...',
+      category: extractedFormData.category,
+      tags: extractedFormData.tags,
+      isBlogPost: extractedFormData.isBlogPost,
+      isPinned: extractedFormData.isPinned
+    });
+    
+    // Call the actual submit handler with the extracted form data
+    await handleFormSubmit(extractedFormData, shouldPublish);
+  };
+
   const filteredThreads = threads.filter((thread: Thread) => {
     switch (filter) {
       case 'published':
@@ -361,22 +547,189 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              setEditingPost(null);
-              setShowCreateForm(true);
-            }}
-            className="bg-[#6bdbff] text-black px-6 py-3 font-medium hover:bg-[#5ac8ec] transition-colors duration-200 font-inter border border-black"
-          >
-            <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Create New Post</span>
-            </div>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCategoryManager(!showCategoryManager)}
+              className="bg-[#f2e356] text-black px-4 py-3 font-medium hover:bg-[#e8d650] transition-colors duration-200 font-inter border border-black"
+              title="Manage Categories"
+            >
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-7H5m14 14H5" />
+                </svg>
+                <span>Categories</span>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => {
+                setEditingPost(null);
+                setShowCreateForm(true);
+              }}
+              className="bg-[#6bdbff] text-black px-6 py-3 font-medium hover:bg-[#5ac8ec] transition-colors duration-200 font-inter border border-black"
+            >
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Create New Post</span>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Category Manager */}
+      {showCategoryManager && (
+        <div className="bg-white border border-black p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-black font-space-grotesk">Manage Categories</h3>
+            <button
+              onClick={handleResetCategories}
+              className="bg-gray-100 text-black px-3 py-2 text-sm font-medium hover:bg-gray-200 transition-colors duration-200 font-inter border border-black"
+              title="Reset to default categories"
+            >
+              Reset to Defaults
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Add New Category */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="Add new category..."
+                className="flex-1 px-3 py-2 border border-black bg-white text-black placeholder-gray-500 font-inter focus:outline-none focus:ring-2 focus:ring-black/20"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCategory();
+                  }
+                }}
+              />
+              <button
+                onClick={handleAddCategory}
+                disabled={!newCategory.trim()}
+                className="bg-[#51bd94] text-black px-4 py-2 font-medium hover:bg-[#4aa384] transition-colors duration-200 font-inter border border-black disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
+            
+            {/* Categories List */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600 font-inter">
+                  Current categories ({categories.length})
+                  {categoriesFallback && (
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-300">
+                      Fallback Mode
+                    </span>
+                  )}
+                  {categoriesLoading && (
+                    <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded border border-blue-300">
+                      Loading...
+                    </span>
+                  )}
+                </p>
+                {categoriesError && (
+                  <button
+                    onClick={refreshCategories}
+                    className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded border border-red-300 hover:bg-red-200 transition-colors"
+                    title="Retry loading categories"
+                  >
+                    Retry
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center gap-2 bg-gray-50 border border-black p-2">
+                    {editingCategory?.id === category.id ? (
+                      <input
+                        type="text"
+                        value={editingCategory.value}
+                        onChange={(e) => setEditingCategory({id: category.id, value: e.target.value})}
+                        className="flex-1 px-2 py-1 border border-black bg-white text-black font-inter text-sm focus:outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleEditCategory(category.id, editingCategory.value);
+                          }
+                          if (e.key === 'Escape') {
+                            setEditingCategory(null);
+                          }
+                        }}
+                        onBlur={() => setEditingCategory(null)}
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="flex-1 flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full border border-black"
+                          style={{ backgroundColor: category.color }}
+                          title={`Color: ${category.color}`}
+                        />
+                        <span className="text-sm text-black font-inter">
+                          {category.name}
+                          {category.isDefault && (
+                            <span className="ml-1 text-xs text-gray-500">(default)</span>
+                          )}
+                        </span>
+                        {category.usageCount > 0 && (
+                          <span className="text-xs text-gray-500">({category.usageCount} uses)</span>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setEditingCategory({id: category.id, value: category.name})}
+                        className="p-1 text-gray-600 hover:text-black hover:bg-white border border-transparent hover:border-black transition-all duration-200"
+                        title="Edit category"
+                        disabled={categoriesLoading}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      
+                      {!category.isDefault && (
+                        <button
+                          onClick={() => handleDeleteCategory(category.id)}
+                          className="p-1 text-gray-600 hover:text-red-600 hover:bg-white border border-transparent hover:border-red-600 transition-all duration-200"
+                          title="Delete category"
+                          disabled={categoriesLoading}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800 font-inter">
+              <strong>Database Integration:</strong> Categories are stored in the database and synchronized across the entire application.
+              {categoriesFallback ? (
+                <span className="block mt-1 text-yellow-700">
+                  <strong>Fallback Mode:</strong> Using local categories due to database connectivity issues. Changes will sync when connection is restored.
+                </span>
+              ) : (
+                <span className="block mt-1">
+                  Changes take effect immediately across all components and are persisted to the database.
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white border border-black p-4">
@@ -405,7 +758,11 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
       {/* Create/Edit Form - Synapsas Design */}
       {showCreateForm && (
-        <section className="px-[2%] py-8" style={{ backgroundColor: '#f0e3ff' }}>
+        <section 
+          className="px-[2%] py-8" 
+          style={{ backgroundColor: '#f0e3ff' }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="max-w-none mx-auto">
             {/* Header */}
             <div className="bg-white border border-black p-6 mb-6">
@@ -426,13 +783,20 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             </div>
 
             {/* Form Content */}
-            <div className="bg-white border border-black">
+            <div 
+              className="bg-white border border-black"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
               <DiscussionForm
                 initialData={editingPost ? (() => {
                   const thread = threads.find((t: any) => t.id === editingPost);
-                  if (!thread) return {};
+                  if (!thread) {
+                    return {};
+                  }
                   
-                  return {
+                  const formData = {
                     title: thread.title || '',
                     content: thread.content || '',
                     excerpt: thread.excerpt || '',
@@ -446,20 +810,42 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     embeddedChart: thread.embeddedChart,
                     embeddedVideo: thread.embeddedVideo
                   };
-                })() : {
-                  title: '',
-                  content: '',
-                  excerpt: '',
-                  category: 'Natal Charts',
-                  tags: [],
-                  authorName: user?.username || 'Admin User',
-                  isBlogPost: true,
-                  isPublished: false,
-                  isPinned: false
+                  // Store initial data in ref
+                  formDataRef.current = formData;
+                  return formData;
+                })() : (() => {
+                  const initialData = {
+                    title: '',
+                    content: '',
+                    excerpt: '',
+                    category: 'Natal Charts',
+                    tags: [],
+                    authorName: user?.username || 'Admin User',
+                    isBlogPost: true,
+                    isPublished: false,
+                    isPinned: false
+                  };
+                  // Store initial data in ref
+                  formDataRef.current = initialData;
+                  return initialData;
+                })()}
+                onSubmit={(formData) => {
+                  // Don't call handleFormSubmit for auto-submits from the form
+                  // We'll handle intentional submits through the action buttons
                 }}
-                onSubmit={handleFormSubmit}
-                onCancel={handleCancel}
-                onAdminOptionsChange={handleAdminOptionsSave}
+                onCancel={() => {
+                  handleCancel();
+                }}
+                onAdminOptionsChange={(formData) => {
+                  console.log('🔍 Form data updated:', {
+                    title: formData.title,
+                    contentLength: formData.content?.length,
+                    contentPreview: formData.content?.substring(0, 100) + '...'
+                  });
+                  // Store the current form data in ref for button submissions
+                  formDataRef.current = formData;
+                  handleAdminOptionsSave(formData);
+                }}
                 isLoading={isLoading}
                 submitText={editingPost ? 'Update Post' : 'Create Post'}
                 showBlogPostToggle={true}
@@ -475,7 +861,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             {/* Action Buttons */}
             <div className="flex gap-0 mt-6 border border-black overflow-hidden">
               <button
-                onClick={handleCancel}
+                onClick={() => {
+                  handleCancel();
+                }}
                 className="group relative flex-1 p-4 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-all duration-300 overflow-hidden font-space-grotesk font-semibold"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-200/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
@@ -483,14 +871,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               </button>
               <button
                 onClick={() => {
-                  // Trigger the form's submit with draft state
-                  // This will use the current form state including the updated authorName
-                  const form = document.querySelector('form');
-                  if (form) {
-                    // Set a flag to indicate this should be a draft
-                    (window as any).__shouldPublish = false;
-                    form.requestSubmit();
-                  }
+                  handleButtonSubmit(false);
                 }}
                 className="group relative flex-1 p-4 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-all duration-300 overflow-hidden font-space-grotesk font-semibold"
                 disabled={isLoading}
@@ -500,14 +881,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               </button>
               <button
                 onClick={() => {
-                  // Trigger the form's submit with published state
-                  // This will use the current form state including the updated authorName
-                  const form = document.querySelector('form');
-                  if (form) {
-                    // Set a flag to indicate this should be published
-                    (window as any).__shouldPublish = true;
-                    form.requestSubmit();
-                  }
+                  handleButtonSubmit(true);
                 }}
                 className="group relative flex-1 p-4 bg-black text-white hover:bg-gray-800 transition-all duration-300 overflow-hidden font-space-grotesk font-semibold"
                 disabled={isLoading}

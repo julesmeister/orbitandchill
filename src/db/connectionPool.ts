@@ -23,7 +23,7 @@ interface PoolConfig {
   retryAttempts: number;
 }
 
-class TursoConnectionPool {
+export class TursoConnectionPool {
   private connections: Map<string, PooledConnection> = new Map();
   private waitingQueue: Array<{
     resolve: (connection: PooledConnection) => void;
@@ -41,12 +41,12 @@ class TursoConnectionPool {
     this.databaseUrl = databaseUrl;
     this.authToken = authToken;
     this.config = {
-      minConnections: 1,
-      maxConnections: 12,      // Increased to handle more concurrent requests
-      acquireTimeoutMs: 15000, // Increased timeout for acquiring connections
-      idleTimeoutMs: 180000,   // 3 minutes idle timeout
-      maxLifetimeMs: 1800000,  // 30 minutes max lifetime
-      retryAttempts: 5,        // More retry attempts
+      minConnections: 2,
+      maxConnections: 20,      // Significantly increased for admin dashboard load
+      acquireTimeoutMs: 10000, // 10 second timeout
+      idleTimeoutMs: 120000,   // 2 minutes idle timeout  
+      maxLifetimeMs: 900000,   // 15 minutes max lifetime
+      retryAttempts: 3,        // Reduced retry attempts for faster failure
       ...config
     };
 
@@ -140,6 +140,12 @@ class TursoConnectionPool {
       try {
         const newConnection = await this.createConnection();
         newConnection.isInUse = true;
+        
+        // If there's high demand (queue > 3), try to create additional connections
+        if (this.waitingQueue.length > 3 && this.connections.size < this.config.maxConnections) {
+          this.scaleUpConnections();
+        }
+        
         return newConnection;
       } catch (error) {
         console.error('❌ Failed to create new connection:', error);
@@ -187,7 +193,32 @@ class TursoConnectionPool {
           this.waitingQueue.splice(index, 1);
         }
         const waitTime = Date.now() - startTime;
-        console.warn(`⏱️ Connection acquisition timeout after ${waitTime}ms. Queue length: ${this.waitingQueue.length}, Active connections: ${Array.from(this.connections.values()).filter(c => c.isInUse).length}/${this.connections.size}`);
+        const activeConnections = Array.from(this.connections.values()).filter(c => c.isInUse).length;
+        console.warn(`⏱️ Connection acquisition timeout after ${waitTime}ms. Queue length: ${this.waitingQueue.length}, Active connections: ${activeConnections}/${this.connections.size}`);
+        
+        // Emergency recovery: Force release connections that have been in use too long (>30 seconds)
+        const now = Date.now();
+        const stuckConnections = Array.from(this.connections.values()).filter(c => 
+          c.isInUse && (now - c.lastUsed) > 30000
+        );
+        
+        if (stuckConnections.length > 0) {
+          console.warn(`🚨 Emergency recovery: Force-releasing ${stuckConnections.length} stuck connections`);
+          stuckConnections.forEach(conn => {
+            conn.isInUse = false;
+            conn.lastUsed = now;
+          });
+          
+          // Try to fulfill the current request with a recovered connection
+          const recoveredConnection = stuckConnections[0];
+          if (recoveredConnection) {
+            recoveredConnection.isInUse = true;
+            clearTimeout(timeout);
+            resolve(recoveredConnection);
+            return;
+          }
+        }
+        
         reject(new Error('Connection acquisition timeout'));
       }, this.config.acquireTimeoutMs);
 
@@ -202,9 +233,24 @@ class TursoConnectionPool {
           .catch(error => {
             // If connection creation fails, fall back to waiting
             console.warn('Failed to create new connection, falling back to waiting:', error.message);
+            
+            // Add to queue since connection creation failed
+            this.waitingQueue.push({
+              resolve: (connection) => {
+                clearTimeout(timeout);
+                resolve(connection);
+              },
+              reject: (error) => {
+                clearTimeout(timeout);
+                reject(error);
+              },
+              timestamp: Date.now()
+            });
           });
+        return; // Don't add to queue if we're creating a connection
       }
 
+      // Only add to queue if we can't create more connections
       this.waitingQueue.push({
         resolve: (connection) => {
           clearTimeout(timeout);
@@ -237,6 +283,43 @@ class TursoConnectionPool {
       if (waiter) {
         connection.isInUse = true;
         waiter.resolve(connection);
+      }
+    }
+  }
+
+  /**
+   * Scale up connections when there's high demand
+   */
+  private scaleUpConnections() {
+    const currentCount = this.connections.size;
+    const maxCount = this.config.maxConnections;
+    const queueLength = this.waitingQueue.length;
+    
+    // Calculate how many connections to create (up to 5 at once)
+    const connectionsNeeded = Math.min(
+      queueLength,
+      maxCount - currentCount,
+      5
+    );
+    
+    if (connectionsNeeded > 0) {
+      console.log(`📈 Scaling up: Creating ${connectionsNeeded} additional connections (queue: ${queueLength})`);
+      
+      for (let i = 0; i < connectionsNeeded; i++) {
+        this.createConnection()
+          .then(connection => {
+            // Try to fulfill a waiting request
+            if (this.waitingQueue.length > 0) {
+              const waiter = this.waitingQueue.shift();
+              if (waiter) {
+                connection.isInUse = true;
+                waiter.resolve(connection);
+              }
+            }
+          })
+          .catch(error => {
+            console.warn('⚠️ Failed to create connection during scale-up:', error.message);
+          });
       }
     }
   }
@@ -348,16 +431,58 @@ class TursoConnectionPool {
     const inUse = connections.filter(conn => conn.isInUse).length;
     const available = connections.filter(conn => !conn.isInUse).length;
     const totalQueries = connections.reduce((sum, conn) => sum + conn.queryCount, 0);
+    const now = Date.now();
+    const stuckConnections = connections.filter(conn => 
+      conn.isInUse && (now - conn.lastUsed) > 30000
+    ).length;
 
     return {
       totalConnections: this.connections.size,
       inUse,
       available,
+      stuckConnections,
       waiting: this.waitingQueue.length,
       totalQueries,
       avgQueriesPerConnection: this.connections.size > 0 ? totalQueries / this.connections.size : 0,
+      utilization: ((inUse / this.config.maxConnections) * 100).toFixed(1) + '%',
       config: this.config
     };
+  }
+
+  /**
+   * Emergency pool recovery - force release stuck connections
+   */
+  emergencyRecovery() {
+    const now = Date.now();
+    let recoveredCount = 0;
+    
+    for (const connection of this.connections.values()) {
+      if (connection.isInUse && (now - connection.lastUsed) > 15000) { // 15 seconds
+        connection.isInUse = false;
+        connection.lastUsed = now;
+        recoveredCount++;
+      }
+    }
+    
+    console.warn(`🚨 Emergency recovery completed: Released ${recoveredCount} stuck connections`);
+    
+    // Process waiting queue after recovery
+    while (this.waitingQueue.length > 0 && recoveredCount > 0) {
+      const waiter = this.waitingQueue.shift();
+      const availableConnection = Array.from(this.connections.values()).find(c => !c.isInUse);
+      
+      if (waiter && availableConnection) {
+        availableConnection.isInUse = true;
+        waiter.resolve(availableConnection);
+        recoveredCount--;
+      } else {
+        // Put the waiter back if no connection available
+        if (waiter) this.waitingQueue.unshift(waiter);
+        break;
+      }
+    }
+    
+    return recoveredCount;
   }
 
   /**

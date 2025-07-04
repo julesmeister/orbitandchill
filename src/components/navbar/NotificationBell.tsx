@@ -100,6 +100,20 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ isMobile = false })
         return '👋';
       case 'newsletter':
         return '📰';
+      case 'analytics_success':
+        return '📊';
+      case 'analytics_failure':
+        return '📉';
+      case 'cron_success':
+        return '⏰';
+      case 'cron_failure':
+        return '🚨';
+      case 'data_aggregation':
+        return '📈';
+      case 'traffic_spike':
+        return '📈';
+      case 'system_health':
+        return '💚';
       default:
         return '🔔';
     }

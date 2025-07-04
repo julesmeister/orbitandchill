@@ -5,7 +5,6 @@ import TrafficSourcesCard from './traffic/TrafficSourcesCard';
 import TopPagesCard from './traffic/TopPagesCard';
 import LocationAnalyticsCard from './traffic/LocationAnalyticsCard';
 import TrafficTable from './traffic/TrafficTable';
-import DataSourceToggle from './DataSourceToggle';
 
 interface TrafficData {
   date: string;
@@ -27,7 +26,6 @@ interface TrafficTabProps {
 
 export default function TrafficTab({ trafficData, isLoading }: TrafficTabProps) {
   const [timeRange, setTimeRange] = useState('Last 30 days');
-  const [useRealData, setUseRealData] = useState(true);
 
   // Filter traffic data based on time range
   const getFilteredTrafficData = () => {
@@ -53,14 +51,6 @@ export default function TrafficTab({ trafficData, isLoading }: TrafficTabProps) 
 
   return (
     <div className="px-4 py-6 sm:px-0">
-      {/* Data Source Toggle */}
-      <div className="mb-6">
-        <DataSourceToggle 
-          onToggle={setUseRealData}
-          defaultValue={true}
-        />
-      </div>
-
       <TrafficMetricsSection 
         filteredTrafficData={filteredTrafficData}
         isLoading={isLoading}

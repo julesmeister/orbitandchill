@@ -1,5 +1,5 @@
 import { initializeDatabase } from './index';
-import { CategoryService } from './services/categoryService';
+import { initializeDefaultCategories, createCategory } from './services/categoryService';
 import { TagService } from './services/tagService';
 
 const categoryData = [
@@ -142,9 +142,12 @@ async function seedCategoriesAndTags() {
     console.log('Creating categories...');
     const categories = [];
     for (const categoryInfo of categoryData) {
-      const category = await CategoryService.createCategory(categoryInfo);
-      categories.push(category);
-      console.log(`✅ Created category: ${category.name}`);
+      const result = await createCategory(categoryInfo);
+      const category = result.data;
+      if (category) {
+        categories.push(category);
+        console.log(`✅ Created category: ${category.name}`);
+      }
     }
 
     // Seed tags

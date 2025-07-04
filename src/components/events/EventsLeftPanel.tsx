@@ -168,23 +168,40 @@ export default function EventsLeftPanel({
               />
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <ActionButton
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                variant="secondary"
+                className="px-3 py-2 border-2 text-sm"
+              >
+                Cancel
+              </ActionButton>
+              <ActionButton
+                type="button"
+                onClick={() => {
+                  const now = new Date();
+                  const currentDate = now.toISOString().split('T')[0];
+                  const currentTime = now.toTimeString().slice(0, 5);
+                  setNewEvent({ 
+                    ...newEvent, 
+                    date: currentDate,
+                    time: currentTime
+                  });
+                }}
+                variant="secondary"
+                className="px-3 py-2 border-2 text-sm"
+              >
+                Now
+              </ActionButton>
               <ActionButton
                 type="submit"
                 disabled={isAnalyzingEvent}
                 isLoading={isAnalyzingEvent}
                 variant="primary"
-                className="flex-1 px-4 py-2 border-2 text-sm"
+                className="px-6 py-2 border-2 text-sm font-medium"
               >
                 Add Event
-              </ActionButton>
-              <ActionButton
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                variant="secondary"
-                className="px-4 py-2 border-2 text-sm"
-              >
-                Cancel
               </ActionButton>
             </div>
           </form>

@@ -73,6 +73,7 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint /mnt/c/Users/User/Documents/orbit-and-chill/src/store/adminStore.ts --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --quiet --format compact)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/store/adminStore.ts)",
+      "Bash(touch:*)",
       "Bash(touch:*)"
     ],
     "deny": []

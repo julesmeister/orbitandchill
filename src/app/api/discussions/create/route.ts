@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
 import { UserService } from '@/db/services/userService';
 import { TagService } from '@/db/services/tagService';
-import { CategoryService } from '@/db/services/categoryService';
+import { incrementCategoryUsage } from '@/db/services/categoryService';
 import { AnalyticsService } from '@/db/services/analyticsService';
 import { AdminAuditService } from '@/db/services/adminAuditService';
 import { initializeDatabase } from '@/db/index';
@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
         isPublished: isDraft ? false : (isPublished ?? true)
       });
 
-      // Increment category discussion count
-      await CategoryService.incrementDiscussionCount(category);
+      // Increment category usage count
+      await incrementCategoryUsage(category);
 
       // Log content creation for audit trail
       try {

@@ -11,6 +11,8 @@ import EmbeddedVideoDisplay from '../videos/EmbeddedVideoDisplay';
 import AuthorAutocomplete from './AuthorAutocomplete';
 import { generateSlug } from '../../utils/slugify';
 import { extractFirstImageFromContent } from '../../utils/extractImageFromContent';
+import { useCategories } from '@/hooks/useCategories';
+import { Category } from '@/types/categories';
 
 interface DiscussionFormProps {
   initialData?: Partial<DiscussionFormData>;
@@ -27,13 +29,6 @@ interface DiscussionFormProps {
   showSubmitButton?: boolean; // Option to hide the large submit button
   showAuthorField?: boolean; // Option to show author name field for admin
   mode?: 'create' | 'edit';
-}
-
-interface Category {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
 }
 
 interface Tag {
@@ -60,7 +55,14 @@ export default function DiscussionForm({
   showAuthorField = false,
   mode = 'create'
 }: DiscussionFormProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+  // Database-backed categories management
+  const {
+    categories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+    fallback: categoriesFallback
+  } = useCategories();
+  
   const [popularTags, setPopularTags] = useState<Tag[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [isExcerptCollapsed, setIsExcerptCollapsed] = useState(true);
@@ -105,16 +107,7 @@ export default function DiscussionForm({
     }
   };
 
-  // Fallback data in case API fails
-  const getFallbackCategories = (): Category[] => [
-    { id: 'natal', name: 'Natal Chart Analysis', color: '#6bdbff' },
-    { id: 'transits', name: 'Transits & Predictions', color: '#f2e356' },
-    { id: 'help', name: 'Chart Reading Help', color: '#51bd94' },
-    { id: 'synastry', name: 'Synastry & Compatibility', color: '#ff91e9' },
-    { id: 'mundane', name: 'Mundane Astrology', color: '#19181a' },
-    { id: 'learning', name: 'Learning Resources', color: '#6bdbff' },
-    { id: 'general', name: 'General Discussion', color: '#51bd94' }
-  ];
+  // Fallback data in case API fails - now using centralized categories
 
   const getFallbackTags = (): Tag[] => [
     { id: 'natal-chart', name: 'natal-chart', usageCount: 50 },
@@ -131,46 +124,19 @@ export default function DiscussionForm({
     { id: 'moon', name: 'moon', usageCount: 12 }
   ];
 
-  // Fetch categories and tags from API
+  // Fetch tags from API (categories are handled by useCategories hook)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchTags = async () => {
       try {
         setLoadingData(true);
 
-        // Fetch categories and tags in parallel with better error handling
-        const [categoriesResponse, tagsResponse] = await Promise.all([
-          fetch('/api/categories', {
-            headers: { 'Accept': 'application/json' }
-          }).catch(err => {
-            console.error('Categories API failed:', err);
-            return new Response('{}', { status: 500, headers: { 'Content-Type': 'application/json' } });
-          }),
-          fetch('/api/tags?popular=true&limit=20', {
-            headers: { 'Accept': 'application/json' }
-          }).catch(err => {
-            console.error('Tags API failed:', err);
-            return new Response('{}', { status: 500, headers: { 'Content-Type': 'application/json' } });
-          })
-        ]);
-
-        // Handle categories response
-        if (categoriesResponse.ok) {
-          try {
-            const categoriesData = await categoriesResponse.json();
-            if (categoriesData.success) {
-              setCategories(categoriesData.categories);
-            } else {
-              console.warn('Categories API returned error:', categoriesData.error);
-              setCategories(getFallbackCategories());
-            }
-          } catch (parseError) {
-            console.error('Failed to parse categories response:', parseError);
-            setCategories(getFallbackCategories());
-          }
-        } else {
-          console.warn('Categories API failed with status:', categoriesResponse.status);
-          setCategories(getFallbackCategories());
-        }
+        // Fetch tags from API
+        const tagsResponse = await fetch('/api/tags?popular=true&limit=20', {
+          headers: { 'Accept': 'application/json' }
+        }).catch(err => {
+          console.error('Tags API failed:', err);
+          return new Response('{}', { status: 500, headers: { 'Content-Type': 'application/json' } });
+        });
 
         // Handle tags response
         if (tagsResponse.ok) {
@@ -191,16 +157,14 @@ export default function DiscussionForm({
           setPopularTags(getFallbackTags());
         }
       } catch (error) {
-        console.error('Error fetching form data:', error);
-        // Use fallback data
-        setCategories(getFallbackCategories());
+        console.error('Error fetching tags:', error);
         setPopularTags(getFallbackTags());
       } finally {
         setLoadingData(false);
       }
     };
 
-    fetchData();
+    fetchTags();
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -758,10 +722,12 @@ export default function DiscussionForm({
               Category <span className="text-red-500">*</span>
             </label>
 
-            {loadingData ? (
+            {(categoriesLoading || loadingData) ? (
               <div className="flex items-center gap-2 p-4 border border-black">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
-                <span className="text-sm text-black/70">Loading categories...</span>
+                <span className="text-sm text-black/70">
+                  Loading categories{categoriesFallback && " (offline mode)"}...
+                </span>
               </div>
             ) : (
               <div className="flex flex-wrap gap-3">

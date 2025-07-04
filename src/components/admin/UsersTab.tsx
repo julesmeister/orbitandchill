@@ -42,7 +42,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
   const [users, setUsers] = useState<AdminUserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [useApiData, setUseApiData] = useState(!userAnalytics);
-  const [userFilter, setUserFilter] = useState('All Users');
+  const [userFilter, setUserFilter] = useState('Named Users');
   const [timeFilter, setTimeFilter] = useState('Last 30 days');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -585,7 +585,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
               label="Show"
             />
             <AdminDropdown
-              options={['All Users', 'Anonymous Users', 'Named Users', 'Active Users']}
+              options={['Named Users', 'All Users', 'Anonymous Users', 'Active Users']}
               value={userFilter}
               onChange={setUserFilter}
             />
