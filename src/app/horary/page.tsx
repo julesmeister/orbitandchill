@@ -13,6 +13,7 @@ import { useHoraryChart } from "../../hooks/useHoraryChart";
 import { useVoidMoonStatus } from "../../hooks/useVoidMoonStatus";
 import { useSharedLocation } from "../../hooks/useSharedLocation";
 import { useHoraryQuestionForm } from "../../hooks/useHoraryQuestionForm";
+import { useHoraryQuestionDeletion } from "../../hooks/useHoraryQuestionDeletion";
 import HoraryChartDisplay from "../../components/horary/HoraryChartDisplay";
 import HoraryQuestionForm from "../../components/horary/HoraryQuestionForm";
 import HoraryQuestionsList from "../../components/horary/HoraryQuestionsList";
@@ -58,11 +59,31 @@ export default function HoraryPage() {
   // Force component re-render when store updates
   const [forceUpdate, setForceUpdate] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState<HoraryQuestion | null>(null);
-  const [questionToDelete, setQuestionToDelete] = useState<HoraryQuestion | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [currentChartData, setCurrentChartData] = useState<any>(null);
   const [showQuestionForm, setShowQuestionForm] = useState(true);
   const [realChartData, setRealChartData] = useState<any>(null);
+
+  // Use horary question deletion hook
+  const {
+    questionToDelete,
+    showDeleteConfirm,
+    handleDeleteQuestion,
+    confirmDelete,
+    cancelDelete
+  } = useHoraryQuestionDeletion({
+    userId: user?.id,
+    onQuestionDeleted: (deletedQuestion) => {
+      // If the deleted question was being viewed, return to the question form
+      if (selectedQuestion?.id === deletedQuestion.id) {
+        setShowQuestionForm(true);
+        setSelectedQuestion(null);
+        setCurrentChartData(null);
+        setRealChartData(null);
+      }
+      setForceUpdate(prev => prev + 1);
+    },
+    showToast: toast.show
+  });
 
   // Filter questions for current user with improved logic
   const userQuestions = useMemo(() => {
@@ -159,66 +180,6 @@ export default function HoraryPage() {
     setQuestion('');
   };
 
-  const handleDeleteQuestion = (question: HoraryQuestion, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent triggering the question click
-    setQuestionToDelete(question);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    if (questionToDelete && user?.id) {
-      // Show loading toast
-      toast.show(
-        'Deleting Question',
-        `Removing "${questionToDelete.question.substring(0, 50)}${questionToDelete.question.length > 50 ? '...' : ''}"`,
-        'loading'
-      );
-
-      // Close confirmation modal immediately
-      setShowDeleteConfirm(false);
-      const questionBeingDeleted = questionToDelete;
-      setQuestionToDelete(null);
-
-      try {
-        // Call delete function and wait for completion
-        await deleteQuestion(questionBeingDeleted.id, user.id);
-
-        // Show success toast
-        toast.show(
-          'Question Deleted',
-          'Your horary question has been successfully removed',
-          'success'
-        );
-
-        // If the deleted question was being viewed, return to the question form
-        if (selectedQuestion?.id === questionBeingDeleted.id) {
-          setShowQuestionForm(true);
-          setSelectedQuestion(null);
-          setCurrentChartData(null);
-          setRealChartData(null);
-        }
-
-        // Force refresh questions list
-        if (user?.id) {
-          await loadQuestions(user.id);
-        }
-        setForceUpdate(prev => prev + 1);
-
-      } catch (error) {
-        // Show error toast
-        toast.show(
-          'Delete Failed',
-          'Failed to delete the question. Please try again.',
-          'error'
-        );
-      }
-    }
-  };
-
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-    setQuestionToDelete(null);
-  };
 
   const handleProceedWithVoidMoon = async () => {
     const result = await proceedWithVoidMoon();

@@ -62,14 +62,31 @@ function generateSitemap(posts: BlogPost[], categories: Category[]) {
 
 export async function GET() {
   try {
-    // Fetch actual blog data and categories
-    const [discussionsResponse, categoriesResponse] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/discussions?limit=100&sortBy=recent`),
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/categories`)
-    ]);
+    let discussionsData = { success: false, discussions: [] };
+    let categoriesData = { success: false, categories: [] };
     
-    const discussionsData = await discussionsResponse.json();
-    const categoriesData = await categoriesResponse.json();
+    // Try to fetch actual blog data and categories, but gracefully fall back
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+      const [discussionsResponse, categoriesResponse] = await Promise.all([
+        fetch(`${baseUrl}/api/discussions?limit=100&sortBy=recent`, {
+          signal: AbortSignal.timeout(5000), // 5 second timeout
+        }),
+        fetch(`${baseUrl}/api/categories`, {
+          signal: AbortSignal.timeout(5000), // 5 second timeout
+        })
+      ]);
+      
+      if (discussionsResponse.ok) {
+        discussionsData = await discussionsResponse.json();
+      }
+      if (categoriesResponse.ok) {
+        categoriesData = await categoriesResponse.json();
+      }
+    } catch (fetchError) {
+      console.warn('Failed to fetch data during sitemap generation, using fallback data:', fetchError);
+    }
     
     let posts: BlogPost[] = [];
     let categories: Category[] = [];

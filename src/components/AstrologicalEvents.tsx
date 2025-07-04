@@ -6,8 +6,12 @@ import { format, addDays } from 'date-fns';
 import { AstrologicalEvent } from '../utils/astrologicalEventDetection';
 import { useAstrologicalEvents } from '../hooks/useAstrologicalEvents';
 import { useCountdownTimer } from '../hooks/useCountdownTimer';
+import { useSharedLocation } from '../hooks/useSharedLocation';
+import { useVoidMoonStatus } from '../hooks/useVoidMoonStatus';
 import EventCard from './events/EventCard';
 import CalendarEventItem from './events/CalendarEventItem';
+import LocationRequestToast from './reusable/LocationRequestToast';
+import StatusToast from './reusable/StatusToast';
 
 // AstrologicalEvent interface is now imported from utils
 
@@ -17,6 +21,43 @@ export default function AstrologicalEvents() {
   // Component state
   const [activeTab, setActiveTab] = useState<'upcoming' | 'calendar'>('upcoming');
   const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Location management hooks
+  const { voidStatus } = useVoidMoonStatus();
+  const {
+    isLocationToastVisible,
+    showLocationToast,
+    hideLocationToast,
+    requestLocationPermission,
+    locationDisplay
+  } = useSharedLocation();
+
+  // Status toast state
+  const [toast, setToast] = useState({
+    title: '',
+    message: '',
+    status: 'info' as 'success' | 'error' | 'info' | 'loading',
+    isVisible: false
+  });
+
+  // Toast helper functions
+  const showToast = (title: string, message: string, status: 'success' | 'error' | 'info' | 'loading') => {
+    setToast({ title, message, status, isVisible: true });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // Location setting with feedback
+  const handleLocationSetWithFeedback = (location: any) => {
+    showToast(
+      'Location Updated',
+      `Using ${location.name} for precise astronomical timing`,
+      'success'
+    );
+    hideLocationToast();
+  };
 
   // Use custom hooks for data management
   const {
@@ -40,10 +81,30 @@ export default function AstrologicalEvents() {
           <h2 className="font-space-grotesk text-4xl lg:text-5xl font-bold text-black mb-4">
             Rare Celestial Events
           </h2>
-          <p className="font-inter text-lg text-black/80 max-w-3xl mx-auto">
+          <p className="font-inter text-lg text-black/80 max-w-3xl mx-auto mb-6">
             Track upcoming astrological phenomena, from eclipses and retrogrades to rare planetary alignments. 
             Never miss a cosmic moment.
           </p>
+          
+          {/* Location Display */}
+          <div className="flex items-center justify-center gap-2 text-sm text-black/60">
+            <span>📍</span>
+            <span>
+              {locationDisplay ? (
+                <>Times shown for <strong>{locationDisplay.name}</strong></>
+              ) : (
+                <>
+                  Using default location - 
+                  <button 
+                    onClick={showLocationToast}
+                    className="ml-1 underline hover:text-black transition-colors"
+                  >
+                    set your location
+                  </button> for precise timing
+                </>
+              )}
+            </span>
+          </div>
         </div>
 
         {/* Primary Tab Navigation */}
@@ -245,6 +306,39 @@ export default function AstrologicalEvents() {
             </div>
           </div>
         )}
+
+        {/* Location Request Toast */}
+        <LocationRequestToast
+          isVisible={isLocationToastVisible}
+          onHide={hideLocationToast}
+          onLocationSet={handleLocationSetWithFeedback}
+          onRequestPermission={async () => {
+            try {
+              await requestLocationPermission();
+              showToast(
+                'Location Detected',
+                'Using your current location for precise astronomical timing',
+                'success'
+              );
+            } catch (error) {
+              showToast(
+                'Location Error',
+                'Unable to get your current location. Please search for your city instead.',
+                'error'
+              );
+            }
+          }}
+        />
+
+        {/* Status Toast */}
+        <StatusToast
+          title={toast.title}
+          message={toast.message}
+          status={toast.status}
+          isVisible={toast.isVisible}
+          onHide={hideToast}
+          duration={toast.status === 'success' ? 3000 : toast.status === 'error' ? 5000 : 0}
+        />
       </div>
     </section>
   );

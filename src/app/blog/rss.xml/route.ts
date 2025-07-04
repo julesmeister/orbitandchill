@@ -54,9 +54,21 @@ function generateRSSFeed(posts: BlogPost[]) {
 
 export async function GET() {
   try {
-    // Fetch actual blog data from the discussions API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/discussions?limit=50&sortBy=recent`);
-    const data = await response.json();
+    let data = { success: false, discussions: [] };
+    
+    // Try to fetch actual blog data, but gracefully fall back
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/discussions?limit=50&sortBy=recent`, {
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
+      
+      if (response.ok) {
+        data = await response.json();
+      }
+    } catch (fetchError) {
+      console.warn('Failed to fetch data during RSS generation, using fallback data:', fetchError);
+    }
     
     let posts: BlogPost[] = [];
     
