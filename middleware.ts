@@ -18,7 +18,7 @@ function generateVisitorHash(ip: string, userAgent: string): string {
 async function trackPageView(data: any) {
   try {
     // Use absolute URL for internal API call
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://orbitandchill.com';
     
     await fetch(`${baseUrl}/api/analytics/track`, {
       method: 'POST',
@@ -81,7 +81,7 @@ export async function middleware(request: NextRequest) {
     ip,
     userAgent,
     referrer,
-    pathname,
+    page: pathname, // Changed from pathname to page for analytics API compatibility
     timestamp: new Date().toISOString(),
     visitorHash,
     // Extract useful metadata

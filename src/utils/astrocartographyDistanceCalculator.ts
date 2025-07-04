@@ -141,7 +141,6 @@ export function calculateLineDistance(
     };
   }
 
-  console.log(`Calculating distance for ${line.planet}/${line.lineType} line with ${coordinates.length} points`);
   
   // For meridian lines (MC/IC), they are vertical lines at constant longitude
   if (line.lineType === 'MC' || line.lineType === 'IC') {
@@ -152,7 +151,6 @@ export function calculateLineDistance(
     const distance = calculateDistanceKm(pointLat, pointLng, pointLat, lineLongitude);
     const closest = { lat: pointLat, lng: lineLongitude };
     
-    console.log(`Meridian line ${line.planet}/${line.lineType}: longitude=${lineLongitude}, distance=${distance.toFixed(1)}km`);
     
     return {
       line,
@@ -180,7 +178,6 @@ export function calculateLineDistance(
     }
   }
   
-  console.log(`Horizon line ${line.planet}/${line.lineType}: closest distance=${minDistance.toFixed(1)}km at lat=${closestPoint.lat.toFixed(2)}, lng=${closestPoint.lng.toFixed(2)}`);
   
   return {
     line,
@@ -386,7 +383,6 @@ export async function analyzeAstrocartographyPoint(
   const latitudinalInfluences: LatitudinalInfluence[] = [];
   
   const displayLocation = countryInfo?.countryName || locationInfo?.displayName || 'coordinates';
-  console.log(`Analysis for ${displayLocation} (${clickedLat.toFixed(2)}, ${clickedLng.toFixed(2)}): ${nearbyLines.length} nearby lines, ${crossings.length} crossings, ${paranProximities.length} parans`);
   
   return {
     clickedPoint: { lat: clickedLat, lng: clickedLng },

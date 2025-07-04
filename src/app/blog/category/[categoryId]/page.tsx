@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useEffect, use, useCallback } from 'react';
+import React, { useEffect, use, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BlogSEO from '@/components/blog/BlogSEO';
 import BlogPostCard from '@/components/blog/BlogPostCard';
@@ -56,14 +56,23 @@ export default function BlogCategoryPage({ params }: BlogCategoryPageProps) {
   // Find the current category
   const currentCategory = dbCategories.find(cat => cat.id === categoryId);
 
-  // Set category filter when component mounts or categoryId changes
+  // Track the last set category to prevent infinite loops
+  const lastSetCategoryRef = useRef<string | undefined>(undefined);
+  
+  const targetCategory = useMemo(() => {
+    return categoryId && categoryId !== 'all' ? categoryId : undefined;
+  }, [categoryId]);
+
   useEffect(() => {
-    if (categoryId && categoryId !== 'all') {
-      setFilters({ ...filters, category: categoryId, sortBy: 'newest' });
-    } else {
-      setFilters({ ...filters, category: undefined, sortBy: 'newest' });
+    // Only update if we haven't already set this category
+    if (lastSetCategoryRef.current !== targetCategory) {
+      lastSetCategoryRef.current = targetCategory;
+      setFilters({
+        sortBy: 'newest',
+        category: targetCategory
+      });
     }
-  }, [categoryId, setFilters, filters]);
+  }, [targetCategory, setFilters]);
 
   // Set document title based on category
   useEffect(() => {

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.views - a.views)
       .slice(0, 10); // Top 10 pages
     
-    // If we have real data, use it
+    // If we have ANY real data, use it (lowered threshold for development)
     if (pages.length > 0) {
       console.log(`✅ API: Real top pages data found: ${pages.length} pages with ${totalViews} total views`);
       

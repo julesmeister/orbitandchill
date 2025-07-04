@@ -14,6 +14,7 @@ export const useNavigation = (): UseNavigationReturn => {
   const [progressWidth, setProgressWidth] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -21,38 +22,61 @@ export const useNavigation = (): UseNavigationReturn => {
     // Clear any existing timers
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     if (completeTimeoutRef.current) clearTimeout(completeTimeoutRef.current);
+    if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
     
     setLoadingLink(href);
     setProgressWidth(0);
     
-    // Progress animation using refs to persist across re-renders
+    // Multi-stage progress animation for more realistic loading
     const startTime = Date.now();
-    const duration = 500;
+    let stage = 1;
     
     progressIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / duration) * 100, 85);
-      setProgressWidth(progress);
+      let progress = 0;
       
-      if (progress >= 85) {
-        if (progressIntervalRef.current) {
-          clearInterval(progressIntervalRef.current);
-          progressIntervalRef.current = null;
-        }
+      // Stage 1: Quick initial progress (0-30%) - first 200ms
+      if (elapsed < 200) {
+        progress = (elapsed / 200) * 30;
       }
+      // Stage 2: Slow middle progress (30-70%) - next 1000ms
+      else if (elapsed < 1200) {
+        progress = 30 + ((elapsed - 200) / 1000) * 40;
+      }
+      // Stage 3: Very slow final progress (70-85%) - next 800ms
+      else if (elapsed < 2000) {
+        progress = 70 + ((elapsed - 1200) / 800) * 15;
+      }
+      // Stage 4: Hold at 85% until navigation completes
+      else {
+        progress = 85;
+      }
+      
+      setProgressWidth(Math.min(progress, 85));
     }, 16);
 
-    // Navigate
-    router.push(href);
+    // Navigate after a brief delay to show initial progress
+    navigationTimeoutRef.current = setTimeout(() => {
+      router.push(href);
+    }, 100);
     
-    // Complete progress after navigation
+    // Complete progress after realistic delay for page load
     completeTimeoutRef.current = setTimeout(() => {
+      // Clear the interval
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      
+      // Quick final progress to 100%
       setProgressWidth(100);
+      
+      // Hide loading state after showing completion
       setTimeout(() => {
         setLoadingLink(null);
         setProgressWidth(0);
-      }, 200);
-    }, 300);
+      }, 300);
+    }, 2500); // Wait 2.5 seconds total for more realistic loading time
   }, [router]);
 
   const isActiveLink = useCallback((href: string) => {
@@ -64,6 +88,7 @@ export const useNavigation = (): UseNavigationReturn => {
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
       if (completeTimeoutRef.current) clearTimeout(completeTimeoutRef.current);
+      if (navigationTimeoutRef.current) clearTimeout(navigationTimeoutRef.current);
     };
   }, []);
 

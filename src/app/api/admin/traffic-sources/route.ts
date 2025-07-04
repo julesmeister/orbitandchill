@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.count - a.count);
     
-    // If we have real data, use it
+    // If we have ANY real data, use it (lowered threshold for development)
     if (sources.length > 0 && totalViews > 0) {
       console.log(`✅ API: Real traffic sources data found: ${sources.length} sources with ${totalViews} total views`);
       

@@ -49,7 +49,7 @@ const NavigationLink = React.memo(({
       {/* Progress bar */}
       {isLoading && (
         <div 
-          className="absolute inset-0 bg-black transition-all duration-75 ease-out"
+          className="absolute inset-0 bg-black transition-all duration-200 ease-out"
           style={{ width: `${progressWidth}%` }}
         />
       )}

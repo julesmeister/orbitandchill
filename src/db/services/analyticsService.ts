@@ -100,10 +100,17 @@ export class AnalyticsService {
       orderBy: [{ column: 'date', direction: 'DESC' }]
     });
 
-    return data.map((record: { topPages: string; trafficSources: string; }) => ({
+    return data.map((record: any) => ({
       ...record,
-      topPages: record.topPages ? JSON.parse(record.topPages) : [],
-      trafficSources: record.trafficSources ? JSON.parse(record.trafficSources) : {},
+      // Convert snake_case database columns to camelCase for API consistency
+      pageViews: record.page_views,
+      chartsGenerated: record.charts_generated,
+      newUsers: record.new_users,
+      returningUsers: record.returning_users,
+      avgSessionDuration: record.avg_session_duration,
+      bounceRate: record.bounce_rate,
+      topPages: record.top_pages ? JSON.parse(record.top_pages) : [],
+      trafficSources: record.traffic_sources ? JSON.parse(record.traffic_sources) : {},
     }));
   }
 

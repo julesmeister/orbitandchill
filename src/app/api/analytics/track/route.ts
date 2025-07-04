@@ -172,19 +172,17 @@ async function handlePageView(data: any, date: string, context: any) {
       trafficSources: { [trafficSource]: 1 }
     });
 
-    // Record user activity if userId is provided
-    if (userId) {
-      await UserActivityService.recordActivity({
-        userId,
-        activityType: 'page_view',
-        entityType: 'page',
-        description: `Viewed page: ${page || '/'}`,
-        metadata: { page, referrer, trafficSource },
-        pageUrl: page,
-        referrer,
-        ...context
-      });
-    }
+    // Record user activity (for both authenticated and anonymous users)
+    await UserActivityService.recordActivity({
+      userId: userId || 'anonymous',
+      activityType: 'page_view',
+      entityType: 'page',
+      description: `Viewed page: ${page || '/'}`,
+      metadata: { page, referrer, trafficSource },
+      pageUrl: page,
+      referrer,
+      ...context
+    });
   } catch (error) {
     console.warn('Failed to handle page view analytics:', error);
   }
@@ -198,16 +196,14 @@ async function handleChartGenerated(data: any, date: string, context: any) {
     await AnalyticsService.incrementDailyCounter('chartsGenerated', date);
     await AnalyticsService.incrementEngagementCounter('chartsGenerated', date);
 
-    // Record user activity if userId is provided
-    if (userId) {
-      await UserActivityService.recordChartActivity(
-        userId,
-        chartId || 'unknown',
-        'chart_generated',
-        { chartType, theme, title },
-        context
-      );
-    }
+    // Record user activity (for both authenticated and anonymous users)
+    await UserActivityService.recordChartActivity(
+      userId || 'anonymous',
+      chartId || 'unknown',
+      'chart_generated',
+      { chartType, theme, title },
+      context
+    );
   } catch (error) {
     console.warn('Failed to handle chart generation analytics:', error);
   }
