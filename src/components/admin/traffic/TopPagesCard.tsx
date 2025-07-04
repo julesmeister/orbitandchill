@@ -31,14 +31,8 @@ export default function TopPagesCard({ isLoading, trafficData }: TopPagesCardPro
         }
       } catch (error) {
         console.warn('Failed to fetch top pages:', error);
-        // Set fallback data if API fails
-        const totalPageViews = trafficData.reduce((sum, day) => sum + day.pageViews, 0);
-        setTopPages([
-          { page: '/chart', views: Math.round(totalPageViews * 0.34), percentage: 34 },
-          { page: '/discussions', views: Math.round(totalPageViews * 0.23), percentage: 23 },
-          { page: '/', views: Math.round(totalPageViews * 0.18), percentage: 18 },
-          { page: '/about', views: Math.round(totalPageViews * 0.10), percentage: 10 }
-        ]);
+        // Set empty data instead of fallback
+        setTopPages([]);
       }
     };
 

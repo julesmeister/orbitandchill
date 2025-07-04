@@ -10,22 +10,44 @@ export async function GET(request: NextRequest) {
     
     console.log('📊 API: Loading real top pages data...');
     
-    // Get real page view data from user activities over last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // ENHANCED APPROACH: Get page data from both traffic aggregation and user activities
     
-    const pageViewActivities = await UserActivityService.getActivitiesByType('page_view');
+    // Method 1: Try to get from traffic data (stored during aggregation)
+    const trafficData = await AnalyticsService.getTrafficData(
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      new Date().toISOString().split('T')[0]
+    );
     
-    // Aggregate page views by page path
     const pageViewCounts: { [page: string]: number } = {};
     let totalViews = 0;
     
-    for (const activity of pageViewActivities) {
-      if (activity.createdAt >= thirtyDaysAgo) {
-        const metadata = activity.metadata ? JSON.parse(activity.metadata as unknown as string) : {};
-        const page = metadata.page || '/';
-        pageViewCounts[page] = (pageViewCounts[page] || 0) + 1;
-        totalViews++;
+    // Extract page data from aggregated traffic data
+    for (const day of trafficData) {
+      if (day.topPages && Array.isArray(day.topPages)) {
+        for (const pageData of day.topPages) {
+          const page = pageData.page || '/';
+          const views = pageData.views || 0;
+          pageViewCounts[page] = (pageViewCounts[page] || 0) + views;
+          totalViews += views;
+        }
+      }
+    }
+    
+    // Method 2: If no aggregated data, try user activities (fallback)
+    if (totalViews === 0) {
+      console.log('📊 API: No aggregated page data found, checking user activities...');
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const pageViewActivities = await UserActivityService.getActivitiesByType('page_view');
+      
+      for (const activity of pageViewActivities) {
+        if (activity.createdAt >= thirtyDaysAgo) {
+          const metadata = activity.metadata ? JSON.parse(activity.metadata as unknown as string) : {};
+          const page = metadata.page || '/';
+          pageViewCounts[page] = (pageViewCounts[page] || 0) + 1;
+          totalViews++;
+        }
       }
     }
     
@@ -39,10 +61,10 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.views - a.views)
       .slice(0, 10); // Top 10 pages
     
-    // If we have ANY real data, use it (lowered threshold for development)
+    console.log(`📊 API: Found ${pages.length} pages with ${totalViews} total views from ${totalViews > 0 ? 'aggregated traffic data' : 'user activities'}`);
+    
+    // Return real data if we have any
     if (pages.length > 0) {
-      console.log(`✅ API: Real top pages data found: ${pages.length} pages with ${totalViews} total views`);
-      
       return NextResponse.json({
         success: true,
         pages,
@@ -51,43 +73,25 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Fallback to proportional data based on actual traffic if no page-level data
-    console.log('⚠️ API: No page-level data found, using proportional fallback...');
-    const trafficSummary = await AnalyticsService.getTrafficSummary(30);
-    const totalPageViews = (trafficSummary as any).pageViews || 100;
-    
-    const fallbackPages = [
-      { page: '/chart', views: Math.round(totalPageViews * 0.34), percentage: 34 },
-      { page: '/discussions', views: Math.round(totalPageViews * 0.23), percentage: 23 },
-      { page: '/', views: Math.round(totalPageViews * 0.18), percentage: 18 },
-      { page: '/horary', views: Math.round(totalPageViews * 0.10), percentage: 10 },
-      { page: '/astrocartography', views: Math.round(totalPageViews * 0.08), percentage: 8 },
-      { page: '/about', views: Math.round(totalPageViews * 0.07), percentage: 7 }
-    ];
+    // No page-level data found, return empty instead of fallback
+    console.log('⚠️ API: No page-level data found, returning empty data');
     
     return NextResponse.json({
       success: true,
-      pages: fallbackPages,
-      dataSource: 'proportional',
-      totalViews: totalPageViews
+      pages: [],
+      dataSource: 'real',
+      totalViews: 0
     });
     
   } catch (error) {
     console.error('API Error loading top pages:', error);
     
-    // Return hardcoded fallback data
+    // Return empty data instead of fallback
     return NextResponse.json({
       success: false,
-      pages: [
-        { page: '/chart', views: 340, percentage: 34 },
-        { page: '/discussions', views: 230, percentage: 23 },
-        { page: '/', views: 180, percentage: 18 },
-        { page: '/horary', views: 100, percentage: 10 },
-        { page: '/astrocartography', views: 80, percentage: 8 },
-        { page: '/about', views: 70, percentage: 7 }
-      ],
-      dataSource: 'fallback',
-      error: 'Failed to fetch top pages, using hardcoded fallback'
+      pages: [],
+      dataSource: 'error',
+      error: 'Failed to fetch top pages'
     });
   }
 }

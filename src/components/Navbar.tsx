@@ -170,7 +170,7 @@ export default function Navbar() {
         <div className="bg-white border-b border-black">
           <div className="flex items-center justify-between h-16 px-4">
             {/* Brand - Mobile */}
-            <Link href="/" className="flex items-center space-x-2 group" onMouseEnter={playHoverSound}>
+            <Link href="/" className="flex items-center space-x-2 group">
               <OrbitingLogo 
                 size="small"
                 className="text-black hover:scale-105 transition-transform duration-300"
@@ -195,13 +195,11 @@ export default function Navbar() {
                 onGoogleSignIn={handleGoogleSignIn}
                 onSignOut={handleSignOut}
                 isMobile={true}
-                onHoverSound={playHoverSound}
               />
 
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                onMouseEnter={playHoverSound}
                 className="text-black transition-colors p-2 bg-white relative group"
               >
                 {/* Vertex borders on hover - visible corners */}

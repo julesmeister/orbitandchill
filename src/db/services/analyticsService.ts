@@ -401,10 +401,33 @@ export class AnalyticsService {
       });
 
       // Calculate metrics from activities
-      const pageViews = activities.rows.filter(row => row.activity_type === 'page_view').length;
+      const pageViewActivities = activities.rows.filter(row => row.activity_type === 'page_view');
+      const pageViews = pageViewActivities.length;
       const chartsGenerated = activities.rows.filter(row => row.activity_type === 'chart_generated').length;
       const uniqueSessions = new Set(activities.rows.map(row => row.session_id)).size;
       const uniqueUsers = new Set(activities.rows.map(row => row.user_id).filter(id => id)).size;
+
+      // Calculate page-level metrics for top pages
+      const pageViewCounts: { [page: string]: number } = {};
+      for (const activity of pageViewActivities) {
+        try {
+          const metadata = activity.metadata ? JSON.parse(activity.metadata as string) : {};
+          const page = metadata.page || '/';
+          pageViewCounts[page] = (pageViewCounts[page] || 0) + 1;
+        } catch (e) {
+          // Skip invalid metadata
+        }
+      }
+
+      // Create top pages array
+      const topPages = Object.entries(pageViewCounts)
+        .map(([page, views]) => ({
+          page,
+          views,
+          percentage: pageViews > 0 ? Math.round((views / pageViews) * 100) : 0
+        }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 10); // Top 10 pages
 
       // Calculate session metrics
       const sessionData = this.calculateSessionMetrics(activities.rows);
@@ -417,7 +440,8 @@ export class AnalyticsService {
         newUsers: uniqueUsers, // Simplified - could be enhanced with first-time user detection
         returningUsers: Math.max(0, uniqueSessions - uniqueUsers),
         avgSessionDuration: sessionData.avgDuration,
-        bounceRate: sessionData.bounceRate
+        bounceRate: sessionData.bounceRate,
+        topPages: topPages.length > 0 ? topPages : undefined
       };
 
       // Save aggregated data

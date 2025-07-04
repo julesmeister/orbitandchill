@@ -67,10 +67,19 @@ export const analyticsApi = {
       });
       const data = await response.json();
       
-      if (data.success && data.metrics) {
+      // Return metrics even if success is false (graceful degradation)
+      if (data.metrics) {
         return data.metrics;
       } else {
-        throw new Error(data.error || 'API returned no metrics');
+        console.warn('No metrics data returned:', data.error || 'Unknown error');
+        return {
+          totalUsers: 0,
+          activeUsers: 0,
+          chartsGenerated: 0,
+          forumPosts: 0,
+          dailyVisitors: 0,
+          monthlyGrowth: 0,
+        };
       }
     } catch (error) {
       return {
@@ -91,28 +100,17 @@ export const analyticsApi = {
       });
       const data = await response.json();
       
-      if (data.success && data.userAnalytics) {
+      // Return userAnalytics array even if success is false (graceful degradation)
+      if (data.userAnalytics) {
         return data.userAnalytics;
       } else {
-        throw new Error(data.error || 'API returned no user analytics');
+        console.warn('No user analytics data returned:', data.error || 'Unknown error');
+        return [];
       }
     } catch (error) {
-      // Fallback to mock data
-      const users = [];
-      const baseDate = new Date('2024-01-01').getTime();
-      for (let i = 0; i < 20; i++) {
-        users.push({
-          id: `user_${i + 1}`,
-          name: i % 3 === 0 ? "" : `User ${i + 1}`,
-          email: `user${i + 1}@example.com`,
-          joinDate: new Date(baseDate + (i * 7 * 24 * 60 * 60 * 1000)).toISOString(),
-          lastActive: new Date(baseDate + (i * 24 * 60 * 60 * 1000)).toISOString(),
-          chartsGenerated: (i % 5) + 1,
-          forumPosts: i % 10,
-          isAnonymous: i % 3 === 0,
-        });
-      }
-      return users;
+      // Return empty data instead of fallback
+      console.error('Failed to fetch user analytics:', error);
+      return [];
     }
   },
 
@@ -123,26 +121,17 @@ export const analyticsApi = {
       });
       const data = await response.json();
       
-      if (data.success && data.trafficData) {
+      // Return trafficData array even if success is false (graceful degradation)
+      if (data.trafficData) {
         return data.trafficData;
       } else {
-        throw new Error(data.error || 'API returned no traffic data');
+        console.warn('No traffic data returned:', data.error || 'Unknown error');
+        return [];
       }
     } catch (error) {
-      // Fallback to deterministic mock data
-      const data = [];
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const dayOfYear = Math.floor((Date.now() - i * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000)) % 365;
-        
-        data.push({
-          date,
-          visitors: 50 + (dayOfYear % 200),
-          pageViews: 150 + (dayOfYear % 500), 
-          chartsGenerated: 5 + (dayOfYear % 50),
-        });
-      }
-      return data;
+      // Return empty data instead of fallback
+      console.error('Failed to fetch traffic data:', error);
+      return [];
     }
   },
 

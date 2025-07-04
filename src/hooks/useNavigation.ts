@@ -17,6 +17,7 @@ export const useNavigation = (): UseNavigationReturn => {
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const previousPathnameRef = useRef<string | null>(null);
 
   const handleNavigation = useCallback((href: string) => {
     // Clear any existing timers
@@ -60,12 +61,26 @@ export const useNavigation = (): UseNavigationReturn => {
       router.push(href);
     }, 100);
     
-    // Complete progress after realistic delay for page load
-    completeTimeoutRef.current = setTimeout(() => {
-      // Clear the interval
+    // Store the current pathname to detect when navigation completes
+    previousPathnameRef.current = pathname;
+  }, [router, pathname]);
+
+  const isActiveLink = useCallback((href: string) => {
+    return pathname === href;
+  }, [pathname]);
+
+  // Listen for pathname changes to detect when navigation completes
+  useEffect(() => {
+    // If we have a loading link and pathname has changed, complete the progress
+    if (loadingLink && previousPathnameRef.current && pathname !== previousPathnameRef.current) {
+      // Clear any existing timers
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
+      }
+      if (completeTimeoutRef.current) {
+        clearTimeout(completeTimeoutRef.current);
+        completeTimeoutRef.current = null;
       }
       
       // Quick final progress to 100%
@@ -76,12 +91,11 @@ export const useNavigation = (): UseNavigationReturn => {
         setLoadingLink(null);
         setProgressWidth(0);
       }, 300);
-    }, 2500); // Wait 2.5 seconds total for more realistic loading time
-  }, [router]);
-
-  const isActiveLink = useCallback((href: string) => {
-    return pathname === href;
-  }, [pathname]);
+      
+      // Update previous pathname
+      previousPathnameRef.current = pathname;
+    }
+  }, [pathname, loadingLink]);
 
   // Cleanup on unmount
   useEffect(() => {

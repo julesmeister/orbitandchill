@@ -54,7 +54,24 @@ const NavigationLink = React.memo(({
         />
       )}
       
-      <span className="relative z-10">{children}</span>
+      {/* Text with inverted color effect */}
+      <span className="relative z-10">
+        {isLoading ? (
+          <span className="relative">
+            {/* Background text (normal color) */}
+            <span className="text-black">{children}</span>
+            {/* Inverted text (white) that gets revealed by progress bar */}
+            <span 
+              className="absolute inset-0 text-white overflow-hidden transition-all duration-200 ease-out"
+              style={{ width: `${progressWidth}%` }}
+            >
+              {children}
+            </span>
+          </span>
+        ) : (
+          children
+        )}
+      </span>
     </button>
   );
 });

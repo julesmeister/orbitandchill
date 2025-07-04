@@ -98,59 +98,25 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Fallback to proportional data based on actual traffic
-    console.log('⚠️ API: No referrer data found, using proportional fallback...');
-    const trafficSummary = await AnalyticsService.getTrafficSummary(30);
-    const totalPageViews = (trafficSummary as any).pageViews || 100;
-    
-    const fallbackSources = [
-      { 
-        source: 'Direct', 
-        count: Math.round(totalPageViews * 0.42),
-        percentage: 42, 
-        color: 'bg-[#6bdbff]' 
-      },
-      { 
-        source: 'Search Engines', 
-        count: Math.round(totalPageViews * 0.28),
-        percentage: 28, 
-        color: 'bg-[#51bd94]' 
-      },
-      { 
-        source: 'Social Media', 
-        count: Math.round(totalPageViews * 0.18),
-        percentage: 18, 
-        color: 'bg-[#ff91e9]' 
-      },
-      { 
-        source: 'Referrals', 
-        count: Math.round(totalPageViews * 0.12),
-        percentage: 12, 
-        color: 'bg-[#f2e356]' 
-      }
-    ];
+    // No referrer data found, return empty instead of fallback
+    console.log('⚠️ API: No referrer data found, returning empty data');
     
     return NextResponse.json({
       success: true,
-      sources: fallbackSources,
-      dataSource: 'proportional',
-      totalViews: totalPageViews
+      sources: [],
+      dataSource: 'real',
+      totalViews: 0
     });
     
   } catch (error) {
     console.error('API Error loading traffic sources:', error);
     
-    // Return hardcoded fallback data
+    // Return empty data instead of fallback
     return NextResponse.json({
       success: false,
-      sources: [
-        { source: 'Direct', count: 42, percentage: 42, color: 'bg-[#6bdbff]' },
-        { source: 'Search Engines', count: 28, percentage: 28, color: 'bg-[#51bd94]' },
-        { source: 'Social Media', count: 18, percentage: 18, color: 'bg-[#ff91e9]' },
-        { source: 'Referrals', count: 12, percentage: 12, color: 'bg-[#f2e356]' }
-      ],
-      dataSource: 'fallback',
-      error: 'Failed to fetch traffic sources, using hardcoded fallback'
+      sources: [],
+      dataSource: 'error',
+      error: 'Failed to fetch traffic sources'
     });
   }
 }

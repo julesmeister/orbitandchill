@@ -51,7 +51,7 @@ const DesktopNav = React.memo(({
           {/* Left Section - Brand and Main Navigation */}
           <div className="flex items-center space-x-8 xl:space-x-12">
             {/* Brand */}
-            <Link href="/" className="flex items-center space-x-3 group" onMouseEnter={onHoverSound}>
+            <Link href="/" className="flex items-center space-x-3 group">
               <OrbitingLogo
                 size="normal"
                 className="text-black hover:scale-105 transition-transform duration-300"
@@ -96,7 +96,6 @@ const DesktopNav = React.memo(({
               displayName={displayName}
               onGoogleSignIn={onGoogleSignIn}
               onSignOut={onSignOut}
-              onHoverSound={onHoverSound}
             />
           </div>
         </div>

@@ -34,13 +34,8 @@ export default function TrafficSourcesCard({ isLoading, trafficData }: TrafficSo
         }
       } catch (error) {
         console.warn('Failed to fetch traffic sources:', error);
-        // Set fallback data if API fails
-        setTrafficSources([
-          { name: 'Organic Search', value: 42, color: '#51bd94' },
-          { name: 'Direct', value: 28, color: '#6bdbff' },
-          { name: 'Social Media', value: 18, color: '#ff91e9' },
-          { name: 'Referrals', value: 12, color: '#f2e356' }
-        ]);
+        // Set empty data instead of fallback
+        setTrafficSources([]);
       }
     };
 

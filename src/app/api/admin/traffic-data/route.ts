@@ -39,24 +39,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('API Error loading traffic data:', error);
     
-    // Return deterministic fallback data
-    const fallbackData = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const dayOfYear = Math.floor((Date.now() - i * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000)) % 365;
-      
-      fallbackData.push({
-        date,
-        visitors: 50 + (dayOfYear % 200),
-        pageViews: 150 + (dayOfYear % 500),
-        chartsGenerated: 5 + (dayOfYear % 50),
-      });
-    }
-    
+    // Return empty data instead of fallback
     return NextResponse.json({
       success: false,
-      trafficData: fallbackData,
-      error: 'Failed to fetch traffic data, using fallback'
+      trafficData: [],
+      error: 'Failed to fetch traffic data'
     });
   }
 }
