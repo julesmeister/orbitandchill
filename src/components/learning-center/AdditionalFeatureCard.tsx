@@ -26,10 +26,10 @@ export default function AdditionalFeatureCard({
         {icon}
       </div>
       <h4 className="font-space-grotesk font-semibold text-black mb-2">{title}</h4>
-      <p className="font-inter text-sm text-black/80 mb-4">
+      <p className="font-open-sans text-sm text-black/80 mb-4">
         {description}
       </p>
-      <Link href={ctaLink} className="font-inter text-black font-semibold hover:text-gray-700 text-sm transition-colors">
+      <Link href={ctaLink} className="font-open-sans text-black font-semibold hover:text-gray-700 text-sm transition-colors">
         {ctaText} →
       </Link>
     </div>

@@ -70,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Brand Section */}
               <div className="md:border-r md:border-gray-200 md:pr-8">
                 <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Orbit and Chill</h3>
-                <p className="font-inter text-sm text-black/80 leading-relaxed mb-6">
+                <p className="font-open-sans text-sm text-black/80 leading-relaxed mb-6">
                   Professional astrology tools combining ancient wisdom with modern technology. Generate natal charts, explore horary questions, and discover your ideal locations worldwide.
                 </p>
                 <div className="flex space-x-4">
@@ -102,27 +102,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <h4 className="font-space-grotesk text-sm font-bold text-black mb-6">Features</h4>
                 <ul className="space-y-4">
                   <li>
-                    <Link href="/chart" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/chart" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Natal Charts
                     </Link>
                   </li>
                   <li>
-                    <Link href="/horary" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/horary" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Horary Astrology
                     </Link>
                   </li>
                   <li>
-                    <Link href="/astrocartography" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/astrocartography" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Astrocartography
                     </Link>
                   </li>
                   <li>
-                    <Link href="/events" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/events" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Event Planning
                     </Link>
                   </li>
                   <li>
-                    <Link href="/event-chart" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/event-chart" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Event Charts
                     </Link>
                   </li>
@@ -134,27 +134,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <h4 className="font-space-grotesk text-sm font-bold text-black mb-6">Resources</h4>
                 <ul className="space-y-4">
                   <li>
-                    <Link href="/learning-center" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/learning-center" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Learning Center
                     </Link>
                   </li>
                   <li>
-                    <Link href="/guides" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/guides" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Astrology Guides
                     </Link>
                   </li>
                   <li>
-                    <Link href="/discussions" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/discussions" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Community Forum
                     </Link>
                   </li>
                   <li>
-                    <Link href="/blog" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/blog" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Blog
                     </Link>
                   </li>
                   <li>
-                    <Link href="/faq" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/faq" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       FAQ
                     </Link>
                   </li>
@@ -166,22 +166,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <h4 className="font-space-grotesk text-sm font-bold text-black mb-6">Company</h4>
                 <ul className="space-y-4">
                   <li>
-                    <Link href="/about" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/about" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       About Us
                     </Link>
                   </li>
                   <li>
-                    <Link href="/contact" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/contact" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Contact
                     </Link>
                   </li>
                   <li>
-                    <Link href="/privacy" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/privacy" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Privacy Policy
                     </Link>
                   </li>
                   <li>
-                    <Link href="/terms" className="font-inter text-sm text-black hover:text-black/70 transition-colors">
+                    <Link href="/terms" className="font-open-sans text-sm text-black hover:text-black/70 transition-colors">
                       Terms of Service
                     </Link>
                   </li>
@@ -192,14 +192,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Bottom Section */}
             <div className="mt-12 pt-8 border-t border-gray-200">
               <div className="flex flex-col md:flex-row justify-between items-center">
-                <p className="font-inter text-sm text-black/60">
+                <p className="font-open-sans text-sm text-black/60">
                   © 2025 Orbit and Chill. All rights reserved.
                 </p>
                 <div className="flex items-center space-x-6 mt-4 md:mt-0">
-                  <span className="font-inter text-sm text-black/60">Made with ✨ for cosmic souls</span>
+                  <span className="font-open-sans text-sm text-black/60">Made with ✨ for cosmic souls</span>
                   <div className="flex items-center space-x-2">
-                    <span className="font-inter text-xs text-black/50">Powered by</span>
-                    <span className="font-inter text-xs font-semibold text-black">Astronomy-Engine</span>
+                    <span className="font-open-sans text-xs text-black/50">Powered by</span>
+                    <span className="font-open-sans text-xs font-semibold text-black">Astronomy-Engine</span>
                   </div>
                 </div>
               </div>
@@ -229,20 +229,20 @@ const NewsletterSection: React.FC<{
           <h3 className="font-space-grotesk text-3xl font-bold text-black mb-4">
             {settings.title}
           </h3>
-          <p className="font-inter text-lg text-black/80 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="font-open-sans text-lg text-black/80 mb-8 max-w-2xl mx-auto leading-relaxed">
             {settings.description}
           </p>
           <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-0 border border-black">
             <input
               type="email"
               placeholder={settings.placeholderText}
-              className="flex-1 px-6 py-4 text-black placeholder-black/50 focus:outline-none border-r border-black bg-white font-inter"
+              className="flex-1 px-6 py-4 text-black placeholder-black/50 focus:outline-none border-r border-black bg-white font-open-sans"
             />
-            <button className="bg-black text-white px-8 py-4 font-semibold font-inter hover:bg-gray-800 transition-colors">
+            <button className="bg-black text-white px-8 py-4 font-semibold font-open-sans hover:bg-gray-800 transition-colors">
               {settings.buttonText}
             </button>
           </div>
-          <p className="font-inter text-sm text-black/60 mt-4">
+          <p className="font-open-sans text-sm text-black/60 mt-4">
             {settings.privacyText}
           </p>
         </div>

@@ -59,14 +59,14 @@ export default function ChartAttachmentButton({ onChartAttach, disabled = false 
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                <span className="font-medium text-sm font-inter">Attaching...</span>
+                <span className="font-medium text-sm font-open-sans">Attaching...</span>
               </>
             ) : (
               <>
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-3 4h.01M12 12h.01M9 12h.01M6 20h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span className="font-medium text-sm font-inter">Add Chart</span>
+                <span className="font-medium text-sm font-open-sans">Add Chart</span>
               </>
             )}
           </div>

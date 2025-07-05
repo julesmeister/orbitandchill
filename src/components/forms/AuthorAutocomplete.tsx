@@ -276,7 +276,7 @@ export default function AuthorAutocomplete({
           onBlur={handleBlur}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          className={`w-full text-xs font-inter px-2 py-1 pr-8 border border-black focus:outline-none focus:ring-1 focus:ring-black/20 transition-all duration-200 ${
+          className={`w-full text-xs font-open-sans px-2 py-1 pr-8 border border-black focus:outline-none focus:ring-1 focus:ring-black/20 transition-all duration-200 ${
             isOpen && suggestions.length > 0 
               ? 'bg-yellow-50 border-yellow-500 ring-1 ring-yellow-200' 
               : 'bg-white'
@@ -300,7 +300,7 @@ export default function AuthorAutocomplete({
         
         {/* Helper text when suggestions are available */}
         {isOpen && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 bg-yellow-100 border-l border-r border-yellow-500 px-4 py-2 text-xs font-inter text-yellow-800" style={{ zIndex: 99998 }}>
+          <div className="absolute top-full left-0 right-0 bg-yellow-100 border-l border-r border-yellow-500 px-4 py-2 text-xs font-open-sans text-yellow-800" style={{ zIndex: 99998 }}>
             💡 Click on a suggestion below to select that user
           </div>
         )}
@@ -338,7 +338,7 @@ export default function AuthorAutocomplete({
           }}
         >
           {isLoading ? (
-            <div className="p-8 text-center font-inter">
+            <div className="p-8 text-center font-open-sans">
               <div className="flex items-center justify-center space-x-3 mb-4">
                 <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
                 <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
@@ -351,7 +351,7 @@ export default function AuthorAutocomplete({
               <button
                 key={user.id}
                 type="button"
-                className={`group relative w-full text-left px-8 py-6 font-inter hover:bg-[#f0e3ff] focus:bg-[#f0e3ff] focus:outline-none border-b border-black/10 last:border-b-0 transition-all duration-200 overflow-hidden ${
+                className={`group relative w-full text-left px-8 py-6 font-open-sans hover:bg-[#f0e3ff] focus:bg-[#f0e3ff] focus:outline-none border-b border-black/10 last:border-b-0 transition-all duration-200 overflow-hidden ${
                   index === highlightedIndex ? 'bg-[#f0e3ff]' : 'bg-white'
                 }`}
                 onMouseDown={(e) => {
@@ -376,16 +376,16 @@ export default function AuthorAutocomplete({
                         {user.username}
                       </span>
                       {user.id === currentUser?.id && (
-                        <span className="px-3 py-1.5 text-sm bg-[#6bdbff] text-black border border-black font-inter font-medium">
+                        <span className="px-3 py-1.5 text-sm bg-[#6bdbff] text-black border border-black font-open-sans font-medium">
                           You
                         </span>
                       )}
-                      <span className={`px-3 py-1.5 text-sm border border-black font-inter font-medium ${getProviderBadgeStyle(user.authProvider)}`}>
+                      <span className={`px-3 py-1.5 text-sm border border-black font-open-sans font-medium ${getProviderBadgeStyle(user.authProvider)}`}>
                         {user.authProvider === 'google' ? 'Google' : 'Anonymous'}
                       </span>
                     </div>
                     {user.email && (
-                      <div className="text-base text-black/60 truncate font-inter">
+                      <div className="text-base text-black/60 truncate font-open-sans">
                         {user.email}
                       </div>
                     )}
@@ -394,7 +394,7 @@ export default function AuthorAutocomplete({
               </button>
             ))
           ) : searchTerm.length >= 1 ? (
-            <div className="p-8 text-center font-inter">
+            <div className="p-8 text-center font-open-sans">
               <div className="mb-4">
                 <svg className="w-12 h-12 mx-auto text-black/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

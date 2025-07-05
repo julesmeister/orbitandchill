@@ -44,8 +44,8 @@ export default function QuickStats({ avgChartsPerUser, totalPageViews, conversio
             className="flex items-center justify-between p-3 sm:p-4 border border-black" 
             style={{ backgroundColor: stat.color }}
           >
-            <span className="font-inter text-xs sm:text-sm font-medium text-black">{stat.label}</span>
-            <span className="font-inter text-xs sm:text-sm font-bold text-black">{stat.value}</span>
+            <span className="font-open-sans text-xs sm:text-sm font-medium text-black">{stat.label}</span>
+            <span className="font-open-sans text-xs sm:text-sm font-bold text-black">{stat.value}</span>
           </div>
         ))}
       </div>
@@ -56,13 +56,13 @@ export default function QuickStats({ avgChartsPerUser, totalPageViews, conversio
             <div className="font-space-grotesk text-lg font-bold text-black">
               {totalPageViews.toLocaleString()}
             </div>
-            <div className="font-inter text-xs text-black/60">Page Views</div>
+            <div className="font-open-sans text-xs text-black/60">Page Views</div>
           </div>
           <div>
             <div className="font-space-grotesk text-lg font-bold text-black">
               {conversionRate}
             </div>
-            <div className="font-inter text-xs text-black/60">Chart Conversion</div>
+            <div className="font-open-sans text-xs text-black/60">Chart Conversion</div>
           </div>
         </div>
       </div>

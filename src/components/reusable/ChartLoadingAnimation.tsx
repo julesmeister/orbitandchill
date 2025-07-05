@@ -114,7 +114,7 @@ export default function ChartLoadingAnimation({
               x="400"
               y="180"
               textAnchor="middle"
-              className="font-inter text-xs fill-black/60"
+              className="font-open-sans text-xs fill-black/60"
             >
               {subtitle}
             </text>

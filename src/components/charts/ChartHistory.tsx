@@ -40,7 +40,7 @@ export default function ChartHistory({ charts, onDeleteChart, onViewChart }: Cha
 
               <div className="flex items-center justify-between ml-3">
                 <div className="flex-1 min-w-0">
-                  <div className="font-inter text-sm font-semibold text-black mb-1">
+                  <div className="font-open-sans text-sm font-semibold text-black mb-1">
                     {chart.metadata?.title || 'Natal Chart'}
                   </div>
                   <div className="flex items-center space-x-4 text-xs text-black/60">

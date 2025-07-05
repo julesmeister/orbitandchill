@@ -331,84 +331,84 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
   const renderGlobalMetaSection = () => (
     <div className="space-y-6">
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Site Name
         </label>
         <input
           type="text"
           value={seoSettings.siteName}
           onChange={(e) => updateSettings('siteName', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="Your site name"
         />
       </div>
 
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Default Title Template
         </label>
         <input
           type="text"
           value={seoSettings.defaultTitle}
           onChange={(e) => updateSettings('defaultTitle', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="Default page title"
         />
-        <p className="mt-1 text-sm text-black/60 font-inter">Use %s as placeholder for page-specific titles</p>
+        <p className="mt-1 text-sm text-black/60 font-open-sans">Use %s as placeholder for page-specific titles</p>
       </div>
 
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Default Meta Description
         </label>
         <textarea
           value={seoSettings.defaultDescription}
           onChange={(e) => updateSettings('defaultDescription', e.target.value)}
           rows={3}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="Default meta description for pages"
         />
-        <p className="mt-1 text-sm text-black/60 font-inter">
+        <p className="mt-1 text-sm text-black/60 font-open-sans">
           {seoSettings.defaultDescription.length}/160 characters
         </p>
       </div>
 
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Default Keywords
         </label>
         <input
           type="text"
           value={seoSettings.defaultKeywords.join(', ')}
           onChange={(e) => updateSettings('defaultKeywords', e.target.value.split(', ').filter(k => k.trim()))}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="keyword1, keyword2, keyword3"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Twitter Handle
           </label>
           <input
             type="text"
             value={seoSettings.twitterHandle}
             onChange={(e) => updateSettings('twitterHandle', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="@yourusername"
           />
         </div>
 
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Facebook App ID
           </label>
           <input
             type="text"
             value={seoSettings.facebookAppId}
             onChange={(e) => updateSettings('facebookAppId', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="123456789"
           />
         </div>
@@ -420,53 +420,53 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Google Analytics 4 ID
           </label>
           <input
             type="text"
             value={seoSettings.googleAnalyticsId}
             onChange={(e) => updateSettings('googleAnalyticsId', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="G-XXXXXXXXXX"
           />
         </div>
 
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Google Tag Manager ID
           </label>
           <input
             type="text"
             value={seoSettings.googleTagManagerId}
             onChange={(e) => updateSettings('googleTagManagerId', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="GTM-XXXXXXX"
           />
         </div>
 
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Google Search Console
           </label>
           <input
             type="text"
             value={seoSettings.googleSearchConsoleId}
             onChange={(e) => updateSettings('googleSearchConsoleId', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="Verification meta tag content"
           />
         </div>
 
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Bing Webmaster Tools
           </label>
           <input
             type="text"
             value={seoSettings.bingWebmasterToolsId}
             onChange={(e) => updateSettings('bingWebmasterToolsId', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="Verification meta tag content"
           />
         </div>
@@ -479,7 +479,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             href="https://analytics.google.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-black text-white border border-black font-open-sans font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
           >
             <span>Google Analytics</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -490,7 +490,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             href="https://search.google.com/search-console"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-black border border-black font-open-sans font-medium transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
           >
             <span>Search Console</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -501,7 +501,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             href="https://www.bing.com/webmasters"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-black border border-black font-open-sans font-medium transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
           >
             <span>Bing Webmaster</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -521,68 +521,68 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             <h4 className="font-space-grotesk text-lg font-bold text-black">
               Page: {path === '/' ? 'Homepage' : path}
             </h4>
-            <span className="px-3 py-1 bg-black text-white text-sm font-inter">{path}</span>
+            <span className="px-3 py-1 bg-black text-white text-sm font-open-sans">{path}</span>
           </div>
           
           <div className="grid grid-cols-1 gap-6">
             <div>
-              <label className="block font-inter text-sm font-medium text-black mb-2">
+              <label className="block font-open-sans text-sm font-medium text-black mb-2">
                 Page Title
               </label>
               <input
                 type="text"
                 value={settings.title}
                 onChange={(e) => updateSettings(`pageSettings.${path}.title`, e.target.value)}
-                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
                 placeholder="Page title"
               />
-              <p className="mt-1 text-sm text-black/60 font-inter">
+              <p className="mt-1 text-sm text-black/60 font-open-sans">
                 {settings.title.length}/60 characters
               </p>
             </div>
 
             <div>
-              <label className="block font-inter text-sm font-medium text-black mb-2">
+              <label className="block font-open-sans text-sm font-medium text-black mb-2">
                 Meta Description
               </label>
               <textarea
                 value={settings.description}
                 onChange={(e) => updateSettings(`pageSettings.${path}.description`, e.target.value)}
                 rows={3}
-                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
                 placeholder="Page meta description"
               />
-              <p className="mt-1 text-sm text-black/60 font-inter">
+              <p className="mt-1 text-sm text-black/60 font-open-sans">
                 {settings.description.length}/160 characters
               </p>
             </div>
 
             <div>
-              <label className="block font-inter text-sm font-medium text-black mb-2">
+              <label className="block font-open-sans text-sm font-medium text-black mb-2">
                 Keywords
               </label>
               <input
                 type="text"
                 value={settings.keywords.join(', ')}
                 onChange={(e) => updateSettings(`pageSettings.${path}.keywords`, e.target.value.split(', ').filter(k => k.trim()))}
-                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
                 placeholder="keyword1, keyword2, keyword3"
               />
-              <p className="mt-1 text-sm text-black/60 font-inter">
+              <p className="mt-1 text-sm text-black/60 font-open-sans">
                 {settings.keywords.length} keywords
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block font-inter text-sm font-medium text-black mb-2">
+                <label className="block font-open-sans text-sm font-medium text-black mb-2">
                   Open Graph Image
                 </label>
                 <input
                   type="text"
                   value={settings.ogImage}
                   onChange={(e) => updateSettings(`pageSettings.${path}.ogImage`, e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+                  className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
                   placeholder="/images/og-page.jpg"
                 />
               </div>
@@ -595,7 +595,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
                     onChange={(e) => updateSettings(`pageSettings.${path}.noindex`, e.target.checked)}
                     className="w-4 h-4 border-2 border-black"
                   />
-                  <span className="font-inter text-sm text-black">No Index</span>
+                  <span className="font-open-sans text-sm text-black">No Index</span>
                 </label>
               </div>
 
@@ -607,7 +607,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
                     onChange={(e) => updateSettings(`pageSettings.${path}.nofollow`, e.target.checked)}
                     className="w-4 h-4 border-2 border-black"
                   />
-                  <span className="font-inter text-sm text-black">No Follow</span>
+                  <span className="font-open-sans text-sm text-black">No Follow</span>
                 </label>
               </div>
             </div>
@@ -622,9 +622,9 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
           <input
             type="text"
             placeholder="/new-page-path"
-            className="flex-1 px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="flex-1 px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           />
-          <button className="px-6 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25">
+          <button className="px-6 py-3 bg-black text-white border border-black font-open-sans font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25">
             Add Page
           </button>
         </div>
@@ -637,20 +637,20 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white border border-black p-6" style={{ backgroundColor: '#6bdbff' }}>
           <h4 className="font-space-grotesk text-lg font-bold text-black mb-4">Sitemap Management</h4>
-          <p className="font-inter text-black/80 mb-4">
+          <p className="font-open-sans text-black/80 mb-4">
             Generate and manage your XML sitemap for better search engine crawling.
           </p>
           <div className="space-y-3">
             <button
               onClick={generateSitemap}
-              className="w-full px-4 py-2 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+              className="w-full px-4 py-2 bg-black text-white border border-black font-open-sans font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
             >
               Generate Sitemap
             </button>
             <a
               href="/sitemap.xml"
               target="_blank"
-              className="block w-full px-4 py-2 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-black hover:text-white text-center"
+              className="block w-full px-4 py-2 bg-white text-black border border-black font-open-sans font-medium transition-all duration-300 hover:bg-black hover:text-white text-center"
             >
               View Current Sitemap
             </a>
@@ -659,13 +659,13 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
 
         <div className="bg-white border border-black p-6" style={{ backgroundColor: '#f2e356' }}>
           <h4 className="font-space-grotesk text-lg font-bold text-black mb-4">Schema Testing</h4>
-          <p className="font-inter text-black/80 mb-4">
+          <p className="font-open-sans text-black/80 mb-4">
             Test your structured data with Google's Rich Results Test.
           </p>
           <div className="space-y-3">
             <button
               onClick={testStructuredData}
-              className="w-full px-4 py-2 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+              className="w-full px-4 py-2 bg-black text-white border border-black font-open-sans font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
             >
               Test Structured Data
             </button>
@@ -673,7 +673,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
               href="https://search.google.com/test/rich-results"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full px-4 py-2 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-black hover:text-white text-center"
+              className="block w-full px-4 py-2 bg-white text-black border border-black font-open-sans font-medium transition-all duration-300 hover:bg-black hover:text-white text-center"
             >
               Open Testing Tool
             </a>
@@ -686,19 +686,19 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="text-center p-4 border border-black" style={{ backgroundColor: '#51bd94' }}>
             <div className="font-space-grotesk text-2xl font-bold text-black">85</div>
-            <div className="font-inter text-sm text-black">SEO Score</div>
+            <div className="font-open-sans text-sm text-black">SEO Score</div>
           </div>
           <div className="text-center p-4 border border-black" style={{ backgroundColor: '#ff91e9' }}>
             <div className="font-space-grotesk text-2xl font-bold text-black">24</div>
-            <div className="font-inter text-sm text-black">Indexed Pages</div>
+            <div className="font-open-sans text-sm text-black">Indexed Pages</div>
           </div>
           <div className="text-center p-4 border border-black" style={{ backgroundColor: '#6bdbff' }}>
             <div className="font-space-grotesk text-2xl font-bold text-black">156</div>
-            <div className="font-inter text-sm text-black">Backlinks</div>
+            <div className="font-open-sans text-sm text-black">Backlinks</div>
           </div>
           <div className="text-center p-4 border border-black" style={{ backgroundColor: '#f2e356' }}>
             <div className="font-space-grotesk text-2xl font-bold text-black">3.2s</div>
-            <div className="font-inter text-sm text-black">Page Speed</div>
+            <div className="font-open-sans text-sm text-black">Page Speed</div>
           </div>
         </div>
       </div>
@@ -708,13 +708,13 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
   const renderSchemaSection = () => (
     <div className="space-y-6">
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Organization Type
         </label>
         <select
           value={seoSettings.organizationType}
           onChange={(e) => updateSettings('organizationType', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
         >
           <option value="Organization">Organization</option>
           <option value="Corporation">Corporation</option>
@@ -725,55 +725,55 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
       </div>
 
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Organization Name
         </label>
         <input
           type="text"
           value={seoSettings.organizationName}
           onChange={(e) => updateSettings('organizationName', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="Your organization name"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Organization Logo URL
           </label>
           <input
             type="text"
             value={seoSettings.organizationLogo}
             onChange={(e) => updateSettings('organizationLogo', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="/images/logo.png"
           />
         </div>
 
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Organization Email
           </label>
           <input
             type="email"
             value={seoSettings.organizationEmail}
             onChange={(e) => updateSettings('organizationEmail', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             placeholder="contact@example.com"
           />
         </div>
       </div>
 
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Organization Phone
         </label>
         <input
           type="tel"
           value={seoSettings.organizationPhone}
           onChange={(e) => updateSettings('organizationPhone', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="+1-555-123-4567"
         />
       </div>
@@ -783,66 +783,66 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block font-inter text-sm font-medium text-black mb-2">
+            <label className="block font-open-sans text-sm font-medium text-black mb-2">
               Street Address
             </label>
             <input
               type="text"
               value={seoSettings.organizationAddress.streetAddress}
               onChange={(e) => updateSettings('organizationAddress.streetAddress', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
               placeholder="123 Main Street"
             />
           </div>
 
           <div>
-            <label className="block font-inter text-sm font-medium text-black mb-2">
+            <label className="block font-open-sans text-sm font-medium text-black mb-2">
               City
             </label>
             <input
               type="text"
               value={seoSettings.organizationAddress.addressLocality}
               onChange={(e) => updateSettings('organizationAddress.addressLocality', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
               placeholder="New York"
             />
           </div>
 
           <div>
-            <label className="block font-inter text-sm font-medium text-black mb-2">
+            <label className="block font-open-sans text-sm font-medium text-black mb-2">
               State/Region
             </label>
             <input
               type="text"
               value={seoSettings.organizationAddress.addressRegion}
               onChange={(e) => updateSettings('organizationAddress.addressRegion', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
               placeholder="NY"
             />
           </div>
 
           <div>
-            <label className="block font-inter text-sm font-medium text-black mb-2">
+            <label className="block font-open-sans text-sm font-medium text-black mb-2">
               Postal Code
             </label>
             <input
               type="text"
               value={seoSettings.organizationAddress.postalCode}
               onChange={(e) => updateSettings('organizationAddress.postalCode', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
               placeholder="10001"
             />
           </div>
         </div>
 
         <div>
-          <label className="block font-inter text-sm font-medium text-black mb-2">
+          <label className="block font-open-sans text-sm font-medium text-black mb-2">
             Country
           </label>
           <select
             value={seoSettings.organizationAddress.addressCountry}
             onChange={(e) => updateSettings('organizationAddress.addressCountry', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+            className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           >
             <option value="US">United States</option>
             <option value="CA">Canada</option>
@@ -885,40 +885,40 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
   const renderTechnicalSEOSection = () => (
     <div className="space-y-6">
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Canonical Base URL
         </label>
         <input
           type="url"
           value={seoSettings.canonicalBaseURL}
           onChange={(e) => updateSettings('canonicalBaseURL', e.target.value)}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
           placeholder="https://your-domain.com"
         />
-        <p className="mt-1 text-sm text-black/60 font-inter">
+        <p className="mt-1 text-sm text-black/60 font-open-sans">
           Used for canonical URLs and absolute links
         </p>
       </div>
 
       <div>
-        <label className="block font-inter text-sm font-medium text-black mb-2">
+        <label className="block font-open-sans text-sm font-medium text-black mb-2">
           Robots.txt Content
         </label>
         <textarea
           value={seoSettings.robotsTxt}
           onChange={(e) => updateSettings('robotsTxt', e.target.value)}
           rows={8}
-          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter font-mono text-sm focus:outline-none focus:border-black"
+          className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans font-mono text-sm focus:outline-none focus:border-black"
           placeholder="User-agent: *&#10;Allow: /&#10;Disallow: /admin/"
         />
         <div className="flex items-center justify-between mt-2">
-          <p className="text-sm text-black/60 font-inter">
+          <p className="text-sm text-black/60 font-open-sans">
             Configure search engine crawler behavior
           </p>
           <a
             href="/robots.txt"
             target="_blank"
-            className="text-sm text-blue-600 hover:text-blue-800 font-inter"
+            className="text-sm text-blue-600 hover:text-blue-800 font-open-sans"
           >
             View Current →
           </a>
@@ -936,19 +936,19 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
               onChange={(e) => updateSettings('sitemapSettings.enabled', e.target.checked)}
               className="w-4 h-4 border-2 border-black"
             />
-            <span className="font-inter text-sm text-black">Enable XML Sitemap</span>
+            <span className="font-open-sans text-sm text-black">Enable XML Sitemap</span>
           </label>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block font-inter text-sm font-medium text-black mb-2">
+            <label className="block font-open-sans text-sm font-medium text-black mb-2">
               Default Priority
             </label>
             <select
               value={seoSettings.sitemapSettings.priority}
               onChange={(e) => updateSettings('sitemapSettings.priority', parseFloat(e.target.value))}
-              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             >
               <option value={1.0}>1.0 (Highest)</option>
               <option value={0.9}>0.9</option>
@@ -964,13 +964,13 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
           </div>
 
           <div>
-            <label className="block font-inter text-sm font-medium text-black mb-2">
+            <label className="block font-open-sans text-sm font-medium text-black mb-2">
               Change Frequency
             </label>
             <select
               value={seoSettings.sitemapSettings.changefreq}
               onChange={(e) => updateSettings('sitemapSettings.changefreq', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black"
+              className="w-full px-4 py-3 border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black"
             >
               <option value="always">Always</option>
               <option value="hourly">Hourly</option>
@@ -993,7 +993,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
                 onChange={(e) => updateSettings('sitemapSettings.includePosts', e.target.checked)}
                 className="w-4 h-4 border-2 border-black"
               />
-              <span className="font-inter text-sm text-black">Blog Posts</span>
+              <span className="font-open-sans text-sm text-black">Blog Posts</span>
             </label>
             
             <label className="flex items-center space-x-2">
@@ -1003,7 +1003,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
                 onChange={(e) => updateSettings('sitemapSettings.includeGuides', e.target.checked)}
                 className="w-4 h-4 border-2 border-black"
               />
-              <span className="font-inter text-sm text-black">Guides</span>
+              <span className="font-open-sans text-sm text-black">Guides</span>
             </label>
             
             <label className="flex items-center space-x-2">
@@ -1013,7 +1013,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
                 onChange={(e) => updateSettings('sitemapSettings.includeUserPages', e.target.checked)}
                 className="w-4 h-4 border-2 border-black"
               />
-              <span className="font-inter text-sm text-black">User Pages</span>
+              <span className="font-open-sans text-sm text-black">User Pages</span>
             </label>
           </div>
         </div>
@@ -1024,13 +1024,13 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={generateRobotsTxt}
-            className="w-full px-4 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+            className="w-full px-4 py-3 bg-black text-white border border-black font-open-sans font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
           >
             Generate robots.txt
           </button>
           <button
             onClick={generateSitemap}
-            className="w-full px-4 py-3 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-black hover:text-white"
+            className="w-full px-4 py-3 bg-white text-black border border-black font-open-sans font-medium transition-all duration-300 hover:bg-black hover:text-white"
           >
             Generate sitemap.xml
           </button>
@@ -1071,7 +1071,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-space-grotesk text-2xl font-bold text-black">SEO Settings</h2>
-            <p className="font-inter text-black/80 mt-1">
+            <p className="font-open-sans text-black/80 mt-1">
               Manage search engine optimization and analytics
             </p>
           </div>
@@ -1079,14 +1079,14 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             <button
               onClick={handleReset}
               disabled={isSaving}
-              className="px-6 py-3 bg-white text-black border border-black font-inter font-medium transition-all duration-300 hover:bg-red-50 hover:border-red-600 hover:text-red-600 disabled:opacity-50"
+              className="px-6 py-3 bg-white text-black border border-black font-open-sans font-medium transition-all duration-300 hover:bg-red-50 hover:border-red-600 hover:text-red-600 disabled:opacity-50"
             >
               Reset to Defaults
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-3 bg-black text-white border border-black font-inter font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 disabled:opacity-50"
+              className="px-6 py-3 bg-black text-white border border-black font-open-sans font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 disabled:opacity-50"
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -1101,7 +1101,7 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             <button
               key={section.id}
               onClick={() => setActiveSection(section.id)}
-              className={`flex items-center space-x-2 px-6 py-4 font-inter font-semibold text-sm transition-all duration-300 border-r border-black last:border-r-0 whitespace-nowrap ${
+              className={`flex items-center space-x-2 px-6 py-4 font-open-sans font-semibold text-sm transition-all duration-300 border-r border-black last:border-r-0 whitespace-nowrap ${
                 activeSection === section.id
                   ? 'bg-black text-white'
                   : 'bg-white text-black hover:bg-black hover:text-white'

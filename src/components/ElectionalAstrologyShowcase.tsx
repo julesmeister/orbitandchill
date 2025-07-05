@@ -38,7 +38,7 @@ FeatureCard.displayName = 'FeatureCard';
 
 const FeatureHighlights = React.memo(() => (
   <div className="mt-10">
-    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-6 text-center font-inter">Why Timing Matters</h3>
+    <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-6 text-center font-open-sans">Why Timing Matters</h3>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-0 bg-white border border-black overflow-hidden">
       <FeatureCard
         icon="💼"
@@ -169,7 +169,7 @@ const ElectionalAstrologyShowcase: React.FC = () => {
 
         {/* Category Filters */}
         <div className="mb-8">
-          <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-3 font-inter">Filter by Category</h3>
+          <h3 className="text-xs font-semibold text-black uppercase tracking-wider mb-3 font-open-sans">Filter by Category</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
@@ -251,7 +251,7 @@ const ElectionalAstrologyShowcase: React.FC = () => {
                       <div className="text-2xl font-bold text-black font-space-grotesk">
                         {new Date(event.date).getDate()}
                       </div>
-                      <div className="text-xs text-gray-600 uppercase tracking-wide font-inter font-medium">
+                      <div className="text-xs text-gray-600 uppercase tracking-wide font-open-sans font-medium">
                         {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                       </div>
                     </div>

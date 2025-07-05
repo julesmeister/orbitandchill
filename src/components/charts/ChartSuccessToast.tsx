@@ -89,10 +89,10 @@ export default function ChartSuccessToast({
           <div className="flex items-center">
             <span className="text-lg mr-2">{getChartIcon(chartType)}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-inter text-green-800 truncate">
+              <p className="text-sm font-open-sans text-green-800 truncate">
                 {chartTitle}
               </p>
-              <p className="text-xs text-green-600 font-inter capitalize">
+              <p className="text-xs text-green-600 font-open-sans capitalize">
                 {chartType} chart ready to share
               </p>
             </div>

@@ -660,7 +660,7 @@ export default function AspectsTab({ chartData, analysisData, question }: Aspect
                   <FontAwesomeIcon icon={faFilter} className="text-white" />
                 </div>
                 <p className="font-space-grotesk text-black font-medium mb-1">No aspects match your filters</p>
-                <p className="font-inter text-sm text-black/60 mb-4">Try adjusting your filter criteria or clear all filters</p>
+                <p className="font-open-sans text-sm text-black/60 mb-4">Try adjusting your filter criteria or clear all filters</p>
                 <button
                   onClick={clearFilters}
                   className="px-4 py-2 bg-black text-white font-medium border border-black hover:bg-gray-800 transition-colors"

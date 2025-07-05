@@ -15,7 +15,7 @@ export default function HoraryQuestionAnalysisSection() {
             <div className="w-24 h-1 bg-black"></div>
           </div>
         </div>
-        <p className="text-black font-inter text-lg leading-relaxed">
+        <p className="text-black font-open-sans text-lg leading-relaxed">
           The foundation of successful horary astrology lies in properly analyzing the question and identifying the correct significators. This step determines the entire interpretation that follows.
         </p>
       </div>
@@ -150,7 +150,7 @@ export default function HoraryQuestionAnalysisSection() {
             <div className="space-y-4">
               <div className="bg-white border border-black p-4">
                 <div className="font-space-grotesk font-bold text-black mb-2">The Querent is ALWAYS:</div>
-                <div className="space-y-2 text-black font-inter text-sm">
+                <div className="space-y-2 text-black font-open-sans text-sm">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-black"></div>
                     <span><span className="font-bold">1st house ruler</span> (primary)</span>
@@ -167,7 +167,7 @@ export default function HoraryQuestionAnalysisSection() {
           {/* Quesited Significators */}
           <div className="border-b border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4 text-lg">Quesited (Thing Asked About)</h4>
-            <div className="space-y-2 text-black font-inter text-sm">
+            <div className="space-y-2 text-black font-open-sans text-sm">
               <div className="flex justify-between">
                 <span>Spouse/Partner:</span>
                 <span className="font-bold">7th house ruler</span>
@@ -206,7 +206,7 @@ export default function HoraryQuestionAnalysisSection() {
               <div className="border-r border-black p-6">
                 <div className="text-black font-medium text-sm mb-3">"Should I buy this house?"</div>
                 <div className="bg-white border border-black p-3">
-                  <div className="space-y-2 text-black font-inter text-xs">
+                  <div className="space-y-2 text-black font-open-sans text-xs">
                     <div><span className="font-bold">Querent:</span> 1st house ruler + Moon</div>
                     <div><span className="font-bold">House:</span> 4th house ruler</div>
                     <div><span className="font-bold">Money:</span> 2nd house ruler</div>
@@ -217,7 +217,7 @@ export default function HoraryQuestionAnalysisSection() {
               <div className="border-r border-black p-6">
                 <div className="text-black font-medium text-sm mb-3">"Will my son get into Harvard?"</div>
                 <div className="bg-white border border-black p-3">
-                  <div className="space-y-2 text-black font-inter text-xs">
+                  <div className="space-y-2 text-black font-open-sans text-xs">
                     <div><span className="font-bold">Querent:</span> 1st house ruler</div>
                     <div><span className="font-bold">Son:</span> 5th house ruler</div>
                     <div><span className="font-bold">Harvard:</span> 9th house ruler</div>
@@ -228,7 +228,7 @@ export default function HoraryQuestionAnalysisSection() {
               <div className="p-6">
                 <div className="text-black font-medium text-sm mb-3">"Is my partner stealing?"</div>
                 <div className="bg-white border border-black p-3">
-                  <div className="space-y-2 text-black font-inter text-xs">
+                  <div className="space-y-2 text-black font-open-sans text-xs">
                     <div><span className="font-bold">Querent:</span> 1st house ruler</div>
                     <div><span className="font-bold">Partner:</span> 7th house ruler</div>
                     <div><span className="font-bold">Business money:</span> 8th house ruler</div>
@@ -253,7 +253,7 @@ export default function HoraryQuestionAnalysisSection() {
               <div className="w-24 h-1 bg-black"></div>
             </div>
           </div>
-          <p className="text-black font-inter leading-relaxed mb-6">
+          <p className="text-black font-open-sans leading-relaxed mb-6">
             The Moon serves multiple crucial functions in horary astrology:
           </p>
         </div>
@@ -262,7 +262,7 @@ export default function HoraryQuestionAnalysisSection() {
           {/* Co-significator */}
           <div className="border-r border-black border-b border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">As Co-significator of Querent</h4>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-black rounded-full mt-2 flex-shrink-0"></div>
                 <span>Always represents the querent's emotional state</span>
@@ -281,7 +281,7 @@ export default function HoraryQuestionAnalysisSection() {
           {/* Flow of Events */}
           <div className="border-b border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">As the Flow of Events</h4>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-black rounded-full mt-2 flex-shrink-0"></div>
                 <span>Next major aspect shows next significant development</span>
@@ -301,7 +301,7 @@ export default function HoraryQuestionAnalysisSection() {
           <div className="border-r border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">Translation of Light</h4>
             <div className="bg-white border border-black p-4">
-              <div className="text-black font-inter text-sm space-y-2">
+              <div className="text-black font-open-sans text-sm space-y-2">
                 <div>When significators don't aspect directly:</div>
                 <div className="text-xs space-y-1 ml-4">
                   <div>1. Moon first aspects one significator</div>
@@ -316,7 +316,7 @@ export default function HoraryQuestionAnalysisSection() {
           <div className="p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">Collection of Light</h4>
             <div className="bg-white border border-black p-4">
-              <div className="text-black font-inter text-sm space-y-2">
+              <div className="text-black font-open-sans text-sm space-y-2">
                 <div>When heavier planet receives aspects from both significators:</div>
                 <div className="text-xs space-y-1 ml-4">
                   <div>• The heavier planet becomes a mediator</div>
@@ -367,7 +367,7 @@ export default function HoraryQuestionAnalysisSection() {
                   </div>
                   <div className="font-space-grotesk font-bold text-black text-sm">{item.title}</div>
                 </div>
-                <div className="text-black font-inter text-xs">{item.desc}</div>
+                <div className="text-black font-open-sans text-xs">{item.desc}</div>
               </div>
             );
           })}
@@ -375,7 +375,7 @@ export default function HoraryQuestionAnalysisSection() {
 
         <div className="p-8 border-t border-black">
           <div className="bg-white border border-black p-6 text-center">
-            <div className="text-black font-inter text-sm italic">
+            <div className="text-black font-open-sans text-sm italic">
               <span className="font-bold">Remember:</span> The art of horary lies not just in technical rules, but in understanding the spiritual principle that genuine questions contain their own answers within the cosmic patterns of the asking moment.
             </div>
           </div>

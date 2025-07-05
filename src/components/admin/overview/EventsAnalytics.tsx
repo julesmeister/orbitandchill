@@ -30,25 +30,25 @@ export default function EventsAnalyticsCard({ events }: EventsAnalyticsProps) {
       {events ? (
         <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between p-3 sm:p-4 border border-black" style={{ backgroundColor: '#6bdbff' }}>
-            <span className="font-inter text-xs sm:text-sm font-medium text-black">Events This Month</span>
-            <span className="font-inter text-xs sm:text-sm font-bold text-black">{events.eventsThisMonth}</span>
+            <span className="font-open-sans text-xs sm:text-sm font-medium text-black">Events This Month</span>
+            <span className="font-open-sans text-xs sm:text-sm font-bold text-black">{events.eventsThisMonth}</span>
           </div>
           <div className="flex items-center justify-between p-3 sm:p-4 border border-black" style={{ backgroundColor: '#51bd94' }}>
-            <span className="font-inter text-xs sm:text-sm font-medium text-black">Benefic Events</span>
-            <span className="font-inter text-xs sm:text-sm font-bold text-black">{events.eventsByType.benefic}</span>
+            <span className="font-open-sans text-xs sm:text-sm font-medium text-black">Benefic Events</span>
+            <span className="font-open-sans text-xs sm:text-sm font-bold text-black">{events.eventsByType.benefic}</span>
           </div>
           <div className="flex items-center justify-between p-3 sm:p-4 border border-black" style={{ backgroundColor: '#ff91e9' }}>
-            <span className="font-inter text-xs sm:text-sm font-medium text-black">Generated vs Manual</span>
-            <span className="font-inter text-xs sm:text-sm font-bold text-black">{events.generationStats.generated}/{events.generationStats.manual}</span>
+            <span className="font-open-sans text-xs sm:text-sm font-medium text-black">Generated vs Manual</span>
+            <span className="font-open-sans text-xs sm:text-sm font-bold text-black">{events.generationStats.generated}/{events.generationStats.manual}</span>
           </div>
           <div className="flex items-center justify-between p-3 sm:p-4 border border-black" style={{ backgroundColor: '#f2e356' }}>
-            <span className="font-inter text-xs sm:text-sm font-medium text-black">Average Score</span>
-            <span className="font-inter text-xs sm:text-sm font-bold text-black">{events.engagementStats.averageScore}/10</span>
+            <span className="font-open-sans text-xs sm:text-sm font-medium text-black">Average Score</span>
+            <span className="font-open-sans text-xs sm:text-sm font-bold text-black">{events.engagementStats.averageScore}/10</span>
           </div>
         </div>
       ) : (
         <div className="p-3 sm:p-4 border border-black bg-gray-50">
-          <p className="font-inter text-xs sm:text-sm text-black/60">No events data available</p>
+          <p className="font-open-sans text-xs sm:text-sm text-black/60">No events data available</p>
         </div>
       )}
     </div>

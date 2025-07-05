@@ -49,7 +49,7 @@ export function useStelliumSync(chartData?: NatalChartData) {
       setHasAttempted(true);
 
       try {
-        console.log('🌟 Syncing stelliums and sun sign from chart data...');
+        // Syncing stelliums and sun sign from chart data
         const stelliumResult = detectStelliums(chartData);
         
         // Prepare update data
@@ -71,7 +71,7 @@ export function useStelliumSync(chartData?: NatalChartData) {
           updateData.detailedStelliums = stelliumResult.detailedStelliums;
         }
         
-        console.log('📊 Chart data extracted:', updateData);
+        // Chart data extracted for sync
         
         // Update via API first (which will persist to database)
         const response = await fetch('/api/users/preferences', {
@@ -89,7 +89,7 @@ export function useStelliumSync(chartData?: NatalChartData) {
           // Update local user store
           await updateUserRef.current(updateData);
           
-          console.log('✅ Chart data synced successfully');
+          // Chart data synced successfully
         } else {
           console.warn('⚠️ Failed to sync chart data via API, updating locally only');
           // Update local store even if API fails

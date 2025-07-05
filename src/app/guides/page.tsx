@@ -272,7 +272,7 @@ export default function GuidesPage() {
                   placeholder="Search guides, topics, or concepts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 text-black placeholder-black/50 focus:outline-none border-b-2 border-black bg-transparent font-inter text-lg"
+                  className="w-full pl-12 pr-4 py-4 text-black placeholder-black/50 focus:outline-none border-b-2 border-black bg-transparent font-open-sans text-lg"
                 />
               </div>
               
@@ -512,7 +512,7 @@ export default function GuidesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
-                <h3 id="learning-path-heading" className="text-3xl font-bold mb-4 font-epilogue">Ready to Begin Your Journey?</h3>
+                <h3 id="learning-path-heading" className="text-3xl font-bold mb-4 font-space-grotesk">Ready to Begin Your Journey?</h3>
                 <p className="text-xl text-blue-100 mb-8 leading-relaxed">
                   Start with our beginner-friendly guides and build your knowledge step by step.
                   We recommend starting with your natal chart basics and then exploring specific areas of interest.

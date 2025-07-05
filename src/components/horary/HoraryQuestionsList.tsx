@@ -61,7 +61,7 @@ export default function HoraryQuestionsList({
                 {safeDisplayQuestions.length}
               </div>
               {!userIsPremium && userQuestions.length > 10 && (
-                <div className="text-xs text-black/60 font-inter">
+                <div className="text-xs text-black/60 font-open-sans">
                   (+{userQuestions.length - 10} more)
                 </div>
               )}
@@ -69,7 +69,7 @@ export default function HoraryQuestionsList({
           </div>
           {!userIsPremium && userQuestions.length > 10 && (
             <div className="mt-3 p-2 bg-yellow-100 border border-yellow-300">
-              <p className="text-xs text-yellow-800 font-inter">
+              <p className="text-xs text-yellow-800 font-open-sans">
                 Free users see last 10 questions. <span className="font-semibold">Upgrade for full history.</span>
               </p>
             </div>
@@ -84,7 +84,7 @@ export default function HoraryQuestionsList({
                 <span className="text-white text-xl">🔮</span>
               </div>
               <h4 className="font-space-grotesk font-bold text-black text-lg mb-2">No Questions Yet</h4>
-              <p className="text-black/60 font-inter">Ask your first horary question to begin</p>
+              <p className="text-black/60 font-open-sans">Ask your first horary question to begin</p>
             </div>
           ) : (
             <div className="divide-y divide-black">
@@ -108,14 +108,14 @@ export default function HoraryQuestionsList({
                           </span>
                         </div>
                         <div className="flex items-center space-x-2 text-xs text-black/60">
-                          <span className="font-inter">
+                          <span className="font-open-sans">
                             {new Date(q.date).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric'
                             })}
                           </span>
                           <span>•</span>
-                          <span className="font-inter">
+                          <span className="font-open-sans">
                             {new Date(q.date).toLocaleTimeString('en-US', {
                               hour: 'numeric',
                               minute: '2-digit'
@@ -134,7 +134,7 @@ export default function HoraryQuestionsList({
                     </div>
 
                     {/* Question text */}
-                    <p className="font-inter text-sm text-black mb-3 line-clamp-2 leading-relaxed">
+                    <p className="font-open-sans text-sm text-black mb-3 line-clamp-2 leading-relaxed">
                       "{q.question}"
                     </p>
 
@@ -154,7 +154,7 @@ export default function HoraryQuestionsList({
                             {q.answer}
                           </span>
                         ) : (
-                          <span className="px-2 py-1 text-xs text-black bg-white border border-black font-inter">
+                          <span className="px-2 py-1 text-xs text-black bg-white border border-black font-open-sans">
                             ⏳ Analyzing...
                           </span>
                         )}
@@ -162,7 +162,7 @@ export default function HoraryQuestionsList({
                         {/* Status indicator inline */}
                         <div className="flex items-center space-x-1">
                           <div className={`w-2 h-2 rounded-full ${q.answer ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                          <span className="text-xs text-black/50 font-inter">
+                          <span className="text-xs text-black/50 font-open-sans">
                             {q.answer ? 'Done' : 'Pending'}
                           </span>
                         </div>
@@ -171,7 +171,7 @@ export default function HoraryQuestionsList({
                       {/* Timing row - full width for better readability */}
                       {q.timing && (
                         <div className="w-full">
-                          <span className="inline-block px-2 py-1 text-xs text-black border border-black font-inter w-full truncate" style={{ backgroundColor: '#6bdbff' }}>
+                          <span className="inline-block px-2 py-1 text-xs text-black border border-black font-open-sans w-full truncate" style={{ backgroundColor: '#6bdbff' }}>
                             ⏰ {q.timing}
                           </span>
                         </div>

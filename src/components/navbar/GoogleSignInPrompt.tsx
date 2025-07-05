@@ -93,7 +93,7 @@ const GoogleSignInPrompt = React.memo(({
         </div>
 
         {/* Content */}
-        <p className="text-xs text-gray-600 mb-3 font-inter leading-relaxed">
+        <p className="text-xs text-gray-600 mb-3 font-open-sans leading-relaxed">
           Sign in with Google to save your natal charts, bookmark optimal timing events, and sync your astrological data across devices.
         </p>
 

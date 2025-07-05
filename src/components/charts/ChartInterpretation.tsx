@@ -86,7 +86,7 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
           <div className="flex items-center justify-center">
             <div className="text-center">
               <h4 className="font-space-grotesk text-xl font-bold text-black mb-2">Chart Interpretation</h4>
-              <p className="font-inter text-black/80">Generate a natal chart to see detailed interpretations</p>
+              <p className="font-open-sans text-black/80">Generate a natal chart to see detailed interpretations</p>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
             </div>
             <div>
               <h4 className="font-space-grotesk text-xl font-bold text-black">Chart Interpretation</h4>
-              <p className="font-inter text-sm text-black/60">Discover the meaning behind your natal chart</p>
+              <p className="font-open-sans text-sm text-black/60">Discover the meaning behind your natal chart</p>
             </div>
           </div>
 

@@ -63,14 +63,14 @@ const ProfileStelliums: React.FC<ProfileStelliumsProps> = ({ detailedStelliums, 
   
   if (!sunSign && !hasDetailedStelliums && !hasSimpleStelliums) {
     return (
-      <div className="font-inter text-black/80">
+      <div className="font-open-sans text-black/80">
         <p>Manage your account information and privacy settings</p>
       </div>
     );
   }
 
   return (
-    <div className="font-inter text-black/80 space-y-3">
+    <div className="font-open-sans text-black/80 space-y-3">
       {/* Sun Sign Display */}
       {sunSign && (
         <div className="flex items-center space-x-3">
@@ -79,7 +79,7 @@ const ProfileStelliums: React.FC<ProfileStelliumsProps> = ({ detailedStelliums, 
           </div>
           <div>
             <span className="font-space-grotesk text-sm font-bold text-black capitalize">{sunSign}</span>
-            <span className="font-inter text-xs text-black/60 ml-2">Sun Sign</span>
+            <span className="font-open-sans text-xs text-black/60 ml-2">Sun Sign</span>
           </div>
         </div>
       )}
@@ -116,10 +116,10 @@ const ProfileStelliums: React.FC<ProfileStelliumsProps> = ({ detailedStelliums, 
                 </div>
               </div>
               <div className="px-2 py-1 bg-black text-white border border-black">
-                <span className="font-inter text-xs font-bold">{stellium.planets.length}</span>
+                <span className="font-open-sans text-xs font-bold">{stellium.planets.length}</span>
               </div>
             </div>
-            <div className="font-inter text-xs text-black/80 mt-1">
+            <div className="font-open-sans text-xs text-black/80 mt-1">
               {stellium.type === 'sign' ? `Multiple planets in ${stellium.sign}` : houseNames[stellium.house!]}
             </div>
           </div>
@@ -134,7 +134,7 @@ const ProfileStelliums: React.FC<ProfileStelliumsProps> = ({ detailedStelliums, 
                       {planetIcons[planet.name.toLowerCase()] || '●'}
                     </span>
                   </div>
-                  <span className="font-inter text-xs font-medium text-black capitalize truncate">
+                  <span className="font-open-sans text-xs font-medium text-black capitalize truncate">
                     {planet.name}
                   </span>
                 </div>
@@ -161,7 +161,7 @@ const ProfileStelliums: React.FC<ProfileStelliumsProps> = ({ detailedStelliums, 
                 <div className="flex flex-wrap gap-2">
                   {stelliumSigns.map((sign) => (
                     <div key={sign} className="flex items-center space-x-1 p-1 border border-black" style={{ backgroundColor: getSignColor(sign) }}>
-                      <span className="font-inter text-xs font-bold text-black capitalize">{sign}</span>
+                      <span className="font-open-sans text-xs font-bold text-black capitalize">{sign}</span>
                     </div>
                   ))}
                 </div>
@@ -185,7 +185,7 @@ const ProfileStelliums: React.FC<ProfileStelliumsProps> = ({ detailedStelliums, 
                     const houseNum = parseInt(house);
                     return (
                       <div key={house} className="flex items-center space-x-1 p-1 border border-black" style={{ backgroundColor: getHouseColor(houseNum) }}>
-                        <span className="font-inter text-xs font-bold text-black">{house}th</span>
+                        <span className="font-open-sans text-xs font-bold text-black">{house}th</span>
                       </div>
                     );
                   })}

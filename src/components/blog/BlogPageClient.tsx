@@ -103,9 +103,12 @@ export default function BlogPageClient() {
 
               {/* Main Content */}
               <div className="lg:col-span-9">
-                {/* Section Header */}
+                {/* Page Header */}
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                    Astrology Blog
+                  </h1>
+                  <h2 className="text-xl font-semibold text-gray-700 mb-2">
                     {getSectionTitle(filters, categories)}
                   </h2>
                   {filters.searchQuery && (
@@ -123,7 +126,7 @@ export default function BlogPageClient() {
                       <div className="w-4 h-4 bg-black animate-bounce [animation-delay:-0.15s]"></div>
                       <div className="w-4 h-4 bg-black animate-bounce"></div>
                     </div>
-                    <p className="text-gray-600 font-inter">Loading articles...</p>
+                    <p className="text-gray-600 font-open-sans">Loading articles...</p>
                   </div>
                 )}
 

@@ -150,7 +150,7 @@ const UserProfile = ({
               </div>
             ) : (
               <div className="w-8 h-8 bg-white flex items-center justify-center">
-                <span className="text-xs font-bold font-inter">{userInitials}</span>
+                <span className="text-xs font-bold font-open-sans">{userInitials}</span>
               </div>
             )}
             <svg
@@ -175,7 +175,7 @@ const UserProfile = ({
         <div className="flex items-center space-x-2 xl:space-x-3 text-black hover:text-gray-600 transition-colors cursor-pointer" onMouseEnter={onHoverSound}>
           <div className="hidden xl:block">
             <div className="text-right">
-              <div className="text-xs text-gray-500 font-inter">Welcome</div>
+              <div className="text-xs text-gray-500 font-open-sans">Welcome</div>
               <div className="text-sm font-medium font-space-grotesk">{displayName}</div>
             </div>
           </div>

@@ -17,7 +17,7 @@ export default function HoraryReferenceCards() {
               </div>
               <h4 className="font-space-grotesk font-bold text-black">Radical Chart</h4>
             </div>
-            <div className="space-y-2 text-sm text-black font-inter">
+            <div className="space-y-2 text-sm text-black font-open-sans">
               <div className="flex justify-between items-center">
                 <span>Ascendant</span>
                 <span className="font-medium">3°-27° in sign</span>
@@ -45,7 +45,7 @@ export default function HoraryReferenceCards() {
               </div>
               <h4 className="font-space-grotesk font-bold text-black">Moon States</h4>
             </div>
-            <div className="space-y-2 text-sm text-black font-inter">
+            <div className="space-y-2 text-sm text-black font-open-sans">
               <div className="flex justify-between items-center">
                 <span><strong>Void</strong></span>
                 <span>Nothing comes of matter</span>
@@ -73,7 +73,7 @@ export default function HoraryReferenceCards() {
               </div>
               <h4 className="font-space-grotesk font-bold text-black">Aspects</h4>
             </div>
-            <div className="space-y-2 text-sm text-black font-inter">
+            <div className="space-y-2 text-sm text-black font-open-sans">
               <div className="flex justify-between items-center">
                 <span><strong>Applying</strong></span>
                 <span>Coming together</span>
@@ -101,7 +101,7 @@ export default function HoraryReferenceCards() {
               </div>
               <h4 className="font-space-grotesk font-bold text-black">Timing</h4>
             </div>
-            <div className="space-y-2 text-sm text-black font-inter">
+            <div className="space-y-2 text-sm text-black font-open-sans">
               <div className="flex justify-between items-center">
                 <span><strong>Angular</strong></span>
                 <span>Months/years</span>
@@ -131,7 +131,7 @@ export default function HoraryReferenceCards() {
             <span className="text-white text-xl">📚</span>
           </div>
           <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">Traditional Method</h3>
-          <p className="font-inter text-black/70 text-sm">
+          <p className="font-open-sans text-black/70 text-sm">
             Based on centuries-old techniques from William Lilly and other masters of horary astrology.
           </p>
         </div>
@@ -142,7 +142,7 @@ export default function HoraryReferenceCards() {
             <span className="text-white text-xl">⏰</span>
           </div>
           <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">Precise Timing</h3>
-          <p className="font-inter text-black/70 text-sm">
+          <p className="font-open-sans text-black/70 text-sm">
             Charts are cast for the exact moment you submit your question, capturing celestial positions with precision.
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function HoraryReferenceCards() {
             <span className="text-white text-xl">⭐</span>
           </div>
           <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">Seven Planets</h3>
-          <p className="font-inter text-black/70 text-sm">
+          <p className="font-open-sans text-black/70 text-sm">
             Uses only the traditional seven planets visible to the naked eye, following classical horary rules.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function HoraryReferenceCards() {
             <span className="text-white text-xl">🧭</span>
           </div>
           <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">Clear Answers</h3>
-          <p className="font-inter text-black/70 text-sm">
+          <p className="font-open-sans text-black/70 text-sm">
             Receive yes/no answers with timing predictions and detailed astrological reasoning.
           </p>
         </div>

@@ -48,13 +48,13 @@ export default function FeatureCard({
         </div>
       </div>
       
-      <p className="font-inter text-black/80 mb-6 leading-relaxed">
+      <p className="font-open-sans text-black/80 mb-6 leading-relaxed">
         {description}
       </p>
 
       <div className="space-y-4 mb-6">
         <h4 className="font-space-grotesk font-semibold text-black">How to use:</h4>
-        <ol className="space-y-3 font-inter text-black/80">
+        <ol className="space-y-3 font-open-sans text-black/80">
           {instructions.map((instruction, index) => (
             <li key={index} className="flex">
               <span className="font-bold text-black mr-3">{index + 1}.</span>
@@ -65,7 +65,7 @@ export default function FeatureCard({
       </div>
 
       <div className="bg-white p-4 border border-black">
-        <p className="font-inter text-sm text-black">
+        <p className="font-open-sans text-sm text-black">
           <strong>💡 Pro tip:</strong> {proTip}
         </p>
       </div>

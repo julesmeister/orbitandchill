@@ -99,7 +99,7 @@ export default function EventsLeftPanel({
           />
 
           <div className="space-y-4">
-            <p className="text-sm text-black/70 font-inter">
+            <p className="text-sm text-black/70 font-open-sans">
               Select your priorities for timing analysis:
             </p>
 
@@ -216,7 +216,7 @@ export default function EventsLeftPanel({
             <h1 className="font-space-grotesk text-2xl font-bold text-black mb-2">
               Electional Astrology
             </h1>
-            <p className="font-inter text-sm text-black/70 mb-4">
+            <p className="font-open-sans text-sm text-black/70 mb-4">
               Plan your wedding, launch your business, schedule important meetings, or make major decisions when the stars are most favorable for success.
             </p>
             
@@ -245,7 +245,7 @@ export default function EventsLeftPanel({
                   ⚙️
                 </button>
               </div>
-              <p className="text-xs text-black/60 font-inter leading-relaxed">
+              <p className="text-xs text-black/60 font-open-sans leading-relaxed">
                 Your location is required for precise astrological calculations. We use it to determine planetary house positions, local sunrise/sunset times, and celestial angles specific to your geographic coordinates. This ensures optimal timing recommendations are accurate for your exact location on Earth.
               </p>
             </div>
@@ -323,7 +323,7 @@ export default function EventsLeftPanel({
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 p-4">
-          <p className="text-red-800 font-inter text-sm">{error}</p>
+          <p className="text-red-800 font-open-sans text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
             className="mt-2 text-red-600 hover:text-red-800 text-sm underline"

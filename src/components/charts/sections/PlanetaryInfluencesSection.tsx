@@ -60,7 +60,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
               <h5 className="font-space-grotesk text-xl font-bold text-black">
                 Planetary Influences
               </h5>
-              <p className="font-inter text-sm text-black/60">How different areas of life are expressed</p>
+              <p className="font-open-sans text-sm text-black/60">How different areas of life are expressed</p>
             </div>
           </div>
         </div>
@@ -95,7 +95,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
                             </span>
                           )}
                         </div>
-                        <p className="font-inter text-xs text-black/60">House {planet.house} • {formatAstrologicalDegree(planet.longitude)}</p>
+                        <p className="font-open-sans text-xs text-black/60">House {planet.house} • {formatAstrologicalDegree(planet.longitude)}</p>
                       </div>
                       <button
                         onClick={() => {
@@ -125,7 +125,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
                     </div>
                   </div>
                 </div>
-                <p className="font-inter text-sm text-black leading-relaxed">
+                <p className="font-open-sans text-sm text-black leading-relaxed">
                   {getFirstSentence(getSignInterpretation(planet.sign, planet.name))}
                 </p>
               </div>

@@ -31,7 +31,7 @@ export default function FormInput({
         type={type}
         value={value}
         onChange={onChange}
-        className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter text-sm"
+        className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans text-sm"
         placeholder={placeholder}
         required={required}
       />

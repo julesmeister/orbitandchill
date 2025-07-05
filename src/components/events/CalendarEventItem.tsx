@@ -24,7 +24,7 @@ export default function CalendarEventItem({ event }: CalendarEventItemProps) {
         <p className="font-space-grotesk font-semibold text-black">
           {event.name}
         </p>
-        <p className="font-inter text-sm text-black/60">
+        <p className="font-open-sans text-sm text-black/60">
           {event.type} • {RARITY_BADGES[event.rarity].text}
         </p>
       </div>

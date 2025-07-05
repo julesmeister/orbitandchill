@@ -46,7 +46,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
               <h5 className="font-space-grotesk text-xl font-bold text-black">
                 Core Personality
               </h5>
-              <p className="font-inter text-sm text-black/60">Your fundamental self-expression</p>
+              <p className="font-open-sans text-sm text-black/60">Your fundamental self-expression</p>
             </div>
           </div>
         </div>
@@ -104,10 +104,10 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                       />
                     </button>
                   </div>
-                  <p className="font-inter text-xs text-black/60">{sunPlanet.sign.charAt(0).toUpperCase() + sunPlanet.sign.slice(1)} • House {sunPlanet.house}</p>
+                  <p className="font-open-sans text-xs text-black/60">{sunPlanet.sign.charAt(0).toUpperCase() + sunPlanet.sign.slice(1)} • House {sunPlanet.house}</p>
                 </div>
               </div>
-              <p className="font-inter text-sm text-black leading-relaxed">
+              <p className="font-open-sans text-sm text-black leading-relaxed">
                 {getFirstSentence(getSignInterpretation(sunPlanet.sign, 'sun'))}
               </p>
             </div>
@@ -163,10 +163,10 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                       <FontAwesomeIcon icon={faEye} className="relative text-black group-hover:text-white text-xs group-hover:scale-110 transition-all duration-300" />
                     </button>
                   </div>
-                  <p className="font-inter text-xs text-black/60">{moonPlanet.sign.charAt(0).toUpperCase() + moonPlanet.sign.slice(1)} • House {moonPlanet.house}</p>
+                  <p className="font-open-sans text-xs text-black/60">{moonPlanet.sign.charAt(0).toUpperCase() + moonPlanet.sign.slice(1)} • House {moonPlanet.house}</p>
                 </div>
               </div>
-              <p className="font-inter text-sm text-black leading-relaxed">
+              <p className="font-open-sans text-sm text-black leading-relaxed">
                 {getFirstSentence(getSignInterpretation(moonPlanet.sign, 'moon'))}
               </p>
             </div>
@@ -198,10 +198,10 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                     <FontAwesomeIcon icon={faEye} className="relative text-black group-hover:text-white text-xs group-hover:scale-110 transition-all duration-300" />
                   </button>
                 </div>
-                <p className="font-inter text-xs text-black/60">{ascendantSign.charAt(0).toUpperCase() + ascendantSign.slice(1)} • {formatAstrologicalDegree(chartData.ascendant)}</p>
+                <p className="font-open-sans text-xs text-black/60">{ascendantSign.charAt(0).toUpperCase() + ascendantSign.slice(1)} • {formatAstrologicalDegree(chartData.ascendant)}</p>
               </div>
             </div>
-            <p className="font-inter text-sm text-black leading-relaxed">
+            <p className="font-open-sans text-sm text-black leading-relaxed">
               {getFirstSentence(getRisingSignInterpretation(ascendantSign))}
             </p>
           </div>

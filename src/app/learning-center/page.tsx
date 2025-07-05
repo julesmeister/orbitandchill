@@ -18,7 +18,7 @@ export default function LearningCenterPage() {
           <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
             Learning Center
           </h1>
-          <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+          <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
             Master the features of {BRAND.name} and deepen your understanding of astrology with our comprehensive guides.
           </p>
         </div>
@@ -200,7 +200,7 @@ export default function LearningCenterPage() {
       <section className="px-[5%] py-16">
         <div className="max-w-7xl mx-auto text-center">
           <h3 className="font-space-grotesk text-3xl md:text-4xl font-bold text-black mb-4">Ready to Begin Your Astrological Journey?</h3>
-          <p className="font-inter text-lg text-black/80 mb-8 max-w-2xl mx-auto">
+          <p className="font-open-sans text-lg text-black/80 mb-8 max-w-2xl mx-auto">
             {BRAND.name} combines ancient wisdom with modern technology to help you understand yourself and navigate life's journey.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

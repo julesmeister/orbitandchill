@@ -531,7 +531,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold text-black mb-2 font-space-grotesk">Posts & Threads</h2>
-            <div className="flex items-center space-x-6 text-sm text-gray-800 font-inter">
+            <div className="flex items-center space-x-6 text-sm text-gray-800 font-open-sans">
               <span className="flex items-center">
                 <div className="w-2 h-2 bg-[#6bdbff] mr-2"></div>
                 {blogPosts.length} Blog Posts
@@ -550,7 +550,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
           <div className="flex gap-3">
             <button
               onClick={() => setShowCategoryManager(!showCategoryManager)}
-              className="bg-[#f2e356] text-black px-4 py-3 font-medium hover:bg-[#e8d650] transition-colors duration-200 font-inter border border-black"
+              className="bg-[#f2e356] text-black px-4 py-3 font-medium hover:bg-[#e8d650] transition-colors duration-200 font-open-sans border border-black"
               title="Manage Categories"
             >
               <div className="flex items-center space-x-2">
@@ -566,7 +566,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 setEditingPost(null);
                 setShowCreateForm(true);
               }}
-              className="bg-[#6bdbff] text-black px-6 py-3 font-medium hover:bg-[#5ac8ec] transition-colors duration-200 font-inter border border-black"
+              className="bg-[#6bdbff] text-black px-6 py-3 font-medium hover:bg-[#5ac8ec] transition-colors duration-200 font-open-sans border border-black"
             >
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -586,7 +586,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             <h3 className="text-lg font-semibold text-black font-space-grotesk">Manage Categories</h3>
             <button
               onClick={handleResetCategories}
-              className="bg-gray-100 text-black px-3 py-2 text-sm font-medium hover:bg-gray-200 transition-colors duration-200 font-inter border border-black"
+              className="bg-gray-100 text-black px-3 py-2 text-sm font-medium hover:bg-gray-200 transition-colors duration-200 font-open-sans border border-black"
               title="Reset to default categories"
             >
               Reset to Defaults
@@ -601,7 +601,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="Add new category..."
-                className="flex-1 px-3 py-2 border border-black bg-white text-black placeholder-gray-500 font-inter focus:outline-none focus:ring-2 focus:ring-black/20"
+                className="flex-1 px-3 py-2 border border-black bg-white text-black placeholder-gray-500 font-open-sans focus:outline-none focus:ring-2 focus:ring-black/20"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -612,7 +612,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               <button
                 onClick={handleAddCategory}
                 disabled={!newCategory.trim()}
-                className="bg-[#51bd94] text-black px-4 py-2 font-medium hover:bg-[#4aa384] transition-colors duration-200 font-inter border border-black disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[#51bd94] text-black px-4 py-2 font-medium hover:bg-[#4aa384] transition-colors duration-200 font-open-sans border border-black disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add
               </button>
@@ -621,7 +621,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             {/* Categories List */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 font-inter">
+                <p className="text-sm text-gray-600 font-open-sans">
                   Current categories ({categories.length})
                   {categoriesFallback && (
                     <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-300">
@@ -653,7 +653,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                         type="text"
                         value={editingCategory.value}
                         onChange={(e) => setEditingCategory({id: category.id, value: e.target.value})}
-                        className="flex-1 px-2 py-1 border border-black bg-white text-black font-inter text-sm focus:outline-none"
+                        className="flex-1 px-2 py-1 border border-black bg-white text-black font-open-sans text-sm focus:outline-none"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -673,7 +673,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                           style={{ backgroundColor: category.color }}
                           title={`Color: ${category.color}`}
                         />
-                        <span className="text-sm text-black font-inter">
+                        <span className="text-sm text-black font-open-sans">
                           {category.name}
                           {category.isDefault && (
                             <span className="ml-1 text-xs text-gray-500">(default)</span>
@@ -715,7 +715,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               </div>
             </div>
             
-            <div className="bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800 font-inter">
+            <div className="bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800 font-open-sans">
               <strong>Database Integration:</strong> Categories are stored in the database and synchronized across the entire application.
               {categoriesFallback ? (
                 <span className="block mt-1 text-yellow-700">
@@ -745,7 +745,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             <button
               key={key}
               onClick={() => setFilter(key as 'all' | 'published' | 'draft' | 'blog' | 'forum' | 'featured')}
-              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 border font-inter ${filter === key
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 border font-open-sans ${filter === key
                   ? 'bg-[#f2e356] text-black border-black'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border-black'
                 }`}
@@ -902,7 +902,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             <h3 className="text-lg font-semibold text-black font-space-grotesk">
               {filter === 'all' ? 'All Posts' : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Posts`}
             </h3>
-            <div className="text-sm text-gray-700 font-inter">
+            <div className="text-sm text-gray-700 font-open-sans">
               Showing {indexOfFirstPost + 1}-{Math.min(indexOfLastPost, filteredThreads.length)} of {filteredThreads.length} posts
             </div>
           </div>
@@ -955,7 +955,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="font-inter">No posts found matching the current filter.</p>
+              <p className="font-open-sans">No posts found matching the current filter.</p>
             </div>
           ) : (
             currentPosts.map((thread: any) => (
@@ -966,17 +966,17 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       <h4 className="text-lg font-medium text-black font-space-grotesk">{thread.title}</h4>
                       <div className="flex items-center space-x-2">
                         {thread.isPinned && (
-                          <span className="px-2 py-1 text-xs font-medium bg-[#ff91e9] text-black border border-black font-inter">
+                          <span className="px-2 py-1 text-xs font-medium bg-[#ff91e9] text-black border border-black font-open-sans">
                             ⭐ Featured
                           </span>
                         )}
-                        <span className={`px-2 py-1 text-xs font-medium border border-black font-inter ${thread.isBlogPost
+                        <span className={`px-2 py-1 text-xs font-medium border border-black font-open-sans ${thread.isBlogPost
                             ? 'bg-[#6bdbff] text-black'
                             : 'bg-[#51bd94] text-black'
                           }`}>
                           {thread.isBlogPost ? 'Blog' : 'Forum'}
                         </span>
-                        <span className={`px-2 py-1 text-xs font-medium border border-black font-inter ${thread.isPublished
+                        <span className={`px-2 py-1 text-xs font-medium border border-black font-open-sans ${thread.isPublished
                             ? 'bg-[#51bd94] text-black'
                             : 'bg-[#f2e356] text-black'
                           }`}>
@@ -985,12 +985,12 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       </div>
                     </div>
 
-                    <p className="text-gray-700 text-sm mb-3 line-clamp-2 font-inter">
+                    <p className="text-gray-700 text-sm mb-3 line-clamp-2 font-open-sans">
                       {stripHtmlTags(thread.excerpt || thread.content || 'No description available').substring(0, 150)}
                       {(thread.excerpt || thread.content) && stripHtmlTags(thread.excerpt || thread.content).length > 150 ? '...' : ''}
                     </p>
 
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 font-inter">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 font-open-sans">
                       <span>by {thread.authorName || 'Unknown Author'}</span>
                       <span>•</span>
                       <span>{thread.category}</span>
@@ -1084,7 +1084,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
           <div className="px-6 py-4 border-t border-black bg-white">
             <div className="flex items-center justify-between">
               {/* Page Info */}
-              <div className="text-sm text-black font-inter">
+              <div className="text-sm text-black font-open-sans">
                 Page {currentPage} of {totalPages}
               </div>
 
@@ -1094,7 +1094,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-inter"
+                  className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-open-sans"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1115,14 +1115,14 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       // Show ellipsis
                       if (pageNumber === 2 && currentPage > 4) {
                         return (
-                          <span key={pageNumber} className="px-3 py-2 text-sm text-gray-600 font-inter">
+                          <span key={pageNumber} className="px-3 py-2 text-sm text-gray-600 font-open-sans">
                             ...
                           </span>
                         );
                       }
                       if (pageNumber === totalPages - 1 && currentPage < totalPages - 3) {
                         return (
-                          <span key={pageNumber} className="px-3 py-2 text-sm text-gray-600 font-inter">
+                          <span key={pageNumber} className="px-3 py-2 text-sm text-gray-600 font-open-sans">
                             ...
                           </span>
                         );
@@ -1134,7 +1134,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       <button
                         key={pageNumber}
                         onClick={() => setCurrentPage(pageNumber)}
-                        className={`relative inline-flex items-center px-3 py-2 text-sm font-medium border transition-colors font-inter ${currentPage === pageNumber
+                        className={`relative inline-flex items-center px-3 py-2 text-sm font-medium border transition-colors font-open-sans ${currentPage === pageNumber
                             ? 'bg-[#6bdbff] text-black border-black hover:bg-[#5ac8ec]'
                             : 'text-gray-800 bg-white border-black hover:bg-gray-50'
                           }`}
@@ -1149,7 +1149,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-inter"
+                  className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-open-sans"
                 >
                   Next
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1160,7 +1160,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
               {/* Posts per page selector */}
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-black font-inter">Posts per page:</span>
+                <span className="text-sm text-black font-open-sans">Posts per page:</span>
                 <select
                   value={postsPerPage}
                   onChange={() => {
@@ -1168,7 +1168,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                     // Note: postsPerPage is read-only in current implementation
                     // You could make it a state variable if you want to allow changing it
                   }}
-                  className="text-sm border border-black px-2 py-1 bg-white font-inter"
+                  className="text-sm border border-black px-2 py-1 bg-white font-open-sans"
                   disabled
                 >
                   <option value={5}>5</option>

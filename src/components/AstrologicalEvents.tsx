@@ -81,7 +81,7 @@ export default function AstrologicalEvents() {
           <h2 className="font-space-grotesk text-4xl lg:text-5xl font-bold text-black mb-4">
             Rare Celestial Events
           </h2>
-          <p className="font-inter text-lg text-black/80 max-w-3xl mx-auto mb-6">
+          <p className="font-open-sans text-lg text-black/80 max-w-3xl mx-auto mb-6">
             Track upcoming astrological phenomena, from eclipses and retrogrades to rare planetary alignments. 
             Never miss a cosmic moment.
           </p>
@@ -171,7 +171,7 @@ export default function AstrologicalEvents() {
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-                <p className="font-inter text-black/80">Calculating real-time astronomical events...</p>
+                <p className="font-open-sans text-black/80">Calculating real-time astronomical events...</p>
               </div>
             </div>
           )}
@@ -196,13 +196,13 @@ export default function AstrologicalEvents() {
                   ))
                 ) : (
                   <div className="col-span-full text-center py-12">
-                    <p className="font-inter text-black/60 text-lg">
+                    <p className="font-open-sans text-black/60 text-lg">
                       {selectedType 
                         ? `No ${selectedType} events detected in the next 90 days.`
                         : 'No rare astronomical events detected in the next 90 days.'
                       }
                     </p>
-                    <p className="font-inter text-black/40 text-sm mt-2">This indicates a relatively stable cosmic period.</p>
+                    <p className="font-open-sans text-black/40 text-sm mt-2">This indicates a relatively stable cosmic period.</p>
                   </div>
                 );
               })()}
@@ -239,7 +239,7 @@ export default function AstrologicalEvents() {
                               <p className="font-space-grotesk font-bold text-black">
                                 {format(date, 'MMM d')}
                               </p>
-                              <p className="font-inter text-sm text-black/60">
+                              <p className="font-open-sans text-sm text-black/60">
                                 {format(date, 'EEEE')}
                               </p>
                             </div>
@@ -256,13 +256,13 @@ export default function AstrologicalEvents() {
                       })
                     ) : (
                       <div className="text-center py-12">
-                        <p className="font-inter text-black/60 text-lg">
+                        <p className="font-open-sans text-black/60 text-lg">
                           {selectedType 
                             ? `No ${selectedType} events detected in the next 30 days.`
                             : 'No astronomical events detected in the next 30 days.'
                           }
                         </p>
-                        <p className="font-inter text-black/40 text-sm mt-2">This indicates a stable cosmic period with gentle planetary movements.</p>
+                        <p className="font-open-sans text-black/40 text-sm mt-2">This indicates a stable cosmic period with gentle planetary movements.</p>
                       </div>
                     );
                   })()}
@@ -281,13 +281,13 @@ export default function AstrologicalEvents() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Event Count</h4>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   {totalEventCount} astronomical events detected in the next 90 days.
                 </p>
               </div>
               <div>
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Most Common Event</h4>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   {mostCommonEventType 
                     ? `${mostCommonEventType.charAt(0).toUpperCase()}${mostCommonEventType.slice(1)} events`
                     : 'Stable planetary period'
@@ -296,7 +296,7 @@ export default function AstrologicalEvents() {
               </div>
               <div>
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Next Major Event</h4>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   {nextMajorEvent 
                     ? `${nextMajorEvent.name} on ${format(nextMajorEvent.date, 'MMM d')}`
                     : 'No major events approaching'

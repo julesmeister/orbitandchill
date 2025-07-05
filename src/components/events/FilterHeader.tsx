@@ -28,14 +28,14 @@ export default function FilterHeader({ activeFiltersCount, onResetAllFilters }: 
       {/* Active Filters Indicator & Reset Button */}
       <div className="flex items-center gap-3">
         {activeFiltersCount > 0 && (
-          <div className="px-3 py-2 bg-white border border-black text-black text-xs font-medium font-inter">
+          <div className="px-3 py-2 bg-white border border-black text-black text-xs font-medium font-open-sans">
             🔍 {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
           </div>
         )}
         
         <button
           onClick={onResetAllFilters}
-          className="px-4 py-2 bg-transparent text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter text-xs font-medium"
+          className="px-4 py-2 bg-transparent text-black border border-black hover:bg-black hover:text-white transition-all duration-300 font-open-sans text-xs font-medium"
         >
           🔄 Reset All
         </button>

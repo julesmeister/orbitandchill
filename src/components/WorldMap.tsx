@@ -128,7 +128,7 @@ export default function WorldMap({
       const y = coords.y;
       
       // Log correction details for debugging
-      console.log(`Reference point ${point.label}: (${point.lat}, ${point.lng}) → (${x.toFixed(1)}, ${y.toFixed(1)}) [zone: ${coords.zoneUsed}]`);
+      // Reference point correction applied
 
 
       // Add circle marker
@@ -489,7 +489,7 @@ export default function WorldMap({
   // Convert SVG coordinates back to geographic coordinates using the proper correction system
   const svgToGeoCoordinates = (svgX: number, svgY: number, svgElement: SVGSVGElement): { lat: number; lng: number } => {
     const result = svgToGeoWithCorrections(svgX, svgY);
-    console.log(`SVG to Geo conversion: (${svgX.toFixed(1)}, ${svgY.toFixed(1)}) → (${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}) [zone: ${result.zoneUsed}]`);
+    // SVG to Geo conversion applied
     return { lat: result.lat, lng: result.lng };
   };
 

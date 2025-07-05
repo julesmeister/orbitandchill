@@ -102,7 +102,7 @@ export default function ChartPage() {
           return;
         }
       } catch (error) {
-        console.error('Error loading existing charts:', error);
+        // Error loading existing charts
       }
 
       // If no existing charts but we have birth data, try to generate
@@ -123,7 +123,7 @@ export default function ChartPage() {
             hasCompleteProfile: isProfileComplete
           });
         } catch (error) {
-          console.error('Error during auto-generation:', error);
+          // Error during auto-generation
         }
       }
     };
@@ -143,7 +143,6 @@ export default function ChartPage() {
       await handleRegenerateChart();
       showSuccess('Chart Regenerated', 'Your natal chart has been successfully regenerated with fresh calculations.', 4000);
     } catch (error) {
-      console.error('Error regenerating chart:', error);
       showError('Regeneration Failed', 'Failed to regenerate your chart. Please try again.', 5000);
     }
   };
@@ -182,7 +181,6 @@ export default function ChartPage() {
         // Chart regenerated successfully
       }
     } catch (error) {
-      console.error("Error regenerating chart:", error);
       alert("Failed to regenerate chart. Please try again.");
     }
   };
@@ -204,7 +202,7 @@ export default function ChartPage() {
           coordinates: person.birthData.coordinates,
         });
       } catch (error) {
-        console.error('Error generating chart for selected person:', error);
+        // Error generating chart for selected person
       }
     }
   };
@@ -245,7 +243,7 @@ export default function ChartPage() {
                       </h1>
 
                       {/* Description */}
-                      <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+                      <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
                         {isUserLoading ? 'Retrieving your birth data and preferences...' :
                           isGenerating ? 'Creating your cosmic blueprint from the stars...' :
                             'We\'re retrieving your cosmic blueprint. This should only take a moment...'}
@@ -377,12 +375,12 @@ export default function ChartPage() {
                     </div>
 
                     {/* Heading */}
-                    <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
+                    <h2 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
                       Your Cosmic Journey Awaits
-                    </h1>
+                    </h2>
 
                     {/* Description */}
-                    <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto mb-12">
+                    <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto mb-12">
                       Unlock the mysteries of your birth chart and discover the celestial blueprint that makes you uniquely you.
                     </p>
 
@@ -395,7 +393,7 @@ export default function ChartPage() {
                           </svg>
                         </div>
                         <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">Planetary Positions</h3>
-                        <p className="font-inter text-sm text-black/80">Discover where the planets were at your exact moment of birth</p>
+                        <p className="font-open-sans text-sm text-black/80">Discover where the planets were at your exact moment of birth</p>
                       </div>
 
                       <div className="p-8 border-black md:border-r" style={{ backgroundColor: '#6bdbff' }}>
@@ -405,7 +403,7 @@ export default function ChartPage() {
                           </svg>
                         </div>
                         <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">House System</h3>
-                        <p className="font-inter text-sm text-black/80">Explore the 12 houses that shape different areas of your life</p>
+                        <p className="font-open-sans text-sm text-black/80">Explore the 12 houses that shape different areas of your life</p>
                       </div>
 
                       <div className="p-8" style={{ backgroundColor: '#f2e356' }}>
@@ -415,7 +413,7 @@ export default function ChartPage() {
                           </svg>
                         </div>
                         <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">Aspects & Energy</h3>
-                        <p className="font-inter text-sm text-black/80">Understand the unique energy patterns in your cosmic design</p>
+                        <p className="font-open-sans text-sm text-black/80">Understand the unique energy patterns in your cosmic design</p>
                       </div>
                     </div>
 
@@ -444,7 +442,7 @@ export default function ChartPage() {
 
                     {/* Additional Info */}
                     <div className="pt-8 border-t border-black">
-                      <p className="font-inter text-sm text-black/60 mb-6">Not sure where to start?</p>
+                      <p className="font-open-sans text-sm text-black/60 mb-6">Not sure where to start?</p>
                       <div className="flex flex-wrap gap-8 justify-center text-sm">
                         <Link href="/faq" className="text-black font-semibold hover:text-black/70 transition-colors flex items-center gap-2">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

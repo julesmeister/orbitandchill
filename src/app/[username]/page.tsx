@@ -205,7 +205,7 @@ export default function UserProfilePage() {
             <h1 className="font-space-grotesk text-4xl font-bold text-black mb-4">
               Loading Profile...
             </h1>
-            <p className="font-inter text-xl text-black/80">Fetching user information.</p>
+            <p className="font-open-sans text-xl text-black/80">Fetching user information.</p>
           </div>
         </section>
       </div>
@@ -221,7 +221,7 @@ export default function UserProfilePage() {
             <h1 className="font-space-grotesk text-4xl font-bold text-black mb-4">
               {error === 'User not found' ? 'User Not Found' : 'Profile Error'}
             </h1>
-            <p className="font-inter text-xl text-black/80 mb-8">
+            <p className="font-open-sans text-xl text-black/80 mb-8">
               {error === 'User not found' 
                 ? `No user found with username "${username}"`
                 : 'Unable to load this profile. Please try again.'}
@@ -272,7 +272,7 @@ export default function UserProfilePage() {
                   <h1 className="font-space-grotesk text-3xl font-bold text-black">
                     {profileUser.username}
                   </h1>
-                  <p className="font-inter text-black/80">
+                  <p className="font-open-sans text-black/80">
                     {profileUser.authProvider === 'google' ? 'Google Account' : 'Anonymous User'}
                     {isOwnProfile && <span className="ml-2 text-sm">(You)</span>}
                   </p>
@@ -298,7 +298,7 @@ export default function UserProfilePage() {
                 </div>
                 <div className="p-3 border border-black text-center lg:text-left">
                   <div className="text-xs font-semibold text-black mb-1">JOINED</div>
-                  <div className="font-inter text-xs font-medium text-black">
+                  <div className="font-open-sans text-xs font-medium text-black">
                     {new Date(profileUser.createdAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric'
@@ -307,7 +307,7 @@ export default function UserProfilePage() {
                 </div>
                 <div className="p-3 border border-black text-center lg:text-left">
                   <div className="text-xs font-semibold text-black mb-1">STATUS</div>
-                  <div className="font-inter text-xs font-medium text-black">
+                  <div className="font-open-sans text-xs font-medium text-black">
                     {profileUser.birthData ? 'Complete' : 'Incomplete'}
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export default function UserProfilePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-space-grotesk text-lg font-bold text-black mb-1">Account</h2>
-                    <p className="font-inter text-xs text-black/60">Personal details</p>
+                    <p className="font-open-sans text-xs text-black/60">Personal details</p>
                   </div>
                   <button
                     onClick={() => toggleSection('account')}
@@ -371,7 +371,7 @@ export default function UserProfilePage() {
                         type="text"
                         value={usernameInput}
                         onChange={(e) => setUsernameInput(e.target.value)}
-                        className="w-full font-inter text-sm text-black border-b border-black bg-transparent focus:outline-none"
+                        className="w-full font-open-sans text-sm text-black border-b border-black bg-transparent focus:outline-none"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleUsernameUpdate();
                           if (e.key === 'Escape') setEditingUsername(false);
@@ -394,28 +394,28 @@ export default function UserProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="font-inter text-sm font-semibold text-black">{profileUser.username}</div>
+                    <div className="font-open-sans text-sm font-semibold text-black">{profileUser.username}</div>
                   )}
                 </div>
                 
                 {/* Account Type */}
                 <div className="border border-black p-2">
                   <div className="text-xs font-semibold text-black mb-1">TYPE</div>
-                  <div className="font-inter text-sm font-semibold text-black capitalize">{profileUser.authProvider}</div>
+                  <div className="font-open-sans text-sm font-semibold text-black capitalize">{profileUser.authProvider}</div>
                 </div>
 
                 {/* Email (only show for own profile) */}
                 {isOwnProfile && profileUser.email && (
                   <div className="border border-black p-2">
                     <div className="text-xs font-semibold text-black mb-1">EMAIL</div>
-                    <div className="font-inter text-xs font-medium text-black break-all">{profileUser.email}</div>
+                    <div className="font-open-sans text-xs font-medium text-black break-all">{profileUser.email}</div>
                   </div>
                 )}
 
                 {/* Member Since */}
                 <div className="border border-black p-2">
                   <div className="text-xs font-semibold text-black mb-1">JOINED</div>
-                  <div className="font-inter text-xs font-medium text-black">
+                  <div className="font-open-sans text-xs font-medium text-black">
                     {new Date(profileUser.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -433,7 +433,7 @@ export default function UserProfilePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-space-grotesk text-lg font-bold text-black mb-1">Birth Data</h2>
-                    <p className="font-inter text-xs text-black/60">Astrological details</p>
+                    <p className="font-open-sans text-xs text-black/60">Astrological details</p>
                   </div>
                   <button
                     onClick={() => toggleSection('birthData')}
@@ -486,7 +486,7 @@ export default function UserProfilePage() {
                             <>
                               <div className="border border-black p-2">
                                 <div className="text-xs font-semibold text-black mb-1">BIRTH DATE</div>
-                                <div className="font-inter text-xs font-medium text-black">
+                                <div className="font-open-sans text-xs font-medium text-black">
                                   {new Date(profileUser.birthData.dateOfBirth).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'short',
@@ -497,12 +497,12 @@ export default function UserProfilePage() {
                               
                               <div className="border border-black p-2">
                                 <div className="text-xs font-semibold text-black mb-1">BIRTH TIME</div>
-                                <div className="font-inter text-xs font-medium text-black">{profileUser.birthData.timeOfBirth}</div>
+                                <div className="font-open-sans text-xs font-medium text-black">{profileUser.birthData.timeOfBirth}</div>
                               </div>
 
                               <div className="border border-black p-2">
                                 <div className="text-xs font-semibold text-black mb-1">LOCATION</div>
-                                <div className="font-inter text-xs font-medium text-black break-words">{profileUser.birthData.locationOfBirth}</div>
+                                <div className="font-open-sans text-xs font-medium text-black break-words">{profileUser.birthData.locationOfBirth}</div>
                               </div>
                             </>
                           )}
@@ -511,7 +511,7 @@ export default function UserProfilePage() {
                           {(isOwnProfile || profileUser.privacy?.showZodiacPublicly) && profileUser.sunSign && (
                             <div className="border border-black p-2">
                               <div className="text-xs font-semibold text-black mb-1">SUN SIGN</div>
-                              <div className="font-inter text-xs font-medium text-black capitalize">{profileUser.sunSign}</div>
+                              <div className="font-open-sans text-xs font-medium text-black capitalize">{profileUser.sunSign}</div>
                             </div>
                           )}
 
@@ -524,7 +524,7 @@ export default function UserProfilePage() {
                                 </svg>
                               </div>
                               <h3 className="font-space-grotesk text-sm font-bold text-black mb-1">Private Birth Data</h3>
-                              <p className="font-inter text-xs text-black/60">This user has chosen to keep their birth information private</p>
+                              <p className="font-open-sans text-xs text-black/60">This user has chosen to keep their birth information private</p>
                             </div>
                           )}
                         </div>
@@ -536,7 +536,7 @@ export default function UserProfilePage() {
                             </svg>
                           </div>
                           <h3 className="font-space-grotesk text-sm font-bold text-black mb-1">No Birth Data</h3>
-                          <p className="font-inter text-xs text-black/60 mb-2">
+                          <p className="font-open-sans text-xs text-black/60 mb-2">
                             {isOwnProfile ? 'Add birth information' : 'No birth data available'}
                           </p>
                           {isOwnProfile && (
@@ -616,7 +616,7 @@ export default function UserProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-space-grotesk text-lg font-bold text-black">Choose Avatar</h2>
-                  <p className="font-inter text-xs text-black/70 mt-1">Select your preferred profile picture</p>
+                  <p className="font-open-sans text-xs text-black/70 mt-1">Select your preferred profile picture</p>
                 </div>
                 <button
                   onClick={handleAvatarCancel}
@@ -666,14 +666,14 @@ export default function UserProfilePage() {
             <div className="border-t border-black flex">
               <button
                 onClick={handleAvatarCancel}
-                className="flex-1 px-4 py-3 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-colors font-inter font-medium text-sm"
+                className="flex-1 px-4 py-3 bg-white text-black border-r border-black hover:bg-black hover:text-white transition-colors font-open-sans font-medium text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAvatarSave}
                 disabled={!selectedAvatar}
-                className={`flex-1 px-4 py-3 font-inter font-medium text-sm transition-colors ${
+                className={`flex-1 px-4 py-3 font-open-sans font-medium text-sm transition-colors ${
                   selectedAvatar
                     ? 'bg-black text-white hover:bg-gray-800'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'

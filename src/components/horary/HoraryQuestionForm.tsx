@@ -76,14 +76,14 @@ export default function HoraryQuestionForm({
                 </div>
                 <div>
                   <h2 className="font-space-grotesk text-lg font-bold text-black">Horary Oracle</h2>
-                  <p className="font-inter text-xs text-black/70">Astrological guidance at inquiry moment</p>
+                  <p className="font-open-sans text-xs text-black/70">Astrological guidance at inquiry moment</p>
                 </div>
               </div>
               
               {/* Information about time & location when custom time is selected */}
               {useCustomTime && (
                 <div className="mt-3 p-3 border border-black/30 bg-white/90">
-                  <div className="text-xs text-black/80 space-y-1.5 font-inter">
+                  <div className="text-xs text-black/80 space-y-1.5 font-open-sans">
                     <div className="font-bold text-black mb-1">Why Time & Location Matter</div>
                     <p>Horary requires the exact moment and place to calculate planetary positions. The cosmic snapshot at your question's birth reveals the answer.</p>
                     <div className="space-y-0.5 text-black/60">
@@ -143,12 +143,12 @@ export default function HoraryQuestionForm({
                   <div className="flex items-center space-x-1">
                     <div className={`w-1.5 h-1.5 rounded-full ${voidStatus.isLoading ? 'bg-gray-400 animate-pulse' : voidStatus.isVoid ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
                     <span className="font-space-grotesk font-bold text-black/70">☽</span>
-                    <span className={`font-inter font-bold ${voidStatus.isVoid ? 'text-yellow-700' : 'text-green-700'}`}>
+                    <span className={`font-open-sans font-bold ${voidStatus.isVoid ? 'text-yellow-700' : 'text-green-700'}`}>
                       {voidStatus.isLoading ? 'Checking' : voidStatus.isVoid ? 'Void' : 'Active'}
                     </span>
                   </div>
                   {voidStatus.moonSign && (
-                    <span className="text-black/60 font-inter capitalize text-xs">
+                    <span className="text-black/60 font-open-sans capitalize text-xs">
                       {voidStatus.moonSign}
                     </span>
                   )}
@@ -214,7 +214,7 @@ export default function HoraryQuestionForm({
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Type your specific question here..."
-            className="w-full h-40 px-4 py-3 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 resize-none font-inter"
+            className="w-full h-40 px-4 py-3 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 resize-none font-open-sans"
           />
           {question.length > 0 && (
             <div className="absolute bottom-3 right-3 text-xs text-black/50">

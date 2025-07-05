@@ -53,7 +53,7 @@ export default function RenameToast({
         
         <form onSubmit={handleSubmit} className="p-4">
           <div className="mb-4">
-            <label className="block font-inter text-xs font-medium text-black mb-2">
+            <label className="block font-open-sans text-xs font-medium text-black mb-2">
               Event Title
             </label>
             <input
@@ -61,7 +61,7 @@ export default function RenameToast({
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full px-3 py-2 border border-black font-inter text-sm text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full px-3 py-2 border border-black font-open-sans text-sm text-black focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Enter new event title"
               autoFocus
               maxLength={100}
@@ -72,14 +72,14 @@ export default function RenameToast({
             <button
               type="submit"
               disabled={!newTitle.trim() || newTitle.trim() === currentTitle}
-              className="flex-1 px-3 py-2 bg-black text-white font-inter font-medium text-xs border border-black hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-3 py-2 bg-black text-white font-open-sans font-medium text-xs border border-black hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Rename
             </button>
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-3 py-2 bg-white text-black font-inter font-medium text-xs border border-black hover:bg-gray-50 transition-colors"
+              className="flex-1 px-3 py-2 bg-white text-black font-open-sans font-medium text-xs border border-black hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>

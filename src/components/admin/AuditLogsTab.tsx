@@ -214,13 +214,13 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
               <div className="flex justify-between items-center">
                 <div>
                   <h1 className="font-space-grotesk text-2xl font-bold text-black">Audit Logs</h1>
-                  <p className="font-inter text-sm text-black/70 mt-0.5">Track all administrative actions and system changes</p>
+                  <p className="font-open-sans text-sm text-black/70 mt-0.5">Track all administrative actions and system changes</p>
                 </div>
                 
                 <div className="flex gap-0 border border-black">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="px-4 py-2 bg-white text-black font-inter font-semibold border-r border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 bg-white text-black font-open-sans font-semibold border-r border-black hover:bg-black hover:text-white transition-all duration-300 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -231,7 +231,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                   <button
                     onClick={() => loadAuditLogs(true)}
                     disabled={isLoading}
-                    className="px-4 py-2 bg-black text-white font-inter font-semibold hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-2 bg-black text-white font-open-sans font-semibold hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -250,7 +250,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <span className="font-inter text-xs text-black/70">Total</span>
+                    <span className="font-open-sans text-xs text-black/70">Total</span>
                     <span className="font-space-grotesk text-sm font-bold text-black">{statistics.totalLogs.toLocaleString()}</span>
                   </div>
 
@@ -260,7 +260,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     </div>
-                    <span className="font-inter text-xs text-black/70">Creates</span>
+                    <span className="font-open-sans text-xs text-black/70">Creates</span>
                     <span className="font-space-grotesk text-sm font-bold text-black">{statistics.logsByAction.create || 0}</span>
                   </div>
 
@@ -270,7 +270,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </div>
-                    <span className="font-inter text-xs text-black/70">Deletes</span>
+                    <span className="font-open-sans text-xs text-black/70">Deletes</span>
                     <span className="font-space-grotesk text-sm font-bold text-black">{statistics.logsByAction.delete || 0}</span>
                   </div>
 
@@ -280,7 +280,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                       </svg>
                     </div>
-                    <span className="font-inter text-xs text-black/70">Critical</span>
+                    <span className="font-open-sans text-xs text-black/70">Critical</span>
                     <span className="font-space-grotesk text-sm font-bold text-black">
                       {(statistics.logsBySeverity.high || 0) + (statistics.logsBySeverity.critical || 0)}
                     </span>
@@ -302,7 +302,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                 <h3 className="font-space-grotesk text-xl font-bold text-black">Filters</h3>
                 <button
                   onClick={clearFilters}
-                  className="font-inter text-sm text-black border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors"
+                  className="font-open-sans text-sm text-black border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors"
                 >
                   Clear all
                 </button>
@@ -311,41 +311,41 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Search */}
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-2">Search</label>
+                  <label className="block font-open-sans text-sm font-medium text-black mb-2">Search</label>
                   <input
                     type="text"
                     value={filters.search}
                     onChange={(e) => handleFilterChange('search', e.target.value)}
                     placeholder="Search descriptions..."
-                    className="w-full px-3 py-3 border-b-2 border-black bg-transparent focus:outline-none focus:border-gray-600 font-inter"
+                    className="w-full px-3 py-3 border-b-2 border-black bg-transparent focus:outline-none focus:border-gray-600 font-open-sans"
                   />
                 </div>
 
                 {/* Date From */}
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-2">From Date</label>
+                  <label className="block font-open-sans text-sm font-medium text-black mb-2">From Date</label>
                   <input
                     type="datetime-local"
                     value={filters.dateFrom}
                     onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                    className="w-full px-3 py-3 border-b-2 border-black bg-transparent focus:outline-none focus:border-gray-600 font-inter"
+                    className="w-full px-3 py-3 border-b-2 border-black bg-transparent focus:outline-none focus:border-gray-600 font-open-sans"
                   />
                 </div>
 
                 {/* Date To */}
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-2">To Date</label>
+                  <label className="block font-open-sans text-sm font-medium text-black mb-2">To Date</label>
                   <input
                     type="datetime-local"
                     value={filters.dateTo}
                     onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                    className="w-full px-3 py-3 border-b-2 border-black bg-transparent focus:outline-none focus:border-gray-600 font-inter"
+                    className="w-full px-3 py-3 border-b-2 border-black bg-transparent focus:outline-none focus:border-gray-600 font-open-sans"
                   />
                 </div>
 
                 {/* Actions */}
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-2">Actions</label>
+                  <label className="block font-open-sans text-sm font-medium text-black mb-2">Actions</label>
                   <div className="space-y-2 max-h-32 overflow-y-auto border border-black p-3">
                     {actionOptions.map((action) => (
                       <label key={action} className="flex items-center cursor-pointer hover:bg-gray-50 p-1">
@@ -355,7 +355,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                           onChange={(e) => handleMultiSelectChange('actions', action, e.target.checked)}
                           className="border-black text-black focus:ring-0"
                         />
-                        <span className="ml-2 font-inter text-sm text-black capitalize">{action}</span>
+                        <span className="ml-2 font-open-sans text-sm text-black capitalize">{action}</span>
                       </label>
                     ))}
                   </div>
@@ -363,7 +363,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
 
                 {/* Entity Types */}
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-2">Entity Types</label>
+                  <label className="block font-open-sans text-sm font-medium text-black mb-2">Entity Types</label>
                   <div className="space-y-2 max-h-32 overflow-y-auto border border-black p-3">
                     {entityTypeOptions.map((type) => (
                       <label key={type} className="flex items-center cursor-pointer hover:bg-gray-50 p-1">
@@ -373,7 +373,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                           onChange={(e) => handleMultiSelectChange('entityTypes', type, e.target.checked)}
                           className="border-black text-black focus:ring-0"
                         />
-                        <span className="ml-2 font-inter text-sm text-black capitalize">{type.replace('_', ' ')}</span>
+                        <span className="ml-2 font-open-sans text-sm text-black capitalize">{type.replace('_', ' ')}</span>
                       </label>
                     ))}
                   </div>
@@ -381,7 +381,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
 
                 {/* Severities */}
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-2">Severity</label>
+                  <label className="block font-open-sans text-sm font-medium text-black mb-2">Severity</label>
                   <div className="space-y-2 border border-black p-3">
                     {severityOptions.map((severity) => (
                       <label key={severity} className="flex items-center cursor-pointer hover:bg-gray-50 p-1">
@@ -391,7 +391,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                           onChange={(e) => handleMultiSelectChange('severities', severity, e.target.checked)}
                           className="border-black text-black focus:ring-0"
                         />
-                        <span className="ml-2 font-inter text-sm text-black capitalize">{severity}</span>
+                        <span className="ml-2 font-open-sans text-sm text-black capitalize">{severity}</span>
                       </label>
                     ))}
                   </div>
@@ -413,7 +413,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="ml-3">
-                  <p className="font-inter text-sm text-black font-medium">{error}</p>
+                  <p className="font-open-sans text-sm text-black font-medium">{error}</p>
                 </div>
               </div>
             </div>
@@ -469,25 +469,25 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                     </tr>
                   ) : logs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center font-inter text-black">
+                      <td colSpan={7} className="px-6 py-12 text-center font-open-sans text-black">
                         No audit logs found matching your criteria.
                       </td>
                     </tr>
                   ) : (
                     logs.map((log) => (
                       <tr key={log.id} className="hover:bg-gray-50 border-b border-black">
-                        <td className="px-6 py-4 whitespace-nowrap font-inter text-sm text-black">
+                        <td className="px-6 py-4 whitespace-nowrap font-open-sans text-sm text-black">
                           {formatDate(log.createdAt)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-inter text-sm text-black font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap font-open-sans text-sm text-black font-medium">
                           {log.adminUsername}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 border border-black text-xs font-inter font-medium bg-white text-black">
+                          <span className="inline-flex items-center px-3 py-1 border border-black text-xs font-open-sans font-medium bg-white text-black">
                             {log.action}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-inter text-sm text-black">
+                        <td className="px-6 py-4 whitespace-nowrap font-open-sans text-sm text-black">
                           <div>
                             <div className="text-black capitalize font-medium">{log.entityType.replace('_', ' ')}</div>
                             {log.entityId && (
@@ -495,17 +495,17 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-inter text-sm text-black max-w-md">
+                        <td className="px-6 py-4 font-open-sans text-sm text-black max-w-md">
                           <div className="truncate" title={log.description}>
                             {log.description}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 border border-black text-xs font-inter font-medium bg-white text-black">
+                          <span className="inline-flex items-center px-3 py-1 border border-black text-xs font-open-sans font-medium bg-white text-black">
                             {log.severity}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-inter text-sm text-black/60 font-mono">
+                        <td className="px-6 py-4 whitespace-nowrap font-open-sans text-sm text-black/60 font-mono">
                           {log.ipAddress || 'N/A'}
                         </td>
                       </tr>
@@ -522,21 +522,21 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                   <button
                     onClick={() => setPage(page - 1)}
                     disabled={page <= 1}
-                    className="relative inline-flex items-center px-4 py-2 border border-black font-inter text-sm font-medium text-black bg-white hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
+                    className="relative inline-flex items-center px-4 py-2 border border-black font-open-sans text-sm font-medium text-black bg-white hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page >= totalPages}
-                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-black font-inter text-sm font-medium text-black bg-white hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-black font-open-sans text-sm font-medium text-black bg-white hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
                   >
                     Next
                   </button>
                 </div>
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                   <div>
-                    <p className="font-inter text-sm text-black">
+                    <p className="font-open-sans text-sm text-black">
                       Page <span className="font-bold">{page}</span> of{' '}
                       <span className="font-bold">{totalPages}</span>
                     </p>
@@ -546,7 +546,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                       <button
                         onClick={() => setPage(page - 1)}
                         disabled={page <= 1}
-                        className="relative inline-flex items-center px-3 py-2 border-r border-black bg-white font-inter text-sm font-medium text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
+                        className="relative inline-flex items-center px-3 py-2 border-r border-black bg-white font-open-sans text-sm font-medium text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -555,7 +555,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                       <button
                         onClick={() => setPage(page + 1)}
                         disabled={page >= totalPages}
-                        className="relative inline-flex items-center px-3 py-2 bg-white font-inter text-sm font-medium text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
+                        className="relative inline-flex items-center px-3 py-2 bg-white font-open-sans text-sm font-medium text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
                       >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

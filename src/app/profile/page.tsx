@@ -31,7 +31,7 @@ export default function ProfileRedirectPage() {
           <h1 className="font-space-grotesk text-4xl font-bold text-black mb-4">
             Redirecting...
           </h1>
-          <p className="font-inter text-xl text-black/80">Taking you to your profile.</p>
+          <p className="font-open-sans text-xl text-black/80">Taking you to your profile.</p>
         </div>
       </section>
     </div>

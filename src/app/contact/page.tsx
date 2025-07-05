@@ -34,7 +34,7 @@ export default function ContactPage() {
         <section className="px-[5%] py-16">
           <div className="text-center">
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">Get in Touch</h1>
-            <p className="font-inter text-xl text-black/80">
+            <p className="font-open-sans text-xl text-black/80">
               Have questions about astrology or need help with our platform? We&apos;d love to hear from you.
             </p>
           </div>
@@ -152,9 +152,9 @@ export default function ContactPage() {
                           </svg>
                         </div>
                         <div>
-                          <h4 className="font-inter font-semibold text-black">Email Support</h4>
-                          <p className="font-inter text-black/80">{BRAND.email}</p>
-                          <p className="font-inter text-sm text-black/60">We typically respond within 24 hours</p>
+                          <h4 className="font-open-sans font-semibold text-black">Email Support</h4>
+                          <p className="font-open-sans text-black/80">{BRAND.email}</p>
+                          <p className="font-open-sans text-sm text-black/60">We typically respond within 24 hours</p>
                         </div>
                       </div>
 
@@ -165,9 +165,9 @@ export default function ContactPage() {
                           </svg>
                         </div>
                         <div>
-                          <h4 className="font-inter font-semibold text-black">Community Forum</h4>
-                          <p className="font-inter text-black/80">Join our discussions</p>
-                          <Link href="/discussions" className="font-inter text-sm text-black hover:text-black/70 font-medium">
+                          <h4 className="font-open-sans font-semibold text-black">Community Forum</h4>
+                          <p className="font-open-sans text-black/80">Join our discussions</p>
+                          <Link href="/discussions" className="font-open-sans text-sm text-black hover:text-black/70 font-medium">
                             Visit Discussions →
                           </Link>
                         </div>
@@ -180,18 +180,18 @@ export default function ContactPage() {
                     <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Quick Answers</h3>
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-inter font-semibold text-black text-sm mb-1">Is {BRAND.name} free to use?</h4>
-                        <p className="font-inter text-xs text-black/70">Yes! Our core features including natal chart generation are completely free.</p>
+                        <h4 className="font-open-sans font-semibold text-black text-sm mb-1">Is {BRAND.name} free to use?</h4>
+                        <p className="font-open-sans text-xs text-black/70">Yes! Our core features including natal chart generation are completely free.</p>
                       </div>
                       
                       <div>
-                        <h4 className="font-inter font-semibold text-black text-sm mb-1">How accurate are the calculations?</h4>
-                        <p className="font-inter text-xs text-black/70">We use astronomy-engine for professional-grade precision (±1 arcminute).</p>
+                        <h4 className="font-open-sans font-semibold text-black text-sm mb-1">How accurate are the calculations?</h4>
+                        <p className="font-open-sans text-xs text-black/70">We use astronomy-engine for professional-grade precision (±1 arcminute).</p>
                       </div>
                       
                       <div>
-                        <h4 className="font-inter font-semibold text-black text-sm mb-1">Do I need to create an account?</h4>
-                        <p className="font-inter text-xs text-black/70">No account required! Your data is automatically saved in your browser.</p>
+                        <h4 className="font-open-sans font-semibold text-black text-sm mb-1">Do I need to create an account?</h4>
+                        <p className="font-open-sans text-xs text-black/70">No account required! Your data is automatically saved in your browser.</p>
                       </div>
                     </div>
                   </div>

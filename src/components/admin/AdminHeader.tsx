@@ -132,15 +132,15 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
             <div className="grid grid-cols-3 gap-0 border border-black">
               <div className="p-3 text-center border-r border-black bg-white">
                 <div className="font-space-grotesk text-sm font-bold text-black">{siteMetrics.activeUsers}</div>
-                <div className="font-inter text-xs text-black/60">Users</div>
+                <div className="font-open-sans text-xs text-black/60">Users</div>
               </div>
               <div className="p-3 text-center border-r border-black bg-white">
                 <div className="font-space-grotesk text-sm font-bold text-black">{getUptimePercentage()}%</div>
-                <div className="font-inter text-xs text-black/60">Uptime</div>
+                <div className="font-open-sans text-xs text-black/60">Uptime</div>
               </div>
               <div className="p-3 text-center bg-white">
                 <div className="font-space-grotesk text-sm font-bold text-black">{currentTime}</div>
-                <div className="font-inter text-xs text-black/60">Time</div>
+                <div className="font-open-sans text-xs text-black/60">Time</div>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                   <span className="hidden lg:inline">Admin Dashboard</span>
                   <span className="lg:hidden">Admin</span>
                 </h1>
-                <p className="font-inter text-sm md:text-base lg:text-lg text-black/80 mt-1">
+                <p className="font-open-sans text-sm md:text-base lg:text-lg text-black/80 mt-1">
                   <span className="hidden lg:inline">Welcome back, </span>
                   <span className="font-semibold text-black">{adminName}</span>
                   <span className="hidden xl:inline mx-3 text-black/60">•</span>
@@ -173,7 +173,7 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
               {/* Status Card - Responsive text */}
               <div className="h-12 flex items-center space-x-2 px-3 lg:px-4 bg-white border border-black">
                 <div className={`w-3 h-3 ${getSystemStatus().color}`}></div>
-                <span className="font-inter text-xs md:text-sm font-medium text-black hidden md:inline">{getSystemStatus().label}</span>
+                <span className="font-open-sans text-xs md:text-sm font-medium text-black hidden md:inline">{getSystemStatus().label}</span>
               </div>
 
               {/* Quick Stats - Show on larger screens */}
@@ -182,12 +182,12 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                   <div className="font-space-grotesk text-sm font-bold text-black">
                     {siteMetrics.activeUsers.toLocaleString()}
                   </div>
-                  <div className="font-inter text-xs text-black/60">Users</div>
+                  <div className="font-open-sans text-xs text-black/60">Users</div>
                 </div>
                 <div className="w-px h-6 bg-black"></div>
                 <div className="text-center">
                   <div className="font-space-grotesk text-sm font-bold text-black">{getUptimePercentage()}%</div>
-                  <div className="font-inter text-xs text-black/60">Uptime</div>
+                  <div className="font-open-sans text-xs text-black/60">Uptime</div>
                 </div>
               </div>
 

@@ -178,7 +178,7 @@ export default function CountryTooltip({ countryId, position, onClose }: Country
 
           {/* Content */}
           <div className="text-center">
-            <h3 className="font-bold text-lg mb-2 font-arvo">
+            <h3 className="font-bold text-lg mb-2 font-open-sans">
               {countryName}
             </h3>
             <p className="text-sm leading-relaxed">

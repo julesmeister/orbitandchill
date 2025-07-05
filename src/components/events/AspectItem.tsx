@@ -66,14 +66,14 @@ export default function AspectItem({ aspect, aspectIndex, day }: AspectItemProps
               {aspect.planets} {aspect.aspect}
             </div>
             {/* Show exact time and applying/separating status */}
-            <div className="text-[8px] font-inter opacity-75 truncate">
+            <div className="text-[8px] font-open-sans opacity-75 truncate">
               <span>Exact: {aspect.exactTime}</span>
               <span className={`ml-1 ${aspect.applying ? 'text-green-600' : 'text-gray-500'}`}>
                 • {aspect.applying ? 'Applying' : 'Separating'}
               </span>
             </div>
             {/* Strength and significance indicators */}
-            <div className="text-[8px] font-inter opacity-75">
+            <div className="text-[8px] font-open-sans opacity-75">
               {aspect.strength} • {aspect.significance}
             </div>
           </div>

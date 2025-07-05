@@ -126,7 +126,7 @@ const VoteCount = React.memo(({
   sizeConfig: typeof SIZE_CONFIG[keyof typeof SIZE_CONFIG];
   layout: keyof typeof LAYOUT_CONFIG;
 }) => (
-  <div className={`flex items-center justify-center ${sizeConfig.elementPadding} ${sizeConfig.textSize} font-semibold text-white bg-black font-inter ${sizeConfig.minWidth}`}>
+  <div className={`flex items-center justify-center ${sizeConfig.elementPadding} ${sizeConfig.textSize} font-semibold text-white bg-black font-open-sans ${sizeConfig.minWidth}`}>
     {count}
     {layout === 'compact' && <span className="ml-1">votes</span>}
   </div>

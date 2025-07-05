@@ -76,7 +76,7 @@ const InterpretationModal: React.FC<InterpretationModalProps> = ({
               </div>
               <div>
                 <h2 className="font-space-grotesk text-2xl font-bold text-black">{title}</h2>
-                <p className="font-inter text-black/60">{subtitle}</p>
+                <p className="font-open-sans text-black/60">{subtitle}</p>
               </div>
             </div>
             <button
@@ -136,7 +136,7 @@ const InterpretationModal: React.FC<InterpretationModalProps> = ({
               } else {
                 return (
                   <div key={index} className="mb-6">
-                    <p className="font-inter text-black leading-relaxed text-base">
+                    <p className="font-open-sans text-black leading-relaxed text-base">
                       {section.content}
                     </p>
                   </div>

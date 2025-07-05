@@ -12,10 +12,10 @@ export default function TermsPage() {
         <section className="px-[5%] py-16">
           <div className="text-center">
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">Terms of Service</h1>
-            <p className="font-inter text-xl text-black/80">
+            <p className="font-open-sans text-xl text-black/80">
               These terms govern your use of {BRAND.name}. By using our service, you agree to these terms.
             </p>
-            <p className="font-inter text-sm text-black/60 mt-4">Last updated: December 6, 2024</p>
+            <p className="font-open-sans text-sm text-black/60 mt-4">Last updated: December 6, 2024</p>
           </div>
         </section>
 
@@ -24,7 +24,7 @@ export default function TermsPage() {
           <section className="px-6 md:px-12 lg:px-20 py-12" style={{ backgroundColor: '#f0e3ff' }}>
             <div>
               <h2 className="font-space-grotesk text-3xl font-bold text-black mb-6 text-center">Terms Summary</h2>
-              <p className="font-inter text-black/80 mb-8 text-center">
+              <p className="font-open-sans text-black/80 mb-8 text-center">
                 We want to keep things simple and fair. Here&apos;s what you need to know:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-black">
@@ -35,8 +35,8 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">Free to Use</h3>
-                    <p className="font-inter text-sm text-black/70">Core features are always free</p>
+                    <h3 className="font-open-sans font-semibold text-black">Free to Use</h3>
+                    <p className="font-open-sans text-sm text-black/70">Core features are always free</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 p-6 border-b border-black bg-white">
@@ -46,8 +46,8 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">Be Respectful</h3>
-                    <p className="font-inter text-sm text-black/70">Treat others kindly in our community</p>
+                    <h3 className="font-open-sans font-semibold text-black">Be Respectful</h3>
+                    <p className="font-open-sans text-sm text-black/70">Treat others kindly in our community</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 p-6 border-r border-black bg-white">
@@ -57,8 +57,8 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">Entertainment Only</h3>
-                    <p className="font-inter text-sm text-black/70">Astrology is for guidance, not life decisions</p>
+                    <h3 className="font-open-sans font-semibold text-black">Entertainment Only</h3>
+                    <p className="font-open-sans text-sm text-black/70">Astrology is for guidance, not life decisions</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 p-6 bg-white">
@@ -68,8 +68,8 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">Your Data is Safe</h3>
-                    <p className="font-inter text-sm text-black/70">We protect your privacy and information</p>
+                    <h3 className="font-open-sans font-semibold text-black">Your Data is Safe</h3>
+                    <p className="font-open-sans text-sm text-black/70">We protect your privacy and information</p>
                   </div>
                 </div>
               </div>
@@ -84,7 +84,7 @@ export default function TermsPage() {
             {/* Acceptance of Terms */}
             <section className="bg-white border border-black p-8">
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">1. Acceptance of Terms</h2>
-              <div className="space-y-4 font-inter text-black/80">
+              <div className="space-y-4 font-open-sans text-black/80">
                 <p>
                   By accessing or using {BRAND.name} (&quot;the Service&quot;), you agree to be bound by these Terms of Service 
                   and our Privacy Policy. If you do not agree to these terms, please do not use our service.
@@ -297,7 +297,7 @@ export default function TermsPage() {
           <section className="px-6 md:px-12 lg:px-20 py-16" style={{ backgroundColor: '#f0e3ff' }}>
             <div className="bg-white border border-black p-8">
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">8. Contact Us</h2>
-              <p className="font-inter text-black/80 mb-6">
+              <p className="font-open-sans text-black/80 mb-6">
                 If you have questions about these terms or need to report a violation, please contact us:
               </p>
               <div className="flex flex-col sm:flex-row gap-4">

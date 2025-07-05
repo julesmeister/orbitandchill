@@ -111,14 +111,14 @@ export default function Home() {
                     Welcome to
                     <span className="block text-blue-600">{BRAND.name}</span>
                   </h1>
-                  <p className="font-inter text-lg lg:text-xl xl:text-xl 2xl:text-2xl text-black/80 leading-relaxed mb-6 xl:mb-4">
+                  <p className="font-open-sans text-lg lg:text-xl xl:text-xl 2xl:text-2xl text-black/80 leading-relaxed mb-6 xl:mb-4">
                     {BRAND.tagline} {BRAND.description}
                   </p>
 
                   <h2 className="font-space-grotesk text-2xl lg:text-3xl xl:text-3xl 2xl:text-4xl font-bold text-black mb-3 xl:mb-2">
                     Explore Your Cosmic Journey
                   </h2>
-                  <p className="font-inter text-base lg:text-lg xl:text-lg 2xl:text-xl text-black/80 leading-relaxed">
+                  <p className="font-open-sans text-base lg:text-lg xl:text-lg 2xl:text-xl text-black/80 leading-relaxed">
                     Dive deeper into astrology with our comprehensive tools and insights
                   </p>
                 </div>
@@ -139,8 +139,8 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                       </svg>
                     </div>
-                    <h3 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Natal Chart</h3>
-                    <p className="font-inter text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
+                    <h2 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Natal Chart</h2>
+                    <p className="font-open-sans text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
                       Discover your cosmic blueprint
                     </p>
                   </div>
@@ -159,8 +159,8 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Astrocartography</h3>
-                    <p className="font-inter text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
+                    <h2 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Astrocartography</h2>
+                    <p className="font-open-sans text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
                       Find your ideal locations
                     </p>
                   </div>
@@ -177,8 +177,8 @@ export default function Home() {
                     <div className="w-8 h-8 xl:w-10 xl:h-10 2xl:w-12 2xl:h-12 bg-black flex items-center justify-center mb-2 mx-auto">
                       <span className="text-lg">✨</span>
                     </div>
-                    <h3 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Astrological Events</h3>
-                    <p className="font-inter text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
+                    <h2 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Astrological Events</h2>
+                    <p className="font-open-sans text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
                       Track rare celestial events
                     </p>
                   </div>
@@ -195,8 +195,8 @@ export default function Home() {
                     <div className="w-8 h-8 xl:w-10 xl:h-10 2xl:w-12 2xl:h-12 bg-black flex items-center justify-center mb-2 mx-auto">
                       <span className="text-lg">⏰</span>
                     </div>
-                    <h3 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Electional Astrology</h3>
-                    <p className="font-inter text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
+                    <h2 className="font-space-grotesk text-sm lg:text-base xl:text-base 2xl:text-lg font-bold text-black mb-1">Electional Astrology</h2>
+                    <p className="font-open-sans text-black/80 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed">
                       Perfect cosmic moments
                     </p>
                   </div>
@@ -216,8 +216,8 @@ export default function Home() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-space-grotesk text-base font-bold text-black">Natal Chart</h3>
-                      <p className="font-inter text-black/80 text-xs">Discover your cosmic blueprint</p>
+                      <h2 className="font-space-grotesk text-base font-bold text-black">Natal Chart</h2>
+                      <p className="font-open-sans text-black/80 text-xs">Discover your cosmic blueprint</p>
                     </div>
                   </button>
 
@@ -231,8 +231,8 @@ export default function Home() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-space-grotesk text-base font-bold text-black">Astrocartography</h3>
-                      <p className="font-inter text-black/80 text-xs">Find your ideal locations</p>
+                      <h2 className="font-space-grotesk text-base font-bold text-black">Astrocartography</h2>
+                      <p className="font-open-sans text-black/80 text-xs">Find your ideal locations</p>
                     </div>
                   </button>
                 </div>
@@ -246,8 +246,8 @@ export default function Home() {
                       <span className="text-xl">✨</span>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-space-grotesk text-base font-bold text-black">Astrological Events</h3>
-                      <p className="font-inter text-black/80 text-xs">Track rare celestial events</p>
+                      <h2 className="font-space-grotesk text-base font-bold text-black">Astrological Events</h2>
+                      <p className="font-open-sans text-black/80 text-xs">Track rare celestial events</p>
                     </div>
                   </button>
 
@@ -259,8 +259,8 @@ export default function Home() {
                       <span className="text-xl">⏰</span>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-space-grotesk text-base font-bold text-black">Electional Astrology</h3>
-                      <p className="font-inter text-black/80 text-xs">Perfect cosmic moments</p>
+                      <h2 className="font-space-grotesk text-base font-bold text-black">Electional Astrology</h2>
+                      <p className="font-open-sans text-black/80 text-xs">Perfect cosmic moments</p>
                     </div>
                   </button>
                 </div>
@@ -273,7 +273,7 @@ export default function Home() {
                 <h2 className="font-space-grotesk text-2xl lg:text-3xl xl:text-3xl 2xl:text-4xl font-bold text-black mb-2">
                   Featured Articles
                 </h2>
-                <p className="font-inter text-black/80 text-sm lg:text-base xl:text-base 2xl:text-lg">
+                <p className="font-open-sans text-black/80 text-sm lg:text-base xl:text-base 2xl:text-lg">
                   Discover the latest insights and cosmic wisdom from our astrology experts
                 </p>
               </div>
@@ -294,11 +294,11 @@ export default function Home() {
                             <h3 className="font-space-grotesk font-bold text-black text-sm lg:text-base xl:text-base 2xl:text-lg mb-2 line-clamp-2">
                               {post.title}
                             </h3>
-                            <p className="font-inter text-black/70 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed mb-3 line-clamp-2">
+                            <p className="font-open-sans text-black/70 text-xs lg:text-sm xl:text-sm 2xl:text-base leading-relaxed mb-3 line-clamp-2">
                               {post.excerpt}
                             </p>
                             <div className="flex items-center">
-                              <span className="font-inter text-xs lg:text-sm xl:text-sm 2xl:text-base text-black/60">
+                              <span className="font-open-sans text-xs lg:text-sm xl:text-sm 2xl:text-base text-black/60">
                                 {post.author} • {post.readTime} min read
                               </span>
                             </div>
@@ -364,7 +364,7 @@ export default function Home() {
                   {/* Quick Stats */}
                   <div className="p-6 border border-black" style={{ backgroundColor: '#f0e3ff' }}>
                     <h4 className="font-space-grotesk font-bold text-black mb-4">Quick Insights</h4>
-                    <div className="font-inter text-black space-y-2">
+                    <div className="font-open-sans text-black space-y-2">
                       <p>✨ Chart generated and cached</p>
                       <p>🎯 Ready for detailed analysis</p>
                       <p>💫 Join discussions to learn more</p>
@@ -392,7 +392,7 @@ export default function Home() {
                 <h2 className="font-space-grotesk text-3xl lg:text-4xl font-bold text-white mb-4">
                   ⭐ Your Cosmic Blueprint Revealed
                 </h2>
-                <p className="font-inter text-white/80 text-lg leading-relaxed mb-4">
+                <p className="font-open-sans text-white/80 text-lg leading-relaxed mb-4">
                   A natal chart is a snapshot of the sky at the exact moment you were born.
                   It reveals your personality traits, strengths, challenges, and life path through the positions of planets and stars.
                 </p>
@@ -406,10 +406,10 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">Houses & Life Areas</h3>
-                    <p className="font-inter text-white/80 text-sm leading-relaxed mb-2">
+                    <p className="font-open-sans text-white/80 text-sm leading-relaxed mb-2">
                       Explore 12 life areas including career, relationships, health, and spirituality through astrological houses.
                     </p>
-                    <p className="font-inter text-white/60 text-xs leading-relaxed">
+                    <p className="font-open-sans text-white/60 text-xs leading-relaxed">
                       Each house represents a different sphere of life experience, from personal identity (1st house)
                       to career ambitions (10th house) and spiritual growth (12th house).
                     </p>
@@ -422,10 +422,10 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">Matrix Destiny</h3>
-                    <p className="font-inter text-white/80 text-sm leading-relaxed mb-2">
+                    <p className="font-open-sans text-white/80 text-sm leading-relaxed mb-2">
                       Discover your life purpose and karmic patterns through ancient numerological wisdom combined with modern psychology.
                     </p>
-                    <p className="font-inter text-white/60 text-xs leading-relaxed">
+                    <p className="font-open-sans text-white/60 text-xs leading-relaxed">
                       Matrix Destiny uses your birth date to reveal your soul's mission, energy centers, and personal
                       development path through a unique 22-arcana system based on Tarot symbolism.
                     </p>
@@ -438,10 +438,10 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">Planetary Positions</h3>
-                    <p className="font-inter text-white/80 text-sm leading-relaxed mb-2">
+                    <p className="font-open-sans text-white/80 text-sm leading-relaxed mb-2">
                       Discover where Venus, Mars, Mercury, Jupiter, Saturn, and outer planets were positioned at your birth.
                     </p>
-                    <p className="font-inter text-white/60 text-xs leading-relaxed">
+                    <p className="font-open-sans text-white/60 text-xs leading-relaxed">
                       Each planet governs different aspects of life: Mercury (communication), Venus (love),
                       Mars (action), Jupiter (expansion), Saturn (discipline), and more.
                     </p>
@@ -458,7 +458,7 @@ export default function Home() {
       {/* World Map - Full Width */}
       <section id="astrocartography-section" className="mt-32 bg-gradient-to-b from-blue-600 to-blue-500 py-12 scroll-mt-20 relative overflow-hidden">
         <div className="container mx-auto px-4 text-center mb-8">
-          <h2 className="text-3xl font-bold text-white mb-4 font-arvo">
+          <h2 className="text-3xl font-bold text-white mb-4 font-open-sans">
             Astrocartography
           </h2>
           <p className="text-lg text-blue-100 max-w-3xl mx-auto">

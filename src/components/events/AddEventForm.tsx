@@ -44,7 +44,7 @@ export default function AddEventForm({
             type="text"
             value={newEvent.title}
             onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
             placeholder="Enter event title..."
             required
           />
@@ -58,7 +58,7 @@ export default function AddEventForm({
             type="date"
             value={newEvent.date}
             onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
             required
           />
         </div>
@@ -71,7 +71,7 @@ export default function AddEventForm({
             type="time"
             value={newEvent.time}
             onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
           />
         </div>
         
@@ -82,7 +82,7 @@ export default function AddEventForm({
           <textarea
             value={newEvent.description}
             onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+            className="w-full px-3 py-2 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
             placeholder="Brief description..."
             rows={3}
           />

@@ -20,7 +20,7 @@ export default function QuickStartStep({
         <span className="text-2xl font-bold font-space-grotesk text-white">{stepNumber}</span>
       </div>
       <h4 className="font-space-grotesk font-semibold text-black mb-2">{title}</h4>
-      <p className="font-inter text-sm text-black/80">
+      <p className="font-open-sans text-sm text-black/80">
         {description}
       </p>
     </div>

@@ -42,7 +42,7 @@ export default function DailyAveragesCard({ filteredTrafficData }: DailyAverages
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3" style={{ backgroundColor: '#6bdbff' }}></div>
-              <span className="text-sm font-medium text-black font-inter">Visitors</span>
+              <span className="text-sm font-medium text-black font-open-sans">Visitors</span>
             </div>
             <span className="text-2xl font-bold text-black font-space-grotesk">{formatNumber(averages.visitors)}</span>
           </div>
@@ -51,7 +51,7 @@ export default function DailyAveragesCard({ filteredTrafficData }: DailyAverages
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3" style={{ backgroundColor: '#51bd94' }}></div>
-              <span className="text-sm font-medium text-black font-inter">Page Views</span>
+              <span className="text-sm font-medium text-black font-open-sans">Page Views</span>
             </div>
             <span className="text-2xl font-bold text-black font-space-grotesk">{formatNumber(averages.pageViews)}</span>
           </div>
@@ -60,7 +60,7 @@ export default function DailyAveragesCard({ filteredTrafficData }: DailyAverages
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3" style={{ backgroundColor: '#ff91e9' }}></div>
-              <span className="text-sm font-medium text-black font-inter">Charts</span>
+              <span className="text-sm font-medium text-black font-open-sans">Charts</span>
             </div>
             <span className="text-2xl font-bold text-black font-space-grotesk">{formatNumber(averages.chartsGenerated)}</span>
           </div>

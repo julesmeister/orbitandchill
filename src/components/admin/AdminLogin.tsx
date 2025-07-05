@@ -75,7 +75,7 @@ export default function AdminLogin() {
           <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
             Admin Access
           </h1>
-          <p className="font-inter text-xl text-black/80 leading-relaxed">
+          <p className="font-open-sans text-xl text-black/80 leading-relaxed">
             Access the {BRAND.name} administration dashboard
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function AdminLogin() {
                 <p className="font-space-grotesk text-lg font-semibold text-black mb-2">
                   Signed in as {user.username}
                 </p>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   {user.email} • {user.email === 'orbitandchill@gmail.com' ? 'Master Admin' : ((user.role?.charAt(0)?.toUpperCase() || '') + (user.role?.slice(1) || '') || 'Admin')}
                 </p>
               </div>
@@ -127,7 +127,7 @@ export default function AdminLogin() {
                   <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">
                     For Admin Users
                   </h3>
-                  <p className="font-inter text-black/80 leading-relaxed">
+                  <p className="font-open-sans text-black/80 leading-relaxed">
                     Sign in with your Google account that has admin privileges to access the dashboard.
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export default function AdminLogin() {
                   <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">
                     Current Status
                   </h3>
-                  <p className="font-inter text-black/80 leading-relaxed">
+                  <p className="font-open-sans text-black/80 leading-relaxed">
                     {user ? 
                       `Signed in as ${user.username} (No admin privileges)` : 
                       'Not signed in'

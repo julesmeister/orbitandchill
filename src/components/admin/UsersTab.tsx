@@ -411,22 +411,22 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
               Delete User Account
             </h3>
             <div className="mb-6">
-              <p className="font-inter text-sm text-black mb-2">
+              <p className="font-open-sans text-sm text-black mb-2">
                 Are you sure you want to delete the account for <strong>{deletionModalUser.username}</strong>?
               </p>
-              <p className="font-inter text-xs text-black/70 mb-4">
+              <p className="font-open-sans text-xs text-black/70 mb-4">
                 This action cannot be undone. Choose deletion type:
               </p>
               <div className="space-y-3">
                 <div className="p-3 bg-yellow-50 border border-yellow-300">
-                  <h4 className="font-inter text-sm font-medium text-black">Soft Delete (Recommended)</h4>
-                  <p className="font-inter text-xs text-black/70 mt-1">
+                  <h4 className="font-open-sans text-sm font-medium text-black">Soft Delete (Recommended)</h4>
+                  <p className="font-open-sans text-xs text-black/70 mt-1">
                     Marks account as deleted and removes sensitive data. Preserves content for recovery.
                   </p>
                 </div>
                 <div className="p-3 bg-red-50 border border-red-300">
-                  <h4 className="font-inter text-sm font-medium text-black">Hard Delete (Permanent)</h4>
-                  <p className="font-inter text-xs text-black/70 mt-1">
+                  <h4 className="font-open-sans text-sm font-medium text-black">Hard Delete (Permanent)</h4>
+                  <p className="font-open-sans text-xs text-black/70 mt-1">
                     Permanently removes all user data. Anonymizes forum posts. Cannot be undone.
                   </p>
                 </div>
@@ -436,21 +436,21 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
               <button
                 onClick={() => handleUserDeletion(deletionModalUser.id, 'soft')}
                 disabled={isDeletionLoading}
-                className="flex-1 px-4 py-2 font-inter text-sm font-medium text-black bg-yellow-100 border border-black hover:bg-yellow-200 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2 font-open-sans text-sm font-medium text-black bg-yellow-100 border border-black hover:bg-yellow-200 disabled:opacity-50 transition-colors"
               >
                 {isDeletionLoading ? 'Processing...' : 'Soft Delete'}
               </button>
               <button
                 onClick={() => handleUserDeletion(deletionModalUser.id, 'hard')}
                 disabled={isDeletionLoading}
-                className="flex-1 px-4 py-2 font-inter text-sm font-medium text-white bg-red-600 border border-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2 font-open-sans text-sm font-medium text-white bg-red-600 border border-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {isDeletionLoading ? 'Processing...' : 'Hard Delete'}
               </button>
               <button
                 onClick={() => setDeletionModalUser(null)}
                 disabled={isDeletionLoading}
-                className="px-4 py-2 font-inter text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 font-open-sans text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
@@ -478,31 +478,31 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
           <div className="p-6 overflow-y-auto max-h-[calc(80vh-64px)]">
             <div className="space-y-4">
               <div>
-                <label className="block font-inter text-sm font-medium text-black mb-1">
+                <label className="block font-open-sans text-sm font-medium text-black mb-1">
                   Username
                 </label>
                 <input
                   type="text"
                   value={editFormData.username}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full px-3 py-2 font-inter text-sm bg-white border-2 border-black focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 font-open-sans text-sm bg-white border-2 border-black focus:outline-none focus:border-blue-500"
                 />
               </div>
               {editingUser.email && (
                 <div>
-                  <label className="block font-inter text-sm font-medium text-black mb-1">
+                  <label className="block font-open-sans text-sm font-medium text-black mb-1">
                     Email
                   </label>
                   <input
                     type="email"
                     value={editFormData.email}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 font-inter text-sm bg-white border-2 border-black focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 font-open-sans text-sm bg-white border-2 border-black focus:outline-none focus:border-blue-500"
                   />
                 </div>
               )}
               <div>
-                <label className="block font-inter text-sm font-medium text-black mb-1">
+                <label className="block font-open-sans text-sm font-medium text-black mb-1">
                   Role
                 </label>
                 <SynapsasDropdown
@@ -518,7 +518,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                 />
               </div>
               <div>
-                <label className="block font-inter text-sm font-medium text-black mb-1">
+                <label className="block font-open-sans text-sm font-medium text-black mb-1">
                   Account Status
                 </label>
                 <SynapsasDropdown
@@ -539,7 +539,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
               <button
                 onClick={handleUserEdit}
                 disabled={isEditLoading}
-                className="w-full px-4 py-2 font-inter text-sm font-medium text-white bg-green-600 border border-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="w-full px-4 py-2 font-open-sans text-sm font-medium text-white bg-green-600 border border-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
               >
                 {isEditLoading ? 'Saving...' : 'Save Changes'}
               </button>
@@ -554,18 +554,18 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-space-grotesk text-lg font-bold text-black">User Analytics</h3>
-              <p className="font-inter text-sm text-black/80 mt-1">
+              <p className="font-open-sans text-sm text-black/80 mt-1">
                 Manage and monitor user activity across the platform
               </p>
             </div>
             <div className="flex items-center space-x-3">
               <button 
                 onClick={selectedUsers.length === displayUsers.length ? clearSelection : selectAllUsers}
-                className="px-4 py-2 font-inter text-sm font-medium text-black bg-white border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
+                className="px-4 py-2 font-open-sans text-sm font-medium text-black bg-white border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15"
               >
                 {selectedUsers.length === displayUsers.length ? 'Deselect All' : 'Select All'}
               </button>
-              <button className="px-4 py-2 font-inter text-sm font-medium text-black bg-white border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15">
+              <button className="px-4 py-2 font-open-sans text-sm font-medium text-black bg-white border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15">
                 Export
               </button>
             </div>
@@ -600,7 +600,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 font-inter text-sm bg-white border-2 border-black focus:outline-none focus:border-black"
+                className="w-full px-3 py-2 font-open-sans text-sm bg-white border-2 border-black focus:outline-none focus:border-black"
               />
             </div>
           </div>
@@ -610,27 +610,27 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
         {useApiData && selectedUsers.length > 0 && (
           <div className="px-8 py-4 bg-yellow-50 border-b border-black">
             <div className="flex items-center justify-between">
-              <span className="font-inter text-sm text-black">
+              <span className="font-open-sans text-sm text-black">
                 {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
               </span>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => handleBulkAction('deactivateUsers')}
                   disabled={isActionLoading}
-                  className="px-3 py-1 font-inter text-sm bg-white border border-black hover:bg-gray-100 disabled:opacity-50"
+                  className="px-3 py-1 font-open-sans text-sm bg-white border border-black hover:bg-gray-100 disabled:opacity-50"
                 >
                   Deactivate
                 </button>
                 <button
                   onClick={() => handleBulkAction('deleteUsers')}
                   disabled={isActionLoading}
-                  className="px-3 py-1 font-inter text-sm bg-red-600 text-white border border-red-600 hover:bg-red-700 disabled:opacity-50"
+                  className="px-3 py-1 font-open-sans text-sm bg-red-600 text-white border border-red-600 hover:bg-red-700 disabled:opacity-50"
                 >
                   Delete
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="px-3 py-1 font-inter text-sm bg-gray-100 border border-black hover:bg-gray-200"
+                  className="px-3 py-1 font-open-sans text-sm bg-gray-100 border border-black hover:bg-gray-200"
                 >
                   Clear
                 </button>
@@ -671,7 +671,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                     )}
 
                     {/* Avatar */}
-                    <div className="w-12 h-12 flex items-center justify-center text-white font-inter font-medium text-sm bg-black">
+                    <div className="w-12 h-12 flex items-center justify-center text-white font-open-sans font-medium text-sm bg-black">
                       {isAnonymous ? (
                         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -684,24 +684,24 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                     {/* User Info */}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-inter text-sm font-medium text-black">
+                        <h4 className="font-open-sans text-sm font-medium text-black">
                           {isAnonymous ? 'Anonymous User' : user.username}
                         </h4>
                         {isAnonymous && (
-                          <span className="inline-flex items-center px-2 py-0.5 font-inter text-xs font-medium bg-black text-white border border-black">
+                          <span className="inline-flex items-center px-2 py-0.5 font-open-sans text-xs font-medium bg-black text-white border border-black">
                             Anonymous
                           </span>
                         )}
-                        <span className="inline-flex items-center px-2 py-0.5 font-inter text-xs font-medium text-black border border-black" style={{ backgroundColor: activity.color }}>
+                        <span className="inline-flex items-center px-2 py-0.5 font-open-sans text-xs font-medium text-black border border-black" style={{ backgroundColor: activity.color }}>
                           {activity.level}
                         </span>
                         {user.hasNatalChart && (
-                          <span className="inline-flex items-center px-2 py-0.5 font-inter text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                          <span className="inline-flex items-center px-2 py-0.5 font-open-sans text-xs font-medium bg-green-100 text-green-800 border border-green-300">
                             Has Chart
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 font-inter text-sm text-black/60">
+                      <div className="mt-1 font-open-sans text-sm text-black/60">
                         <span>Joined {formatDate(user.createdAt)}</span>
                         <span className="mx-2">•</span>
                         <span>Last active {formatDate(user.lastActivity)}</span>
@@ -716,7 +716,7 @@ export default function UsersTab({ userAnalytics, isLoading: propsLoading }: Use
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center space-x-6 font-inter text-sm">
+                  <div className="flex items-center space-x-6 font-open-sans text-sm">
                     <div className="text-center">
                       <div className="font-medium text-black">{user.chartCount}</div>
                       <div className="text-black/60">Charts</div>

@@ -65,7 +65,7 @@ export default function GuideLayout({
           <div className="flex items-center space-x-4">
             <Link 
               href="/guides" 
-              className="text-black hover:text-gray-700 font-medium flex items-center gap-2 font-inter"
+              className="text-black hover:text-gray-700 font-medium flex items-center gap-2 font-open-sans"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -82,7 +82,7 @@ export default function GuideLayout({
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-black font-inter">
+            <div className="text-sm text-black font-open-sans">
               {guide.estimatedTime} • {completedSections.size}/{guide.sections.length} sections
             </div>
             <div className="w-40 bg-gray-200 rounded-full h-2 border border-black">
@@ -136,7 +136,7 @@ export default function GuideLayout({
                           index + 1
                         )}
                       </div>
-                      <span className="flex-1 font-inter font-medium text-sm">{section.title}</span>
+                      <span className="flex-1 font-open-sans font-medium text-sm">{section.title}</span>
                     </div>
                   </button>
                 ))}

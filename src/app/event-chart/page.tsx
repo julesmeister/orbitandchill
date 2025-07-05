@@ -145,7 +145,7 @@ function EventChartContent() {
               <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
                 Event Chart Unavailable
               </h1>
-              <p className="font-inter text-xl text-black/80 leading-relaxed max-w-2xl mx-auto">
+              <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-2xl mx-auto">
                 {validation.error || "We couldn't generate a chart for this event. Please check your birth data settings."}
               </p>
             </div>
@@ -165,7 +165,7 @@ function EventChartContent() {
                 <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">
                   Birth Data
                 </h3>
-                <p className="font-inter text-sm text-white/90">
+                <p className="font-open-sans text-sm text-white/90">
                   Required for chart generation
                 </p>
               </div>
@@ -183,7 +183,7 @@ function EventChartContent() {
                 <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">
                   Profile Setup
                 </h3>
-                <p className="font-inter text-sm text-black/80">
+                <p className="font-open-sans text-sm text-black/80">
                   Complete your profile
                 </p>
               </div>
@@ -201,7 +201,7 @@ function EventChartContent() {
                 <h3 className="font-space-grotesk text-lg font-bold text-white mb-2">
                   Event Selection
                 </h3>
-                <p className="font-inter text-sm text-white/90">
+                <p className="font-open-sans text-sm text-white/90">
                   Choose from Events calendar
                 </p>
               </div>
@@ -251,7 +251,7 @@ function EventChartContent() {
                 <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">
                   Add Birth Data
                 </h3>
-                <p className="font-inter text-sm text-black/80 leading-relaxed">
+                <p className="font-open-sans text-sm text-black/80 leading-relaxed">
                   Go to Settings and enter your birth date, time, and location for accurate chart generation.
                 </p>
               </div>
@@ -264,7 +264,7 @@ function EventChartContent() {
                 <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">
                   Find Events
                 </h3>
-                <p className="font-inter text-sm text-black/80 leading-relaxed">
+                <p className="font-open-sans text-sm text-black/80 leading-relaxed">
                   Visit the Events calendar to discover optimal timing for your activities and important decisions.
                 </p>
               </div>
@@ -277,7 +277,7 @@ function EventChartContent() {
                 <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">
                   Generate Charts
                 </h3>
-                <p className="font-inter text-sm text-black/80 leading-relaxed">
+                <p className="font-open-sans text-sm text-black/80 leading-relaxed">
                   Click on any event to generate a detailed astrological chart for that specific moment.
                 </p>
               </div>
@@ -361,7 +361,7 @@ function EventChartContent() {
                     <svg className="w-4 h-4 mr-2 text-black" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
-                    <span className="font-inter text-black">
+                    <span className="font-open-sans text-black">
                       {formatEventDate(validEventDate)} at {formatTime12Hour(selectedTime)}
                     </span>
                   </div>

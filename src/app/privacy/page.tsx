@@ -12,10 +12,10 @@ export default function PrivacyPage() {
         <section className="px-6 md:px-12 lg:px-20 py-16">
           <div className="text-center">
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">Privacy Policy</h1>
-            <p className="font-inter text-xl text-black/80">
+            <p className="font-open-sans text-xl text-black/80">
               Your privacy is important to us. This policy explains how we collect, use, and protect your information.
             </p>
-            <p className="font-inter text-sm text-black/60 mt-4">Last updated: December 6, 2024</p>
+            <p className="font-open-sans text-sm text-black/60 mt-4">Last updated: December 6, 2024</p>
           </div>
         </section>
 
@@ -32,8 +32,8 @@ export default function PrivacyPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">No Account Required</h3>
-                    <p className="font-inter text-sm text-black/70">Use our service without creating an account</p>
+                    <h3 className="font-open-sans font-semibold text-black">No Account Required</h3>
+                    <p className="font-open-sans text-sm text-black/70">Use our service without creating an account</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 p-6 border-b border-black bg-white">
@@ -43,8 +43,8 @@ export default function PrivacyPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">Local Storage First</h3>
-                    <p className="font-inter text-sm text-black/70">Your data stays in your browser when possible</p>
+                    <h3 className="font-open-sans font-semibold text-black">Local Storage First</h3>
+                    <p className="font-open-sans text-sm text-black/70">Your data stays in your browser when possible</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 p-6 border-r border-black bg-white">
@@ -54,8 +54,8 @@ export default function PrivacyPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">You Control Your Data</h3>
-                    <p className="font-inter text-sm text-black/70">Delete your information anytime</p>
+                    <h3 className="font-open-sans font-semibold text-black">You Control Your Data</h3>
+                    <p className="font-open-sans text-sm text-black/70">Delete your information anytime</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3 p-6 bg-white">
@@ -65,8 +65,8 @@ export default function PrivacyPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-inter font-semibold text-black">No Selling of Data</h3>
-                    <p className="font-inter text-sm text-black/70">We never sell your personal information</p>
+                    <h3 className="font-open-sans font-semibold text-black">No Selling of Data</h3>
+                    <p className="font-open-sans text-sm text-black/70">We never sell your personal information</p>
                   </div>
                 </div>
               </div>
@@ -84,26 +84,26 @@ export default function PrivacyPage() {
               
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-inter text-lg font-semibold text-black mb-3">Birth Data</h3>
-                  <p className="font-inter text-black/80 mb-3">
+                  <h3 className="font-open-sans text-lg font-semibold text-black mb-3">Birth Data</h3>
+                  <p className="font-open-sans text-black/80 mb-3">
                     To generate your natal chart, we collect:
                   </p>
-                  <ul className="list-disc list-inside font-inter text-black/80 space-y-1 ml-4">
+                  <ul className="list-disc list-inside font-open-sans text-black/80 space-y-1 ml-4">
                     <li>Date of birth</li>
                     <li>Time of birth</li>
                     <li>Location of birth (city/coordinates)</li>
                   </ul>
-                  <p className="font-inter text-sm text-black/60 mt-3">
+                  <p className="font-open-sans text-sm text-black/60 mt-3">
                     This information is stored locally in your browser&apos;s IndexedDB and only transmitted to our servers for chart calculation.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-inter text-lg font-semibold text-black mb-3">Optional Information</h3>
-                  <p className="font-inter text-black/80 mb-3">
+                  <h3 className="font-open-sans text-lg font-semibold text-black mb-3">Optional Information</h3>
+                  <p className="font-open-sans text-black/80 mb-3">
                     If you choose to sign in with Google, we may collect:
                   </p>
-                  <ul className="list-disc list-inside font-inter text-black/80 space-y-1 ml-4">
+                  <ul className="list-disc list-inside font-open-sans text-black/80 space-y-1 ml-4">
                     <li>Email address</li>
                     <li>Name</li>
                     <li>Profile picture</li>
@@ -111,11 +111,11 @@ export default function PrivacyPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-inter text-lg font-semibold text-black mb-3">Technical Information</h3>
-                  <p className="font-inter text-black/80 mb-3">
+                  <h3 className="font-open-sans text-lg font-semibold text-black mb-3">Technical Information</h3>
+                  <p className="font-open-sans text-black/80 mb-3">
                     We automatically collect certain technical information:
                   </p>
-                  <ul className="list-disc list-inside font-inter text-black/80 space-y-1 ml-4">
+                  <ul className="list-disc list-inside font-open-sans text-black/80 space-y-1 ml-4">
                     <li>Browser type and version</li>
                     <li>Device information</li>
                     <li>IP address (anonymized)</li>
@@ -131,23 +131,23 @@ export default function PrivacyPage() {
               
               <div className="space-y-4">
                 <div className="border-l-4 border-black pl-4">
-                  <h3 className="font-inter font-semibold text-black">Chart Generation</h3>
-                  <p className="font-inter text-black/80">Your birth data is used solely to calculate and generate your astrological charts using astronomy-engine.</p>
+                  <h3 className="font-open-sans font-semibold text-black">Chart Generation</h3>
+                  <p className="font-open-sans text-black/80">Your birth data is used solely to calculate and generate your astrological charts using astronomy-engine.</p>
                 </div>
                 
                 <div className="border-l-4 border-black pl-4">
-                  <h3 className="font-inter font-semibold text-black">Service Improvement</h3>
-                  <p className="font-inter text-black/80">Anonymized usage data helps us improve our platform and add new features.</p>
+                  <h3 className="font-open-sans font-semibold text-black">Service Improvement</h3>
+                  <p className="font-open-sans text-black/80">Anonymized usage data helps us improve our platform and add new features.</p>
                 </div>
                 
                 <div className="border-l-4 border-black pl-4">
-                  <h3 className="font-inter font-semibold text-black">Communication</h3>
-                  <p className="font-inter text-black/80">If you contact us, we use your email to respond to your inquiries.</p>
+                  <h3 className="font-open-sans font-semibold text-black">Communication</h3>
+                  <p className="font-open-sans text-black/80">If you contact us, we use your email to respond to your inquiries.</p>
                 </div>
                 
                 <div className="border-l-4 border-black pl-4">
-                  <h3 className="font-inter font-semibold text-black">Legal Compliance</h3>
-                  <p className="font-inter text-black/80">We may process data to comply with legal obligations or protect our rights.</p>
+                  <h3 className="font-open-sans font-semibold text-black">Legal Compliance</h3>
+                  <p className="font-open-sans text-black/80">We may process data to comply with legal obligations or protect our rights.</p>
                 </div>
               </div>
             </section>
@@ -158,8 +158,8 @@ export default function PrivacyPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="font-inter text-lg font-semibold text-black mb-3">Where Your Data Lives</h3>
-                  <ul className="space-y-2 font-inter text-black/80">
+                  <h3 className="font-open-sans text-lg font-semibold text-black mb-3">Where Your Data Lives</h3>
+                  <ul className="space-y-2 font-open-sans text-black/80">
                     <li className="flex items-start space-x-2">
                       <svg className="w-5 h-5 text-black mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -182,8 +182,8 @@ export default function PrivacyPage() {
                 </div>
                 
                 <div>
-                  <h3 className="font-inter text-lg font-semibold text-black mb-3">Security Measures</h3>
-                  <ul className="space-y-2 font-inter text-black/80">
+                  <h3 className="font-open-sans text-lg font-semibold text-black mb-3">Security Measures</h3>
+                  <ul className="space-y-2 font-open-sans text-black/80">
                     <li className="flex items-start space-x-2">
                       <svg className="w-5 h-5 text-black mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -220,25 +220,25 @@ export default function PrivacyPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 <div className="space-y-0">
                   <div className="p-6 border border-black" style={{ backgroundColor: '#6bdbff' }}>
-                    <h3 className="font-inter font-semibold text-black mb-2">Access Your Data</h3>
-                    <p className="font-inter text-sm text-black/80">View all information we have about you at any time through your profile page.</p>
+                    <h3 className="font-open-sans font-semibold text-black mb-2">Access Your Data</h3>
+                    <p className="font-open-sans text-sm text-black/80">View all information we have about you at any time through your profile page.</p>
                   </div>
                   
                   <div className="p-6 border-l border-r border-b border-black" style={{ backgroundColor: '#51bd94' }}>
-                    <h3 className="font-inter font-semibold text-black mb-2">Update Information</h3>
-                    <p className="font-inter text-sm text-black/80">Correct or update your birth data and personal information directly in the app.</p>
+                    <h3 className="font-open-sans font-semibold text-black mb-2">Update Information</h3>
+                    <p className="font-open-sans text-sm text-black/80">Correct or update your birth data and personal information directly in the app.</p>
                   </div>
                 </div>
                 
                 <div className="space-y-0">
                   <div className="p-6 border-t border-r border-b border-black" style={{ backgroundColor: '#ff91e9' }}>
-                    <h3 className="font-inter font-semibold text-black mb-2">Delete Your Data</h3>
-                    <p className="font-inter text-sm text-black/80">Remove all your information from our systems permanently at any time.</p>
+                    <h3 className="font-open-sans font-semibold text-black mb-2">Delete Your Data</h3>
+                    <p className="font-open-sans text-sm text-black/80">Remove all your information from our systems permanently at any time.</p>
                   </div>
                   
                   <div className="p-6 border-r border-b border-black" style={{ backgroundColor: '#f2e356' }}>
-                    <h3 className="font-inter font-semibold text-black mb-2">Data Portability</h3>
-                    <p className="font-inter text-sm text-black/80">Export your data in a machine-readable format to use elsewhere.</p>
+                    <h3 className="font-open-sans font-semibold text-black mb-2">Data Portability</h3>
+                    <p className="font-open-sans text-sm text-black/80">Export your data in a machine-readable format to use elsewhere.</p>
                   </div>
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function PrivacyPage() {
           <section className="px-6 md:px-12 lg:px-20 py-16" style={{ backgroundColor: '#f0e3ff' }}>
             <div className="bg-white border border-black p-8">
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">Questions About Privacy?</h2>
-              <p className="font-inter text-black/80 mb-6">
+              <p className="font-open-sans text-black/80 mb-6">
                 If you have any questions about this privacy policy or how we handle your data, 
                 please don&apos;t hesitate to reach out.
               </p>

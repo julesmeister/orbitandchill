@@ -225,7 +225,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
           <h1 className="font-space-grotesk text-3xl font-bold text-black mb-2">
             Premium Features
           </h1>
-          <p className="font-inter text-black/70">
+          <p className="font-open-sans text-black/70">
             Control which features are available to free vs premium users
           </p>
         </div>
@@ -234,13 +234,13 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={handleResetToDefaults}
-              className="px-4 py-2 font-inter text-sm bg-white text-black font-semibold border-2 border-black transition-all duration-300 hover:bg-gray-50"
+              className="px-4 py-2 font-open-sans text-sm bg-white text-black font-semibold border-2 border-black transition-all duration-300 hover:bg-gray-50"
             >
               Reset to Defaults
             </button>
             <button
               onClick={handleSaveChanges}
-              className="px-6 py-2 font-inter text-sm bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+              className="px-6 py-2 font-open-sans text-sm bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
             >
               Save Changes
             </button>
@@ -253,7 +253,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
         <div className="p-6 border-black md:border-r" style={{ backgroundColor: '#f0e3ff' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/70">Total Features</p>
+              <p className="font-open-sans text-sm text-black/70">Total Features</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">{features.length}</p>
             </div>
             <div className="w-10 h-10 bg-black flex items-center justify-center">
@@ -265,7 +265,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
         <div className="p-6 border-black md:border-r" style={{ backgroundColor: '#4ade80' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/70">Enabled</p>
+              <p className="font-open-sans text-sm text-black/70">Enabled</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">{getEnabledCount()}</p>
             </div>
             <div className="w-10 h-10 bg-black flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
         <div className="p-6 border-black md:border-r" style={{ backgroundColor: '#f2e356' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/70">Premium</p>
+              <p className="font-open-sans text-sm text-black/70">Premium</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">{getPremiumCount()}</p>
             </div>
             <div className="w-10 h-10 bg-black flex items-center justify-center">
@@ -289,7 +289,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
         <div className="p-6" style={{ backgroundColor: '#6bdbff' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/70">Free</p>
+              <p className="font-open-sans text-sm text-black/70">Free</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">{features.length - getPremiumCount()}</p>
             </div>
             <div className="w-10 h-10 bg-black flex items-center justify-center">
@@ -329,7 +329,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
             <div className="flex flex-wrap items-center gap-6">
               {/* Category Filter */}
               <div className="flex items-center gap-2">
-                <span className="font-inter text-xs text-black font-medium">Category:</span>
+                <span className="font-open-sans text-xs text-black font-medium">Category:</span>
                 <AdminDropdown
                   options={categoryOptions}
                   value={filterCategory}
@@ -340,7 +340,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
               
               {/* Status Filter */}
               <div className="flex items-center gap-2">
-                <span className="font-inter text-xs text-black font-medium">Status:</span>
+                <span className="font-open-sans text-xs text-black font-medium">Status:</span>
                 <AdminDropdown
                   options={statusOptions}
                   value={filterStatus}
@@ -354,7 +354,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
             <div className="flex items-center gap-4">
               {/* Enable/Disable All */}
               <div className="flex items-center gap-1">
-                <span className="font-inter text-xs text-black font-medium">Enable:</span>
+                <span className="font-open-sans text-xs text-black font-medium">Enable:</span>
                 <button
                   onClick={() => handleToggleAll('isEnabled', true)}
                   className="px-3 py-2 bg-green-500 text-white text-xs font-medium border border-black hover:bg-green-600 transition-colors"
@@ -371,7 +371,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
               
               {/* Premium All/None */}
               <div className="flex items-center gap-1">
-                <span className="font-inter text-xs text-black font-medium">Premium:</span>
+                <span className="font-open-sans text-xs text-black font-medium">Premium:</span>
                 <button
                   onClick={() => handleToggleAll('isPremium', true)}
                   className="px-3 py-2 bg-purple-500 text-white text-xs font-medium border border-black hover:bg-purple-600 transition-colors"
@@ -396,7 +396,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
           <h3 className="font-space-grotesk text-lg font-bold text-black">
             Features ({filteredFeatures.length})
           </h3>
-          <p className="font-inter text-sm text-black/70">
+          <p className="font-open-sans text-sm text-black/70">
             Manage which features are available to different user tiers
           </p>
         </div>
@@ -427,11 +427,11 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
                         </span>
                       )}
                     </div>
-                    <p className="font-inter text-sm text-black/70 mb-3">
+                    <p className="font-open-sans text-sm text-black/70 mb-3">
                       {feature.description}
                     </p>
                     {feature.section && (
-                      <p className="font-inter text-xs text-black/50">
+                      <p className="font-open-sans text-xs text-black/50">
                         Section: {feature.section}
                       </p>
                     )}
@@ -441,7 +441,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
                 <div className="flex items-center gap-4">
                   {/* Enable/Disable Toggle */}
                   <div className="flex items-center gap-2">
-                    <span className="font-inter text-sm text-black">Enabled</span>
+                    <span className="font-open-sans text-sm text-black">Enabled</span>
                     <button
                       onClick={() => handleFeatureToggle(feature.id, 'isEnabled')}
                       className={`relative w-12 h-6 border-2 border-black transition-colors ${
@@ -458,7 +458,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
                   
                   {/* Premium Toggle */}
                   <div className="flex items-center gap-2">
-                    <span className="font-inter text-sm text-black">Premium</span>
+                    <span className="font-open-sans text-sm text-black">Premium</span>
                     <button
                       onClick={() => handleFeatureToggle(feature.id, 'isPremium')}
                       className={`relative w-12 h-6 border-2 border-black transition-colors ${
@@ -486,7 +486,7 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
             <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">
               No features found
             </h3>
-            <p className="font-inter text-black/70">
+            <p className="font-open-sans text-black/70">
               Try adjusting your filter criteria
             </p>
           </div>

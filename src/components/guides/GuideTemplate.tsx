@@ -126,7 +126,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
             <div className="flex items-center space-x-4">
               <Link 
                 href="/guides" 
-                className="text-black hover:text-gray-700 font-medium flex items-center gap-2 font-inter"
+                className="text-black hover:text-gray-700 font-medium flex items-center gap-2 font-open-sans"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -143,7 +143,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-black font-inter">
+              <div className="text-sm text-black font-open-sans">
                 {guide.estimatedTime} • {completedSections.size}/{guide.sections.length} sections
               </div>
               <div className="w-32 bg-gray-200 h-2 border border-black">
@@ -197,7 +197,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
                             index + 1
                           )}
                         </div>
-                        <span className="flex-1 font-inter font-medium text-sm">{section.title}</span>
+                        <span className="flex-1 font-open-sans font-medium text-sm">{section.title}</span>
                       </div>
                     </button>
                   ))}
@@ -210,9 +210,9 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
               {/* Section Header */}
               <div className="border-b border-black p-8">
                 <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-4">{guide.title}</h1>
-                <p className="font-inter text-lg text-black/80 mb-6">{guide.description}</p>
+                <p className="font-open-sans text-lg text-black/80 mb-6">{guide.description}</p>
                 
-                <div className="flex items-center space-x-4 text-sm text-black/70 font-inter">
+                <div className="flex items-center space-x-4 text-sm text-black/70 font-open-sans">
                   <span>Section {currentSection + 1} of {guide.sections.length}</span>
                   <span>•</span>
                   <span>{guide.sections[currentSection].title}</span>
@@ -292,7 +292,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-black">
             <div className="p-8 border-r border-black" style={{ backgroundColor: actions.primary.backgroundColor }}>
               <h3 className="font-space-grotesk text-xl font-bold text-black mb-3">{actions.primary.title}</h3>
-              <p className="font-inter text-black/80 text-sm mb-6">{actions.primary.description}</p>
+              <p className="font-open-sans text-black/80 text-sm mb-6">{actions.primary.description}</p>
               <Link
                 href={actions.primary.href}
                 className="inline-flex items-center gap-2 text-black font-semibold hover:gap-3 transition-all duration-300"
@@ -306,7 +306,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
 
             <div className="p-8" style={{ backgroundColor: actions.secondary.backgroundColor }}>
               <h3 className="font-space-grotesk text-xl font-bold text-black mb-3">{actions.secondary.title}</h3>
-              <p className="font-inter text-black/80 text-sm mb-6">{actions.secondary.description}</p>
+              <p className="font-open-sans text-black/80 text-sm mb-6">{actions.secondary.description}</p>
               <Link
                 href={actions.secondary.href}
                 className="inline-flex items-center gap-2 text-black font-semibold hover:gap-3 transition-all duration-300"

@@ -25,7 +25,7 @@ const ChartActions: React.FC<ChartActionsProps> = ({
         </div>
         <div>
           <h4 className="font-space-grotesk text-lg font-bold text-black">Export & Share</h4>
-          <p className="font-inter text-sm text-black/60">Save your chart or share with others</p>
+          <p className="font-open-sans text-sm text-black/60">Save your chart or share with others</p>
         </div>
       </div>
 
@@ -44,7 +44,7 @@ const ChartActions: React.FC<ChartActionsProps> = ({
             </div>
             <div className="text-left">
               <div className="font-space-grotesk font-semibold text-sm text-black group-hover:text-white">SVG Format</div>
-              <div className="font-inter text-xs text-black/60 group-hover:text-white/80">Vector graphics</div>
+              <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80">Vector graphics</div>
             </div>
           </div>
         </button>
@@ -63,7 +63,7 @@ const ChartActions: React.FC<ChartActionsProps> = ({
             </div>
             <div className="text-left">
               <div className="font-space-grotesk font-semibold text-sm text-black group-hover:text-white">PNG Format</div>
-              <div className="font-inter text-xs text-black/60 group-hover:text-white/80">High quality image</div>
+              <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80">High quality image</div>
             </div>
           </div>
         </button>
@@ -90,7 +90,7 @@ const ChartActions: React.FC<ChartActionsProps> = ({
                 <div className="font-space-grotesk font-semibold text-sm text-black group-hover:text-white">
                   {isPDFGenerating ? 'Generating...' : 'PDF Format'}
                 </div>
-                <div className="font-inter text-xs text-black/60 group-hover:text-white/80">
+                <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80">
                   {isPDFGenerating ? 'Please wait' : 'Print-ready document'}
                 </div>
               </div>
@@ -113,7 +113,7 @@ const ChartActions: React.FC<ChartActionsProps> = ({
               </div>
               <div className="text-left">
                 <div className="font-space-grotesk font-semibold text-sm text-black group-hover:text-white">Share Chart</div>
-                <div className="font-inter text-xs text-black/60 group-hover:text-white/80">Send to others</div>
+                <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80">Send to others</div>
               </div>
             </div>
           </button>

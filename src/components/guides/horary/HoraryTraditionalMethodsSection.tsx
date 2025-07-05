@@ -15,7 +15,7 @@ export default function HoraryTraditionalMethodsSection() {
             <div className="w-24 h-1 bg-black"></div>
           </div>
         </div>
-        <p className="text-black font-inter text-lg leading-relaxed">
+        <p className="text-black font-open-sans text-lg leading-relaxed">
           Traditional horary astrology follows time-tested rules developed over centuries by master astrologers. These methods form the foundation of accurate horary practice.
         </p>
       </div>
@@ -32,7 +32,7 @@ export default function HoraryTraditionalMethodsSection() {
               <div className="w-24 h-1 bg-black"></div>
             </div>
           </div>
-          <p className="text-black font-inter leading-relaxed mb-6">
+          <p className="text-black font-open-sans leading-relaxed mb-6">
             Horary uses the traditional house meanings, but with specific question-related focus:
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function HoraryTraditionalMethodsSection() {
                   </div>
                 </div>
                 <div className="bg-white border border-black p-3">
-                  <div className="text-black font-inter text-sm leading-relaxed">{item.meaning}</div>
+                  <div className="text-black font-open-sans text-sm leading-relaxed">{item.meaning}</div>
                 </div>
                 
                 {/* Visual accent bar */}
@@ -91,7 +91,7 @@ export default function HoraryTraditionalMethodsSection() {
               <div className="w-24 h-1 bg-black"></div>
             </div>
           </div>
-          <p className="text-black font-inter text-sm mb-6">Understanding who represents what in your horary chart</p>
+          <p className="text-black font-open-sans text-sm mb-6">Understanding who represents what in your horary chart</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-black">
@@ -273,7 +273,7 @@ export default function HoraryTraditionalMethodsSection() {
             <h4 className="font-space-grotesk font-bold text-black text-xl">Radical Chart Assessment</h4>
           </div>
           <div className="mb-4">
-            <p className="text-black font-inter text-sm leading-relaxed">
+            <p className="text-black font-open-sans text-sm leading-relaxed">
               Before interpreting, determine if the chart is "radical" (fit to be judged):
             </p>
           </div>
@@ -285,7 +285,7 @@ export default function HoraryTraditionalMethodsSection() {
                 </div>
                 <h5 className="font-space-grotesk font-bold text-black text-lg">Chart is Radical When</h5>
               </div>
-              <div className="space-y-3 text-black font-inter text-sm">
+              <div className="space-y-3 text-black font-open-sans text-sm">
                 <div className="bg-white border border-black p-3">
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
@@ -319,7 +319,7 @@ export default function HoraryTraditionalMethodsSection() {
                 </div>
                 <h5 className="font-space-grotesk font-bold text-black text-lg">Avoid Judgment When</h5>
               </div>
-              <div className="space-y-3 text-black font-inter text-sm">
+              <div className="space-y-3 text-black font-open-sans text-sm">
                 <div className="bg-white border border-black p-3">
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-red-600 rounded-full mt-2 flex-shrink-0"></div>
@@ -357,7 +357,7 @@ export default function HoraryTraditionalMethodsSection() {
             <h4 className="font-space-grotesk font-bold text-black text-xl">Planetary Condition Analysis</h4>
           </div>
           <div className="mb-4">
-            <p className="text-black font-inter text-sm leading-relaxed">
+            <p className="text-black font-open-sans text-sm leading-relaxed">
               Evaluate the strength and condition of significator planets:
             </p>
           </div>
@@ -369,7 +369,7 @@ export default function HoraryTraditionalMethodsSection() {
                 </div>
                 <h5 className="font-space-grotesk font-bold text-black text-lg">Essential Dignity</h5>
               </div>
-              <div className="space-y-3 text-black font-inter text-sm">
+              <div className="space-y-3 text-black font-open-sans text-sm">
                 <div className="bg-white border border-black p-3">
                   <div className="flex justify-between items-center">
                     <span className="font-bold">Ruler</span>
@@ -407,7 +407,7 @@ export default function HoraryTraditionalMethodsSection() {
                 </div>
                 <h5 className="font-space-grotesk font-bold text-black text-lg">Accidental Dignity</h5>
               </div>
-              <div className="space-y-3 text-black font-inter text-sm">
+              <div className="space-y-3 text-black font-open-sans text-sm">
                 <div className="bg-white border border-black p-3">
                   <div className="flex justify-between items-center">
                     <span className="font-bold">Angular</span>
@@ -442,7 +442,7 @@ export default function HoraryTraditionalMethodsSection() {
             <h4 className="font-space-grotesk font-bold text-black text-xl">Aspect Analysis</h4>
           </div>
           <div className="mb-4">
-            <p className="text-black font-inter text-sm leading-relaxed">
+            <p className="text-black font-open-sans text-sm leading-relaxed">
               Examine how planets interact and what their relationships reveal:
             </p>
           </div>
@@ -463,7 +463,7 @@ export default function HoraryTraditionalMethodsSection() {
                     </div>
                     <span className="font-space-grotesk font-bold text-black">Applying Aspects</span>
                   </div>
-                  <div className="space-y-2 text-black font-inter text-sm">
+                  <div className="space-y-2 text-black font-open-sans text-sm">
                     <div>• Future developments and outcomes</div>
                     <div>• Generally indicates "yes" to questions</div>
                     <div>• Shows what will happen</div>
@@ -476,7 +476,7 @@ export default function HoraryTraditionalMethodsSection() {
                     </div>
                     <span className="font-space-grotesk font-bold text-black">Separating Aspects</span>
                   </div>
-                  <div className="space-y-2 text-black font-inter text-sm">
+                  <div className="space-y-2 text-black font-open-sans text-sm">
                     <div>• Past influences and events</div>
                     <div>• Generally indicates "no" or "already happened"</div>
                     <div>• Shows what has been</div>
@@ -499,28 +499,28 @@ export default function HoraryTraditionalMethodsSection() {
                     <span className="font-space-grotesk font-bold text-black">Conjunction (0°)</span>
                     <span className="text-xs bg-purple-100 px-2 py-1 border border-purple-400">Union</span>
                   </div>
-                  <div className="text-xs text-black font-inter">Planets work together intensively</div>
+                  <div className="text-xs text-black font-open-sans">Planets work together intensively</div>
                 </div>
                 <div className="bg-white border border-black p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-space-grotesk font-bold text-black">Trine (120°)</span>
                     <span className="text-xs bg-green-100 px-2 py-1 border border-green-400">Harmony</span>
                   </div>
-                  <div className="text-xs text-black font-inter">Natural flow and ease</div>
+                  <div className="text-xs text-black font-open-sans">Natural flow and ease</div>
                 </div>
                 <div className="bg-white border border-black p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-space-grotesk font-bold text-black">Square (90°)</span>
                     <span className="text-xs bg-orange-100 px-2 py-1 border border-orange-400">Friction</span>
                   </div>
-                  <div className="text-xs text-black font-inter">Dynamic tension, action required</div>
+                  <div className="text-xs text-black font-open-sans">Dynamic tension, action required</div>
                 </div>
                 <div className="bg-white border border-black p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-space-grotesk font-bold text-black">Opposition (180°)</span>
                     <span className="text-xs bg-red-100 px-2 py-1 border border-red-400">Separation</span>
                   </div>
-                  <div className="text-xs text-black font-inter">Balance through contrast</div>
+                  <div className="text-xs text-black font-open-sans">Balance through contrast</div>
                 </div>
               </div>
             </div>

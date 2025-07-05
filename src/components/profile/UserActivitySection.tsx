@@ -189,7 +189,7 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
     return (
       <div className="bg-white">
         <div className="p-6 border-b border-gray-200">
-          <p className="font-inter text-black/60">Loading your activity timeline...</p>
+          <p className="font-open-sans text-black/60">Loading your activity timeline...</p>
         </div>
         <div className="p-6">
           <div className="animate-pulse">
@@ -215,7 +215,7 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
       <div className="p-6 border-b border-black">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-inter text-black/60">Your platform usage and interaction timeline</p>
+            <p className="font-open-sans text-black/60">Your platform usage and interaction timeline</p>
           </div>
           {recentActivities.length > 5 && (
             <button
@@ -236,15 +236,15 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black">
             <div className="p-6 text-center border-r border-black" style={{ backgroundColor: '#6bdbff' }}>
               <div className="font-space-grotesk text-3xl font-bold text-black">{summary.chartActivities}</div>
-              <div className="font-inter text-sm font-semibold text-black">CHART ACTIONS</div>
+              <div className="font-open-sans text-sm font-semibold text-black">CHART ACTIONS</div>
             </div>
             <div className="p-6 text-center border-r border-black md:border-r-0 lg:border-r" style={{ backgroundColor: '#51bd94' }}>
               <div className="font-space-grotesk text-3xl font-bold text-black">{summary.discussionActivities}</div>
-              <div className="font-inter text-sm font-semibold text-black">DISCUSSION ACTIONS</div>
+              <div className="font-open-sans text-sm font-semibold text-black">DISCUSSION ACTIONS</div>
             </div>
             <div className="p-6 text-center" style={{ backgroundColor: '#ff91e9' }}>
               <div className="font-space-grotesk text-3xl font-bold text-black">{summary.eventActivities}</div>
-              <div className="font-inter text-sm font-semibold text-black">EVENT ACTIONS</div>
+              <div className="font-open-sans text-sm font-semibold text-black">EVENT ACTIONS</div>
             </div>
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
               </svg>
             </div>
             <h3 className="font-space-grotesk text-xl font-bold text-black mb-2">No Activity Yet</h3>
-            <p className="font-inter text-black/60">Start using the platform to see your activity timeline here</p>
+            <p className="font-open-sans text-black/60">Start using the platform to see your activity timeline here</p>
           </div>
         ) : (
           <div className="space-y-0 border border-black">
@@ -288,14 +288,14 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
 
                   {/* Activity Details */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-inter text-base font-semibold text-black mb-2">
+                    <p className="font-open-sans text-base font-semibold text-black mb-2">
                       {activity.description}
                     </p>
                     <div className="flex items-center space-x-3">
                       <span className="px-2 py-1 bg-black text-white text-xs font-semibold border border-black">
                         {(activity.activityType || 'unknown').replace('_', ' ').toUpperCase()}
                       </span>
-                      <span className="font-inter text-sm text-black/60 font-medium">
+                      <span className="font-open-sans text-sm text-black/60 font-medium">
                         {formatDate(activity.createdAt)}
                       </span>
                     </div>
@@ -310,7 +310,7 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
       {/* Last Activity */}
       {summary?.lastActivity && (
         <div className="px-6 py-4 border-t border-black bg-gray-50">
-          <p className="font-inter text-sm text-black/60">
+          <p className="font-open-sans text-sm text-black/60">
             Last activity: <span className="font-semibold text-black">
               {new Date(summary.lastActivity).toLocaleDateString()} at {new Date(summary.lastActivity).toLocaleTimeString()}
             </span>

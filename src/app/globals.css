@@ -23,10 +23,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-arvo: var(--font-arvo);
+  --font-sans: var(--font-open-sans);
+  --font-mono: var(--font-open-sans);
+  --font-arvo: var(--font-open-sans);
   --font-space-grotesk: var(--font-space-grotesk);
+  --font-geist-sans: var(--font-open-sans);
+  --font-geist-mono: var(--font-open-sans);
+  --font-epilogue: var(--font-space-grotesk);
+  --font-inter: var(--font-open-sans);
 }
 
 @media (prefers-color-scheme: dark) {

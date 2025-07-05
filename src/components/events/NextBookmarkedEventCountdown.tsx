@@ -149,7 +149,7 @@ export default function NextBookmarkedEventCountdown({
 
   return (
     <div className="text-center">
-      <p className="text-sm text-black/60 font-inter">
+      <p className="text-sm text-black/60 font-open-sans">
         Next bookmarked event: <span className="text-black/80">{nextEvent.title}</span> in <span className="font-medium text-black">{getTimeDisplay()}</span>
       </p>
     </div>

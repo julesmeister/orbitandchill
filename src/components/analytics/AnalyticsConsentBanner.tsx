@@ -58,7 +58,7 @@ export default function AnalyticsConsentBanner({ onAccept, onDecline }: Analytic
                   <h3 className="font-space-grotesk text-lg font-bold text-black">
                     Analytics & Privacy
                   </h3>
-                  <p className="font-inter text-sm text-black leading-tight">
+                  <p className="font-open-sans text-sm text-black leading-tight">
                     We use analytics to improve your experience and understand how our astrology tools are used. 
                     <span className="font-semibold"> No personal data is shared with third parties.</span>
                   </p>
@@ -120,7 +120,7 @@ export default function AnalyticsConsentBanner({ onAccept, onDecline }: Analytic
                     </div>
                     <p className="font-space-grotesk text-xs font-bold text-black">We collect:</p>
                   </div>
-                  <ul className="font-inter text-xs text-black space-y-1">
+                  <ul className="font-open-sans text-xs text-black space-y-1">
                     <li>• Page views</li>
                     <li>• Chart usage</li>
                     <li>• Discussions</li>
@@ -137,7 +137,7 @@ export default function AnalyticsConsentBanner({ onAccept, onDecline }: Analytic
                     </div>
                     <p className="font-space-grotesk text-xs font-bold text-black">We do NOT collect:</p>
                   </div>
-                  <ul className="font-inter text-xs text-black space-y-1">
+                  <ul className="font-open-sans text-xs text-black space-y-1">
                     <li>• Birth information</li>
                     <li>• Messages/content</li>
                     <li>• Email addresses</li>

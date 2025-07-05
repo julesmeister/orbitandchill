@@ -329,9 +329,9 @@ export default function DiscussionDetailPage({
         />
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
               {error || 'Discussion Not Found'}
-            </h1>
+            </h2>
             <Link
               href="/discussions"
               className="text-blue-600 hover:text-blue-700"

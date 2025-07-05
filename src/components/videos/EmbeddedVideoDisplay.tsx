@@ -53,7 +53,7 @@ export default function EmbeddedVideoDisplay({
                 <h3 className="font-space-grotesk font-bold text-black">
                   📹 Shared Video
                 </h3>
-                <p className="text-sm text-black/70 font-inter">
+                <p className="text-sm text-black/70 font-open-sans">
                   {video.title}
                 </p>
               </div>
@@ -105,12 +105,12 @@ export default function EmbeddedVideoDisplay({
               <div className="space-y-2">
                 <h4 className="font-space-grotesk font-bold text-black">{video.title}</h4>
                 {video.channelName && (
-                  <p className="text-sm text-black/70 font-inter">
+                  <p className="text-sm text-black/70 font-open-sans">
                     by {video.channelName}
                   </p>
                 )}
                 {video.description && (
-                  <p className="text-sm text-black/70 font-inter line-clamp-2">
+                  <p className="text-sm text-black/70 font-open-sans line-clamp-2">
                     {video.description.substring(0, 100)}...
                   </p>
                 )}
@@ -165,19 +165,19 @@ export default function EmbeddedVideoDisplay({
                 <h4 className="font-space-grotesk font-bold text-black text-lg">{video.title}</h4>
                 
                 {video.channelName && (
-                  <p className="text-black/70 font-inter">
+                  <p className="text-black/70 font-open-sans">
                     <span className="font-medium">Channel:</span> {video.channelName}
                   </p>
                 )}
                 
                 {video.description && (
-                  <p className="text-black/70 font-inter">
+                  <p className="text-black/70 font-open-sans">
                     {video.description}
                   </p>
                 )}
 
                 {video.publishedAt && (
-                  <p className="text-sm text-black/60 font-inter">
+                  <p className="text-sm text-black/60 font-open-sans">
                     Published: {new Date(video.publishedAt).toLocaleDateString()}
                   </p>
                 )}
@@ -188,7 +188,7 @@ export default function EmbeddedVideoDisplay({
                     {video.tags.slice(0, 5).map((tag, index) => (
                       <span 
                         key={index}
-                        className="text-xs bg-gray-100 border border-gray-300 px-2 py-1 font-inter"
+                        className="text-xs bg-gray-100 border border-gray-300 px-2 py-1 font-open-sans"
                       >
                         {tag}
                       </span>
@@ -212,7 +212,7 @@ export default function EmbeddedVideoDisplay({
 
         {/* Video Attribution */}
         <div className="px-4 py-2 bg-gray-50 border-t border-black">
-          <div className="flex items-center justify-between text-xs text-black/60 font-inter">
+          <div className="flex items-center justify-between text-xs text-black/60 font-open-sans">
             <span>
               Video shared {new Date(video.createdAt).toLocaleDateString()}
             </span>
@@ -265,13 +265,13 @@ export default function EmbeddedVideoDisplay({
               {/* Video Info */}
               <div className="space-y-4">
                 {video.channelName && (
-                  <p className="text-black/70 font-inter">
+                  <p className="text-black/70 font-open-sans">
                     <span className="font-medium">Channel:</span> {video.channelName}
                   </p>
                 )}
                 
                 {video.description && (
-                  <p className="text-black/70 font-inter">
+                  <p className="text-black/70 font-open-sans">
                     {video.description}
                   </p>
                 )}
@@ -290,7 +290,7 @@ export default function EmbeddedVideoDisplay({
                   </a>
                   
                   {video.publishedAt && (
-                    <span className="text-sm text-black/60 font-inter">
+                    <span className="text-sm text-black/60 font-open-sans">
                       Published: {new Date(video.publishedAt).toLocaleDateString()}
                     </span>
                   )}

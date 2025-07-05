@@ -66,8 +66,8 @@ export default function TopPagesCard({ isLoading, trafficData }: TopPagesCardPro
           topPages.map((item, index) => (
             <div key={index} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200">
               <div>
-                <div className="font-medium text-black font-inter">{item.page}</div>
-                <div className="text-sm text-gray-600 font-inter">{formatNumber(item.views)} views</div>
+                <div className="font-medium text-black font-open-sans">{item.page}</div>
+                <div className="text-sm text-gray-600 font-open-sans">{formatNumber(item.views)} views</div>
               </div>
               <div className="text-right">
                 <div className="text-sm font-medium text-black">{item.percentage}%</div>

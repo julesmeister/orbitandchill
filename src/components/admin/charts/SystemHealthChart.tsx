@@ -28,7 +28,7 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
             <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
             <div className="w-3 h-3 bg-black animate-bounce"></div>
           </div>
-          <p className="font-inter text-black/60 text-sm">Loading system status...</p>
+          <p className="font-open-sans text-black/60 text-sm">Loading system status...</p>
         </div>
       </div>
     );
@@ -109,7 +109,7 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
                 <div className="font-space-grotesk text-lg font-bold text-black">
                   {memoryUsage.toFixed(1)}%
                 </div>
-                <div className="font-inter text-xs text-black/60">Memory</div>
+                <div className="font-open-sans text-xs text-black/60">Memory</div>
               </div>
             </div>
           </div>
@@ -119,13 +119,13 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
         <div className="space-y-3">
           {/* Overall System Status */}
           <div className="flex items-center justify-between p-3 border border-black">
-            <span className="font-inter text-sm text-black">System</span>
+            <span className="font-open-sans text-sm text-black">System</span>
             <div className="flex items-center space-x-2">
               <div 
                 className="w-3 h-3"
                 style={{ backgroundColor: getStatusColor(overallStatus) }}
               ></div>
-              <span className="font-inter text-xs text-black/60 capitalize">
+              <span className="font-open-sans text-xs text-black/60 capitalize">
                 {overallStatus}
               </span>
             </div>
@@ -133,13 +133,13 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
 
           {/* Database Status */}
           <div className="flex items-center justify-between p-3 border border-black">
-            <span className="font-inter text-sm text-black">Database</span>
+            <span className="font-open-sans text-sm text-black">Database</span>
             <div className="flex items-center space-x-2">
               <div 
                 className="w-3 h-3"
                 style={{ backgroundColor: getStatusColor(dbStatus) }}
               ></div>
-              <span className="font-inter text-xs text-black/60 capitalize">
+              <span className="font-open-sans text-xs text-black/60 capitalize">
                 {dbStatus}
               </span>
             </div>
@@ -147,13 +147,13 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
 
           {/* API Status */}
           <div className="flex items-center justify-between p-3 border border-black">
-            <span className="font-inter text-sm text-black">API</span>
+            <span className="font-open-sans text-sm text-black">API</span>
             <div className="flex items-center space-x-2">
               <div 
                 className="w-3 h-3"
                 style={{ backgroundColor: getStatusColor(apiStatus) }}
               ></div>
-              <span className="font-inter text-xs text-black/60 capitalize">
+              <span className="font-open-sans text-xs text-black/60 capitalize">
                 {apiStatus}
               </span>
             </div>
@@ -170,7 +170,7 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
                 <div className="font-space-grotesk text-sm font-bold text-black">
                   {healthMetrics.database.responseTime}ms
                 </div>
-                <div className="font-inter text-xs text-black/60">DB Response</div>
+                <div className="font-open-sans text-xs text-black/60">DB Response</div>
               </div>
             )}
             {healthMetrics.api.responseTime && (
@@ -178,7 +178,7 @@ export default function SystemHealthChart({ healthMetrics, isLoading }: SystemHe
                 <div className="font-space-grotesk text-sm font-bold text-black">
                   {healthMetrics.api.responseTime}ms
                 </div>
-                <div className="font-inter text-xs text-black/60">API Response</div>
+                <div className="font-open-sans text-xs text-black/60">API Response</div>
               </div>
             )}
           </div>

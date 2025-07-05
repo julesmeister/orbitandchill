@@ -178,7 +178,7 @@ export default function EventsTable({
               }`}
             >
               All Events
-              <span className={`ml-2 px-2 py-0.5 text-xs font-inter border border-black ${
+              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
                 selectedTab === 'all' ? 'bg-white text-black' : 'bg-black text-white'
               }`}>
                 {events.length}
@@ -194,7 +194,7 @@ export default function EventsTable({
             >
               <div className="w-3 h-3 bg-blue-500 border border-black inline-block mr-2 -mt-0.5"></div>
               Generated Events
-              <span className={`ml-2 px-2 py-0.5 text-xs font-inter border border-black ${
+              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
                 selectedTab === 'generated' ? 'bg-white text-black' : 'bg-black text-white'
               }`}>
                 {events.filter(e => e.isGenerated).length}
@@ -210,7 +210,7 @@ export default function EventsTable({
             >
               <div className="w-3 h-3 bg-yellow-500 border border-black inline-block mr-2 -mt-0.5"></div>
               Bookmarked
-              <span className={`ml-2 px-2 py-0.5 text-xs font-inter border border-black ${
+              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
                 selectedTab === 'bookmarked' ? 'bg-white text-black' : 'bg-black text-white'
               }`}>
                 {events.filter(e => e.isBookmarked).length}
@@ -226,7 +226,7 @@ export default function EventsTable({
             >
               <div className="w-3 h-3 bg-gray-500 border border-black inline-block mr-2 -mt-0.5"></div>
               Manual Events
-              <span className={`ml-2 px-2 py-0.5 text-xs font-inter border border-black ${
+              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
                 selectedTab === 'manual' ? 'bg-white text-black' : 'bg-black text-white'
               }`}>
                 {events.filter(e => !e.isGenerated).length}
@@ -236,7 +236,7 @@ export default function EventsTable({
           
           {/* Show Per Page Selector */}
           <div className="flex items-center space-x-3 px-6 py-4 border-l border-black">
-            <span className="text-sm text-black font-inter font-medium">Show:</span>
+            <span className="text-sm text-black font-open-sans font-medium">Show:</span>
             <div className="w-20">
               <SynapsasDropdown
                 options={itemsPerPageOptions}
@@ -244,7 +244,7 @@ export default function EventsTable({
                 onChange={(value) => handleItemsPerPageChange(parseInt(value))}
               />
             </div>
-            <span className="text-sm text-black font-inter font-medium">per page</span>
+            <span className="text-sm text-black font-open-sans font-medium">per page</span>
           </div>
         </nav>
       </div>
@@ -268,13 +268,13 @@ export default function EventsTable({
               </div>
             </div>
             {hideChallengingDates && (
-              <span className="inline-flex items-center px-3 py-1 text-xs font-inter font-semibold bg-orange-50 text-black border border-black">
+              <span className="inline-flex items-center px-3 py-1 text-xs font-open-sans font-semibold bg-orange-50 text-black border border-black">
                 <div className="w-2 h-2 bg-orange-500 border border-black mr-2"></div>
                 Challenging Hidden
               </span>
             )}
             {showCombosOnly && (
-              <span className="inline-flex items-center px-3 py-1 text-xs font-inter font-semibold bg-indigo-50 text-black border border-black">
+              <span className="inline-flex items-center px-3 py-1 text-xs font-open-sans font-semibold bg-indigo-50 text-black border border-black">
                 <div className="w-2 h-2 bg-indigo-500 border border-black mr-2"></div>
                 Combos Only
               </span>
@@ -285,7 +285,7 @@ export default function EventsTable({
               <button
                 key={type}
                 onClick={() => setSelectedType(type)}
-                className={`inline-flex items-center justify-center px-4 py-2 font-inter font-medium transition-all duration-200 border-black ${
+                className={`inline-flex items-center justify-center px-4 py-2 font-open-sans font-medium transition-all duration-200 border-black ${
                   selectedType === type
                     ? 'bg-black text-white'
                     : 'text-black hover:bg-gray-50'
@@ -355,7 +355,7 @@ export default function EventsTable({
                             )}
                           </div>
                           {event.description && (
-                            <div className="font-inter text-xs text-black/60 leading-relaxed line-clamp-2">{event.description}</div>
+                            <div className="font-open-sans text-xs text-black/60 leading-relaxed line-clamp-2">{event.description}</div>
                           )}
                         </div>
                       </div>
@@ -371,7 +371,7 @@ export default function EventsTable({
                         })}
                       </div>
                       {event.time && (
-                        <div className="mt-1 font-inter font-medium text-black/60">
+                        <div className="mt-1 font-open-sans font-medium text-black/60">
                           {new Date(`2000-01-01T${event.time}`).toLocaleTimeString('en-US', { 
                             hour: 'numeric', 
                             minute: '2-digit',
@@ -383,7 +383,7 @@ export default function EventsTable({
                   </td>
                   <td className="px-8 py-6 border-black border-r">
                     <div 
-                      className={`inline-flex items-center px-3 py-1.5 text-xs font-inter font-medium border border-black ${styling.text}`}
+                      className={`inline-flex items-center px-3 py-1.5 text-xs font-open-sans font-medium border border-black ${styling.text}`}
                       style={{ backgroundColor: styling.bgColor }}
                     >
                       {event.type === 'benefic' ? '✓ Favorable' : 
@@ -405,7 +405,7 @@ export default function EventsTable({
                           </div>
                         </ScoreTooltip>
                       </div>
-                      <div className="text-xs text-black/60 font-inter font-medium">/10</div>
+                      <div className="text-xs text-black/60 font-open-sans font-medium">/10</div>
                     </div>
                   </td>
                   <td className="px-8 py-6">

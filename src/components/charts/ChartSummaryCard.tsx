@@ -52,7 +52,7 @@ export default function ChartSummaryCard({
               <h3 className="font-space-grotesk font-bold text-black text-lg">
                 {metadata.chartTitle}
               </h3>
-              <p className="text-sm text-black/70 font-inter">
+              <p className="text-sm text-black/70 font-open-sans">
                 {chartType === 'natal' ? 'Birth Chart Analysis' : 
                  chartType === 'horary' ? 'Divination Chart' : 
                  chartType === 'event' ? 'Event Chart' : 'Astrological Chart'}
@@ -73,7 +73,7 @@ export default function ChartSummaryCard({
         {chartType === 'natal' && metadata.birthData && (
           <div className="mb-4">
             <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Birth Information</h4>
-            <div className="text-sm text-black/80 font-inter space-y-1">
+            <div className="text-sm text-black/80 font-open-sans space-y-1">
               <p>📅 {new Date(metadata.birthData.dateOfBirth).toLocaleDateString()}</p>
               <p>🕐 {metadata.birthData.timeOfBirth}</p>
               <p>📍 {metadata.birthData.locationOfBirth}</p>
@@ -85,7 +85,7 @@ export default function ChartSummaryCard({
         {chartType === 'event' && metadata.eventData && (
           <div className="mb-4">
             <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Event Information</h4>
-            <div className="text-sm text-black/80 font-inter space-y-1">
+            <div className="text-sm text-black/80 font-open-sans space-y-1">
               <p>📅 {metadata.eventData.eventTitle}</p>
               <p>🕐 {metadata.eventData.eventDate} at {metadata.eventData.eventTime}</p>
               {metadata.eventData.isOptimal && (
@@ -99,7 +99,7 @@ export default function ChartSummaryCard({
         {chartType === 'horary' && metadata.horaryData && (
           <div className="mb-4">
             <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Question</h4>
-            <div className="text-sm text-black/80 font-inter space-y-1">
+            <div className="text-sm text-black/80 font-open-sans space-y-1">
               <p>❓ "{metadata.horaryData.question}"</p>
               <p>📅 {new Date(metadata.horaryData.questionDate).toLocaleDateString()}</p>
               {metadata.horaryData.answer && (
@@ -118,7 +118,7 @@ export default function ChartSummaryCard({
             <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">Key Planetary Positions</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {metadata.planetSummary.slice(0, isPreview ? 4 : 8).map((planet, index) => (
-                <div key={index} className="text-xs font-inter bg-gray-50 p-2 border border-gray-200">
+                <div key={index} className="text-xs font-open-sans bg-gray-50 p-2 border border-gray-200">
                   <span className="font-bold">{planet.planet}</span> in{' '}
                   <span className="font-medium">{planet.sign}</span>{' '}
                   <span className="text-gray-600">{planet.house}</span>
@@ -127,7 +127,7 @@ export default function ChartSummaryCard({
               ))}
             </div>
             {metadata.planetSummary.length > (isPreview ? 4 : 8) && (
-              <p className="text-xs text-black/60 mt-2 font-inter">
+              <p className="text-xs text-black/60 mt-2 font-open-sans">
                 +{metadata.planetSummary.length - (isPreview ? 4 : 8)} more planets
               </p>
             )}
@@ -138,7 +138,7 @@ export default function ChartSummaryCard({
         {metadata.houseSummary && metadata.houseSummary.length > 0 && !isPreview && (
           <div className="mb-4">
             <h4 className="font-space-grotesk font-bold text-black text-sm mb-2">House Occupancy</h4>
-            <div className="text-xs font-inter space-y-1">
+            <div className="text-xs font-open-sans space-y-1">
               {metadata.houseSummary
                 .filter(house => !house.isEmpty)
                 .slice(0, 6)
@@ -160,14 +160,14 @@ export default function ChartSummaryCard({
               {metadata.majorAspects.slice(0, 6).map((aspect, index) => (
                 <span 
                   key={index} 
-                  className="text-xs bg-black text-white px-2 py-1 font-inter"
+                  className="text-xs bg-black text-white px-2 py-1 font-open-sans"
                 >
                   {aspect}
                 </span>
               ))}
             </div>
             {metadata.majorAspects.length > 6 && (
-              <p className="text-xs text-black/60 mt-2 font-inter">
+              <p className="text-xs text-black/60 mt-2 font-open-sans">
                 +{metadata.majorAspects.length - 6} more aspects
               </p>
             )}

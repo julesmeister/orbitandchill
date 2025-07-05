@@ -305,7 +305,7 @@ export default function ChartAttachmentToast({
                 </div>
                 <div>
                   <h3 className="font-space-grotesk font-bold text-black text-lg">Add Chart</h3>
-                  <p className="text-xs text-black/70 font-inter">Attach your astrological chart</p>
+                  <p className="text-xs text-black/70 font-open-sans">Attach your astrological chart</p>
                 </div>
               </div>
               <button
@@ -365,12 +365,12 @@ export default function ChartAttachmentToast({
                       <span className="text-lg mr-2">{option.icon}</span>
                       <div className="flex-1">
                         <div className="font-space-grotesk font-bold text-sm">{option.title}</div>
-                        <div className="text-xs font-inter opacity-80">{option.description}</div>
+                        <div className="text-xs font-open-sans opacity-80">{option.description}</div>
                         {!option.available && option.type === 'natal' && (
-                          <div className="text-xs mt-1 font-inter opacity-60">Complete birth data required</div>
+                          <div className="text-xs mt-1 font-open-sans opacity-60">Complete birth data required</div>
                         )}
                         {!option.available && option.type === 'horary' && (
-                          <div className="text-xs mt-1 font-inter opacity-60">
+                          <div className="text-xs mt-1 font-open-sans opacity-60">
                             {questions.length === 0 && currentPageType !== 'horary' 
                               ? 'Create horary questions first' 
                               : 'Create a question first'
@@ -378,7 +378,7 @@ export default function ChartAttachmentToast({
                           </div>
                         )}
                         {!option.available && option.type === 'event' && (
-                          <div className="text-xs mt-1 font-inter opacity-60">
+                          <div className="text-xs mt-1 font-open-sans opacity-60">
                             {!user?.birthData 
                               ? 'Birth data required' 
                               : 'Create events or visit Event Chart page'
@@ -406,7 +406,7 @@ export default function ChartAttachmentToast({
                     Current Natal Chart
                   </span>
                 </div>
-                <p className="text-xs text-black/70 font-inter">
+                <p className="text-xs text-black/70 font-open-sans">
                   Ready to attach your saved natal chart
                 </p>
               </div>
@@ -420,7 +420,7 @@ export default function ChartAttachmentToast({
                     Current Horary Question
                   </span>
                 </div>
-                <p className="text-xs text-black/70 font-inter truncate">
+                <p className="text-xs text-black/70 font-open-sans truncate">
                   "{questions[0].question}"
                 </p>
               </div>
@@ -434,7 +434,7 @@ export default function ChartAttachmentToast({
                     Current Event Chart
                   </span>
                 </div>
-                <p className="text-xs text-black/70 font-inter">
+                <p className="text-xs text-black/70 font-open-sans">
                   Ready to attach chart for current event
                 </p>
               </div>
@@ -495,7 +495,7 @@ export default function ChartAttachmentToast({
                       <div className="font-space-grotesk font-bold text-sm text-black truncate">
                         {question.question}
                       </div>
-                      <div className="text-xs text-black/60 font-inter mt-1">
+                      <div className="text-xs text-black/60 font-open-sans mt-1">
                         {new Date(question.date).toLocaleDateString()}
                         {question.answer && <span className="ml-2 text-green-600">• {question.answer}</span>}
                       </div>
@@ -516,7 +516,7 @@ export default function ChartAttachmentToast({
                     className="w-full p-3 text-left border border-gray-300 hover:border-black hover:bg-gray-50 transition-colors"
                   >
                     <div className="font-space-grotesk font-bold text-sm text-black">📋 Bookmarked Events</div>
-                    <div className="text-xs text-black/60 font-inter">
+                    <div className="text-xs text-black/60 font-open-sans">
                       {bookmarkedEvents.length > 0 ? `${bookmarkedEvents.length} saved events` : 'No bookmarked events'}
                     </div>
                   </button>
@@ -538,7 +538,7 @@ export default function ChartAttachmentToast({
                     className="w-full p-3 text-left border border-gray-300 hover:border-black hover:bg-gray-50 transition-colors"
                   >
                     <div className="font-space-grotesk font-bold text-sm text-black">⚡ Current Moment</div>
-                    <div className="text-xs text-black/60 font-inter">Generate chart for right now</div>
+                    <div className="text-xs text-black/60 font-open-sans">Generate chart for right now</div>
                   </button>
                 </div>
 
@@ -568,7 +568,7 @@ export default function ChartAttachmentToast({
                             <div className="font-space-grotesk font-bold text-sm text-black truncate">
                               {event.title}
                             </div>
-                            <div className="text-xs text-black/60 font-inter mt-1">
+                            <div className="text-xs text-black/60 font-open-sans mt-1">
                               📅 {event.date} {event.time && `at ${event.time}`}
                               <span className={`ml-2 px-1 rounded text-white ${
                                 event.type === 'benefic' ? 'bg-green-500' : 
@@ -581,7 +581,7 @@ export default function ChartAttachmentToast({
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-4 text-black/60 text-sm font-inter">
+                      <div className="text-center py-4 text-black/60 text-sm font-open-sans">
                         No bookmarked events found.
                         <br />
                         <span className="text-xs">Visit the Events page to bookmark some events first.</span>

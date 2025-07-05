@@ -150,7 +150,7 @@ export default function EventsPage() {
 
   // Cleanup old unbookmarked generated events on initial page load - TEMPORARILY DISABLED
   useEffect(() => {
-    console.log('🚫 Cleanup disabled for debugging manual events issue');
+    // Cleanup disabled for debugging manual events issue
     // const cleanupOldGeneratedEvents = async () => {
     //   if (user?.id) {
     //     try {
@@ -322,7 +322,7 @@ export default function EventsPage() {
   // Handle month changes from calendar navigation
   const handleMonthChange = useCallback(async (month: number, year: number) => {
     if (user?.id) {
-      console.log(`📅 Month changed to ${month + 1}/${year}, loading events...`);
+      // Month changed, loading events
       await loadMonthEvents(user.id, month, year);
     }
   }, [user?.id, loadMonthEvents]);

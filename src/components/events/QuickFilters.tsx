@@ -35,7 +35,7 @@ export default function QuickFilters({
                 console.log(`${filter.label} toggle clicked, current state:`, isActive);
                 handler(!isActive);
               }}
-              className={`group px-4 py-2 border border-black transition-all duration-200 font-inter text-xs font-medium hover:shadow-md rounded ${
+              className={`group px-4 py-2 border border-black transition-all duration-200 font-open-sans text-xs font-medium hover:shadow-md rounded ${
                 isActive
                   ? 'bg-black text-white'
                   : 'bg-white text-black hover:bg-gray-50'

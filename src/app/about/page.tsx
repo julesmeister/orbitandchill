@@ -14,7 +14,7 @@ export default function AboutPage() {
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
               About {BRAND.name}
             </h1>
-            <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+            <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
               {BRAND.description}
             </p>
           </div>
@@ -33,12 +33,12 @@ export default function AboutPage() {
                   </div>
                   <h2 className="font-space-grotesk text-3xl font-bold text-black">Our Mission</h2>
                 </div>
-                <p className="font-inter text-lg text-black leading-relaxed mb-4">
+                <p className="font-open-sans text-lg text-black leading-relaxed mb-4">
                   At {BRAND.name}, we believe that understanding your astrological profile can provide 
                   profound insights into your personality, relationships, and life path. Our mission is 
                   to make accurate, professional-grade astrology accessible to everyone.
                 </p>
-                <p className="font-inter text-black leading-relaxed">
+                <p className="font-open-sans text-black leading-relaxed">
                   We combine the precision of astronomy-engine calculations with intuitive design and 
                   community-driven interpretations to create a platform where both beginners and 
                   experienced astrologers can explore the cosmos within themselves.
@@ -55,8 +55,8 @@ export default function AboutPage() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-inter font-semibold text-black">Precision Accuracy</h4>
-                      <p className="font-inter text-sm text-black/80">Astronomy-engine calculations ensure professional-grade precision (±1 arcminute)</p>
+                      <h4 className="font-open-sans font-semibold text-black">Precision Accuracy</h4>
+                      <p className="font-open-sans text-sm text-black/80">Astronomy-engine calculations ensure professional-grade precision (±1 arcminute)</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -66,8 +66,8 @@ export default function AboutPage() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-inter font-semibold text-black">Community Driven</h4>
-                      <p className="font-inter text-sm text-black/80">Learn and share insights with fellow astrology enthusiasts</p>
+                      <h4 className="font-open-sans font-semibold text-black">Community Driven</h4>
+                      <p className="font-open-sans text-sm text-black/80">Learn and share insights with fellow astrology enthusiasts</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -77,8 +77,8 @@ export default function AboutPage() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-inter font-semibold text-black">Always Free</h4>
-                      <p className="font-inter text-sm text-black/80">Core features remain accessible to everyone, always</p>
+                      <h4 className="font-open-sans font-semibold text-black">Always Free</h4>
+                      <p className="font-open-sans text-sm text-black/80">Core features remain accessible to everyone, always</p>
                     </div>
                   </div>
                 </div>
@@ -92,7 +92,7 @@ export default function AboutPage() {
           <section className="px-6 md:px-12 lg:px-20 py-16">
             <div className="text-center mb-12">
               <h2 className="font-space-grotesk text-3xl font-bold text-black mb-4">Our Values</h2>
-              <p className="font-inter text-lg text-black/80">
+              <p className="font-open-sans text-lg text-black/80">
                 The principles that guide our approach to astrology and community building
               </p>
             </div>
@@ -105,7 +105,7 @@ export default function AboutPage() {
                   </svg>
                 </div>
                 <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Authenticity</h3>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   We present astrology as it is - a tool for self-reflection and understanding, 
                   not absolute prediction.
                 </p>
@@ -118,7 +118,7 @@ export default function AboutPage() {
                   </svg>
                 </div>
                 <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Community</h3>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   We foster a welcoming space where people can share experiences and learn 
                   from each other&apos;s perspectives.
                 </p>
@@ -131,7 +131,7 @@ export default function AboutPage() {
                   </svg>
                 </div>
                 <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Privacy</h3>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   Your birth data and personal information are sacred. We protect your privacy 
                   with the highest standards.
                 </p>
@@ -146,12 +146,12 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div className="bg-white border border-black p-8">
                 <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">Powered by Astronomy-Engine</h2>
-                <p className="font-inter text-black/80 mb-4">
+                <p className="font-open-sans text-black/80 mb-4">
                   Our calculations are powered by astronomy-engine, a modern MIT-licensed library 
                   that provides professional-grade astronomical accuracy (±1 arcminute). This ensures 
                   that your natal chart is as precise as possible.
                 </p>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   We believe that accurate data is the foundation of meaningful astrological 
                   interpretation, which is why we&apos;ve chosen cutting-edge astronomical 
                   calculation tools that are both precise and accessible.
@@ -160,7 +160,7 @@ export default function AboutPage() {
               
               <div className="space-y-6">
                 <h2 className="font-space-grotesk text-2xl font-bold text-black">Join Our Journey</h2>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   Whether you&apos;re just beginning to explore astrology or you&apos;re a seasoned 
                   practitioner, {BRAND.name} is designed to grow with you on your cosmic journey.
                 </p>

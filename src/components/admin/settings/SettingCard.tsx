@@ -37,12 +37,12 @@ export default function SettingCard({
           <span className="text-red-500 text-sm font-bold">*</span>
         )}
         {isAdvanced && (
-          <span className="text-xs font-inter font-medium text-white bg-gray-800 px-2 py-1">
+          <span className="text-xs font-open-sans font-medium text-white bg-gray-800 px-2 py-1">
             Advanced
           </span>
         )}
         {isEdited && (
-          <span className="text-xs font-inter font-medium text-white bg-yellow-600 px-2 py-1">
+          <span className="text-xs font-open-sans font-medium text-white bg-yellow-600 px-2 py-1">
             Modified
           </span>
         )}

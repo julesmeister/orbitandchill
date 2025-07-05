@@ -46,7 +46,7 @@ export default function MetricsCard({
               <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.15s]"></div>
               <div className="w-2 h-2 bg-black animate-bounce"></div>
             </div>
-            <p className="font-inter text-xs text-black/60">Loading...</p>
+            <p className="font-open-sans text-xs text-black/60">Loading...</p>
           </div>
         ) : (
           <div className="flex items-center">
@@ -54,7 +54,7 @@ export default function MetricsCard({
               {icon}
             </div>
             <div className="ml-4 flex-1">
-              <dt className="font-inter text-sm font-medium text-black/80 truncate mb-1">
+              <dt className="font-open-sans text-sm font-medium text-black/80 truncate mb-1">
                 {title}
               </dt>
               <dd className="font-space-grotesk text-2xl font-bold text-black leading-none">
@@ -62,7 +62,7 @@ export default function MetricsCard({
               </dd>
               {trend && (
                 <div className="flex items-center mt-2">
-                  <div className={`flex items-center font-inter text-xs font-medium ${
+                  <div className={`flex items-center font-open-sans text-xs font-medium ${
                     trend.isPositive ? 'text-black' : 'text-black/60'
                   }`}>
                     {trend.isPositive ? (
@@ -76,7 +76,7 @@ export default function MetricsCard({
                     )}
                     {Math.abs(trend.value)}%
                   </div>
-                  <span className="font-inter text-xs text-black/50 ml-1">vs last month</span>
+                  <span className="font-open-sans text-xs text-black/50 ml-1">vs last month</span>
                 </div>
               )}
             </div>

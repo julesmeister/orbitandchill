@@ -22,7 +22,7 @@ export default function SettingsPage() {
             <h1 className="font-space-grotesk text-4xl font-bold text-black mb-4">
               Settings Not Available
             </h1>
-            <p className="font-inter text-xl text-black/80">Please refresh the page to load your settings.</p>
+            <p className="font-open-sans text-xl text-black/80">Please refresh the page to load your settings.</p>
           </div>
         </section>
       </div>
@@ -94,7 +94,7 @@ export default function SettingsPage() {
                 <h1 className="font-space-grotesk text-3xl font-bold text-black">
                   Settings
                 </h1>
-                <p className="font-inter text-black/80">
+                <p className="font-open-sans text-black/80">
                   Configure your preferences and account settings
                 </p>
               </div>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
             <div className="border border-black bg-white">
               <div className="p-6 border-b border-black" style={{ backgroundColor: '#6bdbff' }}>
                 <h2 className="font-space-grotesk text-xl font-bold text-black mb-1">App Preferences</h2>
-                <p className="font-inter text-sm text-black/80">Customize your experience</p>
+                <p className="font-open-sans text-sm text-black/80">Customize your experience</p>
               </div>
               <div className="p-6 space-y-6">
                 <div className="border border-black p-4">
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Default Chart Theme
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Choose your preferred chart appearance
                       </p>
                     </div>
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Timezone
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Your local timezone for accurate calculations
                       </p>
                     </div>
@@ -202,7 +202,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Language
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Interface language preference
                       </p>
                     </div>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
             <div className="border border-black bg-white">
               <div className="p-6 border-b border-black" style={{ backgroundColor: '#f2e356' }}>
                 <h2 className="font-space-grotesk text-xl font-bold text-black mb-1">Display Preferences</h2>
-                <p className="font-inter text-sm text-black/80">Interface and layout options</p>
+                <p className="font-open-sans text-sm text-black/80">Interface and layout options</p>
               </div>
               <div className="p-6 space-y-6">
                 <div className="border border-black p-4">
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Chart Animation Speed
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Control chart rendering animations
                       </p>
                     </div>
@@ -259,7 +259,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Default View Mode
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Preferred chart view when opening
                       </p>
                     </div>
@@ -286,7 +286,7 @@ export default function SettingsPage() {
             <div className="border border-black bg-white">
               <div className="p-6 border-b border-black" style={{ backgroundColor: '#51bd94' }}>
                 <h2 className="font-space-grotesk text-xl font-bold text-black mb-1">Email Notifications</h2>
-                <p className="font-inter text-sm text-black/80">Manage email preferences</p>
+                <p className="font-open-sans text-sm text-black/80">Manage email preferences</p>
               </div>
               <div className="p-6 space-y-4">
                 <div className="border border-black p-4">
@@ -295,7 +295,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Email Notifications
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Receive important updates via email
                       </p>
                     </div>
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Weekly Newsletter
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Get our weekly astrology insights and updates
                       </p>
                     </div>
@@ -327,7 +327,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Discussion Notifications
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Get notified about replies to your discussions
                       </p>
                     </div>
@@ -343,7 +343,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Chart Reminders
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Receive reminders about astrological events
                       </p>
                     </div>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
             <div className="border border-black bg-white">
               <div className="p-6 border-b border-black" style={{ backgroundColor: '#6bdbff' }}>
                 <h2 className="font-space-grotesk text-xl font-bold text-black mb-1">Browser Notifications</h2>
-                <p className="font-inter text-sm text-black/80">Push notification settings</p>
+                <p className="font-open-sans text-sm text-black/80">Push notification settings</p>
               </div>
               <div className="p-6 space-y-4">
                 <div className="border border-black p-4">
@@ -368,7 +368,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Push Notifications
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Enable browser push notifications
                       </p>
                     </div>
@@ -384,7 +384,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Real-time Alerts
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Instant notifications for urgent updates
                       </p>
                     </div>
@@ -400,7 +400,7 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                         Sound Notifications
                       </div>
-                      <p className="font-inter text-xs text-black/60">
+                      <p className="font-open-sans text-xs text-black/60">
                         Play sound with notifications
                       </p>
                     </div>
@@ -421,7 +421,7 @@ export default function SettingsPage() {
               <div className="border border-black bg-white">
                 <div className="p-6 border-b border-black" style={{ backgroundColor: '#ff91e9' }}>
                   <h2 className="font-space-grotesk text-xl font-bold text-black mb-1">Privacy Settings</h2>
-                  <p className="font-inter text-sm text-black/80">Control information visibility</p>
+                  <p className="font-open-sans text-sm text-black/80">Control information visibility</p>
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="border border-black p-4">
@@ -430,7 +430,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Show Zodiac Sign Publicly
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           Display sun sign in discussions
                         </p>
                       </div>
@@ -455,7 +455,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Show Birth Information
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           Display birth details in profile
                         </p>
                       </div>
@@ -480,7 +480,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Allow Direct Messages
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           Let users send private messages
                         </p>
                       </div>
@@ -505,7 +505,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Show Online Status
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           Display when actively using site
                         </p>
                       </div>
@@ -530,7 +530,7 @@ export default function SettingsPage() {
               <div className="border border-black bg-white">
                 <div className="p-6 border-b border-black" style={{ backgroundColor: '#51bd94' }}>
                   <h2 className="font-space-grotesk text-xl font-bold text-black mb-1">Account Status</h2>
-                  <p className="font-inter text-sm text-black/80">Your account information</p>
+                  <p className="font-open-sans text-sm text-black/80">Your account information</p>
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="border border-black p-4">
@@ -539,7 +539,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Account Type
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           {user.authProvider === 'anonymous' ? 'Anonymous account' : 'Registered account'}
                         </p>
                       </div>
@@ -558,7 +558,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Member Since
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           {new Date(user.createdAt).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -575,7 +575,7 @@ export default function SettingsPage() {
                         <div className="font-space-grotesk text-sm font-semibold text-black mb-1">
                           Export Your Data
                         </div>
-                        <p className="font-inter text-xs text-black/60">
+                        <p className="font-open-sans text-xs text-black/60">
                           Download a copy of all your account data
                         </p>
                       </div>
@@ -595,7 +595,7 @@ export default function SettingsPage() {
             <div className="border border-black bg-white">
               <div className="p-6 border-b border-black bg-red-500">
                 <h2 className="font-space-grotesk text-xl font-bold text-white mb-1">Danger Zone</h2>
-                <p className="font-inter text-sm text-white/90">Irreversible account actions</p>
+                <p className="font-open-sans text-sm text-white/90">Irreversible account actions</p>
               </div>
               <div className="p-6">
                 <div className="border border-red-500 p-6 bg-red-50">
@@ -604,11 +604,11 @@ export default function SettingsPage() {
                       <div className="font-space-grotesk text-lg font-semibold text-black mb-2">
                         Delete Your Account
                       </div>
-                      <p className="font-inter text-sm text-black/70 mb-4">
+                      <p className="font-open-sans text-sm text-black/70 mb-4">
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
                       <div className="p-4 border border-red-300 bg-white">
-                        <p className="font-inter text-xs text-red-800">
+                        <p className="font-open-sans text-xs text-red-800">
                           <strong>What gets deleted:</strong> Your profile, birth data, generated charts, forum posts, votes, and all personal information. Some content may be anonymized rather than deleted to preserve forum discussions.
                         </p>
                       </div>

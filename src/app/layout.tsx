@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Epilogue, Inter, Open_Sans } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import Layout from "@/components/Layout"; // Import the Layout component
@@ -13,33 +13,13 @@ import MemoryCleanup from "@/components/MemoryCleanup";
 // Memory pressure monitoring disabled - import only when needed
 // import "@/utils/memoryPressure";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Synapsas fonts - reduced weights to save memory
-const epilogue = Epilogue({
-  variable: "--font-epilogue",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"], // Reduced from 6 to 3 weights
-});
+// Optimized to only 2 fonts for better performance
 
 const spaceGrotesk = localFont({
   src: [
     {
       path: "../../public/fonts/Space_Grotesk/SpaceGrotesk-Regular.ttf",
       weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Space_Grotesk/SpaceGrotesk-Medium.ttf",
-      weight: "500",
       style: "normal",
     },
     {
@@ -52,52 +32,19 @@ const spaceGrotesk = localFont({
       weight: "700",
       style: "normal",
     },
-    {
-      path: "../../public/fonts/Space_Grotesk/SpaceGrotesk-Light.ttf",
-      weight: "300",
-      style: "normal",
-    },
   ],
   variable: "--font-space-grotesk",
+  display: "swap",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"], // Reduced from 6 to 3 weights
-});
 
 const openSans = Open_Sans({
   variable: "--font-open-sans",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+  display: "swap",
 });
 
-const arvo = localFont({
-  src: [
-    {
-      path: "../../public/fonts/Arvo/Arvo-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Arvo/Arvo-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Arvo/Arvo-Italic.ttf",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../../public/fonts/Arvo/Arvo-BoldItalic.ttf",
-      weight: "700",
-      style: "italic",
-    },
-  ],
-  variable: "--font-arvo",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -179,7 +126,7 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${arvo.variable} ${epilogue.variable} ${spaceGrotesk.variable} ${inter.variable} ${openSans.variable} antialiased`}
+        className={`${spaceGrotesk.variable} ${openSans.variable} antialiased`}
       >
         <ErrorBoundary>
           <Layout>{children}</Layout> {/* Wrap children with Layout */}

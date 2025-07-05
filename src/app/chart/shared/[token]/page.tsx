@@ -41,7 +41,6 @@ export default function SharedChartPage() {
           setNotFound(true);
         }
       } catch (error) {
-        console.error('Error loading shared chart:', error);
         setNotFound(true);
       } finally {
         setIsLoading(false);
@@ -56,7 +55,7 @@ export default function SharedChartPage() {
       <main className="bg-white min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-black border-t-transparent animate-spin mx-auto mb-4"></div>
-          <p className="font-inter text-black/60">Loading shared chart...</p>
+          <p className="font-open-sans text-black/60">Loading shared chart...</p>
         </div>
       </main>
     );
@@ -74,7 +73,7 @@ export default function SharedChartPage() {
           <h1 className="font-space-grotesk text-2xl font-bold text-black mb-4">
             Chart Not Found
           </h1>
-          <p className="font-inter text-black/70 mb-8">
+          <p className="font-open-sans text-black/70 mb-8">
             This chart link is invalid, expired, or the chart is no longer shared publicly.
           </p>
           <button
@@ -102,7 +101,7 @@ export default function SharedChartPage() {
             <h1 className="font-space-grotesk text-3xl md:text-4xl font-bold text-black mb-4">
               {chart.title || `${chart.subjectName}'s Natal Chart`}
             </h1>
-            <p className="font-inter text-black/70">
+            <p className="font-open-sans text-black/70">
               Shared from {BRAND.name}
             </p>
           </div>
@@ -142,21 +141,21 @@ export default function SharedChartPage() {
                 </h3>
                 <div className="space-y-3">
                   <div>
-                    <span className="font-inter text-sm text-black/60">Subject:</span>
-                    <div className="font-inter text-sm font-medium text-black">
+                    <span className="font-open-sans text-sm text-black/60">Subject:</span>
+                    <div className="font-open-sans text-sm font-medium text-black">
                       {chart.subjectName}
                     </div>
                   </div>
                   <div>
-                    <span className="font-inter text-sm text-black/60">Generated:</span>
-                    <div className="font-inter text-sm font-medium text-black">
+                    <span className="font-open-sans text-sm text-black/60">Generated:</span>
+                    <div className="font-open-sans text-sm font-medium text-black">
                       {new Date(chart.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                   {chart.description && (
                     <div>
-                      <span className="font-inter text-sm text-black/60">Description:</span>
-                      <div className="font-inter text-sm font-medium text-black">
+                      <span className="font-open-sans text-sm text-black/60">Description:</span>
+                      <div className="font-open-sans text-sm font-medium text-black">
                         {chart.description}
                       </div>
                     </div>
@@ -184,7 +183,7 @@ export default function SharedChartPage() {
                   <h4 className="font-space-grotesk text-sm font-bold text-black mb-2">
                     Create Your Own Chart
                   </h4>
-                  <p className="font-inter text-xs text-black/70 mb-4">
+                  <p className="font-open-sans text-xs text-black/70 mb-4">
                     Discover your own cosmic blueprint with a personalized natal chart.
                   </p>
                   <button

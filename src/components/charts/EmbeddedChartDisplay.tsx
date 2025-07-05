@@ -172,7 +172,7 @@ export default function EmbeddedChartDisplay({
                 <h3 className="font-space-grotesk font-bold text-black">
                   📊 Shared Chart
                 </h3>
-                <p className="text-sm text-black/70 font-inter">
+                <p className="text-sm text-black/70 font-open-sans">
                   {chart.metadata.chartTitle}
                 </p>
               </div>
@@ -210,7 +210,7 @@ export default function EmbeddedChartDisplay({
             /* Preview Mode - Compact Summary */
             <div className="space-y-4">
               {/* Quick Info */}
-              <div className="flex flex-wrap gap-4 text-sm font-inter">
+              <div className="flex flex-wrap gap-4 text-sm font-open-sans">
                 {chart.chartType === 'natal' && chart.metadata.birthData && (
                   <>
                     <span>📅 {new Date(chart.metadata.birthData.dateOfBirth).toLocaleDateString()}</span>
@@ -267,7 +267,7 @@ export default function EmbeddedChartDisplay({
                                 <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                 <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                               </div>
-                              <p className="text-lg font-inter">
+                              <p className="text-lg font-open-sans">
                                 Loading {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
                               </p>
                               <p className="text-sm text-gray-400 mt-2">Preparing chart data...</p>
@@ -284,7 +284,7 @@ export default function EmbeddedChartDisplay({
                             <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                             <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                           </div>
-                          <p className="text-lg font-inter">
+                          <p className="text-lg font-open-sans">
                             Loading {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
                           </p>
                           <p className="text-sm text-gray-400 mt-2">Please wait...</p>
@@ -302,7 +302,7 @@ export default function EmbeddedChartDisplay({
                       chart.metadata.planetSummary.map((planet, index) => (
                         <span 
                           key={index}
-                          className="inline-block px-2 py-1 text-xs font-inter font-medium border bg-white"
+                          className="inline-block px-2 py-1 text-xs font-open-sans font-medium border bg-white"
                           style={{ borderColor: '#e5e7eb', color: '#19181a' }}
                         >
                           {planet.planet} {planet.sign} {planet.house}H
@@ -310,7 +310,7 @@ export default function EmbeddedChartDisplay({
                         </span>
                       ))
                     ) : (
-                      <p className="text-xs font-inter text-gray-500">No planet data available</p>
+                      <p className="text-xs font-open-sans text-gray-500">No planet data available</p>
                     )}
                   </div>
 
@@ -346,7 +346,7 @@ export default function EmbeddedChartDisplay({
                     <h4 className="font-space-grotesk font-bold text-black">
                       🌟 Major Aspects
                     </h4>
-                    <p className="text-sm text-black/70 font-inter">
+                    <p className="text-sm text-black/70 font-open-sans">
                       {computedAspects.length} aspects found
                     </p>
                   </div>
@@ -391,7 +391,7 @@ export default function EmbeddedChartDisplay({
                         return (
                           <span 
                             key={index}
-                            className={`inline-block px-3 py-1 text-sm font-inter font-medium border ${getAspectColor()}`}
+                            className={`inline-block px-3 py-1 text-sm font-open-sans font-medium border ${getAspectColor()}`}
                             style={{ backgroundColor: getAspectBgColor() }}
                           >
                             {aspect}
@@ -409,7 +409,7 @@ export default function EmbeddedChartDisplay({
 
         {/* Chart Attribution */}
         <div className="px-4 py-2 bg-gray-50 border-t border-black">
-          <div className="flex items-center justify-between text-xs text-black/60 font-inter">
+          <div className="flex items-center justify-between text-xs text-black/60 font-open-sans">
             <span>
               Chart created {new Date(chart.createdAt).toLocaleDateString()}
             </span>
@@ -454,7 +454,7 @@ export default function EmbeddedChartDisplay({
                         <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         <div className="w-3 h-3 bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
-                      <p className="text-lg font-inter">
+                      <p className="text-lg font-open-sans">
                         Loading {chart.chartType.charAt(0).toUpperCase() + chart.chartType.slice(1)} Chart
                       </p>
                       <p className="text-sm text-gray-400 mt-2">Preparing detailed view...</p>

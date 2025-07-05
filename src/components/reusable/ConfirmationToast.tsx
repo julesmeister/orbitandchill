@@ -100,7 +100,7 @@ export default function ConfirmationToast({
 
           {/* Message */}
           <div className="mb-5">
-            <p className="text-sm text-gray-700 font-inter leading-relaxed">
+            <p className="text-sm text-gray-700 font-open-sans leading-relaxed">
               {message}
             </p>
           </div>

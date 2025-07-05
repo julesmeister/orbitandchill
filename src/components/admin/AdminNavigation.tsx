@@ -79,7 +79,7 @@ const SearchInput = ({ placeholder, className }: { placeholder: string; classNam
     <input
       type="text"
       placeholder={placeholder}
-      className={`h-12 pl-10 pr-3 text-sm bg-white border border-black focus:outline-none focus:border-black transition-colors font-inter ${className || ''}`}
+      className={`h-12 pl-10 pr-3 text-sm bg-white border border-black focus:outline-none focus:border-black transition-colors font-open-sans ${className || ''}`}
     />
     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
       <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">

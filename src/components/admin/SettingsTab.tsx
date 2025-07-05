@@ -62,7 +62,7 @@ export default function SettingsTab({ isLoading: externalLoading = false }: Sett
                   <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
                   <div className="w-3 h-3 bg-black animate-bounce"></div>
                 </div>
-                <p className="font-inter text-black">Loading settings...</p>
+                <p className="font-open-sans text-black">Loading settings...</p>
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ export default function SettingsTab({ isLoading: externalLoading = false }: Sett
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <h3 className="mt-3 font-space-grotesk text-base font-bold text-black">No settings found</h3>
-              <p className="mt-1 font-inter text-xs text-black/70">
+              <p className="mt-1 font-open-sans text-xs text-black/70">
                 {searchQuery ? 'Try adjusting your search criteria.' : 'No settings available in this category.'}
               </p>
             </div>

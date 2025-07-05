@@ -150,7 +150,7 @@ export default function StatusToast({
 
         {/* Message */}
         <div className="mb-3">
-          <p className="text-sm font-inter" style={{ color: colors.text }}>
+          <p className="text-sm font-open-sans" style={{ color: colors.text }}>
             {message}
           </p>
         </div>

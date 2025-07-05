@@ -83,7 +83,7 @@ export default function ConfirmationModal({
               <div>
                 <h3 className="text-lg font-bold font-space-grotesk text-black">{title}</h3>
                 {timeLeft !== null && (
-                  <p className="text-xs text-black/60 font-inter">
+                  <p className="text-xs text-black/60 font-open-sans">
                     Auto-cancel in {timeLeft}s
                   </p>
                 )}
@@ -98,7 +98,7 @@ export default function ConfirmationModal({
           </div>
 
           {/* Message */}
-          <p className="text-black font-inter mb-6 leading-relaxed">
+          <p className="text-black font-open-sans mb-6 leading-relaxed">
             {message}
           </p>
 

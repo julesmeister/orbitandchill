@@ -44,11 +44,11 @@ export default function SettingsCategory({
             </div>
             <div>
               <h3 className="font-space-grotesk text-base font-bold text-black">{categoryInfo.name}</h3>
-              <p className="font-inter text-xs text-black/80">{categoryInfo.description}</p>
+              <p className="font-open-sans text-xs text-black/80">{categoryInfo.description}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-inter text-xs font-medium text-black px-2 py-1 bg-white border border-black">
+            <span className="font-open-sans text-xs font-medium text-black px-2 py-1 bg-white border border-black">
               {settings.length}
             </span>
             <svg

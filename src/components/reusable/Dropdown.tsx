@@ -140,7 +140,7 @@ export default function Dropdown({
                 return (
                   <div
                     key={index}
-                    className="px-4 py-2 text-xs font-semibold text-black uppercase tracking-wider font-inter"
+                    className="px-4 py-2 text-xs font-semibold text-black uppercase tracking-wider font-open-sans"
                   >
                     {item.label}
                   </div>
@@ -152,7 +152,7 @@ export default function Dropdown({
                   <Link
                     key={index}
                     href={item.href || '#'}
-                    className={`group relative flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 font-inter overflow-hidden hover:pl-6 ${getVariantClasses(item.variant)}`}
+                    className={`group relative flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 font-open-sans overflow-hidden hover:pl-6 ${getVariantClasses(item.variant)}`}
                     onClick={() => setIsOpen(false)}
                   >
                     {/* Animated accent bar */}
@@ -192,7 +192,7 @@ export default function Dropdown({
                       item.onClick?.()
                       setIsOpen(false)
                     }}
-                    className={`group relative flex items-center w-full px-4 py-3 text-sm font-medium transition-all duration-200 text-left font-inter overflow-hidden hover:pl-6 ${getVariantClasses(item.variant)}`}
+                    className={`group relative flex items-center w-full px-4 py-3 text-sm font-medium transition-all duration-200 text-left font-open-sans overflow-hidden hover:pl-6 ${getVariantClasses(item.variant)}`}
                   >
                     {/* Animated accent bar */}
                     <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>

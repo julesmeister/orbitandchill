@@ -79,7 +79,7 @@ export default function VideoSelectionModal({
               <h2 className="font-space-grotesk text-2xl font-bold text-black">
                 Add Video
               </h2>
-              <p className="font-inter text-black/70 mt-1">
+              <p className="font-open-sans text-black/70 mt-1">
                 Add a YouTube or Vimeo video to your discussion
               </p>
             </div>
@@ -107,7 +107,7 @@ export default function VideoSelectionModal({
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
-              className={`w-full px-4 py-3 border bg-white focus:outline-none focus:ring-2 focus:ring-black/20 font-inter ${
+              className={`w-full px-4 py-3 border bg-white focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans ${
                 videoUrl && !validation.isValid ? 'border-red-500' : 'border-black'
               }`}
               disabled={isLoading}
@@ -115,12 +115,12 @@ export default function VideoSelectionModal({
             
             {/* Validation Message */}
             {videoUrl && !validation.isValid && validation.error && (
-              <p className="text-red-600 text-sm mt-2 font-inter">{validation.error}</p>
+              <p className="text-red-600 text-sm mt-2 font-open-sans">{validation.error}</p>
             )}
             
             {/* Success Message */}
             {validation.isValid && (
-              <div className="flex items-center mt-2 text-green-600 text-sm font-inter">
+              <div className="flex items-center mt-2 text-green-600 text-sm font-open-sans">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
@@ -159,7 +159,7 @@ export default function VideoSelectionModal({
                         {validation.platform} Video
                       </span>
                     </div>
-                    <p className="text-sm text-black/70 font-inter">
+                    <p className="text-sm text-black/70 font-open-sans">
                       Ready to attach to your discussion
                     </p>
                   </div>
@@ -176,14 +176,14 @@ export default function VideoSelectionModal({
                 <span className="text-lg mr-3">📺</span>
                 <div>
                   <div className="font-space-grotesk font-bold text-black text-sm">YouTube</div>
-                  <div className="text-xs text-black/60 font-inter">youtube.com, youtu.be</div>
+                  <div className="text-xs text-black/60 font-open-sans">youtube.com, youtu.be</div>
                 </div>
               </div>
               <div className="flex items-center p-3 border border-black bg-white">
                 <span className="text-lg mr-3">🎬</span>
                 <div>
                   <div className="font-space-grotesk font-bold text-black text-sm">Vimeo</div>
-                  <div className="text-xs text-black/60 font-inter">vimeo.com</div>
+                  <div className="text-xs text-black/60 font-open-sans">vimeo.com</div>
                 </div>
               </div>
             </div>

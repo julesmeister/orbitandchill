@@ -122,7 +122,7 @@ export default function HoraryChartDisplay({
               <div>
                 <h2 className="font-space-grotesk text-3xl font-bold text-black mb-2">Horary Oracle</h2>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
+                  <div className="flex items-center gap-2 text-sm text-black/70 font-open-sans">
                     <span className="text-black">⏰</span>
                     <span>
                       Cast on {questionDate.toLocaleDateString('en-US', { 
@@ -137,7 +137,7 @@ export default function HoraryChartDisplay({
                       })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
+                  <div className="flex items-center gap-2 text-sm text-black/70 font-open-sans">
                     <span className="text-black">📍</span>
                     <span>
                       {question?.location || 
@@ -183,7 +183,7 @@ export default function HoraryChartDisplay({
             </div>
             <h3 className="font-space-grotesk font-bold text-black">Your Question</h3>
           </div>
-          <p className={`text-black font-inter text-lg leading-relaxed ${!showFullQuestion && question.question.length > 150 ? 'line-clamp-3' : ''}`}>
+          <p className={`text-black font-open-sans text-lg leading-relaxed ${!showFullQuestion && question.question.length > 150 ? 'line-clamp-3' : ''}`}>
             "{question.question}"
           </p>
           {question.question.length > 150 && (
@@ -216,7 +216,7 @@ export default function HoraryChartDisplay({
               <div className="text-4xl font-bold mb-3 text-black font-space-grotesk">
                 {question.answer}
               </div>
-              <p className="text-sm text-black font-inter">
+              <p className="text-sm text-black font-open-sans">
                 {question.answer === 'Yes' 
                   ? 'The stars favor your inquiry' 
                   : question.answer === 'No' 
@@ -238,7 +238,7 @@ export default function HoraryChartDisplay({
                 <div className="text-xl font-bold text-black mb-3 font-space-grotesk">
                   {question.timing}
                 </div>
-                <p className="text-sm text-black font-inter">
+                <p className="text-sm text-black font-open-sans">
                   When the celestial forces align
                 </p>
               </div>

@@ -51,7 +51,7 @@ const MobileNav = React.memo(({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-white text-black placeholder-black/50 pl-10 pr-4 py-3 border border-black focus:outline-none font-inter focus:border-black"
+            className="w-full bg-white text-black placeholder-black/50 pl-10 pr-4 py-3 border border-black focus:outline-none font-open-sans focus:border-black"
             placeholder="Search..."
           />
         </div>
@@ -63,7 +63,7 @@ const MobileNav = React.memo(({
           <div key={href} className="border-b border-black last:border-b-0">
             <NavigationLink
               href={href}
-              className="block px-4 py-4 w-full text-left font-inter font-medium"
+              className="block px-4 py-4 w-full text-left font-open-sans font-medium"
               isLoading={loadingLink === href}
               isActive={isActiveLink(href)}
               progressWidth={progressWidth}

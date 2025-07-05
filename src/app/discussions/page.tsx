@@ -115,6 +115,8 @@ export default function DiscussionsPage() {
 
   return (
     <div className="bg-white">
+      {/* Hero Section */}
+      <DiscussionsHero />
 
       {/* Mobile Search Filters */}
       <MobileSearchFilters
@@ -269,7 +271,7 @@ export default function DiscussionsPage() {
             <h2 className="font-space-grotesk text-3xl font-bold text-black mb-4">
               Community Guidelines
             </h2>
-            <p className="font-inter text-lg text-black/80 mb-8 max-w-2xl mx-auto">
+            <p className="font-open-sans text-lg text-black/80 mb-8 max-w-2xl mx-auto">
               Help us maintain a welcoming and respectful community for all astrology enthusiasts
             </p>
 

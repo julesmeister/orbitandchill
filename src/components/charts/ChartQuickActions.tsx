@@ -171,7 +171,7 @@ export default function ChartQuickActions({
           </div>
           <div>
             <h3 className="font-space-grotesk text-lg font-bold text-black">Quick Actions</h3>
-            <p className="font-inter text-sm text-black/60">Manage your chart and explore</p>
+            <p className="font-open-sans text-sm text-black/60">Manage your chart and explore</p>
           </div>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function ChartQuickActions({
               </div>
               <div>
                 <h4 className="font-space-grotesk text-xl font-bold text-black">Edit Person Data</h4>
-                <p className="font-inter text-sm text-black/70 mt-1">Update details</p>
+                <p className="font-open-sans text-sm text-black/70 mt-1">Update details</p>
               </div>
             </div>
             <button
@@ -221,7 +221,7 @@ export default function ChartQuickActions({
               </div>
               <div>
                 <h4 className="font-space-grotesk text-xl font-bold text-black">Generate Chart For</h4>
-                <p className="font-inter text-sm text-black/70 mt-1">Select or add a new person</p>
+                <p className="font-open-sans text-sm text-black/70 mt-1">Select or add a new person</p>
               </div>
             </div>
             <PeopleSelector
@@ -264,7 +264,7 @@ export default function ChartQuickActions({
               </div>
               <div>
                 <h4 className="font-space-grotesk text-xl font-bold text-black">Add New Person</h4>
-                <p className="font-inter text-sm text-black/70 mt-1">Enter birth details and information</p>
+                <p className="font-open-sans text-sm text-black/70 mt-1">Enter birth details and information</p>
               </div>
             </div>
             <button
@@ -310,7 +310,7 @@ export default function ChartQuickActions({
                   <div className="font-space-grotesk text-lg font-bold text-black">
                     {isGenerating ? 'Regenerating Chart...' : 'Regenerate Chart'}
                   </div>
-                  <div className="font-inter text-sm text-black/80">
+                  <div className="font-open-sans text-sm text-black/80">
                     {isGenerating ? 'Please wait, creating your chart' : 'Generate a fresh version with latest data'}
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export default function ChartQuickActions({
                 </div>
                 <div>
                   <div className="font-space-grotesk font-semibold text-black group-hover:text-white text-sm transition-colors duration-300">Edit Data</div>
-                  <div className="font-inter text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Update info</div>
+                  <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Update info</div>
                 </div>
               </div>
             </button>
@@ -363,7 +363,7 @@ export default function ChartQuickActions({
                 </div>
                 <div>
                   <div className="font-space-grotesk font-semibold text-black group-hover:text-white text-sm transition-colors duration-300">Share Chart</div>
-                  <div className="font-inter text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Copy link</div>
+                  <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Copy link</div>
                 </div>
               </div>
             </button>
@@ -383,7 +383,7 @@ export default function ChartQuickActions({
                 </div>
                 <div>
                   <div className="font-space-grotesk font-semibold text-black group-hover:text-white text-sm transition-colors duration-300">Astrocartography</div>
-                  <div className="font-inter text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Explore locations</div>
+                  <div className="font-open-sans text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">Explore locations</div>
                 </div>
               </div>
             </button>
@@ -400,7 +400,7 @@ export default function ChartQuickActions({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 <span className="font-space-grotesk text-sm font-medium text-black group-hover:text-white transition-colors duration-300">Clear All Caches</span>
-                <span className="font-inter text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">(Force refresh)</span>
+                <span className="font-open-sans text-xs text-black/60 group-hover:text-white/80 transition-colors duration-300">(Force refresh)</span>
               </div>
             </button>
           )}

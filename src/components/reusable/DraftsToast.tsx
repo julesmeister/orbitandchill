@@ -110,7 +110,7 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-black font-space-grotesk">My Drafts</h3>
-              <p className="text-xs text-black/70 font-inter">
+              <p className="text-xs text-black/70 font-open-sans">
                 {loading ? 'Loading...' : `${drafts.length} draft${drafts.length !== 1 ? 's' : ''}`}
               </p>
             </div>
@@ -132,14 +132,14 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
           {loading ? (
             <div className="flex items-center justify-center py-4">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
-              <span className="ml-2 text-sm text-black font-inter">Loading...</span>
+              <span className="ml-2 text-sm text-black font-open-sans">Loading...</span>
             </div>
           ) : error ? (
             <div className="text-center py-4">
-              <div className="text-red-600 mb-3 text-sm font-inter">{error}</div>
+              <div className="text-red-600 mb-3 text-sm font-open-sans">{error}</div>
               <button 
                 onClick={fetchDrafts}
-                className="px-3 py-2 bg-black text-white border border-black hover:bg-gray-800 transition-colors text-sm font-inter"
+                className="px-3 py-2 bg-black text-white border border-black hover:bg-gray-800 transition-colors text-sm font-open-sans"
               >
                 Retry
               </button>
@@ -152,7 +152,7 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
               <h4 className="font-space-grotesk text-sm font-bold text-black mb-2">
                 No drafts yet
               </h4>
-              <p className="text-black/70 mb-3 text-xs font-inter">
+              <p className="text-black/70 mb-3 text-xs font-open-sans">
                 Save a draft to see it here.
               </p>
               <button 
@@ -160,7 +160,7 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
                   router.push('/discussions/new');
                   onHide();
                 }}
-                className="inline-flex items-center gap-1 px-3 py-2 bg-black text-white font-medium border border-black transition-all duration-300 hover:bg-gray-800 text-xs font-inter"
+                className="inline-flex items-center gap-1 px-3 py-2 bg-black text-white font-medium border border-black transition-all duration-300 hover:bg-gray-800 text-xs font-open-sans"
               >
                 Start Writing
               </button>
@@ -173,11 +173,11 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
                     <h4 className="font-space-grotesk text-sm font-bold text-black mb-1 line-clamp-1">
                       {draft.title || 'Untitled Draft'}
                     </h4>
-                    <div className="text-xs text-black/60 mb-2 font-inter">
+                    <div className="text-xs text-black/60 mb-2 font-open-sans">
                       {draft.category}
                     </div>
                     {draft.excerpt && (
-                      <p className="text-black/70 text-xs mb-2 line-clamp-2 font-inter">
+                      <p className="text-black/70 text-xs mb-2 line-clamp-2 font-open-sans">
                         {stripHtmlTags(draft.excerpt)}
                       </p>
                     )}
@@ -186,13 +186,13 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
                         {draft.tags.slice(0, 2).map((tag, index) => (
                           <span 
                             key={index}
-                            className="inline-flex items-center px-1 py-0.5 bg-black text-white text-xs border border-black font-inter"
+                            className="inline-flex items-center px-1 py-0.5 bg-black text-white text-xs border border-black font-open-sans"
                           >
                             #{tag}
                           </span>
                         ))}
                         {draft.tags.length > 2 && (
-                          <span className="text-xs text-black/60 font-inter">+{draft.tags.length - 2}</span>
+                          <span className="text-xs text-black/60 font-open-sans">+{draft.tags.length - 2}</span>
                         )}
                       </div>
                     )}
@@ -201,7 +201,7 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
                   <div className="flex items-center gap-0 border border-black overflow-hidden">
                     <button
                       onClick={() => editDraft(draft.id)}
-                      className="group relative flex-1 px-2 py-1.5 bg-black text-white border-r border-black hover:bg-gray-800 transition-colors text-xs font-inter"
+                      className="group relative flex-1 px-2 py-1.5 bg-black text-white border-r border-black hover:bg-gray-800 transition-colors text-xs font-open-sans"
                     >
                       <div className="relative flex items-center justify-center">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ export default function DraftsToast({ isVisible, onHide }: DraftsToastProps) {
                     </button>
                     <button
                       onClick={() => deleteDraft(draft.id)}
-                      className="group relative flex-1 px-2 py-1.5 bg-white text-black hover:bg-black hover:text-white transition-colors text-xs font-inter"
+                      className="group relative flex-1 px-2 py-1.5 bg-white text-black hover:bg-black hover:text-white transition-colors text-xs font-open-sans"
                     >
                       <div className="relative flex items-center justify-center">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

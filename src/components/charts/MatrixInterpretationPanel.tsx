@@ -138,13 +138,13 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
                   backgroundColor: arcana.color
                 }}
               >
-                <span className="text-2xl font-epilogue">{arcanaNumber}</span>
+                <span className="text-2xl font-space-grotesk">{arcanaNumber}</span>
               </div>
               <div className="flex-1">
                 <h3 className="font-space-grotesk text-3xl font-black text-black mb-1">
                   {positionName}
                 </h3>
-                <p className="font-inter text-xl text-black/70 mb-2">Arcana {arcanaNumber}: {arcana.name}</p>
+                <p className="font-open-sans text-xl text-black/70 mb-2">Arcana {arcanaNumber}: {arcana.name}</p>
                 {aspectType && (
                   <div
                     className="inline-flex items-center px-3 py-1 text-sm font-semibold text-black border-2 border-black"
@@ -165,7 +165,7 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
               <h4 className="font-space-grotesk text-xl font-bold text-black margin-small">
                 General Meaning
               </h4>
-              <p className="font-inter text-black leading-relaxed text-lg">
+              <p className="font-open-sans text-black leading-relaxed text-lg">
                 {arcana.description}
               </p>
             </div>
@@ -187,7 +187,7 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
                       }}
                     >
                       <h5 className="font-space-grotesk font-bold text-black margin-small">Overview</h5>
-                      <p className="font-inter text-black leading-relaxed">
+                      <p className="font-open-sans text-black leading-relaxed">
                         {matrixInterpretation.general}
                       </p>
                     </div>
@@ -199,7 +199,7 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
                       }}
                     >
                       <h5 className="font-space-grotesk font-bold text-black margin-small">Strengths</h5>
-                      <p className="font-inter text-black leading-relaxed">
+                      <p className="font-open-sans text-black leading-relaxed">
                         {matrixInterpretation.positive}
                       </p>
                     </div>
@@ -214,7 +214,7 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
                       }}
                     >
                       <h5 className="font-space-grotesk font-bold text-black margin-small">Challenges</h5>
-                      <p className="font-inter text-black leading-relaxed">
+                      <p className="font-open-sans text-black leading-relaxed">
                         {matrixInterpretation.challenge}
                       </p>
                     </div>
@@ -226,7 +226,7 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
                       }}
                     >
                       <h5 className="font-space-grotesk font-bold text-black margin-small">Guidance</h5>
-                      <p className="font-inter text-black leading-relaxed">
+                      <p className="font-open-sans text-black leading-relaxed">
                         {matrixInterpretation.advice}
                       </p>
                     </div>
@@ -256,7 +256,7 @@ const MatrixInterpretationPanel: React.FC<MatrixInterpretationPanelProps> = ({
                   </div>
                   <div>
                     <h5 className="font-space-grotesk font-bold text-black margin-small">Foundational Element</h5>
-                    <p className="font-inter text-black leading-relaxed">
+                    <p className="font-open-sans text-black leading-relaxed">
                       This position represents a foundational element in your Matrix of Destiny.
                       While specific interpretations for this aspect are still being developed,
                       the general arcana meaning above provides valuable insight into this energy in your life.

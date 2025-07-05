@@ -274,14 +274,14 @@ export default function DiscussionForm({
               value={formData.title}
               onChange={handleInputChange}
               placeholder={`What would you like to ${showBlogPostToggle ? 'write about' : 'discuss'}?`}
-              className="w-full px-4 py-4 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 text-lg placeholder-black/50 font-inter border-b-0"
+              className="w-full px-4 py-4 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 text-lg placeholder-black/50 font-open-sans border-b-0"
               required
             />
             
             {/* Slug Editor */}
             <div className="border-l border-r border-b border-black bg-gray-50 p-3">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-inter text-black/60">URL:</span>
+                <span className="text-xs font-open-sans text-black/60">URL:</span>
                 <span className="text-xs font-mono text-black/40">/discussions/</span>
                 {isEditingSlug ? (
                   <input
@@ -320,15 +320,15 @@ export default function DiscussionForm({
                                 autoFocus={true}
                               />
                             </div>
-                            <span className="text-xs font-inter text-black/60">Author</span>
+                            <span className="text-xs font-open-sans text-black/60">Author</span>
                           </>
                         ) : (
                           <>
-                            <span className="text-xs font-inter text-black/60 ml-4">Author:</span>
+                            <span className="text-xs font-open-sans text-black/60 ml-4">Author:</span>
                             <button
                               type="button"
                               onClick={handleAuthorEdit}
-                              className="text-left text-xs font-inter text-black hover:bg-black/5 px-2 py-1 rounded transition-colors border border-transparent"
+                              className="text-left text-xs font-open-sans text-black hover:bg-black/5 px-2 py-1 rounded transition-colors border border-transparent"
                             >
                               {formData.authorName || 'click-to-set-author'}
                             </button>
@@ -342,7 +342,7 @@ export default function DiscussionForm({
                   <button
                     type="button"
                     onClick={resetSlugFromTitle}
-                    className="text-xs font-inter text-black/60 hover:text-black underline ml-2"
+                    className="text-xs font-open-sans text-black/60 hover:text-black underline ml-2"
                     title="Reset URL from title"
                   >
                     Reset
@@ -367,7 +367,7 @@ export default function DiscussionForm({
                             }`}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-200/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                          <span className="relative font-medium text-sm font-inter">Blog Post</span>
+                          <span className="relative font-medium text-sm font-open-sans">Blog Post</span>
                         </button>
                         <button
                           type="button"
@@ -378,7 +378,7 @@ export default function DiscussionForm({
                             }`}
                         >
                           <div className="absolute inset-0 bg-gradient-to-l from-transparent via-green-200/20 to-transparent translate-x-[100%] group-hover:translate-x-[-100%] transition-transform duration-700"></div>
-                          <span className="relative font-medium text-sm font-inter">Forum Thread</span>
+                          <span className="relative font-medium text-sm font-open-sans">Forum Thread</span>
                         </button>
                       </div>
                     )}
@@ -403,7 +403,7 @@ export default function DiscussionForm({
                               </svg>
                             )}
                           </div>
-                          <span className="font-medium text-sm font-inter">Publish</span>
+                          <span className="font-medium text-sm font-open-sans">Publish</span>
                         </div>
                       </button>
                     )}
@@ -428,7 +428,7 @@ export default function DiscussionForm({
                               </svg>
                             )}
                           </div>
-                          <span className="font-medium text-sm font-inter">⭐ Feature</span>
+                          <span className="font-medium text-sm font-open-sans">⭐ Feature</span>
                         </div>
                       </button>
                     )}
@@ -481,7 +481,7 @@ export default function DiscussionForm({
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        <span className="font-medium text-sm font-inter">Edit</span>
+                        <span className="font-medium text-sm font-open-sans">Edit</span>
                       </>
                     ) : (
                       <>
@@ -489,7 +489,7 @@ export default function DiscussionForm({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span className="font-medium text-sm font-inter">Preview</span>
+                        <span className="font-medium text-sm font-open-sans">Preview</span>
                       </>
                     )}
                   </div>
@@ -504,7 +504,7 @@ export default function DiscussionForm({
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     <div className="relative flex items-center">
-                      <span className="font-medium text-sm font-inter mr-2">Excerpt</span>
+                      <span className="font-medium text-sm font-open-sans mr-2">Excerpt</span>
                       <svg
                         className={`w-4 h-4 transition-transform duration-200 ${isExcerptCollapsed ? 'rotate-0' : 'rotate-180'}`}
                         fill="none"
@@ -543,7 +543,7 @@ export default function DiscussionForm({
                   )}
                   
                   {/* Preview Meta */}
-                  <div className="flex items-center gap-3 text-sm text-black/60 mb-8 font-inter">
+                  <div className="flex items-center gap-3 text-sm text-black/60 mb-8 font-open-sans">
                     <time>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
                     <span>•</span>
                     <span>Draft</span>
@@ -564,7 +564,7 @@ export default function DiscussionForm({
                         <h3 className="font-space-grotesk font-bold text-black text-lg">
                           📊 {formData.embeddedChart.metadata.chartTitle}
                         </h3>
-                        <p className="text-sm text-black/70 font-inter mt-1">
+                        <p className="text-sm text-black/70 font-open-sans mt-1">
                           {formData.embeddedChart.chartType.charAt(0).toUpperCase() + formData.embeddedChart.chartType.slice(1)} Chart
                         </p>
                       </div>
@@ -585,7 +585,7 @@ export default function DiscussionForm({
                         <h3 className="font-space-grotesk font-bold text-black text-lg">
                           📹 {formData.embeddedVideo.title}
                         </h3>
-                        <p className="text-sm text-black/70 font-inter mt-1">
+                        <p className="text-sm text-black/70 font-open-sans mt-1">
                           {formData.embeddedVideo.platform.charAt(0).toUpperCase() + formData.embeddedVideo.platform.slice(1)} Video
                         </p>
                       </div>
@@ -599,7 +599,7 @@ export default function DiscussionForm({
                   )}
                   
                   {/* Preview Body */}
-                  <div className="prose prose-black max-w-none font-inter">
+                  <div className="prose prose-black max-w-none font-open-sans">
                     {formData.content ? (
                       <div 
                         className={`
@@ -622,7 +622,7 @@ export default function DiscussionForm({
                         dangerouslySetInnerHTML={{ __html: formData.content }}
                       />
                     ) : (
-                      <p className="text-black/50 italic font-inter">
+                      <p className="text-black/50 italic font-open-sans">
                         Your post content will appear here...
                       </p>
                     )}
@@ -637,7 +637,7 @@ export default function DiscussionForm({
                           {formData.tags.map((tag, index) => (
                             <span 
                               key={index}
-                              className="inline-flex items-center px-3 py-1 bg-black text-white text-sm border border-black font-inter"
+                              className="inline-flex items-center px-3 py-1 bg-black text-white text-sm border border-black font-open-sans"
                             >
                               <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
@@ -657,7 +657,7 @@ export default function DiscussionForm({
                 {/* Attached Media Indicators (Edit Mode Only) */}
                 {(formData.embeddedChart || formData.embeddedVideo) && (
                   <div className="mb-4 p-3 bg-gray-50 border border-gray-300 rounded">
-                    <div className="flex items-center gap-2 text-sm text-black/70 font-inter">
+                    <div className="flex items-center gap-2 text-sm text-black/70 font-open-sans">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                       </svg>
@@ -699,7 +699,7 @@ export default function DiscussionForm({
             {showExcerpt && !isExcerptCollapsed && (
               <div className="mt-6 pt-6 border-t border-black">
                 <label className="font-space-grotesk text-lg font-bold text-black mb-4 block">
-                  Excerpt <span className="text-black/60 font-inter text-sm">(optional)</span>
+                  Excerpt <span className="text-black/60 font-open-sans text-sm">(optional)</span>
                 </label>
 
                 <textarea
@@ -709,7 +709,7 @@ export default function DiscussionForm({
                   onChange={handleInputChange}
                   rows={3}
                   placeholder="Brief description of the post..."
-                  className="w-full px-4 py-3 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 resize-vertical placeholder-black/50 font-inter"
+                  className="w-full px-4 py-3 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 resize-vertical placeholder-black/50 font-open-sans"
                 />
               </div>
             )}
@@ -735,7 +735,7 @@ export default function DiscussionForm({
                     key={category.id}
                     type="button"
                     onClick={() => updateFormData({ category: category.name })}
-                    className={`px-4 py-2 text-sm font-medium border border-black transition-all duration-300 font-inter ${formData.category === category.name
+                    className={`px-4 py-2 text-sm font-medium border border-black transition-all duration-300 font-open-sans ${formData.category === category.name
                       ? 'bg-black text-white'
                       : 'bg-white text-black hover:bg-black hover:text-white'
                       }`}
@@ -760,7 +760,7 @@ export default function DiscussionForm({
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleTagInputKeyDown}
               placeholder="Type a tag and press Enter..."
-              className="w-full px-4 py-3 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-black/50 font-inter mb-4"
+              className="w-full px-4 py-3 border border-black bg-white focus:outline-none focus:ring-2 focus:ring-black/20 placeholder-black/50 font-open-sans mb-4"
             />
 
             {/* Tag Display */}
@@ -769,7 +769,7 @@ export default function DiscussionForm({
                 {formData.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-3 py-1 text-sm bg-black text-white border border-black font-inter"
+                    className="inline-flex items-center px-3 py-1 text-sm bg-black text-white border border-black font-open-sans"
                   >
                     #{tag}
                     <button
@@ -799,7 +799,7 @@ export default function DiscussionForm({
                       key={tag.id}
                       type="button"
                       onClick={() => handleAddTag(tag.name)}
-                      className="bg-white text-black px-3 py-1 text-sm border border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
+                      className="bg-white text-black px-3 py-1 text-sm border border-black hover:bg-black hover:text-white transition-all duration-300 font-open-sans"
                       title={tag.description}
                     >
                       #{tag.name} {tag.usageCount > 10 && <span className="text-xs opacity-70">({tag.usageCount})</span>}

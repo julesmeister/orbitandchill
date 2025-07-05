@@ -303,14 +303,14 @@ export default function SimpleRichTextEditor({
         {isPreviewMode ? (
           /* Preview Mode */
           <div className={`p-3 sm:p-6 ${isFullscreen ? 'h-full overflow-y-auto' : 'min-h-[300px] sm:min-h-[400px]'} bg-gray-50`}>
-            <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-inter">
+            <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-open-sans">
               {content ? (
                 <div 
                   className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1"
                   dangerouslySetInnerHTML={{ __html: content }}
                 />
               ) : (
-                <div className="text-black/50 font-inter italic">
+                <div className="text-black/50 font-open-sans italic">
                   {placeholder}
                 </div>
               )}
@@ -323,12 +323,12 @@ export default function SimpleRichTextEditor({
               ref={editorRef}
               contentEditable
               onInput={handleInput}
-              className={`prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none p-3 sm:p-6 font-inter ${isFullscreen ? 'h-full overflow-y-auto' : 'min-h-[300px] sm:min-h-[400px]'} [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h1]:text-2xl [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h2]:text-xl [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_h3]:text-lg [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-gray-50 [&_blockquote]:italic [&_blockquote]:pl-4 [&_blockquote]:py-2 [&_blockquote]:my-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1`}
+              className={`prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none p-3 sm:p-6 font-open-sans ${isFullscreen ? 'h-full overflow-y-auto' : 'min-h-[300px] sm:min-h-[400px]'} [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h1]:text-2xl [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h2]:text-xl [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_h3]:text-lg [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-gray-50 [&_blockquote]:italic [&_blockquote]:pl-4 [&_blockquote]:py-2 [&_blockquote]:my-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1`}
               style={{ minHeight: isFullscreen ? 'auto' : '300px' }}
               suppressContentEditableWarning={true}
             />
             {!content && (
-              <div className="absolute top-3 sm:top-6 left-3 sm:left-6 text-black/40 pointer-events-none font-inter text-sm sm:text-base italic">
+              <div className="absolute top-3 sm:top-6 left-3 sm:left-6 text-black/40 pointer-events-none font-open-sans text-sm sm:text-base italic">
                 {placeholder}
               </div>
             )}
@@ -343,7 +343,7 @@ export default function SimpleRichTextEditor({
           <div className="px-3 sm:px-6 py-3 sm:py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               {/* Left: Writing Statistics */}
-              <div className="flex items-center gap-6 font-inter">
+              <div className="flex items-center gap-6 font-open-sans">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-black"></div>
                   <span className="text-sm font-medium text-black">
@@ -378,7 +378,7 @@ export default function SimpleRichTextEditor({
                         ? 'bg-white' 
                         : 'bg-black'
                     }`}></div>
-                    <span className="text-xs font-medium font-inter">
+                    <span className="text-xs font-medium font-open-sans">
                       {textStats.words >= minWords ? 'Words ✓' : `${minWords - textStats.words} more words`}
                     </span>
                   </div>
@@ -394,7 +394,7 @@ export default function SimpleRichTextEditor({
                         ? 'bg-white' 
                         : 'bg-black'
                     }`}></div>
-                    <span className="text-xs font-medium font-inter">
+                    <span className="text-xs font-medium font-open-sans">
                       {textStats.characters >= minCharacters ? 'Length ✓' : `${minCharacters - textStats.characters} more chars`}
                     </span>
                   </div>
@@ -410,7 +410,7 @@ export default function SimpleRichTextEditor({
                 <div className="w-5 h-5 bg-black flex items-center justify-center flex-shrink-0">
                   <FontAwesomeIcon icon={faInfoCircle} className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm text-black font-inter">
+                <span className="text-sm text-black font-open-sans">
                   {validation.errors.join(' • ')}
                 </span>
               </div>

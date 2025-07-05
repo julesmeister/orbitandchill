@@ -15,7 +15,7 @@ export default function HoraryTimingJudgmentSection() {
             <div className="w-24 h-1 bg-black"></div>
           </div>
         </div>
-        <p className="text-black font-inter text-lg leading-relaxed">
+        <p className="text-black font-open-sans text-lg leading-relaxed">
           The final stage of horary interpretation involves synthesizing all astrological factors into a clear answer and, when possible, determining the timing of events.
         </p>
       </div>
@@ -32,7 +32,7 @@ export default function HoraryTimingJudgmentSection() {
               <div className="w-24 h-1 bg-black"></div>
             </div>
           </div>
-          <p className="text-black font-inter leading-relaxed mb-6">
+          <p className="text-black font-open-sans leading-relaxed mb-6">
             After analyzing significators, aspects, and planetary conditions, you must weave together all factors:
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function HoraryTimingJudgmentSection() {
                 <span className="text-black text-xs font-medium">"Yes" signals</span>
               </div>
             </div>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-4 h-4 bg-green-500 rounded-full mt-1 flex-shrink-0 flex items-center justify-center">
@@ -104,7 +104,7 @@ export default function HoraryTimingJudgmentSection() {
                 <span className="text-black text-xs font-medium">"No" signals</span>
               </div>
             </div>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-4 h-4 bg-red-500 rounded-full mt-1 flex-shrink-0 flex items-center justify-center">
@@ -159,7 +159,7 @@ export default function HoraryTimingJudgmentSection() {
                 <span className="text-black text-xs font-medium">Conditional outcomes</span>
               </div>
             </div>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-4 h-4 bg-orange-500 rounded-full mt-1 flex-shrink-0 flex items-center justify-center">
@@ -194,7 +194,7 @@ export default function HoraryTimingJudgmentSection() {
               <div className="border-r border-black p-6">
                 <h5 className="font-space-grotesk font-bold text-black mb-3">Reception</h5>
                 <div className="bg-white border border-black p-4">
-                  <div className="text-black font-inter text-sm space-y-2">
+                  <div className="text-black font-open-sans text-sm space-y-2">
                     <div>When one significator is in a sign ruled by the other:</div>
                     <div className="space-y-1 ml-4 text-xs">
                       <div className="flex items-center space-x-2">
@@ -222,7 +222,7 @@ export default function HoraryTimingJudgmentSection() {
               <div className="p-6">
                 <h5 className="font-space-grotesk font-bold text-black mb-3">Mutual Reception</h5>
                 <div className="bg-white border border-black p-4">
-                  <div className="text-black font-inter text-sm space-y-2">
+                  <div className="text-black font-open-sans text-sm space-y-2">
                     <div>When significators are each in signs ruled by the other:</div>
                     <div className="space-y-1 ml-4 text-xs">
                       <div className="flex items-center space-x-2">
@@ -272,11 +272,11 @@ export default function HoraryTimingJudgmentSection() {
             <h4 className="font-space-grotesk font-bold text-black mb-4">Aspect-Based Timing</h4>
             <div className="bg-white border border-black p-4 mb-4">
               <div className="font-space-grotesk font-bold text-black mb-2">Orb = Time Units</div>
-              <div className="text-black font-inter text-sm">
+              <div className="text-black font-open-sans text-sm">
                 If orb is 5°, event occurs in 5 time units
               </div>
             </div>
-            <div className="space-y-2 text-black font-inter text-sm">
+            <div className="space-y-2 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex justify-between">
                   <span>Immediate questions:</span>
@@ -301,7 +301,7 @@ export default function HoraryTimingJudgmentSection() {
           {/* House-Based Timing */}
           <div className="border-b border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">House-Based Timing</h4>
-            <div className="space-y-2 text-black font-inter text-sm">
+            <div className="space-y-2 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex justify-between">
                   <span>Angular houses (1, 4, 7, 10):</span>
@@ -322,7 +322,7 @@ export default function HoraryTimingJudgmentSection() {
               </div>
             </div>
             <div className="mt-4 bg-white border border-black p-3">
-              <div className="text-black font-inter text-xs">
+              <div className="text-black font-open-sans text-xs">
                 <span className="font-bold">Note:</span> Speed can also be determined by planetary motion and sign modality
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function HoraryTimingJudgmentSection() {
           {/* Sign-Based Timing */}
           <div className="border-r border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">Sign-Based Timing</h4>
-            <div className="space-y-2 text-black font-inter text-sm">
+            <div className="space-y-2 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="font-bold mb-1">Cardinal Signs (♈♋♎♑)</div>
                 <div className="text-xs">Quick action, immediate results</div>
@@ -350,7 +350,7 @@ export default function HoraryTimingJudgmentSection() {
           {/* Planetary Speed */}
           <div className="p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">Planetary Speed</h4>
-            <div className="space-y-2 text-black font-inter text-sm">
+            <div className="space-y-2 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex justify-between">
                   <span>Moon, Mercury:</span>
@@ -406,7 +406,7 @@ export default function HoraryTimingJudgmentSection() {
               >
                 <div className="font-space-grotesk font-bold text-black text-sm mb-2">{item.condition}</div>
                 <div className="bg-white border border-black p-2">
-                  <div className="text-black font-inter text-xs">{item.timing}</div>
+                  <div className="text-black font-open-sans text-xs">{item.timing}</div>
                 </div>
               </div>
             );
@@ -433,19 +433,19 @@ export default function HoraryTimingJudgmentSection() {
             <div className="space-y-4">
               <div>
                 <div className="font-space-grotesk font-bold text-black mb-2">Question:</div>
-                <div className="text-black font-inter">"Will I get the job I interviewed for?"</div>
+                <div className="text-black font-open-sans">"Will I get the job I interviewed for?"</div>
               </div>
               
               <div>
                 <div className="font-space-grotesk font-bold text-black mb-2">Chart Analysis:</div>
-                <div className="text-black font-inter text-sm">
+                <div className="text-black font-open-sans text-sm">
                   Querent's ruler (Mercury) applying to conjunction with 10th house ruler (Venus) in 3°. Both planets well-dignified. Moon applying to sextile querent's ruler.
                 </div>
               </div>
               
               <div>
                 <div className="font-space-grotesk font-bold text-black mb-2">Final Answer:</div>
-                <div className="text-black font-inter text-sm">
+                <div className="text-black font-open-sans text-sm">
                   "Yes, you will get the job. The applying conjunction between your significator and the job significator shows success. Venus is well-dignified, suggesting the position is genuine and worthwhile. The 3° orb in a cardinal sign suggests you'll hear within 3 days."
                 </div>
               </div>
@@ -459,21 +459,21 @@ export default function HoraryTimingJudgmentSection() {
                 <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-bold mx-auto mb-2">1</div>
                 <div className="font-space-grotesk font-bold text-black text-sm">Direct Answer</div>
                 <div className="bg-white border border-black p-2 mt-2">
-                  <div className="text-black font-inter text-xs">Yes, No, or Conditional</div>
+                  <div className="text-black font-open-sans text-xs">Yes, No, or Conditional</div>
                 </div>
               </div>
               <div className="border-r border-black p-4 text-center">
                 <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-bold mx-auto mb-2">2</div>
                 <div className="font-space-grotesk font-bold text-black text-sm">Explanation</div>
                 <div className="bg-white border border-black p-2 mt-2">
-                  <div className="text-black font-inter text-xs">Why this outcome is indicated</div>
+                  <div className="text-black font-open-sans text-xs">Why this outcome is indicated</div>
                 </div>
               </div>
               <div className="p-4 text-center">
                 <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-bold mx-auto mb-2">3</div>
                 <div className="font-space-grotesk font-bold text-black text-sm">Timing</div>
                 <div className="bg-white border border-black p-2 mt-2">
-                  <div className="text-black font-inter text-xs">When it will occur (if applicable)</div>
+                  <div className="text-black font-open-sans text-xs">When it will occur (if applicable)</div>
                 </div>
               </div>
             </div>
@@ -499,7 +499,7 @@ export default function HoraryTimingJudgmentSection() {
           {/* Ethical Guidelines */}
           <div className="border-r border-black border-b border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">Ethical Guidelines</h4>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-4 h-4 bg-indigo-500 rounded-full mt-1 flex-shrink-0 flex items-center justify-center">
@@ -538,7 +538,7 @@ export default function HoraryTimingJudgmentSection() {
           {/* When to Decline */}
           <div className="border-b border-black p-8">
             <h4 className="font-space-grotesk font-bold text-black mb-4">When to Decline Reading</h4>
-            <div className="space-y-3 text-black font-inter text-sm">
+            <div className="space-y-3 text-black font-open-sans text-sm">
               <div className="bg-white border border-black p-3">
                 <div className="flex items-start space-x-3">
                   <div className="w-4 h-4 bg-red-500 rounded-full mt-1 flex-shrink-0 flex items-center justify-center">
@@ -585,7 +585,7 @@ export default function HoraryTimingJudgmentSection() {
           {/* Final Note */}
           <div className="p-8 col-span-full">
             <div className="bg-white border border-black p-6 text-center">
-              <div className="text-black font-inter text-sm italic">
+              <div className="text-black font-open-sans text-sm italic">
                 <span className="font-bold">Mastery Note:</span> The mastery of horary timing comes through practice and developing intuitive sensitivity to the cosmic rhythms. Start with clear-cut charts and gradually work with more complex scenarios as your skills develop.
               </div>
             </div>

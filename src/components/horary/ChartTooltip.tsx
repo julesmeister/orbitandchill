@@ -129,7 +129,7 @@ export const ChartTooltip: React.FC<ChartTooltipProps> = ({
 
           {/* Content Section */}
           <div className="px-4 py-4 bg-white">
-            <div className="text-black font-inter text-sm leading-relaxed">
+            <div className="text-black font-open-sans text-sm leading-relaxed">
               {tooltip.content}
             </div>
           </div>

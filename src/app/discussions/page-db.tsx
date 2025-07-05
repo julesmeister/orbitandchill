@@ -275,7 +275,7 @@ export default function DiscussionsPage() {
           <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
             Astrology Discussions
           </h1>
-          <p className="font-inter text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+          <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
             Connect with fellow star enthusiasts, share insights, and explore the mysteries of the cosmos together
           </p>
         </div>
@@ -295,7 +295,7 @@ export default function DiscussionsPage() {
                   placeholder="Search discussions..."
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 text-black placeholder-black/50 focus:outline-none border-b-2 border-black bg-transparent font-inter text-lg"
+                  className="w-full pl-12 pr-4 py-4 text-black placeholder-black/50 focus:outline-none border-b-2 border-black bg-transparent font-open-sans text-lg"
                 />
               </div>
               
@@ -660,7 +660,7 @@ export default function DiscussionsPage() {
           <h2 className="font-space-grotesk text-3xl font-bold text-black mb-4">
             Community Guidelines
           </h2>
-          <p className="font-inter text-lg text-black/80 mb-8 max-w-2xl mx-auto">
+          <p className="font-open-sans text-lg text-black/80 mb-8 max-w-2xl mx-auto">
             Help us maintain a welcoming and respectful community for all astrology enthusiasts
           </p>
           

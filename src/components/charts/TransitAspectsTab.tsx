@@ -784,10 +784,10 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
         <h2 className="font-space-grotesk text-2xl font-bold text-black mb-2">
           Your Natal Aspects Right Now
         </h2>
-        <p className="font-inter text-sm text-black/70">
+        <p className="font-open-sans text-sm text-black/70">
           Discover when your birth patterns are strongest. This shows which of your existing natal aspects are being triggered and amplified by current planetary movements.
         </p>
-        <p className="font-inter text-xs text-black/50 mt-2">
+        <p className="font-open-sans text-xs text-black/50 mt-2">
           Updated: {new Date().toLocaleString()}
         </p>
       </div>

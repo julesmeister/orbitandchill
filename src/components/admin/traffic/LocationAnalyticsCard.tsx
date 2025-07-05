@@ -128,7 +128,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-green-500"></div>
-              <span className="text-sm font-medium text-black font-inter">Permission Granted</span>
+              <span className="text-sm font-medium text-black font-open-sans">Permission Granted</span>
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-black font-space-grotesk">{permissionGrantRate}</div>
@@ -142,7 +142,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-yellow-500"></div>
-              <span className="text-sm font-medium text-black font-inter">NYC Fallback</span>
+              <span className="text-sm font-medium text-black font-open-sans">NYC Fallback</span>
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-black font-space-grotesk">{fallbackRate}</div>
@@ -156,7 +156,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-blue-500"></div>
-              <span className="text-sm font-medium text-black font-inter">Current Location</span>
+              <span className="text-sm font-medium text-black font-open-sans">Current Location</span>
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-black font-space-grotesk">{formatPercentage(locationStats.currentLocationUsage, locationStats.totalRequests)}</div>
@@ -170,7 +170,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-purple-500"></div>
-              <span className="text-sm font-medium text-black font-inter">Birth Location</span>
+              <span className="text-sm font-medium text-black font-open-sans">Birth Location</span>
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-black font-space-grotesk">{formatPercentage(locationStats.birthLocationUsage, locationStats.totalRequests)}</div>
@@ -190,7 +190,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
                 <div key={country.country} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-indigo-500"></div>
-                    <span className="text-xs text-black font-inter">{country.country}</span>
+                    <span className="text-xs text-black font-open-sans">{country.country}</span>
                   </div>
                   <span className="text-xs font-bold text-black">{formatNumber(country.count)}</span>
                 </div>
@@ -207,7 +207,7 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
           <div className="space-y-2">
             {Object.entries(locationStats.errorBreakdown).slice(0, 2).map(([errorType, count]) => (
               <div key={errorType} className="flex items-center justify-between">
-                <span className="text-xs text-red-700 font-inter capitalize">
+                <span className="text-xs text-red-700 font-open-sans capitalize">
                   {errorType.replace('_', ' ')}
                 </span>
                 <span className="text-xs font-bold text-red-800">{formatNumber(count)}</span>

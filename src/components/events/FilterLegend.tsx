@@ -25,7 +25,7 @@ export default function FilterLegend({
       {hideChallengingDates && challengingEventsCount > 0 && (
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-orange-500 border border-black rounded"></div>
-          <span className="text-black font-inter font-medium text-xs">
+          <span className="text-black font-open-sans font-medium text-xs">
             ⚠️ {challengingEventsCount} challenging date{challengingEventsCount !== 1 ? 's' : ''} hidden
           </span>
         </div>
@@ -33,7 +33,7 @@ export default function FilterLegend({
       {showCombosOnly && comboEventsCount > 0 && (
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-indigo-500 border border-black rounded"></div>
-          <span className="text-black font-inter font-medium text-xs">
+          <span className="text-black font-open-sans font-medium text-xs">
             🔗 {comboEventsCount} combo event{comboEventsCount !== 1 ? 's' : ''} only
           </span>
         </div>

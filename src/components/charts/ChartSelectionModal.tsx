@@ -105,7 +105,7 @@ export default function ChartSelectionModal({ isOpen, onClose, onChartSelect }: 
               <h2 className="font-space-grotesk text-2xl font-bold text-black">
                 Select Chart to Attach
               </h2>
-              <p className="font-inter text-black/70 mt-1">
+              <p className="font-open-sans text-black/70 mt-1">
                 Choose which type of chart you'd like to share in your discussion
               </p>
             </div>
@@ -163,12 +163,12 @@ export default function ChartSelectionModal({ isOpen, onClose, onChartSelect }: 
                   style={{ backgroundColor: selectedChartType === option.type ? '#000' : option.available ? option.color : '#f3f4f6' }}
                 >
                   <h4 className="font-space-grotesk font-bold mb-2">{option.title}</h4>
-                  <p className="text-sm font-inter opacity-80">{option.description}</p>
+                  <p className="text-sm font-open-sans opacity-80">{option.description}</p>
                   {!option.available && option.type !== 'natal' && (
-                    <p className="text-xs mt-2 font-inter opacity-60">Coming soon</p>
+                    <p className="text-xs mt-2 font-open-sans opacity-60">Coming soon</p>
                   )}
                   {!option.available && option.type === 'natal' && (
-                    <p className="text-xs mt-2 font-inter opacity-60">Complete birth data required</p>
+                    <p className="text-xs mt-2 font-open-sans opacity-60">Complete birth data required</p>
                   )}
                 </button>
               ))}

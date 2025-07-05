@@ -192,7 +192,7 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
             <h4 className="font-space-grotesk text-xs font-bold text-black">Summary</h4>
             <button
               onClick={() => setShowSummary(!showSummary)}
-              className="font-inter text-xs text-black hover:underline"
+              className="font-open-sans text-xs text-black hover:underline"
             >
               Hide
             </button>
@@ -200,11 +200,11 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="bg-white p-2 text-center border border-black">
               <div className="font-space-grotesk font-bold text-lg text-black">{summary.totalActivities}</div>
-              <div className="font-inter text-xs text-black/80">Total</div>
+              <div className="font-open-sans text-xs text-black/80">Total</div>
             </div>
             <div className="p-2 text-center border border-black" style={{ backgroundColor: '#6bdbff' }}>
               <div className="font-space-grotesk font-bold text-lg text-black">{summary.chartActivities}</div>
-              <div className="font-inter text-xs text-black/80">Charts</div>
+              <div className="font-open-sans text-xs text-black/80">Charts</div>
             </div>
           </div>
         </div>
@@ -213,11 +213,11 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
       {/* Compact Filters */}
       <div className="px-3 py-2 border-b border-black bg-white">
         <div className="flex items-center space-x-1">
-          <span className="font-inter text-xs font-medium text-black">Filter:</span>
+          <span className="font-open-sans text-xs font-medium text-black">Filter:</span>
           <select 
             value={filter} 
             onChange={(e) => setFilter(e.target.value)}
-            className="font-inter text-xs bg-white border border-black px-2 py-1"
+            className="font-open-sans text-xs bg-white border border-black px-2 py-1"
           >
             <option value="all">All</option>
             <option value="charts">Charts</option>
@@ -225,7 +225,7 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
             <option value="events">Events</option>
             <option value="user">User</option>
           </select>
-          <span className="ml-auto font-inter text-xs text-black/60">
+          <span className="ml-auto font-open-sans text-xs text-black/60">
             {filteredActivities.length} items
           </span>
         </div>
@@ -257,7 +257,7 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <h4 className="mt-2 font-space-grotesk text-sm font-bold text-black">No activities</h4>
-              <p className="mt-1 font-inter text-xs text-black/70">No activities found for this filter.</p>
+              <p className="mt-1 font-open-sans text-xs text-black/70">No activities found for this filter.</p>
             </div>
           </div>
         ) : (
@@ -278,15 +278,15 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
                   {/* Activity Details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-inter text-xs font-medium text-black truncate">
+                      <p className="font-open-sans text-xs font-medium text-black truncate">
                         {activity.description}
                       </p>
-                      <p className="font-inter text-xs text-black/60 ml-2">
+                      <p className="font-open-sans text-xs text-black/60 ml-2">
                         {getCreatedAt(activity) ? formatDate(getCreatedAt(activity)) : 'No date'}
                       </p>
                     </div>
                     <div className="mt-1">
-                      <span className="inline-flex items-center px-2 py-0.5 border border-black text-xs font-inter font-medium bg-white text-black">
+                      <span className="inline-flex items-center px-2 py-0.5 border border-black text-xs font-open-sans font-medium bg-white text-black">
                         {getActivityType(activity)?.replace(/_/g, ' ') || 'Unknown'}
                       </span>
                     </div>

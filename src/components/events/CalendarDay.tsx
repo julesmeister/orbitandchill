@@ -86,7 +86,7 @@ export default function CalendarDay({
           backgroundColor: day.hasOptimalTiming ? '#fafffe' : (day.isCurrentMonth ? 'white' : '#f3f4f6')
         }}
       >
-        <div className={`font-inter text-sm font-bold ${
+        <div className={`font-open-sans text-sm font-bold ${
           day.isCurrentMonth ? 'text-black' : 'text-black/40'
         } ${day.hasOptimalTiming ? 'text-green-800' : ''}`}>
           {day.date.getDate()}

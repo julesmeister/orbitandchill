@@ -39,14 +39,14 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="font-space-grotesk text-xl font-bold text-black">Growth Overview</h3>
-            <p className="font-inter text-sm text-red-600">Failed to load chart data</p>
+            <p className="font-open-sans text-sm text-red-600">Failed to load chart data</p>
           </div>
         </div>
         <div className="h-80 bg-white relative border border-red-200 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 mb-2">⚠️</div>
             <p className="font-space-grotesk text-lg font-bold text-red-600 mb-1">Error Loading Data</p>
-            <p className="font-inter text-sm text-red-500">{error}</p>
+            <p className="font-open-sans text-sm text-red-500">{error}</p>
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
         x={padding.left - 10}
         y={y + 4}
         textAnchor="end"
-        className="font-inter text-xs fill-black/60"
+        className="font-open-sans text-xs fill-black/60"
       >
         {value}
       </text>
@@ -143,7 +143,7 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
           x={x}
           y={chartHeight - padding.bottom + 25}
           textAnchor="middle"
-          className="font-inter text-sm fill-black/70"
+          className="font-open-sans text-sm fill-black/70"
         >
           {label}
         </text>
@@ -157,7 +157,7 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="font-space-grotesk text-xl font-bold text-black">Growth Overview</h3>
-          <p className="font-inter text-sm text-black/60">
+          <p className="font-open-sans text-sm text-black/60">
             Performance trends - {timePeriod === 'daily' ? 'Last 7 days' : timePeriod === 'monthly' ? 'Last 30 days' : 'Last 12 months'}
           </p>
         </div>
@@ -167,11 +167,11 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-black"></div>
-              <span className="font-inter text-sm text-black">Users</span>
+              <span className="font-open-sans text-sm text-black">Users</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3" style={{ backgroundColor: '#51bd94' }}></div>
-              <span className="font-inter text-sm text-black">Charts</span>
+              <span className="font-open-sans text-sm text-black">Charts</span>
             </div>
           </div>
 
@@ -180,7 +180,7 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
               <button
                 key={period}
                 onClick={() => setTimePeriod(period)}
-                className={`px-4 py-2 font-inter text-sm font-medium transition-colors ${timePeriod === period
+                className={`px-4 py-2 font-open-sans text-sm font-medium transition-colors ${timePeriod === period
                   ? 'bg-black text-white'
                   : 'bg-white text-black hover:bg-gray-100'
                   }`}
@@ -282,25 +282,25 @@ export default function GrowthChart({ data, isLoading }: GrowthChartProps) {
             <div className="font-space-grotesk text-lg font-bold text-black">
               {chartData.length > 0 ? Math.round(chartData.reduce((sum, d) => sum + (d.users || 0), 0) / chartData.length) : 0}
             </div>
-            <div className="font-inter text-xs text-black/60">Avg Users</div>
+            <div className="font-open-sans text-xs text-black/60">Avg Users</div>
           </div>
           <div>
             <div className="font-space-grotesk text-lg font-bold text-black">
               {chartData.length > 0 ? Math.round(chartData.reduce((sum, d) => sum + (d.charts || 0), 0) / chartData.length) : 0}
             </div>
-            <div className="font-inter text-xs text-black/60">Avg Charts</div>
+            <div className="font-open-sans text-xs text-black/60">Avg Charts</div>
           </div>
           <div>
             <div className="font-space-grotesk text-lg font-bold text-black">
               {chartData.length > 0 ? Math.max(...chartData.map(d => d.users || 0)) : 0}
             </div>
-            <div className="font-inter text-xs text-black/60">Peak Users</div>
+            <div className="font-open-sans text-xs text-black/60">Peak Users</div>
           </div>
           <div>
             <div className="font-space-grotesk text-lg font-bold text-black">
               {chartData.length > 0 ? Math.max(...chartData.map(d => d.charts || 0)) : 0}
             </div>
-            <div className="font-inter text-xs text-black/60">Peak Charts</div>
+            <div className="font-open-sans text-xs text-black/60">Peak Charts</div>
           </div>
         </div>
       </div>

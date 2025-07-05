@@ -71,7 +71,7 @@ export default function FilterToast({
           
           {/* Message */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-black font-inter">
+            <p className="text-sm font-medium text-black font-open-sans">
               {message}
             </p>
           </div>

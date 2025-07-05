@@ -125,7 +125,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
           </div>
           <div>
             <h5 className="font-space-grotesk text-lg font-bold text-black">Major Aspects</h5>
-            <p className="font-inter text-sm text-black/60">
+            <p className="font-open-sans text-sm text-black/60">
               Showing {filteredAspects.length} of {majorAspects.length} aspects
             </p>
           </div>
@@ -270,11 +270,11 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
                         {aspectInfo.type}
                       </span>
                     </div>
-                    <span className="font-inter text-sm text-black/60">
+                    <span className="font-open-sans text-sm text-black/60">
                       {aspect.orb.toFixed(1)}° orb
                     </span>
                   </div>
-                  <p className="font-inter text-sm text-black">
+                  <p className="font-open-sans text-sm text-black">
                     {aspectInfo.interpretation}
                   </p>
                 </div>
@@ -288,7 +288,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
             <FontAwesomeIcon icon={faFilter} className="text-white" />
           </div>
           <p className="font-space-grotesk text-black font-medium mb-1">No aspects match your filters</p>
-          <p className="font-inter text-sm text-black/60">Try adjusting your filter criteria or clear all filters</p>
+          <p className="font-open-sans text-sm text-black/60">Try adjusting your filter criteria or clear all filters</p>
         </div>
       )}
     </div>

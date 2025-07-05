@@ -81,10 +81,10 @@ export default function VideoSuccessToast({
           <div className="flex items-center">
             <span className="text-lg mr-2">{getPlatformIcon(platform)}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-inter text-green-800 truncate">
+              <p className="text-sm font-open-sans text-green-800 truncate">
                 {videoTitle}
               </p>
-              <p className="text-xs text-green-600 font-inter capitalize">
+              <p className="text-xs text-green-600 font-open-sans capitalize">
                 {platform} video ready to share
               </p>
             </div>

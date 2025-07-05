@@ -50,7 +50,7 @@ export default function EventItem({ event, handleEventClick, toggleBookmark }: E
       <div className={`text-left ${event.isBookmarked || isCombo ? 'pl-4 pr-5' : 'pr-5'}`}>
         <div className="font-space-grotesk font-semibold truncate leading-tight text-[10px]">{event.title}</div>
         {(event.timeWindow || event.time) && (
-          <div className="text-[8px] mt-0.5 font-inter opacity-75">
+          <div className="text-[8px] mt-0.5 font-open-sans opacity-75">
             {event.timeWindow ? (
               // Display time window range
               `${new Date(`2000-01-01T${event.timeWindow.startTime}`).toLocaleTimeString('en-US', { 

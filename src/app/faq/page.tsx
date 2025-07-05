@@ -179,7 +179,7 @@ export default function FAQPage() {
             <h1 className="font-space-grotesk text-5xl md:text-6xl font-bold text-black mb-6">
               Frequently Asked Questions
             </h1>
-            <p className="font-inter text-xl text-black/80 leading-relaxed">
+            <p className="font-open-sans text-xl text-black/80 leading-relaxed">
               Find answers to common questions about {BRAND.name}, natal charts, and astrology.
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function FAQPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 text-black placeholder-black/50 focus:outline-none border-b-2 border-black bg-transparent font-inter text-lg"
+              className="w-full pl-12 pr-4 py-4 text-black placeholder-black/50 focus:outline-none border-b-2 border-black bg-transparent font-open-sans text-lg"
               placeholder="Search for answers..."
             />
           </div>
@@ -233,7 +233,7 @@ export default function FAQPage() {
                         style={{ backgroundColor: getCategoryColor(categories[index]?.id || 'general') }}
                       />
                     )}
-                    <span className="font-inter font-medium">{category.label}</span>
+                    <span className="font-open-sans font-medium">{category.label}</span>
                     <span className={`text-sm px-2 py-1 font-semibold ${
                       selectedCategory === category.id
                         ? 'bg-white text-black'
@@ -257,7 +257,7 @@ export default function FAQPage() {
                   </svg>
                 </div>
                 <h3 className="font-space-grotesk text-xl font-bold text-black mb-3">No questions found</h3>
-                <p className="font-inter text-black/70">Try adjusting your search or browse different categories.</p>
+                <p className="font-open-sans text-black/70">Try adjusting your search or browse different categories.</p>
               </div>
             ) : (
               <div className="divide-y divide-black">
@@ -293,7 +293,7 @@ export default function FAQPage() {
                     {expandedItems.has(faq.id) && (
                       <div className="px-8 pb-6">
                         <div className="border-t border-black/20 pt-4">
-                          <p className="font-inter text-black/80 leading-relaxed">
+                          <p className="font-open-sans text-black/80 leading-relaxed">
                             {faq.answer}
                           </p>
                         </div>
@@ -322,7 +322,7 @@ export default function FAQPage() {
               </svg>
             </div>
             <h3 className="font-space-grotesk text-3xl font-bold text-black mb-4">Still have questions?</h3>
-            <p className="font-inter text-black/80 mb-8 text-lg">
+            <p className="font-open-sans text-black/80 mb-8 text-lg">
               Can&apos;t find what you&apos;re looking for? Our team is here to help you with any questions about 
               astrology, charts, or using our platform.
             </p>

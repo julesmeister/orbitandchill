@@ -56,7 +56,7 @@ const VertexButton: React.FC<VertexButtonProps> = ({
   showCorners = true
 }) => {
   // Base classes for all buttons
-  const baseClasses = 'relative overflow-hidden group font-inter font-medium transition-all duration-300 focus:outline-none';
+  const baseClasses = 'relative overflow-hidden group font-open-sans font-medium transition-all duration-300 focus:outline-none';
   
   // Variant-specific classes
   const variantClasses = {

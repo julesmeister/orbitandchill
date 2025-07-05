@@ -296,26 +296,26 @@ export default function UserPreferences() {
               Delete Your Account
             </h3>
             <div className="mb-6">
-              <p className="font-inter text-sm text-black mb-4">
+              <p className="font-open-sans text-sm text-black mb-4">
                 We're sorry to see you go! Please help us understand why you're leaving (optional):
               </p>
               <textarea
                 value={deletionReason}
                 onChange={(e) => setDeletionReason(e.target.value)}
                 placeholder="Reason for leaving..."
-                className="w-full border border-black rounded p-3 font-inter text-sm h-20 resize-none"
+                className="w-full border border-black rounded p-3 font-open-sans text-sm h-20 resize-none"
                 maxLength={500}
               />
               <div className="space-y-4 mt-4">
                 <div className="p-3 bg-yellow-50 border border-yellow-300">
-                  <h4 className="font-inter text-sm font-medium text-black">Scheduled Deletion (Recommended)</h4>
-                  <p className="font-inter text-xs text-black/70 mt-1">
+                  <h4 className="font-open-sans text-sm font-medium text-black">Scheduled Deletion (Recommended)</h4>
+                  <p className="font-open-sans text-xs text-black/70 mt-1">
                     Schedule deletion in 30 days. You can cancel anytime before then.
                   </p>
                 </div>
                 <div className="p-3 bg-red-50 border border-red-300">
-                  <h4 className="font-inter text-sm font-medium text-black">Immediate Deletion</h4>
-                  <p className="font-inter text-xs text-black/70 mt-1">
+                  <h4 className="font-open-sans text-sm font-medium text-black">Immediate Deletion</h4>
+                  <p className="font-open-sans text-xs text-black/70 mt-1">
                     Request immediate deletion. Requires email confirmation.
                   </p>
                 </div>
@@ -325,21 +325,21 @@ export default function UserPreferences() {
               <button
                 onClick={() => handleAccountDeletionRequest('grace_period')}
                 disabled={isDeletionLoading}
-                className="flex-1 px-4 py-2 font-inter text-sm font-medium text-black bg-yellow-100 border border-black hover:bg-yellow-200 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2 font-open-sans text-sm font-medium text-black bg-yellow-100 border border-black hover:bg-yellow-200 disabled:opacity-50 transition-colors"
               >
                 {isDeletionLoading ? 'Processing...' : 'Schedule Deletion'}
               </button>
               <button
                 onClick={() => handleAccountDeletionRequest('immediate')}
                 disabled={isDeletionLoading}
-                className="flex-1 px-4 py-2 font-inter text-sm font-medium text-white bg-red-600 border border-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2 font-open-sans text-sm font-medium text-white bg-red-600 border border-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {isDeletionLoading ? 'Processing...' : 'Delete Now'}
               </button>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeletionLoading}
-                className="px-4 py-2 font-inter text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 font-open-sans text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
@@ -353,7 +353,7 @@ export default function UserPreferences() {
         <h1 className="font-space-grotesk text-3xl font-bold text-black mb-2">
           Account Preferences
         </h1>
-        <p className="font-inter text-black/70">
+        <p className="font-open-sans text-black/70">
           Customize your experience and manage your privacy settings
         </p>
       </div>
@@ -367,7 +367,7 @@ export default function UserPreferences() {
               <h2 className="font-space-grotesk text-xl font-bold text-black mb-2">
                 {section.title}
               </h2>
-              <p className="font-inter text-sm text-black/70">
+              <p className="font-open-sans text-sm text-black/70">
                 {section.description}
               </p>
             </div>
@@ -377,10 +377,10 @@ export default function UserPreferences() {
               {section.preferences.map((pref, prefIndex) => (
                 <div key={prefIndex} className="flex items-start justify-between">
                   <div className="flex-1 mr-4">
-                    <label className="font-inter font-medium text-black mb-1 block">
+                    <label className="font-open-sans font-medium text-black mb-1 block">
                       {pref.label}
                     </label>
-                    <p className="font-inter text-sm text-black/60">
+                    <p className="font-open-sans text-sm text-black/60">
                       {pref.description}
                     </p>
                   </div>
@@ -403,7 +403,7 @@ export default function UserPreferences() {
                       <select
                         value={preferences[pref.key] as string}
                         onChange={(e) => handlePreferenceChange(pref.key, e.target.value)}
-                        className="border border-black rounded px-3 py-2 font-inter text-sm min-w-[200px]"
+                        className="border border-black rounded px-3 py-2 font-open-sans text-sm min-w-[200px]"
                       >
                         {pref.options?.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -426,7 +426,7 @@ export default function UserPreferences() {
             <h2 className="font-space-grotesk text-xl font-bold text-black mb-2">
               Account Management
             </h2>
-            <p className="font-inter text-sm text-black/70">
+            <p className="font-open-sans text-sm text-black/70">
               Manage your account data and deletion options
             </p>
           </div>
@@ -436,17 +436,17 @@ export default function UserPreferences() {
             {/* Data Export */}
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-4">
-                <label className="font-inter font-medium text-black mb-1 block">
+                <label className="font-open-sans font-medium text-black mb-1 block">
                   Export Your Data
                 </label>
-                <p className="font-inter text-sm text-black/60">
+                <p className="font-open-sans text-sm text-black/60">
                   Download a copy of all your account data including charts, discussions, and settings
                 </p>
               </div>
               <div className="flex-shrink-0">
                 <button
                   onClick={() => toast.info('Data export feature coming soon')}
-                  className="px-4 py-2 font-inter text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 font-open-sans text-sm font-medium text-black bg-white border border-black hover:bg-gray-100 transition-colors"
                 >
                   Export Data
                 </button>
@@ -456,15 +456,15 @@ export default function UserPreferences() {
             {/* Account Status */}
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-4">
-                <label className="font-inter font-medium text-black mb-1 block">
+                <label className="font-open-sans font-medium text-black mb-1 block">
                   Account Status
                 </label>
-                <p className="font-inter text-sm text-black/60">
+                <p className="font-open-sans text-sm text-black/60">
                   Your account is currently active. You have {user?.authProvider === 'anonymous' ? 'an anonymous' : 'a registered'} account.
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <span className="inline-flex items-center px-3 py-1 font-inter text-sm font-medium bg-green-100 text-green-800 border border-green-300 rounded">
+                <span className="inline-flex items-center px-3 py-1 font-open-sans text-sm font-medium bg-green-100 text-green-800 border border-green-300 rounded">
                   Active
                 </span>
               </div>
@@ -474,14 +474,14 @@ export default function UserPreferences() {
             <div className="border-t border-red-200 pt-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1 mr-4">
-                  <label className="font-inter font-medium text-red-600 mb-1 block">
+                  <label className="font-open-sans font-medium text-red-600 mb-1 block">
                     Delete Your Account
                   </label>
-                  <p className="font-inter text-sm text-black/60">
+                  <p className="font-open-sans text-sm text-black/60">
                     Permanently delete your account and all associated data. This action cannot be undone.
                   </p>
                   <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded">
-                    <p className="font-inter text-xs text-red-800">
+                    <p className="font-open-sans text-xs text-red-800">
                       <strong>What gets deleted:</strong> Your profile, birth data, generated charts, forum posts, 
                       votes, and all personal information. Some content may be anonymized rather than deleted 
                       to preserve forum discussions.
@@ -491,7 +491,7 @@ export default function UserPreferences() {
                 <div className="flex-shrink-0">
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className="px-4 py-2 font-inter text-sm font-medium text-white bg-red-600 border border-red-600 hover:bg-red-700 transition-colors"
+                    className="px-4 py-2 font-open-sans text-sm font-medium text-white bg-red-600 border border-red-600 hover:bg-red-700 transition-colors"
                   >
                     Delete Account
                   </button>

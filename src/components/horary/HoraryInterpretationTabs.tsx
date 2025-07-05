@@ -153,9 +153,9 @@ export default function HoraryInterpretationTabs({ chartData, question }: Horary
     <div className="bg-white border border-black p-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-black font-space-grotesk font-bold text-sm">{label}</span>
-        <span className="text-black font-inter font-bold text-sm">{value || 'N/A'}</span>
+        <span className="text-black font-open-sans font-bold text-sm">{value || 'N/A'}</span>
       </div>
-      <div className="text-xs text-black font-inter">{description}</div>
+      <div className="text-xs text-black font-open-sans">{description}</div>
     </div>
   );
 
@@ -167,7 +167,7 @@ export default function HoraryInterpretationTabs({ chartData, question }: Horary
         </div>
         <div>
           <div className="font-space-grotesk font-bold text-black text-lg mb-2">{title}</div>
-          <div className="text-black font-inter text-sm">{message}</div>
+          <div className="text-black font-open-sans text-sm">{message}</div>
         </div>
       </div>
     </div>
@@ -179,7 +179,7 @@ export default function HoraryInterpretationTabs({ chartData, question }: Horary
         <div className={`w-3 h-3 bg-${color}-500 flex items-center justify-center`}>
           <span className="text-white text-xs">{symbol}</span>
         </div>
-        <span className="text-black font-inter text-xs"><span className="font-bold">{label}:</span> {description}</span>
+        <span className="text-black font-open-sans text-xs"><span className="font-bold">{label}:</span> {description}</span>
       </div>
     </div>
   );
@@ -316,7 +316,7 @@ export default function HoraryInterpretationTabs({ chartData, question }: Horary
                       </div>
                       <div className="flex-1">
                         <div className="font-space-grotesk font-bold text-black text-lg mb-3">Oracle's Interpretation</div>
-                        <p className="text-black leading-relaxed text-base font-inter">{question.interpretation}</p>
+                        <p className="text-black leading-relaxed text-base font-open-sans">{question.interpretation}</p>
                       </div>
                     </div>
                   </div>

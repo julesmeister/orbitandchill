@@ -41,7 +41,7 @@ const PlanetaryPositionsSection: React.FC<PlanetaryPositionsSectionProps> = ({ c
               </div>
               <div className="text-right text-sm">
                 <div className="font-space-grotesk font-medium capitalize text-black">{planet.sign}</div>
-                <div className="font-inter text-black/60">House {planet.house}</div>
+                <div className="font-open-sans text-black/60">House {planet.house}</div>
               </div>
             </div>
           ))}

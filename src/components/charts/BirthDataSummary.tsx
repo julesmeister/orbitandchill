@@ -20,7 +20,7 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
           <div>
             <h3 className="font-space-grotesk text-lg font-bold text-black">Birth Details</h3>
             {personName && (
-              <p className="font-inter text-sm text-black/60">for {personName}</p>
+              <p className="font-open-sans text-sm text-black/60">for {personName}</p>
             )}
           </div>
         </div>
@@ -39,9 +39,9 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
                 <svg className="w-4 h-4 text-black mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="font-inter text-xs font-medium text-black/60 uppercase tracking-wide">Birth Date</p>
+                <p className="font-open-sans text-xs font-medium text-black/60 uppercase tracking-wide">Birth Date</p>
               </div>
-              <p className="font-inter text-sm font-semibold text-black">
+              <p className="font-open-sans text-sm font-semibold text-black">
                 {new Date(birthData.dateOfBirth).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -62,9 +62,9 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
                 <svg className="w-4 h-4 text-black mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="font-inter text-xs font-medium text-black/60 uppercase tracking-wide">Birth Time</p>
+                <p className="font-open-sans text-xs font-medium text-black/60 uppercase tracking-wide">Birth Time</p>
               </div>
-              <p className="font-inter text-sm font-semibold text-black">{birthData.timeOfBirth}</p>
+              <p className="font-open-sans text-sm font-semibold text-black">{birthData.timeOfBirth}</p>
             </div>
           </div>
           
@@ -79,9 +79,9 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
                 <svg className="w-4 h-4 text-black mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 </svg>
-                <p className="font-inter text-xs font-medium text-black/60 uppercase tracking-wide">Birth Location</p>
+                <p className="font-open-sans text-xs font-medium text-black/60 uppercase tracking-wide">Birth Location</p>
               </div>
-              <p className="font-inter text-sm font-semibold text-black break-words">{birthData.locationOfBirth}</p>
+              <p className="font-open-sans text-sm font-semibold text-black break-words">{birthData.locationOfBirth}</p>
             </div>
           </div>
         </div>

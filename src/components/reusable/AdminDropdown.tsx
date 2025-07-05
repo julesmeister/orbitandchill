@@ -38,7 +38,7 @@ export default function AdminDropdown({ options, value, onChange, className = ''
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="px-3 py-2 text-sm border-2 border-black bg-white text-black font-inter focus:outline-none focus:border-black flex items-center justify-between min-w-[140px]"
+        className="px-3 py-2 text-sm border-2 border-black bg-white text-black font-open-sans focus:outline-none focus:border-black flex items-center justify-between min-w-[140px]"
       >
         <span>{value}</span>
         <svg className="w-4 h-4 text-black ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,7 +53,7 @@ export default function AdminDropdown({ options, value, onChange, className = ''
               key={option}
               type="button"
               onClick={() => handleSelect(option)}
-              className={`w-full text-left px-4 py-3 text-sm font-medium text-black hover:bg-gray-100 hover:pl-5 transition-all duration-200 border-none cursor-pointer font-inter ${
+              className={`w-full text-left px-4 py-3 text-sm font-medium text-black hover:bg-gray-100 hover:pl-5 transition-all duration-200 border-none cursor-pointer font-open-sans ${
                 value === option ? 'bg-black text-white font-semibold hover:!bg-gray-800 hover:!text-white' : ''
               }`}
             >

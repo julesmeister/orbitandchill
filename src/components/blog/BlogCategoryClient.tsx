@@ -95,7 +95,7 @@ export default function BlogCategoryClient({ params }: BlogCategoryClientProps) 
             <div className="w-4 h-4 bg-black animate-bounce [animation-delay:-0.15s]"></div>
             <div className="w-4 h-4 bg-black animate-bounce"></div>
           </div>
-          <p className="text-gray-600 font-inter">Loading category...</p>
+          <p className="text-gray-600 font-open-sans">Loading category...</p>
         </div>
       </div>
     );
@@ -237,7 +237,7 @@ export default function BlogCategoryClient({ params }: BlogCategoryClientProps) 
                       <div className="w-4 h-4 bg-black animate-bounce [animation-delay:-0.15s]"></div>
                       <div className="w-4 h-4 bg-black animate-bounce"></div>
                     </div>
-                    <p className="text-gray-600 font-inter">Loading articles...</p>
+                    <p className="text-gray-600 font-open-sans">Loading articles...</p>
                   </div>
                 )}
 

@@ -20,7 +20,7 @@ export default function PriorityButton({
   return (
     <button
       onClick={() => onToggle(priority.id)}
-      className={`w-full flex items-center gap-3 p-3 border transition-all duration-200 font-inter text-sm hover:shadow-sm ${
+      className={`w-full flex items-center gap-3 p-3 border transition-all duration-200 font-open-sans text-sm hover:shadow-sm ${
         isSelected
           ? 'bg-black text-white border-black'
           : 'bg-white text-black border-black hover:bg-gray-50'

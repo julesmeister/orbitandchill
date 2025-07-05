@@ -687,7 +687,7 @@ export default function EventsPage() {
                                 <h1 className="font-space-grotesk text-xl md:text-2xl font-bold text-black">
                                     Electional Astrology
                                 </h1>
-                                <p className="font-inter text-xs text-black/50 max-w-xl mt-1">
+                                <p className="font-open-sans text-xs text-black/50 max-w-xl mt-1">
                                     Plan your wedding, launch your business, schedule important meetings, or make major decisions when the stars are most favorable for success.
                                 </p>
                             </div>
@@ -813,7 +813,7 @@ export default function EventsPage() {
                         {/* Error Display - Subtle */}
                         {error && (
                             <div className="mt-2 p-2 bg-red-50 border border-red-300">
-                                <p className="text-red-800 font-inter text-xs">{error}</p>
+                                <p className="text-red-800 font-open-sans text-xs">{error}</p>
                                 <button
                                     onClick={() => setError(null)}
                                     className="mt-1 text-red-600 hover:text-red-800 text-xs underline"
@@ -859,7 +859,7 @@ export default function EventsPage() {
 
                                 {/* Compact Priority Selection */}
                                 <div className="space-y-4">
-                                    <p className="text-sm text-black/70 font-inter">
+                                    <p className="text-sm text-black/70 font-open-sans">
                                         Select your priorities for timing analysis (multiple selections allowed):
                                     </p>
 
@@ -868,7 +868,7 @@ export default function EventsPage() {
                                             <button
                                                 key={priority.id}
                                                 onClick={() => togglePriority(priority.id)}
-                                                className={`inline-flex items-center gap-2 px-4 py-2 border border-black transition-all duration-200 font-inter text-sm font-medium hover:shadow-sm ${selectedPriorities.includes(priority.id)
+                                                className={`inline-flex items-center gap-2 px-4 py-2 border border-black transition-all duration-200 font-open-sans text-sm font-medium hover:shadow-sm ${selectedPriorities.includes(priority.id)
                                                     ? 'bg-black text-white'
                                                     : 'bg-white text-black hover:bg-gray-50'
                                                     }`}
@@ -968,7 +968,7 @@ export default function EventsPage() {
                                                 type="text"
                                                 value={newEvent.title}
                                                 onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
                                                 placeholder="Enter event title..."
                                                 required
                                             />
@@ -981,7 +981,7 @@ export default function EventsPage() {
                                                 type="date"
                                                 value={newEvent.date}
                                                 onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
                                                 required
                                             />
                                         </div>
@@ -996,7 +996,7 @@ export default function EventsPage() {
                                                 type="time"
                                                 value={newEvent.time}
                                                 onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
                                             />
                                         </div>
                                         <div>
@@ -1007,7 +1007,7 @@ export default function EventsPage() {
                                                 type="text"
                                                 value={newEvent.description}
                                                 onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-inter"
+                                                className="w-full px-4 py-3 border border-black focus:outline-none focus:ring-2 focus:ring-black/20 font-open-sans"
                                                 placeholder="Brief description..."
                                             />
                                         </div>

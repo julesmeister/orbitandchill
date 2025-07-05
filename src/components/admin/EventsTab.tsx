@@ -171,7 +171,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     return (
       <div className="space-y-8">
         <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-          <p className="text-red-800 font-inter text-sm mb-2">
+          <p className="text-red-800 font-open-sans text-sm mb-2">
             {eventsError || analyticsError || 'Failed to load data'}
           </p>
           <button 
@@ -192,7 +192,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <h1 className="font-space-grotesk text-3xl font-bold text-black mb-2">
           Events Management
         </h1>
-        <p className="font-inter text-black/70">
+        <p className="font-open-sans text-black/70">
           Monitor and analyze astrological events created by users
         </p>
       </div>
@@ -270,7 +270,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <div className="bg-white border border-black p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/60 mb-1">Total Events</p>
+              <p className="font-open-sans text-sm text-black/60 mb-1">Total Events</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">
                 {analytics?.totalEvents || 0}
               </p>
@@ -286,7 +286,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <div className="bg-white border border-black p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/60 mb-1">This Month</p>
+              <p className="font-open-sans text-sm text-black/60 mb-1">This Month</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">
                 {analytics?.eventsThisMonth || 0}
               </p>
@@ -302,7 +302,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <div className="bg-white border border-black p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/60 mb-1">Active Users</p>
+              <p className="font-open-sans text-sm text-black/60 mb-1">Active Users</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">
                 {analytics?.usageStats.activeUsers || 0}
               </p>
@@ -318,7 +318,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <div className="bg-white border border-black p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-inter text-sm text-black/60 mb-1">Average Score</p>
+              <p className="font-open-sans text-sm text-black/60 mb-1">Average Score</p>
               <p className="font-space-grotesk text-2xl font-bold text-black">
                 {analytics?.engagementStats.averageScore || 0}/10
               </p>
@@ -339,21 +339,21 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
           {analytics ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#51bd94' }}>
-                <span className="font-inter text-sm font-medium text-black">Benefic Events</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.eventsByType.benefic}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Benefic Events</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.eventsByType.benefic}</span>
               </div>
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#ff6b6b' }}>
-                <span className="font-inter text-sm font-medium text-black">Challenging Events</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.eventsByType.challenging}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Challenging Events</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.eventsByType.challenging}</span>
               </div>
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#6bdbff' }}>
-                <span className="font-inter text-sm font-medium text-black">Neutral Events</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.eventsByType.neutral}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Neutral Events</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.eventsByType.neutral}</span>
               </div>
             </div>
           ) : (
             <div className="p-4 border border-black bg-gray-50">
-              <p className="font-inter text-sm text-black/60">Loading...</p>
+              <p className="font-open-sans text-sm text-black/60">Loading...</p>
             </div>
           )}
         </div>
@@ -363,25 +363,25 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
           {analytics ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#f2e356' }}>
-                <span className="font-inter text-sm font-medium text-black">Generated Events</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.generationStats.generated}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Generated Events</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.generationStats.generated}</span>
               </div>
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#ff91e9' }}>
-                <span className="font-inter text-sm font-medium text-black">Manual Events</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.generationStats.manual}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Manual Events</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.generationStats.manual}</span>
               </div>
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#6bdbff' }}>
-                <span className="font-inter text-sm font-medium text-black">Bookmarked Events</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.engagementStats.bookmarked}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Bookmarked Events</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.engagementStats.bookmarked}</span>
               </div>
               <div className="flex items-center justify-between p-4 border border-black" style={{ backgroundColor: '#51bd94' }}>
-                <span className="font-inter text-sm font-medium text-black">Events per User</span>
-                <span className="font-inter text-sm font-bold text-black">{analytics.usageStats.eventsPerUser}</span>
+                <span className="font-open-sans text-sm font-medium text-black">Events per User</span>
+                <span className="font-open-sans text-sm font-bold text-black">{analytics.usageStats.eventsPerUser}</span>
               </div>
             </div>
           ) : (
             <div className="p-4 border border-black bg-gray-50">
-              <p className="font-inter text-sm text-black/60">Loading...</p>
+              <p className="font-open-sans text-sm text-black/60">Loading...</p>
             </div>
           )}
         </div>
@@ -397,8 +397,8 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                 ? Math.round((analytics.generationStats.generated / analytics.totalEvents) * 100) 
                 : 0}%
             </div>
-            <div className="font-inter text-sm text-black/60">Generated Events</div>
-            <div className="font-inter text-xs text-black/40 mt-1">
+            <div className="font-open-sans text-sm text-black/60">Generated Events</div>
+            <div className="font-open-sans text-xs text-black/40 mt-1">
               Users prefer auto-generated optimal timing
             </div>
           </div>
@@ -409,8 +409,8 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                 ? Math.round((analytics.eventsByType.benefic / analytics.totalEvents) * 100) 
                 : 0}%
             </div>
-            <div className="font-inter text-sm text-black/60">Benefic Events</div>
-            <div className="font-inter text-xs text-black/40 mt-1">
+            <div className="font-open-sans text-sm text-black/60">Benefic Events</div>
+            <div className="font-open-sans text-xs text-black/40 mt-1">
               Users focus on positive timing
             </div>
           </div>
@@ -421,8 +421,8 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                 ? Math.round((analytics.engagementStats.bookmarked / analytics.totalEvents) * 100) 
                 : 0}%
             </div>
-            <div className="font-inter text-sm text-black/60">Bookmark Rate</div>
-            <div className="font-inter text-xs text-black/40 mt-1">
+            <div className="font-open-sans text-sm text-black/60">Bookmark Rate</div>
+            <div className="font-open-sans text-xs text-black/40 mt-1">
               Events saved for later reference
             </div>
           </div>
@@ -434,7 +434,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <h3 className="font-space-grotesk text-lg font-bold text-black mb-4">Feature Adoption</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="font-inter text-sm text-black">Electional Astrology (Auto-generation)</span>
+            <span className="font-open-sans text-sm text-black">Electional Astrology (Auto-generation)</span>
             <div className="flex items-center space-x-2">
               <div className="w-32 bg-gray-200 rounded-full h-2">
                 <div 
@@ -446,7 +446,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                   }}
                 ></div>
               </div>
-              <span className="font-inter text-xs text-black/60 w-12">
+              <span className="font-open-sans text-xs text-black/60 w-12">
                 {analytics && analytics.totalEvents > 0 
                   ? Math.round((analytics.generationStats.generated / analytics.totalEvents) * 100) 
                   : 0}%
@@ -455,7 +455,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="font-inter text-sm text-black">Manual Event Creation</span>
+            <span className="font-open-sans text-sm text-black">Manual Event Creation</span>
             <div className="flex items-center space-x-2">
               <div className="w-32 bg-gray-200 rounded-full h-2">
                 <div 
@@ -467,7 +467,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                   }}
                 ></div>
               </div>
-              <span className="font-inter text-xs text-black/60 w-12">
+              <span className="font-open-sans text-xs text-black/60 w-12">
                 {analytics && analytics.totalEvents > 0 
                   ? Math.round((analytics.generationStats.manual / analytics.totalEvents) * 100) 
                   : 0}%
@@ -476,7 +476,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="font-inter text-sm text-black">Event Bookmarking</span>
+            <span className="font-open-sans text-sm text-black">Event Bookmarking</span>
             <div className="flex items-center space-x-2">
               <div className="w-32 bg-gray-200 rounded-full h-2">
                 <div 
@@ -488,7 +488,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                   }}
                 ></div>
               </div>
-              <span className="font-inter text-xs text-black/60 w-12">
+              <span className="font-open-sans text-xs text-black/60 w-12">
                 {analytics && analytics.totalEvents > 0 
                   ? Math.round((analytics.engagementStats.bookmarked / analytics.totalEvents) * 100) 
                   : 0}%

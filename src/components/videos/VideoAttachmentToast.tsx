@@ -108,7 +108,7 @@ export default function VideoAttachmentToast({
                 </div>
                 <div>
                   <h3 className="font-space-grotesk font-bold text-black text-lg">Add Video</h3>
-                  <p className="text-xs text-black/70 font-inter">YouTube or Vimeo</p>
+                  <p className="text-xs text-black/70 font-open-sans">YouTube or Vimeo</p>
                 </div>
               </div>
               <button
@@ -138,7 +138,7 @@ export default function VideoAttachmentToast({
                   }
                 }}
                 placeholder="https://youtube.com/watch?v=..."
-                className={`w-full px-3 py-2 text-sm border bg-white focus:outline-none focus:ring-1 focus:ring-black/20 font-inter ${
+                className={`w-full px-3 py-2 text-sm border bg-white focus:outline-none focus:ring-1 focus:ring-black/20 font-open-sans ${
                   videoUrl && !validation.isValid ? 'border-red-500' : 'border-black'
                 }`}
                 disabled={isLoading}
@@ -146,12 +146,12 @@ export default function VideoAttachmentToast({
               
               {/* Validation Message */}
               {videoUrl && !validation.isValid && validation.error && (
-                <p className="text-red-600 text-xs mt-1 font-inter">{validation.error}</p>
+                <p className="text-red-600 text-xs mt-1 font-open-sans">{validation.error}</p>
               )}
               
               {/* Success Message */}
               {validation.isValid && (
-                <div className="flex items-center mt-1 text-green-600 text-xs font-inter">
+                <div className="flex items-center mt-1 text-green-600 text-xs font-open-sans">
                   <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -188,7 +188,7 @@ export default function VideoAttachmentToast({
                         {validation.platform}
                       </span>
                     </div>
-                    <p className="text-xs text-black/70 font-inter">
+                    <p className="text-xs text-black/70 font-open-sans">
                       Ready to attach
                     </p>
                   </div>
@@ -200,11 +200,11 @@ export default function VideoAttachmentToast({
             <div className="mb-4">
               <p className="text-xs font-space-grotesk font-bold text-black mb-2">Supported:</p>
               <div className="flex gap-2">
-                <div className="flex items-center text-xs text-black/70 font-inter">
+                <div className="flex items-center text-xs text-black/70 font-open-sans">
                   <span className="mr-1">📺</span>
                   YouTube
                 </div>
-                <div className="flex items-center text-xs text-black/70 font-inter">
+                <div className="flex items-center text-xs text-black/70 font-open-sans">
                   <span className="mr-1">🎬</span>
                   Vimeo
                 </div>

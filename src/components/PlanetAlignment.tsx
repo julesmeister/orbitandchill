@@ -398,19 +398,19 @@ const PlanetAlignment: React.FC = () => {
             <div className="group text-center p-8 border-r border-black hover:bg-gray-50 transition-all duration-300 relative">
               <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
               <div className="text-6xl font-black text-black mb-3 font-space-grotesk">{planetData.length}</div>
-              <div className="text-black text-sm font-bold uppercase tracking-wider font-inter">Planets</div>
+              <div className="text-black text-sm font-bold uppercase tracking-wider font-open-sans">Planets</div>
               <div className="text-gray-600 text-xs mt-2">Live tracking</div>
             </div>
             <div className="group text-center p-8 md:border-r border-black hover:bg-gray-50 transition-all duration-300 relative">
               <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
               <div className="text-6xl font-black text-black mb-3 font-space-grotesk">360°</div>
-              <div className="text-black text-sm font-bold uppercase tracking-wider font-inter">View</div>
+              <div className="text-black text-sm font-bold uppercase tracking-wider font-open-sans">View</div>
               <div className="text-gray-600 text-xs mt-2">Full rotation</div>
             </div>
             <div className="group text-center p-8 border-r border-black hover:bg-gray-50 transition-all duration-300 relative">
               <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
               <div className="text-6xl font-black text-black mb-3 font-space-grotesk">3D</div>
-              <div className="text-black text-sm font-bold uppercase tracking-wider font-inter">Space</div>
+              <div className="text-black text-sm font-bold uppercase tracking-wider font-open-sans">Space</div>
               <div className="text-gray-600 text-xs mt-2">Interactive</div>
             </div>
             <div className="group text-center p-8 hover:bg-gray-50 transition-all duration-300 relative">
@@ -418,7 +418,7 @@ const PlanetAlignment: React.FC = () => {
               <div className="text-6xl font-black text-black mb-3 font-space-grotesk">
                 {new Date().getDate()}
               </div>
-              <div className="text-black text-sm font-bold uppercase tracking-wider font-inter">
+              <div className="text-black text-sm font-bold uppercase tracking-wider font-open-sans">
                 {new Date().toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
               </div>
               <div className="text-gray-600 text-xs mt-2">{new Date().getFullYear()}</div>

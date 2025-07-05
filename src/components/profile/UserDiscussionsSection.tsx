@@ -67,7 +67,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
     return (
       <div className="bg-white">
         <div className="p-6 border-b border-gray-200">
-          <p className="font-inter text-sm text-black/60">Loading discussions and replies...</p>
+          <p className="font-open-sans text-sm text-black/60">Loading discussions and replies...</p>
         </div>
         <div className="p-6">
           <div className="animate-pulse space-y-3">
@@ -88,7 +88,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
       <div className="p-6 border-b border-black">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-inter text-sm text-black/60">Your discussions and replies</p>
+            <p className="font-open-sans text-sm text-black/60">Your discussions and replies</p>
           </div>
           <div className="flex space-x-0 border border-black">
             <button
@@ -126,7 +126,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
                   </svg>
                 </div>
                 <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">No Discussions Yet</h3>
-                <p className="font-inter text-sm text-black/60">Start a discussion to share your thoughts</p>
+                <p className="font-open-sans text-sm text-black/60">Start a discussion to share your thoughts</p>
               </div>
             ) : (
               discussions.map((discussion) => (
@@ -143,7 +143,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
                       {discussion.category}
                     </span>
                   </div>
-                  <p className="font-inter text-xs text-black/60 mb-2 line-clamp-2">
+                  <p className="font-open-sans text-xs text-black/60 mb-2 line-clamp-2">
                     {stripHtmlTags(discussion.excerpt)}
                   </p>
                   <div className="flex items-center space-x-4 text-xs text-black/60">
@@ -166,7 +166,7 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
                   </svg>
                 </div>
                 <h3 className="font-space-grotesk text-lg font-bold text-black mb-2">No Replies Yet</h3>
-                <p className="font-inter text-sm text-black/60">Join discussions to share your insights</p>
+                <p className="font-open-sans text-sm text-black/60">Join discussions to share your insights</p>
               </div>
             ) : (
               replies.map((reply) => (
@@ -176,12 +176,12 @@ export default function UserDiscussionsSection({ userId }: UserDiscussionsSectio
                   className="block border border-black p-4 hover:bg-gray-50 transition-colors group"
                 >
                   <div className="mb-2">
-                    <span className="font-inter text-xs text-black/60">Replied to:</span>
+                    <span className="font-open-sans text-xs text-black/60">Replied to:</span>
                     <h4 className="font-space-grotesk text-sm font-semibold text-black group-hover:underline">
                       {reply.discussionTitle}
                     </h4>
                   </div>
-                  <p className="font-inter text-xs text-black/60 mb-2 line-clamp-2">
+                  <p className="font-open-sans text-xs text-black/60 mb-2 line-clamp-2">
                     {stripHtmlTags(reply.content)}
                   </p>
                   <div className="flex items-center space-x-4 text-xs text-black/60">

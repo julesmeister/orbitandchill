@@ -243,15 +243,15 @@ export default function LocationRequestToast({
         <div className="p-4">
           {gpsStatus === 'failed' ? (
             <div className="mb-4">
-              <p className="text-sm text-black mb-2 font-inter">
+              <p className="text-sm text-black mb-2 font-open-sans">
                 GPS location failed. Please search for your city below:
               </p>
-              <div className="text-xs text-gray-600 font-inter">
+              <div className="text-xs text-gray-600 font-open-sans">
                 💡 Try searching "Manila" or "Philippines" for better results
               </div>
             </div>
           ) : (
-            <p className="text-sm text-black mb-4 font-inter">
+            <p className="text-sm text-black mb-4 font-open-sans">
               For accurate void moon calculations, please set your location:
             </p>
           )}
@@ -277,7 +277,7 @@ export default function LocationRequestToast({
           )}
 
           {gpsStatus !== 'failed' && (
-            <div className="text-center text-xs text-gray-500 mb-3 font-inter">or</div>
+            <div className="text-center text-xs text-gray-500 mb-3 font-open-sans">or</div>
           )}
 
           {/* Search Input */}
@@ -287,7 +287,7 @@ export default function LocationRequestToast({
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder="Search for your city..."
-              className="w-full px-3 py-2 border border-black bg-white text-black placeholder-gray-500 text-sm font-inter focus:outline-none focus:ring-2 focus:ring-black/20"
+              className="w-full px-3 py-2 border border-black bg-white text-black placeholder-gray-500 text-sm font-open-sans focus:outline-none focus:ring-2 focus:ring-black/20"
             />
             
             {isSearching && (
@@ -306,7 +306,7 @@ export default function LocationRequestToast({
                 <button
                   key={result.place_id}
                   onClick={() => handleLocationSelect(result)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors font-inter"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 border-b border-gray-200 last:border-b-0 transition-colors font-open-sans"
                 >
                   <div className="text-black truncate">
                     {result.display_name}
@@ -318,7 +318,7 @@ export default function LocationRequestToast({
 
           {/* No Results */}
           {showResults && searchQuery.length >= 3 && searchResults.length === 0 && !isSearching && (
-            <div className="mt-2 p-3 text-sm text-gray-500 border border-gray-300 bg-gray-50 font-inter">
+            <div className="mt-2 p-3 text-sm text-gray-500 border border-gray-300 bg-gray-50 font-open-sans">
               No locations found. Try a different search term.
             </div>
           )}
@@ -326,7 +326,7 @@ export default function LocationRequestToast({
           {/* Skip Option */}
           <button
             onClick={onHide}
-            className="w-full mt-3 px-4 py-2 text-sm text-gray-600 hover:text-black transition-colors font-inter"
+            className="w-full mt-3 px-4 py-2 text-sm text-gray-600 hover:text-black transition-colors font-open-sans"
           >
             {gpsStatus === 'failed' 
               ? 'Skip and use New York as fallback' 

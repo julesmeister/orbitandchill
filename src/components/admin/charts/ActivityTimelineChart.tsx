@@ -26,7 +26,7 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
             <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
             <div className="w-3 h-3 bg-black animate-bounce"></div>
           </div>
-          <p className="font-inter text-black/60 text-sm">Loading activity...</p>
+          <p className="font-open-sans text-black/60 text-sm">Loading activity...</p>
         </div>
       </div>
     );
@@ -172,7 +172,7 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
               <button
                 key={period}
                 onClick={() => setTimePeriod(period)}
-                className={`px-4 py-2 font-inter text-sm font-medium transition-colors ${
+                className={`px-4 py-2 font-open-sans text-sm font-medium transition-colors ${
                   timePeriod === period
                     ? 'bg-black text-white'
                     : 'bg-white text-black hover:bg-gray-100'
@@ -188,7 +188,7 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
         <div className="space-y-8">
           {filteredActivities.length === 0 ? (
             <div className="text-center py-12">
-              <p className="font-inter text-black/60">No activity in this time period</p>
+              <p className="font-open-sans text-black/60">No activity in this time period</p>
             </div>
           ) : (
             filteredActivities.map((activity, index) => (
@@ -214,7 +214,7 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
                         <h4 className="font-space-grotesk text-lg font-bold text-black mb-2">
                           {activity.title}
                         </h4>
-                        <p className="font-inter text-base text-black/80 leading-relaxed">
+                        <p className="font-open-sans text-base text-black/80 leading-relaxed">
                           {activity.message}
                         </p>
                       </div>
@@ -225,7 +225,7 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
                             HIGH PRIORITY
                           </span>
                         )}
-                        <span className="font-inter text-sm text-black/60 whitespace-nowrap">
+                        <span className="font-open-sans text-sm text-black/60 whitespace-nowrap">
                           {getTimeAgo(activity.timestamp)}
                         </span>
                       </div>
@@ -237,7 +237,7 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
                         className="w-3 h-3 border border-black"
                         style={{ backgroundColor: getTypeColor(activity.type) }}
                       ></div>
-                      <span className="font-inter text-sm text-black/60 capitalize">
+                      <span className="font-open-sans text-sm text-black/60 capitalize">
                         {activity.type.replace('_', ' ')}
                       </span>
                     </div>
@@ -251,10 +251,10 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
         {/* Footer with stats */}
         <div className="mt-8 pt-6 border-t border-black/20">
           <div className="flex items-center justify-between">
-            <div className="font-inter text-sm text-black/60">
+            <div className="font-open-sans text-sm text-black/60">
               Showing {filteredActivities.length} activities in the last {timePeriod === 'daily' ? '24 hours' : timePeriod === 'monthly' ? '30 days' : 'year'}
             </div>
-            <button className="font-inter text-sm text-black hover:underline font-medium">
+            <button className="font-open-sans text-sm text-black hover:underline font-medium">
               View all activity →
             </button>
           </div>

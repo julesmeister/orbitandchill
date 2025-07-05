@@ -25,14 +25,14 @@ export default function SettingsHeader({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="font-space-grotesk text-2xl font-bold text-black">Admin Settings</h1>
-          <p className="font-inter text-sm text-black/70 mt-0.5">
+          <p className="font-open-sans text-sm text-black/70 mt-0.5">
             Configure application settings and system behavior
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {hasUnsavedChanges && (
-            <div className="px-2 py-1 text-xs font-inter font-medium text-black bg-white border border-black">
+            <div className="px-2 py-1 text-xs font-open-sans font-medium text-black bg-white border border-black">
               {editedSettingsCount} unsaved change{editedSettingsCount !== 1 ? 's' : ''}
             </div>
           )}

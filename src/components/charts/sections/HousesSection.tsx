@@ -44,7 +44,7 @@ const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
         </div>
         <div>
           <h5 className="font-space-grotesk text-lg font-bold text-black">Houses & Cusps</h5>
-          <p className="font-inter text-sm text-black/60">The twelve life areas and their ruling signs</p>
+          <p className="font-open-sans text-sm text-black/60">The twelve life areas and their ruling signs</p>
         </div>
       </div>
 
@@ -77,7 +77,7 @@ const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
                 <div className="font-space-grotesk text-sm font-bold capitalize text-black">
                   {house.sign}
                 </div>
-                <div className="font-inter text-xs text-black/60 font-medium">
+                <div className="font-open-sans text-xs text-black/60 font-medium">
                   {formatAstrologicalDegree(house.cusp)}
                 </div>
               </div>
@@ -92,25 +92,25 @@ const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-3">
             <div className="w-4 h-4" style={{ backgroundColor: '#ff91e9' }}></div>
-            <p className="font-inter text-black">
+            <p className="font-open-sans text-black">
               <span className="font-medium">Angular Houses (1, 4, 7, 10):</span> Action-oriented, initiating energy
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-4 h-4" style={{ backgroundColor: '#6bdbff' }}></div>
-            <p className="font-inter text-black">
+            <p className="font-open-sans text-black">
               <span className="font-medium">Succedent Houses (2, 5, 8, 11):</span> Stabilizing, sustaining energy
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-4 h-4" style={{ backgroundColor: '#f2e356' }}></div>
-            <p className="font-inter text-black">
+            <p className="font-open-sans text-black">
               <span className="font-medium">Cadent Houses (3, 6, 9, 12):</span> Adaptable, learning energy
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-4 h-4 bg-black"></div>
-            <p className="font-inter text-black">
+            <p className="font-open-sans text-black">
               <span className="font-medium">Cusp:</span> The exact degree where each house begins
             </p>
           </div>

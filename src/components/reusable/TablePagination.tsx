@@ -32,7 +32,7 @@ export default function TablePagination({
     <div className="px-6 py-4 border-t border-black" style={{ backgroundColor }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <p className="text-sm text-black font-inter">
+          <p className="text-sm text-black font-open-sans">
             Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
             <span className="font-medium">{Math.min(endIndex, totalItems)}</span> of{' '}
             <span className="font-medium">{totalItems}</span> {label}
@@ -40,11 +40,11 @@ export default function TablePagination({
           
           {showItemsPerPageSelector && onItemsPerPageChange && (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-black font-inter">Show:</span>
+              <span className="text-sm text-black font-open-sans">Show:</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => onItemsPerPageChange(parseInt(e.target.value))}
-                className="px-2 py-1 text-sm font-medium text-black bg-white border border-black focus:outline-none hover:bg-[#6bdbff] transition-colors font-inter"
+                className="px-2 py-1 text-sm font-medium text-black bg-white border border-black focus:outline-none hover:bg-[#6bdbff] transition-colors font-open-sans"
               >
                 {itemsPerPageOptions.map((option) => (
                   <option key={option} value={option}>
@@ -61,7 +61,7 @@ export default function TablePagination({
           <button
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 text-sm font-medium text-black bg-white border border-black hover:bg-[#6bdbff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-inter"
+            className="px-3 py-1 text-sm font-medium text-black bg-white border border-black hover:bg-[#6bdbff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-open-sans"
           >
             ← Previous
           </button>
@@ -83,7 +83,7 @@ export default function TablePagination({
                 <button
                   key={pageNum}
                   onClick={() => onPageChange(pageNum)}
-                  className={`px-3 py-1 text-sm font-medium transition-colors font-inter ${
+                  className={`px-3 py-1 text-sm font-medium transition-colors font-open-sans ${
                     currentPage === pageNum
                       ? 'bg-black text-white'
                       : 'text-black bg-white border border-black hover:bg-[#6bdbff]'
@@ -98,7 +98,7 @@ export default function TablePagination({
           <button
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 text-sm font-medium text-black bg-white border border-black hover:bg-[#6bdbff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-inter"
+            className="px-3 py-1 text-sm font-medium text-black bg-white border border-black hover:bg-[#6bdbff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-open-sans"
           >
             Next →
           </button>

@@ -74,7 +74,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-black font-space-grotesk">Daily Traffic Data</h3>
-            <p className="mt-1 text-sm text-gray-600 font-inter">Last 30 days of detailed analytics</p>
+            <p className="mt-1 text-sm text-gray-600 font-open-sans">Last 30 days of detailed analytics</p>
           </div>
           <div className="flex items-center space-x-3">
             <AdminDropdown
@@ -91,7 +91,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
               value={timeRange}
               onChange={onTimeRangeChange}
             />
-            <button className="px-4 py-2 text-sm font-medium text-black bg-white border-2 border-black hover:bg-[#6bdbff] hover:text-black transition-colors font-inter">
+            <button className="px-4 py-2 text-sm font-medium text-black bg-white border-2 border-black hover:bg-[#6bdbff] hover:text-black transition-colors font-open-sans">
               Export CSV
             </button>
           </div>
@@ -182,10 +182,10 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                   
                   return (
                     <tr key={`${day.date}-${index}`} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black font-inter">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black font-open-sans">
                         {formatDate(day.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-open-sans">
                         <div className="flex items-center">
                           <span>{formatNumber(day.visitors)}</span>
                           <div className="ml-2 w-8 h-2 bg-gray-200">
@@ -196,7 +196,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-open-sans">
                         <div className="flex items-center">
                           <span>{formatNumber(day.pageViews)}</span>
                           <div className="ml-2 w-8 h-2 bg-gray-200">
@@ -207,7 +207,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-open-sans">
                         <div className="flex items-center">
                           <span>{formatNumber(day.chartsGenerated)}</span>
                           <div className="ml-2 w-8 h-2 bg-gray-200">
@@ -218,7 +218,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-open-sans">
                         <div className="space-y-1">
                           {day.topCountries && day.topCountries.length > 0 ? (
                             day.topCountries.slice(0, 2).map((country, i) => (
@@ -233,7 +233,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-inter">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black font-open-sans">
                         <div className="space-y-1">
                           {day.locationBreakdown ? (
                             <>
@@ -265,7 +265,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium border font-inter ${
+                        <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium border font-open-sans ${
                           isHighConversion 
                             ? 'bg-[#51bd94] text-white border-black' 
                             : 'bg-[#f2e356] text-black border-black'

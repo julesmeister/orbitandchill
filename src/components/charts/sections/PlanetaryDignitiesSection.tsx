@@ -40,7 +40,7 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
         </div>
         <div>
           <h5 className="font-space-grotesk text-lg font-bold text-black">Planetary Dignities & Debilities</h5>
-          <p className="font-inter text-sm text-black/60">How well each planet expresses its energy in its current sign</p>
+          <p className="font-open-sans text-sm text-black/60">How well each planet expresses its energy in its current sign</p>
         </div>
       </div>
 

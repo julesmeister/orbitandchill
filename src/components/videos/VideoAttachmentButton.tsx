@@ -54,14 +54,14 @@ export default function VideoAttachmentButton({ onVideoAttach, disabled = false 
           {isLoading ? (
             <>
               <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-              <span className="font-medium text-sm font-inter">Attaching...</span>
+              <span className="font-medium text-sm font-open-sans">Attaching...</span>
             </>
           ) : (
             <>
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              <span className="font-medium text-sm font-inter">Add Video</span>
+              <span className="font-medium text-sm font-open-sans">Add Video</span>
             </>
           )}
         </div>
