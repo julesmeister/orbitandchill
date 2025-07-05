@@ -182,7 +182,7 @@ function eventToDbRow(eventData: CreateEventData) {
     aspects: JSON.stringify(eventData.aspects || []),
     planetaryPositions: JSON.stringify(eventData.planetaryPositions || []),
     score: eventData.score || 5,
-    isGenerated: eventData.isGenerated ? 1 : 0, // Explicitly convert to integer for SQLite
+    isGenerated: eventData.isGenerated === true ? 1 : 0, // Explicitly convert to integer for SQLite, default false
     priorities: eventData.priorities ? JSON.stringify(eventData.priorities) : null,
     chartData: eventData.chartData ? JSON.stringify(eventData.chartData) : null,
     timeWindow: eventData.timeWindow ? JSON.stringify(eventData.timeWindow) : null,
@@ -202,7 +202,20 @@ function eventToDbRow(eventData: CreateEventData) {
 export class EventService {
   // Get all events for a user with optional filtering
   static async getEvents(filters: EventFilters = {}): Promise<AstrologicalEvent[]> {
-    return resilient.array(db, 'getEvents', async () => {
+    // Check database availability manually first
+    console.log('🔍 Database availability check:', {
+      hasDb: !!db,
+      hasClient: !!db?.client,
+      hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+      isAvailable: !!db && (!!db.client || !!process.env.TURSO_DATABASE_URL)
+    });
+    
+    // Temporarily bypass resilience wrapper to debug manual events issue
+    const bypassResilience = false;
+    
+    if (bypassResilience) {
+      console.log('🚨 BYPASSING resilience wrapper for debugging');
+      return await (async () => {
       console.log('🔍 EventService.getEvents called with filters:', filters);
       
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
@@ -240,6 +253,69 @@ export class EventService {
       }
       
       console.log('🔍 Building raw SQL query with', conditions.length, 'conditions');
+      console.log('🔍 Full conditions array:', JSON.stringify(conditions, null, 2));
+      
+      const rows = await executeRawSelect(db, {
+        table: 'astrological_events',
+        conditions,
+        orderBy: [{ column: 'created_at', direction: 'DESC' }]
+      });
+      
+      // Apply search filter if needed (raw SQL approach)
+      let filteredRows = rows;
+      if (filters.searchTerm) {
+        filteredRows = rows.filter((row: any) => 
+          row.title?.toLowerCase().includes(filters.searchTerm!.toLowerCase()) ||
+          row.description?.toLowerCase().includes(filters.searchTerm!.toLowerCase())
+        );
+      }
+      
+      console.log(`📊 EventService.getEvents returning ${filteredRows.length} events for filters:`, filters);
+      
+      return filteredRows.map((row: any) => dbRowToEvent(transformDatabaseRow(row)));
+      })();
+    }
+    
+    // Original resilience wrapper path (when bypassResilience is false)
+    return resilient.array(db, 'getEvents', async () => {
+      console.log('🔍 EventService.getEvents called with filters (via resilience):', filters);
+      
+      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      const conditions = [];
+      
+      if (filters.userId) {
+        console.log('🎯 Adding userId filter:', filters.userId);
+        conditions.push({ column: 'user_id', value: filters.userId });
+      }
+      
+      if (filters.type && filters.type !== 'all') {
+        conditions.push({ column: 'type', value: filters.type });
+      }
+      
+      if (filters.isBookmarked !== undefined) {
+        conditions.push({ column: 'is_bookmarked', value: filters.isBookmarked ? 1 : 0 });
+      }
+      
+      if (filters.isGenerated !== undefined) {
+        conditions.push({ column: 'is_generated', value: filters.isGenerated ? 1 : 0 });
+      }
+      
+      if (filters.dateFrom) {
+        conditions.push({ column: 'date', value: filters.dateFrom, operator: '>=' as const });
+      }
+      
+      if (filters.dateTo) {
+        conditions.push({ column: 'date', value: filters.dateTo, operator: '<=' as const });
+      }
+      
+      // Handle search term with raw SQL LIKE queries
+      let searchSql = '';
+      if (filters.searchTerm) {
+        searchSql = ` AND (title LIKE '%${filters.searchTerm}%' OR description LIKE '%${filters.searchTerm}%')`;
+      }
+      
+      console.log('🔍 Building raw SQL query with', conditions.length, 'conditions');
+      console.log('🔍 Full conditions array:', JSON.stringify(conditions, null, 2));
       
       const rows = await executeRawSelect(db, {
         table: 'astrological_events',
@@ -352,6 +428,14 @@ export class EventService {
           lastInsertRowid: insertResult.lastInsertRowid
         });
         
+        console.log('🔍 Inserted event details for debugging:', {
+          id: dbData.id,
+          title: dbData.title,
+          isGenerated: dbData.isGenerated,
+          isGeneratedType: typeof dbData.isGenerated,
+          userId: dbData.userId
+        });
+        
         if (insertResult.rowsAffected !== 1) {
           console.error('❌ Insert affected', insertResult.rowsAffected, 'rows, expected 1');
           throw new Error(`Insert affected ${insertResult.rowsAffected} rows, expected 1`);
@@ -376,6 +460,20 @@ export class EventService {
           title: convertedEvent.title,
           locationName: convertedEvent.locationName
         });
+        
+        // DEBUG: Immediately check if event exists after creation
+        try {
+          const checkResult = await client.execute({
+            sql: 'SELECT id, title, is_generated, is_bookmarked FROM astrological_events WHERE id = ?',
+            args: [convertedEvent.id]
+          });
+          console.log('🔍 Event verification after creation:', {
+            found: checkResult.rows.length > 0,
+            event: checkResult.rows[0] || 'NOT_FOUND'
+          });
+        } catch (verifyError) {
+          console.error('❌ Could not verify event after creation:', verifyError);
+        }
         
         return convertedEvent;
     } catch (error) {
@@ -975,10 +1073,10 @@ export class EventService {
           return deletedCount;
         }
         
-        // Method 3: If all else fails, delete ALL non-bookmarked events (nuclear option)
-        console.log('🔄 Method 3 - Nuclear: No events found with previous methods, trying to delete ALL non-bookmarked events...');
+        // Method 3: If all else fails, delete ALL non-bookmarked GENERATED events (nuclear option)
+        console.log('🔄 Method 3 - Nuclear: No events found with previous methods, trying to delete ALL non-bookmarked GENERATED events...');
         
-        let nuclearSql = 'SELECT id, title FROM astrological_events WHERE user_id = ? AND is_bookmarked = 0';
+        let nuclearSql = 'SELECT id, title FROM astrological_events WHERE user_id = ? AND is_bookmarked = 0 AND is_generated = 1';
         const nuclearArgs: string[] = [userId];
         
         if (month !== undefined && year !== undefined) {
@@ -994,7 +1092,7 @@ export class EventService {
         console.log(`📋 Method 3 - Nuclear: Found ${nuclearCheckResult.rows.length} non-bookmarked events to delete${month !== undefined ? ` in ${year}-${(month + 1).toString().padStart(2, '0')}` : ''}`);
         
         if (nuclearCheckResult.rows.length > 0) {
-          let nuclearDeleteSql = 'DELETE FROM astrological_events WHERE user_id = ? AND is_bookmarked = 0';
+          let nuclearDeleteSql = 'DELETE FROM astrological_events WHERE user_id = ? AND is_bookmarked = 0 AND is_generated = 1';
           if (month !== undefined && year !== undefined) {
             nuclearDeleteSql += ' AND strftime("%m", date) = ? AND strftime("%Y", date) = ?';
           }

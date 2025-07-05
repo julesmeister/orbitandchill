@@ -2,10 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUserStore } from '../store/userStore';
 import { getLocationAnalytics } from '../utils/locationAnalytics';
+import { approximateTimeZoneFromCoordinates } from '../utils/timeZoneHandler';
 
 interface LocationData {
   name: string;
   coordinates: { lat: string; lon: string };
+  timezone?: string;
 }
 
 interface LocationState {
@@ -121,9 +123,20 @@ export const useSharedLocation = () => {
           const result = await response.json();
           
           if (result.success && result.location) {
+            // Ensure timezone is included
+            let timezone = result.location.timezone;
+            if (!timezone && result.location.coordinates) {
+              const tzResult = approximateTimeZoneFromCoordinates(
+                parseFloat(result.location.coordinates.lat),
+                parseFloat(result.location.coordinates.lon)
+              );
+              timezone = tzResult.timeZone;
+            }
+            
             const savedLocation: LocationData = {
               name: result.location.name,
-              coordinates: result.location.coordinates
+              coordinates: result.location.coordinates,
+              timezone: timezone
             };
             
             setLocationState(prev => ({
@@ -172,22 +185,32 @@ export const useSharedLocation = () => {
     name: string;
     source: 'birth' | 'current' | 'fallback';
     coordinates: { lat: string; lon: string };
+    timezone?: string;
   } => {
     // 1. Try current location if available
     if (locationState.currentLocation) {
       return {
         name: locationState.currentLocation.name,
         source: 'current',
-        coordinates: locationState.currentLocation.coordinates
+        coordinates: locationState.currentLocation.coordinates,
+        timezone: locationState.currentLocation.timezone
       };
     }
 
     // 2. Try user birth location
     if (user?.birthData?.locationOfBirth && user?.birthData?.coordinates) {
+      // Get timezone for birth location if not already stored
+      const timezone = user.birthData.timezone || 
+        approximateTimeZoneFromCoordinates(
+          parseFloat(user.birthData.coordinates.lat),
+          parseFloat(user.birthData.coordinates.lon)
+        ).timeZone;
+        
       return {
         name: user.birthData.locationOfBirth,
         source: 'birth',
-        coordinates: user.birthData.coordinates
+        coordinates: user.birthData.coordinates,
+        timezone
       };
     }
 
@@ -195,7 +218,8 @@ export const useSharedLocation = () => {
     return {
       name: 'New York, NY',
       source: 'fallback',
-      coordinates: { lat: '40.7128', lon: '-74.0060' }
+      coordinates: { lat: '40.7128', lon: '-74.0060' },
+      timezone: 'America/New_York'
     };
   }, [locationState.currentLocation, user?.birthData]);
 
@@ -215,9 +239,16 @@ export const useSharedLocation = () => {
       // Get location name
       const name = await getLocationName(coordinates.lat, coordinates.lon);
       
+      // Get timezone
+      const tzResult = approximateTimeZoneFromCoordinates(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      
       const newLocation: LocationData = {
         name,
-        coordinates
+        coordinates,
+        timezone: tzResult.timeZone
       };
       
       // Track successful permission grant
@@ -292,7 +323,8 @@ export const useSharedLocation = () => {
             userId: user.id,
             location: {
               name: locationData.name,
-              coordinates: locationData.coordinates
+              coordinates: locationData.coordinates,
+              timezone: locationData.timezone
             }
           })
         });
@@ -331,6 +363,7 @@ export const useSharedLocation = () => {
       shortName: bestLocation.name.split(',')[0],
       source: bestLocation.source,
       coordinates: bestLocation.coordinates,
+      timezone: bestLocation.timezone,
       isUserSet: bestLocation.source === 'current',
       isBirthLocation: bestLocation.source === 'birth',
       isFallback: bestLocation.source === 'fallback'

@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     });
     const type = searchParams.get('type') as 'all' | 'benefic' | 'challenging' | 'neutral' | null;
     const tab = searchParams.get('tab') as 'all' | 'bookmarked' | 'manual' | null;
+    console.log('📊 Tab parameter:', tab || 'NOT_PROVIDED');
     const isGenerated = searchParams.get('isGenerated');
     const isBookmarked = searchParams.get('isBookmarked');
     const searchTerm = searchParams.get('searchTerm');
@@ -86,7 +87,16 @@ export async function GET(request: NextRequest) {
 
     // Get events based on filters
     let events;
-    if (tab === 'all' && !isGenerated && !isBookmarked) {
+    // If no tab specified or tab is 'all', show all user's events
+    const shouldUseAllBranch = (!tab || tab === 'all');
+    console.log('🔀 Branch decision:', {
+      tab,
+      isGenerated,
+      isBookmarked,
+      shouldUseAllBranch,
+      originalCondition: (!tab || tab === 'all') && !isGenerated && !isBookmarked
+    });
+    if (shouldUseAllBranch) {
       // For 'all' tab, get both user's personal events AND all generated events
       // Handle database unavailability gracefully for all event types
       let userPersonalEvents: any[] = [];

@@ -7,6 +7,7 @@ interface LocationData {
   latitude: number;
   longitude: number;
   locationName: string;
+  timezone?: string;
 }
 
 interface UseManualEventHandlerProps {
@@ -48,7 +49,9 @@ export const useManualEventHandler = ({
           time: newEvent.time,
           description: newEvent.description,
           latitude,
-          longitude
+          longitude,
+          locationName: locationForGeneration.locationName,
+          timezone: locationForGeneration.timezone
         });
 
         if (analyzedEvent) {
@@ -90,7 +93,14 @@ export const useManualEventHandler = ({
           isBookmarked: false,
           userId: userId || '',
           isGenerated: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          // Include location data when available, even for basic events
+          ...(locationForGeneration ? {
+            latitude: (locationForGeneration as LocationData).latitude,
+            longitude: (locationForGeneration as LocationData).longitude,
+            locationName: (locationForGeneration as LocationData).locationName,
+            timezone: (locationForGeneration as LocationData).timezone
+          } : {})
         };
 
         await addEvent(basicEvent);

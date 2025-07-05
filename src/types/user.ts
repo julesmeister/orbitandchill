@@ -7,6 +7,7 @@ export interface BirthData {
     lat: string;
     lon: string;
   };
+  timezone?: string;
 }
 
 // Privacy settings interface

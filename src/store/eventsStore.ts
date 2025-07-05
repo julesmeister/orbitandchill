@@ -161,7 +161,8 @@ export const useEventsStore = create<EventsState>()(
           const params = new URLSearchParams({
             userId,
             month: month.toString(),
-            year: year.toString()
+            year: year.toString(),
+            tab: 'all' // Explicitly request all events
           });
           
           const response = await fetch(`/api/events?${params}`);

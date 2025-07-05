@@ -10,6 +10,8 @@ export interface ManualEventOptions {
   description: string;
   latitude: number;
   longitude: number;
+  locationName?: string;
+  timezone?: string;
 }
 
 export const useManualEventAnalysis = () => {
@@ -17,7 +19,7 @@ export const useManualEventAnalysis = () => {
   const { analyzeChartForPriorities } = useOptimalTiming();
 
   const analyzeManualEvent = async (options: ManualEventOptions): Promise<AstrologicalEvent> => {
-    const { title, date, time, description, latitude, longitude } = options;
+    const { title, date, time, description, latitude, longitude, locationName, timezone } = options;
     
     setIsAnalyzing(true);
     
@@ -83,7 +85,12 @@ export const useManualEventAnalysis = () => {
         isGenerated: false,
         createdAt: new Date().toISOString(),
         priorities: topPriorities,
-        chartData
+        chartData,
+        // Include location data that was used for the analysis
+        latitude,
+        longitude,
+        locationName: locationName || `Analyzed at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+        timezone
       };
       
     } catch (error) {
@@ -100,7 +107,12 @@ export const useManualEventAnalysis = () => {
         planetaryPositions: [],
         score: 5,
         isGenerated: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        // Include location data even when analysis fails
+        latitude,
+        longitude,
+        locationName: locationName || `Event at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+        timezone
       };
     } finally {
       setIsAnalyzing(false);

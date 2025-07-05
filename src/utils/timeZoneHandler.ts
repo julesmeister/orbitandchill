@@ -46,7 +46,7 @@ export interface TimeZoneLookupResult {
  * Approximate time zone lookup based on coordinates
  * Enhanced with regional specificity for better accuracy
  */
-function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneLookupResult {
+export function approximateTimeZoneFromCoordinates(lat: number, lng: number): TimeZoneLookupResult {
   // console.log(`🧭 TIMEZONE LOOKUP: Coordinates ${lat}, ${lng}`);
   
   // Regional boundary checks for better accuracy

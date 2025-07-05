@@ -111,8 +111,7 @@ export async function executeRawSelect(
       args.push(options.offset);
     }
 
-    // SQL query execution (no logging to reduce noise)
-    
+    // SQL query execution
     const result = await client.execute({ sql, args });
     return result.rows || [];
     

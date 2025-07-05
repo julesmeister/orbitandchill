@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
           authToken: authToken,
         });
         
+        // Update timezone in the user preferences if provided
+        if (location.timezone) {
+          await client.execute({
+            sql: 'UPDATE users SET timezone = ? WHERE id = ?',
+            args: [location.timezone, userId]
+          });
+        }
+        
         const result = await client.execute({
           sql: 'UPDATE users SET current_location_name = ?, current_latitude = ?, current_longitude = ?, current_location_updated_at = ? WHERE id = ?',
           args: [
@@ -125,7 +133,8 @@ export async function GET(request: NextRequest) {
             currentLocationUpdatedAt: userData.current_location_updated_at,
             locationOfBirth: userData.location_of_birth,
             latitude: userData.latitude,
-            longitude: userData.longitude
+            longitude: userData.longitude,
+            timezone: userData.timezone
           };
         }
       }
@@ -152,6 +161,7 @@ export async function GET(request: NextRequest) {
             lat: user.currentLatitude.toString(),
             lon: user.currentLongitude.toString()
           },
+          timezone: user.timezone,
           updatedAt: user.currentLocationUpdatedAt ? new Date(user.currentLocationUpdatedAt).toISOString() : undefined
         }
       });

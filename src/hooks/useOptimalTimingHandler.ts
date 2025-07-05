@@ -87,6 +87,7 @@ export const useOptimalTimingHandler = ({
         userId: userId || '',
         selectedPriorities,
         currentDate: currentDate,
+        onProgress: updateProgress, // Pass the progress callback!
         onEventGenerated: async (newEvent) => {
           // Real-time event addition callback - local only during generation
           console.log('🎯 Real-time event generated:', newEvent.title);

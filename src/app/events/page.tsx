@@ -79,7 +79,8 @@ export default function EventsPage() {
   // Get current location data from the shared location hook
   const currentLocationData = locationDisplay.isUserSet ? {
     name: locationDisplay.name,
-    coordinates: locationDisplay.coordinates
+    coordinates: locationDisplay.coordinates,
+    timezone: locationDisplay.timezone
   } : null;
 
   // Note: handleToggleBookmark is defined later in the component with full logic
@@ -147,28 +148,29 @@ export default function EventsPage() {
     document.title = `Astrological Events Dashboard | ${BRAND.name}`;
   }, []);
 
-  // Cleanup old unbookmarked generated events on initial page load
+  // Cleanup old unbookmarked generated events on initial page load - TEMPORARILY DISABLED
   useEffect(() => {
-    const cleanupOldGeneratedEvents = async () => {
-      if (user?.id) {
-        try {
-          console.log('🧹 Cleaning up old unbookmarked generated events...');
-          
-          // Clear unbookmarked generated events from all months
-          await clearGeneratedEvents(user.id);
-          
-          console.log('✅ Old generated events cleaned up successfully');
-        } catch (error) {
-          console.warn('⚠️ Could not clean up old generated events:', error);
-          // Don't show error to user as this is a background cleanup
-        }
-      }
-    };
+    console.log('🚫 Cleanup disabled for debugging manual events issue');
+    // const cleanupOldGeneratedEvents = async () => {
+    //   if (user?.id) {
+    //     try {
+    //       console.log('🧹 Cleaning up old unbookmarked generated events...');
+    //       
+    //       // Clear unbookmarked generated events from all months
+    //       await clearGeneratedEvents(user.id);
+    //       
+    //       console.log('✅ Old generated events cleaned up successfully');
+    //     } catch (error) {
+    //       console.warn('⚠️ Could not clean up old generated events:', error);
+    //       // Don't show error to user as this is a background cleanup
+    //     }
+    //   }
+    // };
 
-    // Only run cleanup once when user is available
-    if (user?.id) {
-      cleanupOldGeneratedEvents();
-    }
+    // // Only run cleanup once when user is available
+    // if (user?.id) {
+    //   cleanupOldGeneratedEvents();
+    // }
   }, [user?.id, clearGeneratedEvents]); // Only run when user changes
 
   // Load events for current month when user is available
@@ -250,7 +252,8 @@ export default function EventsPage() {
       return {
         latitude: parseFloat(currentLocationData.coordinates.lat),
         longitude: parseFloat(currentLocationData.coordinates.lon),
-        locationName: currentLocationData.name
+        locationName: currentLocationData.name,
+        timezone: currentLocationData.timezone
       };
     }
 
@@ -259,7 +262,8 @@ export default function EventsPage() {
       return {
         latitude: parseFloat(user.birthData.coordinates.lat),
         longitude: parseFloat(user.birthData.coordinates.lon),
-        locationName: user.birthData.locationOfBirth || 'Your Birth Location'
+        locationName: user.birthData.locationOfBirth || 'Your Birth Location',
+        timezone: user.birthData.timezone
       };
     }
 

@@ -3,6 +3,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useUserStore } from '@/store/userStore';
+import { approximateTimeZoneFromCoordinates } from '@/utils/timeZoneHandler';
 
 interface LocationRequestToastProps {
   isVisible: boolean;
@@ -17,6 +18,7 @@ interface LocationData {
     lat: string;
     lon: string;
   };
+  timezone?: string;
 }
 
 interface LocationSearchResult {
@@ -99,12 +101,19 @@ export default function LocationRequestToast({
   };
 
   const handleLocationSelect = async (result: LocationSearchResult) => {
+    // Get timezone from coordinates
+    const tzResult = approximateTimeZoneFromCoordinates(
+      parseFloat(result.lat), 
+      parseFloat(result.lon)
+    );
+    
     const locationData: LocationData = {
       name: result.display_name,
       coordinates: {
         lat: result.lat,
         lon: result.lon
-      }
+      },
+      timezone: tzResult.timeZone
     };
 
     // Save location to user database
@@ -156,12 +165,18 @@ export default function LocationRequestToast({
       });
 
       // Success! Set the location and close toast
+      const tzResult = approximateTimeZoneFromCoordinates(
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      
       const locationData = {
         name: `Your Current Location (${position.coords.latitude.toFixed(2)}°, ${position.coords.longitude.toFixed(2)}°)`,
         coordinates: {
           lat: position.coords.latitude.toString(),
           lon: position.coords.longitude.toString()
-        }
+        },
+        timezone: tzResult.timeZone
       };
 
       handleLocationSelect({ 
