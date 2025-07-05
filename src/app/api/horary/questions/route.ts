@@ -56,7 +56,6 @@ export async function POST(request: NextRequest) {
           console.warn(`⚠️ User ${userId} not found in database, but allowing question creation`);
           // Log the issue but don't fail - allow question creation for better UX
         } else {
-          console.log(`✅ User ${userId} verified in database`);
         }
       } catch (error) {
         console.warn(`⚠️ User verification failed for ${userId}:`, error);

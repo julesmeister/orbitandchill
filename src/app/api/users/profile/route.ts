@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
       }).filter(([_, value]) => value !== undefined)
     );
 
-    console.log('🔍 Birth data processing:', {
       originalBirthData: birthData,
       flattenedBirthData,
       finalUpdateData
@@ -147,8 +146,6 @@ export async function POST(request: NextRequest) {
       if (Object.keys(finalUpdateData).length > 0) {
         await UserService.updateUser(newUser.id, finalUpdateData);
       }
-
-      console.log(`✅ Created user in server database: ${id} (${username})`);
 
       return NextResponse.json({
         success: true,

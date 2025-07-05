@@ -7,9 +7,7 @@ import AnalyticsNotificationService from '@/lib/services/analyticsNotificationSe
 export async function POST(request: NextRequest) {
   try {
     await initializeDatabase();
-    
-    console.log('📊 API: Starting daily traffic aggregation...');
-    
+
     // Get date parameter or use yesterday by default
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get('date');
@@ -23,14 +21,11 @@ export async function POST(request: NextRequest) {
       yesterday.setDate(yesterday.getDate() - 1);
       targetDate = yesterday.toISOString().split('T')[0];
     }
-    
-    console.log(`📅 Aggregating traffic data for date: ${targetDate}`);
-    
+
     // Aggregate traffic data for the target date
     const aggregatedData = await AnalyticsService.aggregateDailyTraffic(targetDate);
     
     if (aggregatedData) {
-      console.log(`✅ Successfully aggregated traffic data for ${targetDate}:`, aggregatedData);
       
       // Send success notification to admin
       await AnalyticsNotificationService.notifyDailyAggregationSuccess(targetDate, aggregatedData);

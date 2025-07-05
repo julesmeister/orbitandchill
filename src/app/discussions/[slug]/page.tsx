@@ -85,7 +85,6 @@ export default function DiscussionDetailPage({
     
     // Cross-check with database discussion.replies count (debounced)
     if (discussion && discussion.replies !== newCount) {
-      console.log(`🔍 Reply count mismatch detected:`, {
         databaseCount: discussion.replies,
         actualCount: newCount,
         discussionId: discussion.id
@@ -105,7 +104,6 @@ export default function DiscussionDetailPage({
           });
           
           if (response.ok) {
-            console.log('✅ Database reply count synchronized');
           } else {
             console.error('❌ Failed to sync reply count');
           }
@@ -133,14 +131,12 @@ export default function DiscussionDetailPage({
         const actualCount = repliesData.replies.length;
         const databaseCount = discussionData.replies;
         
-        console.log('🔍 Initial reply count check:', {
           discussionId: discussionData.id,
           databaseCount,
           actualCount
         });
         
         if (databaseCount !== actualCount) {
-          console.log('🔧 Reply count mismatch on load, syncing...');
           handleReplyCountUpdate(actualCount).catch(() => {}); // Non-blocking
         } else {
           setRepliesCount(actualCount);

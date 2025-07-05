@@ -110,7 +110,6 @@ export default function RichTextEditor({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const text = editor.getText();
-      console.log('🔍 Editor onUpdate:', {
         htmlLength: html?.length,
         textLength: text?.length,
         textPreview: text?.substring(0, 50)
@@ -180,7 +179,6 @@ export default function RichTextEditor({
   useEffect(() => {
     if (editor) {
       const initialText = editor.getText();
-      console.log('🔍 Editor initialized with text:', {
         contentProp: content?.substring(0, 100),
         editorHTML: editor.getHTML()?.substring(0, 100),
         editorText: initialText?.substring(0, 100),
@@ -192,19 +190,16 @@ export default function RichTextEditor({
 
   // Text statistics using our utility functions
   const textStats = useMemo(() => {
-    console.log('🔍 Calculating text stats for:', {
       editorText: editorText?.substring(0, 100),
       textLength: editorText?.length,
       hasContent: !!editorText
     });
     
     if (!editorText) {
-      console.log('🔍 No editorText, returning zeros');
       return { characters: 0, words: 0, readingTime: 0 };
     }
     
     const stats = getTextStats(editorText);
-    console.log('🔍 Text stats calculated:', stats);
     return stats;
   }, [editorText]);
 

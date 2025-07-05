@@ -41,10 +41,8 @@ export async function initializeDatabase() {
   }
   
   try {
-    console.log('🔄 Testing database connection...');
     // Just test the connection for now, skip migrations
     const result = await db.select().from(schema.users).limit(1);
-    console.log('✅ Database connection test successful');
     isInitialized = true;
   } catch (error) {
     console.error('❌ Database connection test failed:', error);

@@ -16,9 +16,7 @@ export async function POST() {
   /* Unreachable code commented out
   try {
     await initializeDatabase();
-    
-    console.log('🌱 Seeding database with test data...');
-    
+
     // Log the data seeding operation
     try {
       await AdminAuditService.logSystemAction(
@@ -71,7 +69,6 @@ export async function POST() {
       try {
         const user = await UserService.createUser(userData);
         createdUsers.push(user);
-        console.log(`✅ Created user: ${userData.username}`);
       } catch (error) {
         console.warn(`Failed to create user ${userData.username}:`, error);
       }
@@ -119,7 +116,6 @@ export async function POST() {
       try {
         const discussion = await DiscussionService.createDiscussion(discussionData);
         createdDiscussions.push(discussion);
-        console.log(`✅ Created discussion: ${discussionData.title}`);
       } catch (error) {
         console.warn(`Failed to create discussion ${discussionData.title}:`, error);
       }
@@ -158,7 +154,6 @@ export async function POST() {
         bounceRate: 28
       });
       
-      console.log('✅ Created analytics data');
     } catch (error) {
       console.warn('Failed to create analytics data:', error);
     }

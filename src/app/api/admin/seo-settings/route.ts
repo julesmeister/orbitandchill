@@ -150,8 +150,6 @@ export async function POST(request: NextRequest) {
       return { success: true };
     });
 
-    console.log('✅ SEO settings saved to Turso database successfully');
-
     return NextResponse.json({
       success: true,
       message: 'SEO settings saved successfully',
@@ -180,8 +178,6 @@ export async function DELETE(request: NextRequest) {
         args: ['default']
       });
     });
-
-    console.log('✅ SEO settings reset to defaults');
 
     return NextResponse.json({
       success: true,

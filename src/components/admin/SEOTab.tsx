@@ -178,7 +178,6 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
             ...prev,
             ...result.settings
           }));
-          console.log('✅ SEO settings loaded successfully');
         }
       } catch (error) {
         console.warn('Failed to load SEO settings, using defaults:', error);
@@ -227,7 +226,6 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
       const result = await response.json();
 
       if (result.success) {
-        console.log('✅ SEO settings saved successfully');
         // Could show success toast here
       } else {
         console.error('❌ Failed to save SEO settings:', result.error);
@@ -249,7 +247,6 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
       const result = await response.json();
       
       if (result.success) {
-        console.log('✅ Sitemap generated successfully');
         // Could show success toast here
       } else {
         console.error('❌ Failed to generate sitemap:', result.error);
@@ -267,7 +264,6 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
       const result = await response.json();
       
       if (result.success) {
-        console.log('✅ Robots.txt generated successfully');
         // Could show success toast here
       } else {
         console.error('❌ Failed to generate robots.txt:', result.error);
@@ -291,7 +287,6 @@ Sitemap: ${BRAND.domain}/sitemap.xml`,
       const result = await response.json();
 
       if (result.success) {
-        console.log('✅ SEO settings reset successfully');
         // Reload the page to fetch default settings
         window.location.reload();
       } else {

@@ -38,7 +38,12 @@ const MobileNav = React.memo(({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-full left-0 right-0 bg-white border border-black border-t-0 z-50">
+    <div 
+      id="mobile-menu"
+      className="absolute top-full left-0 right-0 bg-white border border-black border-t-0 z-50"
+      role="menu"
+      aria-label="Mobile navigation menu"
+    >
       {/* Mobile Search - Synapsas style with sharp corners */}
       <div className="p-4 border-b border-black">
         <div className="relative">
@@ -53,12 +58,14 @@ const MobileNav = React.memo(({
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full bg-white text-black placeholder-black/50 pl-10 pr-4 py-3 border border-black focus:outline-none font-inter focus:border-black"
             placeholder="Search..."
+            aria-label="Search the website"
+            role="searchbox"
           />
         </div>
       </div>
 
       {/* Mobile Navigation Links - Connected partitions with Synapsas styling */}
-      <div className="divide-y divide-black">
+      <nav className="divide-y divide-black" aria-label="Main navigation" role="navigation">
         {NAVIGATION_LINKS.map(({ href, label }) => (
           <div key={href} className="border-b border-black last:border-b-0">
             <NavigationLink
@@ -75,7 +82,7 @@ const MobileNav = React.memo(({
             </NavigationLink>
           </div>
         ))}
-      </div>
+      </nav>
     </div>
   );
 });

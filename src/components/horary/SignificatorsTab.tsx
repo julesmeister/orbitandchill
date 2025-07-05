@@ -49,7 +49,6 @@ export default function SignificatorsTab({ chartData, analysisData, question }: 
         const signRuler = getSignRuler(signName);
         
         // Debug log
-        console.log(`House ${houseNumber}: cusp ${house.cusp}° → ${signName} → ruled by ${signRuler}`);
         
         return signRuler || 'Unknown';
       } catch (e) {

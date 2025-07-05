@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
   try {
     const body: ChartGenerationRequest = await request.json();
 
-    console.log('Chart generation request received:', {
       userId: !!body.userId,
       subjectName: !!body.subjectName,
       dateOfBirth: !!body.dateOfBirth,
@@ -163,7 +162,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to database
-    console.log('Saving chart to database...');
     const savedChart = await ChartService.createChart({
       userId: body.userId,
       subjectName: body.subjectName,
@@ -180,8 +178,6 @@ export async function POST(request: NextRequest) {
       chartData: svg,
       metadata,
     });
-
-    console.log('Chart saved:', !!savedChart, savedChart?.id);
 
     // Track chart generation analytics
     if (savedChart) {
@@ -211,7 +207,6 @@ export async function POST(request: NextRequest) {
     // Update user stellium data if this is their own chart and we have chart data
     if (savedChart && metadata?.chartData) {
       try {
-        console.log('Detecting stelliums for user chart...');
         const stelliumResult = detectStelliums(metadata.chartData);
         
         // Prepare user update data
@@ -232,13 +227,10 @@ export async function POST(request: NextRequest) {
         if (stelliumResult.detailedStelliums && stelliumResult.detailedStelliums.length > 0) {
           userUpdateData.detailedStelliums = stelliumResult.detailedStelliums;
         }
-        
-        console.log('Chart data extracted for user update:', userUpdateData);
-        
+
         // Update user profile with extracted chart data
         await UserService.updateUser(body.userId, userUpdateData);
         
-        console.log('User chart data updated successfully');
       } catch (stelliumError) {
         console.error('Error detecting/updating stelliums:', stelliumError);
         // Don't fail the chart generation if stellium detection fails

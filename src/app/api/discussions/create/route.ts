@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
       
       // Check if database is available
       if (!db) {
-        console.log('⚠️  Database not available, using fallback mode for discussion creation');
         
         // Use fallback creation pattern from protocol
         const now = new Date();
@@ -86,8 +85,6 @@ export async function POST(request: NextRequest) {
           username: creativeName
         };
       }
-      
-      console.log('🔍 Creating discussion with user:', user.username, user.id);
 
       // Create the discussion with tags directly stored in the discussions table
       const discussion = await DiscussionService.createDiscussion({

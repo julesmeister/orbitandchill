@@ -285,7 +285,6 @@ export async function crossReferenceWithProfessionalSoftware(
   recommendation: string;
 }> {
   // Placeholder for professional software integration
-  console.log('Cross-reference validation: Would integrate with professional astrology APIs');
   
   return {
     comparison: {

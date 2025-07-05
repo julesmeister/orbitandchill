@@ -101,7 +101,6 @@ export function useAstrocartographyData({
   // Update stable astro lines when fresh data arrives
   useEffect(() => {
     if (astrocartographyData) {
-      console.log('🔄 ASTRO: Updating stable astrocartography lines from fresh data');
       hasFreshAstroData.current = true;
 
       // Convert astrocartography data to SVG lines
@@ -139,12 +138,10 @@ export function useAstrocartographyData({
   const astrocartographyLines = useMemo(() => {
     // Use stable lines if we have fresh data
     if (hasFreshAstroData.current && stableAstroLines.length > 0) {
-      console.log('✅ ASTRO: Using stable fresh astrocartography lines');
       return stableAstroLines;
     }
 
     // No fallback needed - we always use fresh astrocartography data
-    console.log('⚠️ ASTRO: No fresh astrocartography data available yet');
     return [];
   }, [stableAstroLines]);
 
@@ -167,7 +164,6 @@ export function useAstrocartographyData({
         try {
           const clearedCount = await clearOutdatedNatalChartCaches();
           if (clearedCount > 0) {
-            console.log(`Cleared ${clearedCount} outdated caches on astrocartography page load`);
             // Force a fresh calculation by setting hasInitialLoad to false
             setHasInitialLoad(false);
             // Reset fresh data flag to allow new calculations

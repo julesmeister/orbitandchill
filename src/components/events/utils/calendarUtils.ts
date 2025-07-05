@@ -171,7 +171,6 @@ export const applyFiltersToEvents = (
       if (event.electionalData?.mercuryStatus) {
         const isDirectFromElectional = event.electionalData.mercuryStatus === 'direct';
         if (event.date.includes('2025-08')) {
-          console.log(`🌍 Using electional data: ${event.electionalData.mercuryStatus} -> ${isDirectFromElectional ? 'KEEP' : 'FILTER OUT'}`);
         }
         return isDirectFromElectional;
       }
@@ -189,7 +188,6 @@ export const applyFiltersToEvents = (
       // If keywords indicate retrograde, filter it out
       if (hasRetrogradeKeywords) {
         if (event.date.includes('2025-08')) {
-          console.log(`🌍 Using keyword detection: found retrograde keywords -> FILTER OUT`);
         }
         return false;
       }

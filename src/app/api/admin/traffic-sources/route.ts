@@ -44,9 +44,7 @@ function categorizeTrafficSource(referrer: string): string {
 export async function GET(request: NextRequest) {
   try {
     await initializeDatabase();
-    
-    console.log('📊 API: Loading real traffic sources data...');
-    
+
     // Get real referrer data from user activities over last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -88,7 +86,6 @@ export async function GET(request: NextRequest) {
     
     // If we have ANY real data, use it (lowered threshold for development)
     if (sources.length > 0 && totalViews > 0) {
-      console.log(`✅ API: Real traffic sources data found: ${sources.length} sources with ${totalViews} total views`);
       
       return NextResponse.json({
         success: true,
@@ -99,7 +96,6 @@ export async function GET(request: NextRequest) {
     }
     
     // No referrer data found, return empty instead of fallback
-    console.log('⚠️ API: No referrer data found, returning empty data');
     
     return NextResponse.json({
       success: true,

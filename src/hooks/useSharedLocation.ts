@@ -332,7 +332,6 @@ export const useSharedLocation = () => {
         if (!response.ok) {
           console.warn('Failed to save location to database:', response.statusText);
         } else {
-          console.log('✅ Location saved to database successfully');
         }
       } catch (error) {
         console.warn('Failed to save location to database:', error);

@@ -38,7 +38,6 @@ export async function POST() {
       `);
     } catch (error) {
       // Column might already exist, ignore error
-      console.log('subscription_tier column already exists or error adding it:', error instanceof Error ? error.message : String(error));
     }
 
     // Seed the default premium features using direct SQL

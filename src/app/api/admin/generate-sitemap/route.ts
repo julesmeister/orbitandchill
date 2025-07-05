@@ -138,8 +138,6 @@ export async function POST(request: NextRequest) {
     const publicPath = join(process.cwd(), 'public', 'sitemap.xml');
     writeFileSync(publicPath, sitemapXml, 'utf-8');
 
-    console.log('✅ sitemap.xml generated successfully');
-
     return NextResponse.json({
       success: true,
       message: 'sitemap.xml generated successfully',

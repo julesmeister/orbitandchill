@@ -90,9 +90,7 @@ export const useOptimalTimingHandler = ({
         onProgress: updateProgress, // Pass the progress callback!
         onEventGenerated: async (newEvent) => {
           // Real-time event addition callback - local only during generation
-          console.log('🎯 Real-time event generated:', newEvent.title);
           addEventsLocal([newEvent]);
-          console.log('📊 Current events count after add:', useEventsStore.getState().events.length);
         },
         onEventsGenerated: async (events) => {
           // Final batch completion callback

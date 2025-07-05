@@ -135,23 +135,19 @@ const tagData = [
 
 async function seedCategoriesAndTags() {
   try {
-    console.log('🌱 Seeding categories and tags...');
     await initializeDatabase();
 
     // Seed categories
-    console.log('Creating categories...');
     const categories = [];
     for (const categoryInfo of categoryData) {
       const result = await createCategory(categoryInfo);
       const category = result.data;
       if (category) {
         categories.push(category);
-        console.log(`✅ Created category: ${category.name}`);
       }
     }
 
     // Seed tags
-    console.log('Creating tags...');
     const tags = [];
     for (const tagInfo of tagData) {
       const tag = await TagService.createTag({
@@ -166,15 +162,10 @@ async function seedCategoriesAndTags() {
       }
       
       tags.push(tag);
-      console.log(`✅ Created tag: ${tag.name}`);
     }
 
     // Update popular status
     await TagService.updatePopularStatus();
-
-    console.log(`✅ Created ${categories.length} categories`);
-    console.log(`✅ Created ${tags.length} tags`);
-    console.log('🎉 Categories and tags seeding completed!');
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);
@@ -186,7 +177,6 @@ async function seedCategoriesAndTags() {
 if (require.main === module) {
   seedCategoriesAndTags()
     .then(() => {
-      console.log('🌟 Categories and tags seeded successfully!');
       process.exit(0);
     })
     .catch((error) => {

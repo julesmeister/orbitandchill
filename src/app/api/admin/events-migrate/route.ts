@@ -14,7 +14,6 @@ async function handleMigration(request: NextRequest, context: AdminAuthContext) 
       });
     } catch (error) {
       // Column doesn't exist, add it
-      console.log('Adding timing_method column to astrological_events table...');
     }
 
     // Add timing_method column
@@ -39,7 +38,6 @@ async function handleMigration(request: NextRequest, context: AdminAuthContext) 
       await executePooledQuery('SELECT planets_involved FROM astrological_events LIMIT 1');
     } catch (error) {
       // Column doesn't exist, add it
-      console.log('Adding planets_involved column to astrological_events table...');
       
       const addPlanetsQuery = `
         ALTER TABLE astrological_events 

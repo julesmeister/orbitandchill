@@ -40,7 +40,6 @@ export default function ChartQuickActions({
     loadPeople();
   }, []); // Empty dependency array to run only once
 
-
   const handleAddPersonClick = () => {
     setShowAddPersonForm(true);
     onAddPersonClick?.();
@@ -72,7 +71,6 @@ export default function ChartQuickActions({
     // Fall back to first person if no default
     if (!personToEdit && people.length > 0) {
       personToEdit = people[0];
-      console.log('Using first person:', personToEdit);
     }
 
     if (!personToEdit) {
@@ -81,10 +79,8 @@ export default function ChartQuickActions({
       return;
     }
 
-    console.log('Editing person:', personToEdit);
     setEditingPersonData(personToEdit);
     setShowEditPersonForm(true);
-    console.log('Set showEditPersonForm to true');
   };
 
   const handlePersonEdited = (person: Person) => {
@@ -105,7 +101,6 @@ export default function ChartQuickActions({
     if (showEditPersonForm) {
       const currentPerson = selectedPerson || defaultPerson;
       if (currentPerson && currentPerson.id !== editingPersonData?.id) {
-        console.log('Updating editing person to:', currentPerson.name);
         setEditingPersonData(currentPerson);
       }
     }

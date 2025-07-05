@@ -46,7 +46,6 @@ export default function LocationAnalyticsCard({ isLoading }: LocationAnalyticsCa
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            console.log(`📍 Location analytics loaded: ${data.dataSource} data`);
             setLocationStats(data.stats);
             return;
           }

@@ -45,8 +45,6 @@ Sitemap: https://orbitandchill.com/sitemap.xml`;
     const publicPath = join(process.cwd(), 'public', 'robots.txt');
     writeFileSync(publicPath, robotsTxtContent, 'utf-8');
 
-    console.log('✅ robots.txt generated successfully');
-
     return NextResponse.json({
       success: true,
       message: 'robots.txt generated successfully',

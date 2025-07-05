@@ -5,9 +5,7 @@ import { initializeDatabase } from '@/db/index';
 export async function GET(request: NextRequest) {
   try {
     const db = await initializeDatabase();
-    
-    console.log('🔍 Checking user activity data...');
-    
+
     // Get recent user activities
     const recentActivities = await db.client.execute({
       sql: `SELECT activity_type, COUNT(*) as count, DATE(created_at) as date 

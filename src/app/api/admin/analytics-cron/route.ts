@@ -6,7 +6,6 @@ import AnalyticsNotificationService from '@/lib/services/analyticsNotificationSe
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  console.log('🔄 Starting daily analytics cron job...');
 
   try {
     await initializeDatabase();
@@ -18,9 +17,7 @@ export async function POST(request: NextRequest) {
     const results = [];
     const errors = [];
     let processedDates = 0;
-    
-    console.log(`📊 Processing analytics for last ${daysBack} days (force: ${force})`);
-    
+
     // Process each day from yesterday backwards
     for (let i = 1; i <= daysBack; i++) {
       const date = new Date();
@@ -28,13 +25,11 @@ export async function POST(request: NextRequest) {
       const dateString = date.toISOString().split('T')[0];
       
       try {
-        console.log(`📅 Processing ${dateString}...`);
         
         // Check if data already exists
         if (!force) {
           const existingData = await AnalyticsService.getTrafficData(dateString, dateString);
           if (existingData.length > 0 && 'visitors' in existingData[0] && (existingData[0] as any).visitors > 0) {
-            console.log(`✅ Data already exists for ${dateString}, skipping`);
             results.push({
               date: dateString,
               status: 'skipped',
@@ -49,7 +44,6 @@ export async function POST(request: NextRequest) {
         const aggregatedData = await AnalyticsService.aggregateDailyTraffic(dateString);
         
         if (aggregatedData && aggregatedData.visitors > 0) {
-          console.log(`✅ Successfully processed ${dateString}: ${aggregatedData.visitors} visitors`);
           results.push({
             date: dateString,
             status: 'success',
@@ -57,7 +51,6 @@ export async function POST(request: NextRequest) {
           });
           processedDates++;
         } else {
-          console.log(`⚠️ No data found for ${dateString}`);
           results.push({
             date: dateString,
             status: 'no_data',
@@ -132,10 +125,7 @@ export async function POST(request: NextRequest) {
         datesProcessed: processedDates
       });
     }
-    
-    console.log(`🎉 Analytics cron job completed in ${duration}ms`);
-    console.log(`📊 Summary: ${processedDates}/${daysBack} dates processed, ${errors.length} errors`);
-    
+
     return NextResponse.json({
       success: !hasErrors,
       message: hasErrors 

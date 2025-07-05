@@ -274,8 +274,6 @@ export * from './schema';
 
 // Initialize database function
 export async function initializeDatabase() {
-  console.log('✅ Mock database initialized');
-  console.log('⚠️  Using mock database - data is stored in memory only');
   return Promise.resolve();
 }
 

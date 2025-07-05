@@ -275,7 +275,6 @@ const HouseWedge: React.FC<HouseWedgeProps> = ({ house, angle, houses, onHover, 
   const houseSize = endAngleDegrees - startAngleDegrees;
   if (houseSize < 15) {
     endAngleDegrees = startAngleDegrees + 15;
-    console.log(`🏠 House ${house.number}: Adjusting size from ${houseSize.toFixed(1)}° to 15° for visibility`);
   }
 
   const startAngle = (startAngleDegrees - 90) * Math.PI / 180;
@@ -374,7 +373,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
     position: "bottom-right",
   });
 
-
   if (!chartData) {
     return <div className={className} dangerouslySetInnerHTML={{ __html: svgContent }} />;
   }
@@ -453,7 +451,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
   };
 
   const handleHouseHover = (house: { number: number; sign: string }, containerX: number, containerY: number) => {
-    console.log(`✨ House ${house.number} hover - Working perfectly!`);
 
     const houseMeanings = [
       "Self, Identity, First Impressions", "Money, Values, Possessions",

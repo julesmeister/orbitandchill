@@ -32,7 +32,6 @@ export default function QuickFilters({
           >
             <button
               onClick={() => {
-                console.log(`${filter.label} toggle clicked, current state:`, isActive);
                 handler(!isActive);
               }}
               className={`group px-4 py-2 border border-black transition-all duration-200 font-inter text-xs font-medium hover:shadow-md rounded ${

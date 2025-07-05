@@ -7,9 +7,7 @@ import { initializeDatabase } from '@/db/index';
 export async function GET(request: NextRequest) {
   try {
     await initializeDatabase();
-    
-    console.log('👥 API: Loading user analytics...');
-    
+
     // Get all users from database
     const dbUsers = await UserService.getAllUsers(100);
     
@@ -38,9 +36,7 @@ export async function GET(request: NextRequest) {
     const sortedAnalytics = userAnalytics.sort((a, b) => 
       new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()
     );
-    
-    console.log(`✅ API: Loaded ${sortedAnalytics.length} user analytics`);
-    
+
     return NextResponse.json({
       success: true,
       userAnalytics: sortedAnalytics

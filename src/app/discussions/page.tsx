@@ -63,9 +63,7 @@ export default function DiscussionsPage() {
   // Log discussions to check for blog posts
   useEffect(() => {
     if (discussions.length > 0) {
-      console.log('🔍 Discussions loaded:', discussions.length);
       discussions.forEach((discussion, index) => {
-        console.log(`Discussion ${index + 1}:`, {
           id: discussion.id,
           title: discussion.title,
           isBlogPost: discussion.isBlogPost,

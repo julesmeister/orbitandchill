@@ -8,7 +8,6 @@ import { executePooledQuery } from '@/db/connectionPool';
  */
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🧹 Debug cleanup: Starting horary debug questions cleanup...');
 
     // Define patterns for debug questions to remove
     const debugPatterns = [
@@ -26,7 +25,6 @@ export async function DELETE(request: NextRequest) {
 
     // Try connection pool first
     try {
-      console.log('🔄 Using connection pool for cleanup...');
       
       // Delete questions by ID pattern
       for (const pattern of debugPatterns) {
@@ -40,7 +38,6 @@ export async function DELETE(request: NextRequest) {
         deletedCount += rowsAffected;
         
         if (rowsAffected > 0) {
-          console.log(`✅ Deleted ${rowsAffected} questions matching pattern: ${pattern}`);
         }
       }
 
@@ -56,7 +53,6 @@ export async function DELETE(request: NextRequest) {
         deletedCount += rowsAffected;
         
         if (rowsAffected > 0) {
-          console.log(`✅ Deleted ${rowsAffected} questions from debug users matching: ${userPattern}`);
         }
       }
 
@@ -89,7 +85,6 @@ export async function DELETE(request: NextRequest) {
           const result = await client.execute(cleanupSql);
           deletedCount = result.rowsAffected || 0;
           
-          console.log(`✅ Direct connection cleanup completed: ${deletedCount} questions deleted`);
         } else {
           errors.push('Database environment variables not available');
         }
@@ -116,8 +111,6 @@ export async function DELETE(request: NextRequest) {
     } catch (countError) {
       console.warn('⚠️ Could not verify remaining debug questions:', countError);
     }
-
-    console.log(`🧹 Cleanup complete: ${deletedCount} debug questions deleted, ${remainingCount} remaining`);
 
     return NextResponse.json({
       success: true,

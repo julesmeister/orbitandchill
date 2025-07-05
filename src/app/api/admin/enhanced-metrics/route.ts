@@ -13,9 +13,7 @@ async function handleGetEnhancedMetrics(request: NextRequest, context: AdminAuth
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || null;
     
-    console.log('📊 API: Calculating enhanced metrics with trends...');
     if (period) {
-      console.log(`📊 API: Including historical data for period: ${period}`);
     }
     
     // Get current period metrics
@@ -58,7 +56,6 @@ async function handleGetEnhancedMetrics(request: NextRequest, context: AdminAuth
 
 async function getCurrentPeriodMetrics() {
   try {
-    console.log('📊 Fetching current period metrics from real data APIs...');
     
     // Fetch real user analytics
     let userMetrics = {
@@ -286,7 +283,6 @@ function calculateAverageSessionDuration(trafficSummary: any) {
 
 async function getHistoricalData(period: 'daily' | 'monthly' | 'yearly') {
   try {
-    console.log(`📈 Fetching real historical data for period: ${period}`);
     
     // Import the HTTP client directly
     const { createClient } = await import('@libsql/client/http');
@@ -410,7 +406,6 @@ async function getHistoricalData(period: 'daily' | 'monthly' | 'yearly') {
       }
     }
     
-    console.log(`✅ Fetched ${historicalData.length} real historical data points`);
     return historicalData;
     
   } catch (error) {
@@ -421,7 +416,6 @@ async function getHistoricalData(period: 'daily' | 'monthly' | 'yearly') {
 
 // Fallback function to generate mock data if database is unavailable
 function generateFallbackHistoricalData(period: 'daily' | 'monthly' | 'yearly') {
-  console.log(`📈 Using fallback historical data for period: ${period}`);
   
   const historicalData = [];
   let periods, interval, format;

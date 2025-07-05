@@ -55,9 +55,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     filters.limit = Math.min(limit, 100); // Cap at 100 for performance
     filters.offset = (page - 1) * filters.limit;
-    
-    console.log('🔍 Fetching audit logs with filters:', filters);
-    
+
     const result = await AdminAuditService.getLogs(filters);
     
     return NextResponse.json({

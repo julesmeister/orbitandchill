@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
       const isPublished = !drafts;
 
       // Fetch discussions from database with increased timeout
-      console.log('🔍 Fetching discussions with params:', { category, isBlogPost, isPublished, drafts, userId, limit, sortBy });
       
       const discussions = await Promise.race([
         DiscussionService.getAllDiscussions({
@@ -39,8 +38,6 @@ export async function GET(request: NextRequest) {
           setTimeout(() => reject(new Error('Database query timeout')), 10000)
         )
       ]) as any[];
-      
-      console.log('✅ Successfully fetched', discussions.length, 'discussions');
 
       // Filter discussions received from database
       

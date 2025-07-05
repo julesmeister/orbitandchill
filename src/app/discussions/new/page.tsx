@@ -48,7 +48,6 @@ function NewDiscussionContent() {
     const loadData = async () => {
       // Load user profile first
       await loadProfile();
-      console.log('🔍 Loaded user for discussion:', user?.username, user?.id);
       
       // If editing, load the discussion data
       if (isEditMode && editId && user?.id) {
@@ -67,7 +66,6 @@ function NewDiscussionContent() {
               return;
             }
             
-            console.log('🔍 Discussion data loaded for editing:', {
               id: discussion.id,
               title: discussion.title,
               hasEmbeddedChart: !!discussion.embeddedChart,
@@ -119,9 +117,7 @@ function NewDiscussionContent() {
       // Get the updated user after ensuring anonymous user
       currentUser = useUserStore.getState().user;
     }
-    
-    console.log(isEditMode ? '📝 Updating discussion' : '📝 Creating discussion', 'with user:', currentUser?.username, currentUser?.id);
-    
+
     try {
       const discussionData = {
         ...formData,

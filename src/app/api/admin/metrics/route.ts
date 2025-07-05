@@ -10,9 +10,7 @@ import { createAdminRoute, type AdminAuthContext } from '@/middleware/adminAuth'
 async function handleGetMetrics(request: NextRequest, context: AdminAuthContext) {
   try {
     await initializeDatabase();
-    
-    console.log('📊 API: Calculating real site metrics...');
-    
+
     let totalUsers = 0;
     let activeUsers = 0;
     let forumPosts = 0;
@@ -24,7 +22,6 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
     try {
       const allUsers = await UserService.getAllUsers(1000);
       totalUsers = allUsers.length;
-      console.log(`👥 API: Found ${totalUsers} users in database`);
       
       // Calculate active users (users with natal charts or recent activity)
       activeUsers = allUsers.filter((user: any) => 
@@ -42,7 +39,6 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
     try {
       const discussionsResult = await DiscussionService.getAllDiscussions({ limit: 1000 });
       forumPosts = Array.isArray(discussionsResult) ? discussionsResult.length : 0;
-      console.log(`💬 API: Found ${forumPosts} discussions in database`);
     } catch (discussionError) {
       console.warn('Failed to fetch discussions:', discussionError);
       forumPosts = 0;
@@ -53,7 +49,6 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
       const trafficSummary = await AnalyticsService.getTrafficSummary(30);
       chartsGenerated = (trafficSummary as any).chartsGenerated || 0;
       dailyVisitors = trafficSummary.averages?.visitors || 0;
-      console.log(`📊 API: Analytics: ${chartsGenerated} charts, ${dailyVisitors} daily visitors`);
     } catch (analyticsError) {
       console.warn('Failed to fetch analytics:', analyticsError);
       chartsGenerated = 0;
@@ -63,7 +58,6 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
     // Get events analytics
     try {
       eventsAnalytics = await EventService.getGlobalAnalytics();
-      console.log(`📅 API: Events: ${eventsAnalytics.totalEvents} total, ${eventsAnalytics.eventsThisMonth} this month`);
     } catch (eventsError) {
       console.warn('Failed to fetch events analytics:', eventsError);
       eventsAnalytics = {
@@ -88,9 +82,7 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
       monthlyGrowth,
       events: eventsAnalytics,
     };
-    
-    console.log('✅ API: Site metrics calculated:', metrics);
-    
+
     return NextResponse.json({
       success: true,
       metrics,

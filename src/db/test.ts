@@ -6,35 +6,28 @@ import { AnalyticsService } from './services/analyticsService';
 
 async function testDatabase() {
   // DISABLED: Database test function disabled to prevent memory issues
-  console.log('🧪 Database test function has been disabled to prevent memory consumption');
   return { success: true, message: 'Database tests disabled' };
   
   try {
-    console.log('🚀 Initializing database...');
     await initializeDatabase();
 
     // Clean up any existing test data
-    console.log('🧹 Cleaning up existing test data...');
     const db = await getDbAsync();
     if (db && db.client) {
       try {
         await db.client.execute('DELETE FROM natal_charts WHERE subject_name = ?', ['John Doe']);
         await db.client.execute('DELETE FROM users WHERE email = ?', ['john@example.com']);
         await db.client.execute('DELETE FROM users WHERE id LIKE ?', ['anon_%']);
-        console.log('✅ Test data cleaned up');
       } catch (cleanupError) {
         console.warn('⚠️ Cleanup warning (this is normal):', cleanupError.message);
       }
     }
 
-    console.log('👤 Testing user creation...');
-    
     // Create an anonymous user
     const anonUser = await UserService.createUser({
       username: 'Anonymous',
       authProvider: 'anonymous'
     });
-    console.log('Created anonymous user:', anonUser);
 
     // Create a Google user
     const googleUser = await UserService.createUser({
@@ -43,7 +36,6 @@ async function testDatabase() {
       profilePictureUrl: 'https://example.com/avatar.jpg',
       authProvider: 'google'
     });
-    console.log('Created Google user:', googleUser);
 
     // Update user with birth data
     const updatedUser = await UserService.updateUser(googleUser.id, {
@@ -58,10 +50,7 @@ async function testDatabase() {
       hasNatalChart: true,
       showZodiacPublicly: true,
     });
-    console.log('Updated user:', updatedUser);
 
-    console.log('💬 Testing discussions...');
-    
     // Create a discussion
     const discussion = await DiscussionService.createDiscussion({
       title: 'Understanding Your Mars Placement',
@@ -73,7 +62,6 @@ async function testDatabase() {
       tags: ['mars', 'planets', 'natal-chart'],
       isBlogPost: false,
     });
-    console.log('Created discussion:', discussion);
 
     // Create a reply
     const reply = await DiscussionService.createReply({
@@ -81,45 +69,32 @@ async function testDatabase() {
       authorId: anonUser.id,
       content: 'Great explanation! I have Mars in Scorpio and this really resonates.',
     });
-    console.log('Created reply:', reply);
 
     // Vote on discussion
     await DiscussionService.voteOnDiscussion(anonUser.id, discussion.id, 'up');
-    console.log('Voted on discussion');
 
-    console.log('📊 Testing analytics...');
-    
     // Generate some mock analytics data
     await AnalyticsService.generateMockData(7); // 7 days of data
     
     // Get traffic summary
     const trafficSummary = await AnalyticsService.getTrafficSummary(7);
-    console.log('Traffic summary:', {
       totalVisitors: trafficSummary.totals.visitors,
       avgVisitorsPerDay: trafficSummary.averages.visitors,
       totalCharts: trafficSummary.totals.chartsGenerated,
     });
 
-    console.log('✅ Database test completed successfully!');
-    
     // Test queries
-    console.log('🔍 Testing queries...');
     
     const allUsers = await UserService.getAllUsers(10);
-    console.log(`Found ${allUsers.length} users`);
     
     const allDiscussions = await DiscussionService.getAllDiscussions({ limit: 10 });
-    console.log(`Found ${allDiscussions.length} discussions`);
     
     const publicProfile = await UserService.getPublicProfile(googleUser.id);
-    console.log('Public profile:', publicProfile);
 
     // Test natal chart creation
-    console.log('📈 Testing natal chart creation...');
     try {
       // First check table structure
       const tableInfo = await db.client.execute("PRAGMA table_info(natal_charts)");
-      console.log('natal_charts columns:', tableInfo.rows);
 
       // Test chart insertion with ChartService
       const { ChartService } = await import('./services/chartService');
@@ -153,11 +128,9 @@ async function testDatabase() {
         }
       };
 
-      console.log('🔄 Creating test chart...');
       const createdChart = await ChartService.createChart(testChartData);
       
       if (createdChart) {
-        console.log('✅ Chart created successfully!', {
           id: createdChart.id,
           userId: createdChart.userId,
           subjectName: createdChart.subjectName,
@@ -166,24 +139,18 @@ async function testDatabase() {
         });
 
         // Test retrieval
-        console.log('🔍 Testing chart retrieval...');
         const retrievedChart = await ChartService.getChartById(createdChart.id, googleUser.id);
         
         if (retrievedChart) {
-          console.log('✅ Chart retrieved successfully!');
         } else {
           console.error('❌ Failed to retrieve chart');
         }
 
         // Test user charts listing
-        console.log('📋 Testing user charts listing...');
         const userCharts = await ChartService.getUserCharts(googleUser.id);
-        console.log(`✅ Found ${userCharts.length} charts for user`);
 
         // Clean up test chart
-        console.log('🧹 Cleaning up test chart...');
         await ChartService.deleteChart(createdChart.id, googleUser.id);
-        console.log('✅ Test chart deleted');
         
       } else {
         console.error('❌ Chart creation returned null');
@@ -206,7 +173,6 @@ async function testDatabase() {
 if (require.main === module) {
   testDatabase()
     .then(() => {
-      console.log('🎉 All tests passed!');
       process.exit(0);
     })
     .catch((error) => {

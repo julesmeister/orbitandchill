@@ -104,7 +104,6 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
                 );
                 
                 const chartToLoad = matchingChart || charts[0];
-                console.log('useNatalChart: Loading chart from API:', chartToLoad.id);
                 
                 // Transform API chart to local format
                 const chartData: NatalChartData = {
@@ -141,7 +140,6 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
         }
       } else {
         // Don't clear cached chart to prevent chart loss during data transitions
-        console.log('useNatalChart: Invalid person data, keeping existing chart to prevent loss');
         setHasExistingChart(false);
         setIsLoadingCache(false);
       }

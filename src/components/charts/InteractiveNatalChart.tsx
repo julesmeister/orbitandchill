@@ -189,15 +189,12 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
       }
     );
 
-    console.log(`🎯 Found ${allPaths.length} colored paths total`);
-
     // Let's examine the SVG structure more carefully - log all paths with their colors and positions
     allPaths.forEach((path, index) => {
       const fill = path.getAttribute("fill");
       const pathBBox = (path as SVGGraphicsElement).getBBox();
       const centerX = pathBBox.x + pathBBox.width / 2;
       const centerY = pathBBox.y + pathBBox.height / 2;
-      console.log(
         `Path ${index}: fill=${fill}, center=(${centerX.toFixed(
           1
         )}, ${centerY.toFixed(1)}), size=${pathBBox.width.toFixed(
@@ -268,7 +265,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
 
     // Debug: Show all house numbers found
     const foundHouses = allTexts.filter((t) => t.isHouse);
-    console.log(
       `🏠 Found house numbers:`,
       foundHouses.map(
         (h) => `${h.content} at (${h.x.toFixed(1)}, ${h.y.toFixed(1)})`
@@ -278,11 +274,9 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
     // Specifically check if houses 4 and 8 are found
     const house4 = foundHouses.find((h) => h.content === "4");
     const house8 = foundHouses.find((h) => h.content === "8");
-    console.log(
       `🔍 House 4:`,
       house4 ? `Found at (${house4.x}, ${house4.y})` : "NOT FOUND"
     );
-    console.log(
       `🔍 House 8:`,
       house8 ? `Found at (${house8.x}, ${house8.y})` : "NOT FOUND"
     );
@@ -367,24 +361,18 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
 
         // Debug houses 4 and 8 specifically
         if (textData.content === "4" || textData.content === "8") {
-          console.log(
             `🔍 House ${textData.content} paired with wedge at distance:`,
             closestDistance
           );
-          console.log(`   Text position: (${textData.x}, ${textData.y})`);
           const pathBBox = (closestPath as SVGGraphicsElement).getBBox();
-          console.log(
             `   Wedge center: (${pathBBox.x + pathBBox.width / 2}, ${
               pathBBox.y + pathBBox.height / 2
             })`
           );
         }
       } else if (textData.content === "4" || textData.content === "8") {
-        console.log(
           `❌ House ${textData.content} NOT paired - distance ${closestDistance} > threshold ${houseDistanceThreshold}`
         );
-        console.log(`   Text position: (${textData.x}, ${textData.y})`);
-        console.log(
           `   Available unused paths:`,
           allPaths.filter((p) => !usedPaths.has(p)).length
         );
@@ -412,13 +400,11 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
     if (house4Element) {
       // Create a fake wedge group with just the house 4 text
       wedgeGroups.set(house4Element as Element, [house4Element as Element]);
-      console.log("🏠 Created fake wedge group for house 4");
     }
 
     if (house8Element) {
       // Create a fake wedge group with just the house 8 text
       wedgeGroups.set(house8Element as Element, [house8Element as Element]);
-      console.log("🏠 Created fake wedge group for house 8");
     }
 
     // Add individual hover ONLY to elements that are NOT part of wedge groups AND not special houses
@@ -451,7 +437,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
         (textElement as unknown as HTMLElement).style.transition = "transform 0.3s ease";
 
         const hoverIn = () => {
-          console.log(
             `✨ Individual hover fired for unpaired ${
               isHouseNumber ? "house" : "zodiac"
             } ${content}`
@@ -493,8 +478,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
       const addHoverEffect = (e: Event) => {
         // Only log houses 4 and 8 for debugging
         if (houseNumbers.includes("4") || houseNumbers.includes("8")) {
-          console.log(`🔥 Hovering house ${houseNumbers.join(", ")}`);
-          console.log(
             "   Before transform:",
             group.map((el) => (el as HTMLElement).style.transform || "none")
           );
@@ -539,7 +522,6 @@ const InteractiveNatalChart: React.FC<InteractiveNatalChartProps> = ({
 
         // Log after transform for houses 4 and 8
         if (houseNumbers.includes("4") || houseNumbers.includes("8")) {
-          console.log(
             "   After transform:",
             group.map((el) => (el as HTMLElement).style.transform)
           );

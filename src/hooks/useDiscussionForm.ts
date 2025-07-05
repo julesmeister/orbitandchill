@@ -87,9 +87,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    console.log('🔍 handleInputChange called:', { name, value });
-    
+
     if (name === 'slug') {
       // Mark slug as manually edited when user types in it
       setHasManuallyEditedSlug(true);
@@ -103,8 +101,6 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
           ...prev,
           [name]: value
         };
-        console.log('🔍 Form data updated:', newData);
-        console.log('🔍 New authorName value:', newData.authorName);
         return newData;
       });
     }

@@ -107,7 +107,6 @@ export function useFilterState({
 
   // Reset all filters function - Reset to optimal defaults based on Electional.md
   const resetAllFilters = useCallback(() => {
-    console.log('🔄 Resetting all filters to optimal defaults');
     filterSetters.setHideChallengingDates(false);
     filterSetters.setShowCombosOnly(false);
     filterSetters.setShowHousesOnly(false);
@@ -184,7 +183,6 @@ export function useFilterState({
       default: return '';
     }
   }, []);
-
 
   // Advanced filter handlers
   const getAdvancedFilterState = useCallback((key: string) => {

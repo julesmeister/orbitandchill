@@ -86,7 +86,6 @@ class Logger {
         console.warn(prefix, message, data || '');
         break;
       default:
-        console.log(prefix, message, data || '');
     }
   }
 
@@ -138,7 +137,6 @@ class Logger {
   // Table for structured data
   table(data: any): void {
     if (this.isDevelopment) {
-      console.log(`[TABLE] [${this.getCallerInfo()}]`);
       console.table(data);
     }
   }
@@ -175,7 +173,6 @@ export function createLogger(component: string) {
     timeEnd: (label: string) => 
       logger.timeEnd(`[${component}] ${label}`),
     table: (data: any) => {
-      console.log(`[TABLE] [${component}]`);
       logger.table(data);
     }
   };

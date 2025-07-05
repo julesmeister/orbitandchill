@@ -30,7 +30,6 @@ export async function POST(
       );
     }
 
-    console.log('🔍 Syncing reply count:', {
       discussionId,
       currentCount: discussion.replies,
       actualCount
@@ -40,7 +39,6 @@ export async function POST(
     if (discussion.replies !== actualCount) {
       await DiscussionService.syncReplyCount(discussionId, actualCount);
       
-      console.log('✅ Reply count synchronized:', {
         discussionId,
         oldCount: discussion.replies,
         newCount: actualCount

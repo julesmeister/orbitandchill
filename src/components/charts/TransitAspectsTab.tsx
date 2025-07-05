@@ -104,8 +104,6 @@ class NatalAspectActivationEngine {
   calculateNatalAspectActivations(currentTransits: Record<string, TransitPosition>): NatalAspectActivation[] {
     const activations: NatalAspectActivation[] = [];
 
-    console.log('🔍 Analyzing natal aspects for current transit triggers...');
-
     // For each of your natal aspects, check if current transits are triggering it
     this.natalAspects.forEach(natalAspect => {
       const activation = this.findCurrentTransitTriggersForNatalAspect(natalAspect, currentTransits);
@@ -123,7 +121,6 @@ class NatalAspectActivationEngine {
       }
     });
 
-    console.log(`🎯 Found ${activations.length} real natal aspect activations`);
     return activations.sort((a, b) => b.totalStrength - a.totalStrength);
   }
 
@@ -134,8 +131,6 @@ class NatalAspectActivationEngine {
     const activationFactors: ActivationFactor[] = [];
     let totalStrength = 0;
 
-    console.log(`🔍 Checking natal aspect: ${natalAspect.planet1} ${natalAspect.aspect} ${natalAspect.planet2}`);
-
     // Get natal positions of the planets in this aspect (handle case sensitivity)
     const planet1Name = natalAspect.planet1.charAt(0).toUpperCase() + natalAspect.planet1.slice(1).toLowerCase();
     const planet2Name = natalAspect.planet2.charAt(0).toUpperCase() + natalAspect.planet2.slice(1).toLowerCase();
@@ -144,8 +139,6 @@ class NatalAspectActivationEngine {
     const natalPlanet2Pos = this.natalChart[planet2Name];
 
     if (natalPlanet1Pos === undefined || natalPlanet2Pos === undefined) {
-      console.log(`❌ Could not find natal positions for ${planet1Name} (${natalPlanet1Pos}) or ${planet2Name} (${natalPlanet2Pos})`);
-      console.log(`Available natal planets:`, Object.keys(this.natalChart));
       return { activationFactors, totalStrength: 0, activationLevel: 'subtly activated' };
     }
 
@@ -164,7 +157,6 @@ class NatalAspectActivationEngine {
             details: { transitPlanet, natalPlanet: natalAspect.planet1, aspect }
           });
           totalStrength += strength;
-          console.log(`🎯 Found: Transit ${transitPlanet} ${aspect.type} natal ${natalAspect.planet1} (${strength.toFixed(2)})`);
         }
       });
 
@@ -180,7 +172,6 @@ class NatalAspectActivationEngine {
             details: { transitPlanet, natalPlanet: natalAspect.planet2, aspect }
           });
           totalStrength += strength;
-          console.log(`🎯 Found: Transit ${transitPlanet} ${aspect.type} natal ${natalAspect.planet2} (${strength.toFixed(2)})`);
         }
       });
     });
@@ -628,7 +619,6 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
 
   // Generate REAL current planetary positions using astronomy-engine
   const generateCurrentTransits = useCallback(() => {
-    console.log('🚀 Activation Debug: Getting REAL current planetary positions using astronomy-engine');
     setIsLoading(true);
     
     try {
@@ -668,17 +658,11 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
           console.warn(`Error calculating ${name} position:`, error);
         }
       });
-      
-      console.log('✅ REAL astronomical positions calculated:', transitPositions);
-      
+
       // Debug: Show sample positions
-      console.log('📊 Current planetary positions (astronomy-engine):');
       Object.entries(transitPositions).slice(0, 5).forEach(([planet, pos]) => {
-        console.log(`${planet}: ${pos.longitude.toFixed(2)}°`);
       });
-      
-      console.log('🔧 Using realistic orbs and 50%+ threshold');
-      
+
       setCurrentTransits(transitPositions);
     } catch (error) {
       console.error('❌ Activation Debug: Error getting astronomical positions:', error);
@@ -690,7 +674,6 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
   // Initialize engine and calculate activations
   useEffect(() => {
     if (chartData?.aspects && chartData?.planets && currentTransits) {
-      console.log('🔄 Activation Debug: Initializing activation engine');
       
       // Convert natal planets to the format expected by engine
       const natalChart: Record<string, number> = {};
@@ -700,11 +683,9 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
       });
       
       // Debug: Show natal vs current positions
-      console.log('📊 Position comparison (first 3 planets):');
       Object.entries(natalChart).slice(0, 3).forEach(([planet, natalPos]) => {
         const currentPos = currentTransits[planet]?.longitude;
         const diff = currentPos ? Math.abs(currentPos - natalPos) : 0;
-        console.log(`${planet}: Natal ${natalPos.toFixed(1)}° | Current ${currentPos?.toFixed(1)}° | Diff ${diff.toFixed(1)}°`);
       });
 
       // Initialize engine
@@ -712,14 +693,9 @@ const TransitAspectsTab: React.FC<TransitAspectsTabProps> = ({ className = "", c
       
       // Calculate activations
       const currentActivations = engineRef.current.calculateNatalAspectActivations(currentTransits);
-      console.log('✅ Activation Debug: Found activations:', currentActivations);
       
       // Debug: Show activation strengths and levels
-      console.log('📊 Activation breakdown:');
       currentActivations.slice(0, 5).forEach((activation, i) => {
-        console.log(`${i+1}. ${activation.natalAspect.planet1} ${activation.natalAspect.aspect} ${activation.natalAspect.planet2}:`);
-        console.log(`   Strength: ${(activation.totalStrength * 100).toFixed(1)}% | Level: ${activation.activationLevel}`);
-        console.log(`   Factors: ${activation.activationFactors.length} triggers`);
       });
       
       setActivations(currentActivations);

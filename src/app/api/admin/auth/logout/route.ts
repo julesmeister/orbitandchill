@@ -30,7 +30,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<AdminLogo
     }
 
     // Log successful admin logout
-    console.log(`✅ Admin logout successful: ${user.username} (${user.email})`);
 
     return NextResponse.json({
       success: true,

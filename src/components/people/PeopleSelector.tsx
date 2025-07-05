@@ -57,7 +57,6 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
     userAddedRef.current = false;
   }, [user?.id]);
 
-
   // Load people on component mount
   useEffect(() => {
     loadPeople();
@@ -74,14 +73,12 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
       }
       
       if (personToSelect) {
-        console.log('Auto-selecting person:', personToSelect.name);
         setSelectedPerson(personToSelect.id);
         // Only call onPersonSelect if explicitly needed - this prevents disrupting existing charts
         // onPersonSelect(personToSelect);
         
         // If this person isn't marked as default, make them default
         if (!personToSelect.isDefault) {
-          console.log('Setting as default:', personToSelect.name);
           setDefaultPerson(personToSelect.id).catch(console.error);
         }
       }
@@ -108,7 +105,6 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
       person.relationship === 'self' && person.userId === user.id
     );
 
-    console.log('Auto-add check:', {
       userExists,
       peopleCount: people.length,
       userId: user.id,
@@ -119,7 +115,6 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
     if (!userExists) {
       userAddedRef.current = true; // Prevent multiple additions
       localStorage.setItem(storageKey, 'true'); // Mark as attempted
-      console.log('Adding user to people store');
       
       // Add user to people store
       const userPersonData = {
@@ -131,14 +126,12 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
       };
 
       addPerson(userPersonData).then(() => {
-        console.log('Successfully added user to people store');
       }).catch(error => {
         console.error('Failed to add user to people store:', error);
         userAddedRef.current = false; // Reset on error to allow retry
         localStorage.removeItem(storageKey); // Remove the flag to allow retry
       });
     } else {
-      console.log('User already exists in people store');
       userAddedRef.current = true; // Mark as added to prevent future attempts
       localStorage.setItem(storageKey, 'true'); // Mark as added
     }
@@ -433,17 +426,11 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
                       const defaultPerson = persons.find((p: { isDefault: any; }) => p.isDefault);
                       const keep = defaultPerson || persons[0];
                       const toDelete = persons.filter((p: { id: any; }) => p.id !== keep.id);
-                      
-                      console.log('Cleanup - All persons:', persons.map((p: { id: any; name: any; isDefault: any; }) => ({ id: p.id, name: p.name, isDefault: p.isDefault })));
-                      console.log('Cleanup - Keep:', { id: keep.id, name: keep.name, isDefault: keep.isDefault });
-                      console.log('Cleanup - To delete:', toDelete.map((p: { id: any; name: any; }) => ({ id: p.id, name: p.name })));
-                      
+
                       try {
                         // Delete them one by one with proper error handling
                         for (const person of toDelete) {
-                          console.log('Deleting:', person.name, person.id);
                           await deletePerson(person.id);
-                          console.log('Successfully deleted:', person.name);
                         }
                         toast.success(`Cleaned up ${toDelete.length} duplicate${toDelete.length > 1 ? 's' : ''} for ${keep.name}${defaultPerson ? ' (kept default)' : ''}`);
                       } catch (error) {
@@ -466,8 +453,6 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
               {showAddNew && onAddNew && (
                 <button
                   onClick={() => {
-                    console.log('Add first person clicked');
-                    console.log('onAddNew function:', onAddNew);
                     onAddNew();
                     setIsOpen(false);
                   }}
@@ -627,11 +612,8 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
                           onClick={async (e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            console.log('Delete clicked for:', person.name, person.id);
-                            console.log('deletePerson function:', deletePerson);
                             try {
                               const result = await deletePerson(person.id);
-                              console.log('Delete result:', result);
                               toast.success(`Deleted ${person.name}`);
                             } catch (error) {
                               console.error('Failed to delete person:', error);
@@ -694,8 +676,6 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
                 <div className="border-t border-gray-200 rounded-b-lg overflow-hidden">
                   <button
                     onClick={() => {
-                      console.log('Add new person clicked');
-                      console.log('onAddNew function:', onAddNew);
                       onAddNew();
                       setIsOpen(false);
                     }}

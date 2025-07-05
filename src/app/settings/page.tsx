@@ -165,7 +165,6 @@ export default function SettingsPage() {
                         { value: 'colorful', label: 'Colorful' }
                       ]}
                       value="default"
-                      onChange={(value) => console.log('Chart theme changed:', value)}
                       className="min-w-[150px]"
                     />
                   </div>
@@ -190,7 +189,6 @@ export default function SettingsPage() {
                         { value: 'America/Los_Angeles', label: 'Pacific Time (US & Canada)' }
                       ]}
                       value="UTC"
-                      onChange={(value) => console.log('Timezone changed:', value)}
                       className="min-w-[250px]"
                     />
                   </div>
@@ -214,7 +212,6 @@ export default function SettingsPage() {
                         { value: 'de', label: 'Deutsch' }
                       ]}
                       value="en"
-                      onChange={(value) => console.log('Language changed:', value)}
                       className="min-w-[120px]"
                     />
                   </div>
@@ -247,7 +244,6 @@ export default function SettingsPage() {
                         { value: 'none', label: 'No Animation' }
                       ]}
                       value="normal"
-                      onChange={(value) => console.log('Animation speed changed:', value)}
                       className="min-w-[140px]"
                     />
                   </div>
@@ -270,7 +266,6 @@ export default function SettingsPage() {
                         { value: 'aspects', label: 'Aspects View' }
                       ]}
                       value="wheel"
-                      onChange={(value) => console.log('View mode changed:', value)}
                       className="min-w-[140px]"
                     />
                   </div>

@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { EmbeddedVideo } from '../../types/threads';
 import { getPlatformIcon, getPlatformColor, formatDuration } from '../../utils/videoSharing';
 
@@ -80,9 +81,11 @@ export default function EmbeddedVideoDisplay({
             /* Preview Mode - Thumbnail with Play Button */
             <div className="space-y-4">
               <div className="relative">
-                <img
+                <Image
                   src={video.thumbnail}
                   alt={video.title}
+                  width={640}
+                  height={192}
                   className="w-full h-48 object-cover border border-gray-300 rounded cursor-pointer"
                   onClick={handlePlayVideo}
                   onError={(e) => {

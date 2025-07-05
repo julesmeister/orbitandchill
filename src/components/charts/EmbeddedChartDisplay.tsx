@@ -46,7 +46,6 @@ export default function EmbeddedChartDisplay({
   // Get real chart data if this is the user's chart
   const realChartData = useMemo(() => {
     if (isUserChart && cachedChart?.metadata?.chartData) {
-      console.log('🔍 Found matching cached chart with real data:', {
         planetsCount: cachedChart.metadata.chartData.planets?.length,
         aspectsCount: cachedChart.metadata.chartData.aspects?.length,
         samplePlanet: cachedChart.metadata.chartData.planets?.[0]
@@ -78,7 +77,6 @@ export default function EmbeddedChartDisplay({
       }));
 
     if (planets.length < 2) {
-      console.log('🔍 Not enough planets with valid degree data for aspect calculation');
       return [];
     }
 
@@ -112,7 +110,6 @@ export default function EmbeddedChartDisplay({
   const computedAspects = useMemo(() => {
     // First priority: Use real chart data if this is the user's chart
     if (realChartData?.aspects && realChartData.aspects.length > 0) {
-      console.log('🔍 Using real chart aspects:', realChartData.aspects.length);
       // Filter to major aspects only and limit to 6
       const majorAspects = realChartData.aspects
         .filter(aspect => ['conjunction', 'square', 'trine', 'opposition'].includes(aspect.aspect.toLowerCase()))
@@ -133,7 +130,6 @@ export default function EmbeddedChartDisplay({
   // Debug logging to see what data we receive (only log once per chart)
   useEffect(() => {
     if (chart.id !== lastLoggedChartId.current) {
-      console.log('🔍 EmbeddedChartDisplay received chart:', {
         chartId: chart.id,
         chartType: chart.chartType,
         hasNatalChartData: !!chart.metadata.natalChartData,

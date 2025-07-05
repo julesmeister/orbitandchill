@@ -47,8 +47,6 @@ export async function migrateUserData(options: MigrationOptions = {}): Promise<M
     warnings: []
   };
 
-  console.log('🔄 Starting user data migration...');
-  
   try {
     // Check if migration is needed
     const needsMigration = await checkMigrationNeeded();
@@ -82,7 +80,6 @@ export async function migrateUserData(options: MigrationOptions = {}): Promise<M
     result.success = result.errors.length === 0;
     
     if (result.success) {
-      console.log('✅ User data migration completed successfully');
     } else {
       console.error('❌ User data migration completed with errors');
     }
@@ -133,7 +130,6 @@ async function createDataBackup(): Promise<void> {
   const backupKey = `data-backup-${Date.now()}`;
   try {
     localStorage.setItem(backupKey, JSON.stringify(backup));
-    console.log(`📦 Data backup created: ${backupKey}`);
   } catch (error) {
     console.warn('⚠️ Could not create data backup:', error);
   }
@@ -178,9 +174,7 @@ async function migrateLocalStorage(options: MigrationOptions): Promise<Partial<M
           }
 
           localStorage.setItem(migration.to, data);
-          console.log(`✅ Migrated: ${migration.from} → ${migration.to}`);
         } else {
-          console.log(`📝 [DRY RUN] Would migrate: ${migration.from} → ${migration.to}`);
         }
 
         result.migratedKeys?.push(migration.to);
@@ -245,7 +239,6 @@ async function migrateIndexedDB(options: MigrationOptions): Promise<Partial<Migr
     }
 
     if (options.dryRun) {
-      console.log('📝 [DRY RUN] Would migrate IndexedDB data');
       result.migratedKeys?.push('IndexedDB');
       return result;
     }
@@ -271,18 +264,15 @@ async function migrateIndexedDB(options: MigrationOptions): Promise<Partial<Migr
  * Clean up legacy data after successful migration
  */
 async function cleanupLegacyData(): Promise<void> {
-  console.log('🧹 Cleaning up legacy data...');
 
   // Remove legacy localStorage keys
   Object.values(LEGACY_KEYS).forEach(key => {
     if (localStorage.getItem(key)) {
       localStorage.removeItem(key);
-      console.log(`🗑️ Removed legacy key: ${key}`);
     }
   });
 
   // TODO: Remove legacy IndexedDB if migration was successful
-  console.log('✅ Legacy data cleanup completed');
 }
 
 /**
@@ -329,7 +319,6 @@ export async function rollbackMigration(backupKey?: string): Promise<MigrationRe
     });
 
     result.success = true;
-    console.log('✅ Migration rollback completed');
 
   } catch (error) {
     result.errors.push(`Rollback failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

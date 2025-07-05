@@ -183,7 +183,6 @@ class MemoryCache {
 
     // Cleanup completed silently - only log in development if needed
     if (keysToDelete.length > 10 && process.env.NODE_ENV === 'development') {
-      console.log(`Cache cleanup: removed ${keysToDelete.length} expired entries`);
     }
   }
 

@@ -81,7 +81,6 @@ export function extractMajorAspects(chartData: any): string[] {
  * Create embedded chart data for sharing
  */
 export function createEmbeddedChart(shareData: ChartShareData): EmbeddedChart {
-  console.log('🔍 createEmbeddedChart called with:', {
     chartType: shareData.chartType,
     hasMetadata: !!shareData.metadata,
     hasChartData: !!shareData.metadata?.chartData,

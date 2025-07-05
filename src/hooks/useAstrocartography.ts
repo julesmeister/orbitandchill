@@ -145,7 +145,6 @@ export function useAstrocartography({
 
     try {
       // Always calculate fresh planetary positions for astrocartography
-      console.log('🔄 ASTRO: Calculating fresh planetary positions for astrocartography');
       const chartData = await calculatePlanetaryPositions(
         dataToUse.date,
         dataToUse.location.latitude,
@@ -160,8 +159,6 @@ export function useAstrocartography({
           declination: planet.declination!
         }));
 
-      console.log('🔄 ASTRO: Fresh planetary positions calculated:', planetaryDataToUse.length);
-
       const result = calculateCompleteAstrocartography(
         planetaryDataToUse,
         dataToUse
@@ -170,7 +167,6 @@ export function useAstrocartography({
       setAstrocartographyData(result);
       setLastCalculation(now);
       
-      console.log('🔄 ASTRO: Astrocartography calculation complete');
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

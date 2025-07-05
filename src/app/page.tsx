@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import NatalChartForm, { NatalChartFormData } from '@/components/forms/NatalChartForm';
 import ChartPreview from '@/components/charts/ChartPreview';
 import ClientWorldMap from '@/components/ClientWorldMap';
@@ -81,7 +82,6 @@ export default function Home() {
   const shouldShowChart = hasStoredData && isProfileComplete && cachedChart && !showingForm;
 
   const handleCountryClick = (countryId: string, event?: MouseEvent) => {
-    console.log('Country clicked:', countryId);
     // Add any future country click functionality here
   };
 
@@ -129,8 +129,9 @@ export default function Home() {
                 {/* Natal Chart Analysis */}
                 <button
                   onClick={() => scrollToSection('natal-chart-section')}
-                  className="group relative p-4 xl:p-3 2xl:p-8 transition-all duration-300 border-r border-black border-b hover:bg-gray-50"
+                  className="group relative p-4 xl:p-3 2xl:p-8 transition-all duration-300 border-r border-black border-b hover:bg-gray-50 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-black focus:ring-inset"
                   style={{ backgroundColor: '#6bdbff' }}
+                  aria-label="Navigate to Natal Chart Analysis section"
                 >
                   <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-black"></div>
                   <div className="relative text-center">
@@ -305,9 +306,11 @@ export default function Home() {
                           </div>
                         </div>
                         {post.imageUrl && (
-                          <img 
+                          <Image 
                             src={post.imageUrl} 
                             alt={post.title}
+                            width={112}
+                            height={112}
                             className="w-20 h-20 xl:w-24 xl:h-24 2xl:w-28 2xl:h-28 object-cover flex-shrink-0"
                           />
                         )}
@@ -454,7 +457,6 @@ export default function Home() {
         </div>
       </section>
 
-
       {/* World Map - Full Width */}
       <section id="astrocartography-section" className="mt-32 bg-gradient-to-b from-blue-600 to-blue-500 py-12 scroll-mt-20 relative overflow-hidden">
         <div className="container mx-auto px-4 text-center mb-8">
@@ -475,7 +477,6 @@ export default function Home() {
           />
         </div>
       </section>
-
 
       <div id="electional-astrology-section" className="mt-12 scroll-mt-20">
         <ElectionalAstrologyShowcase />

@@ -179,7 +179,6 @@ export default function ChartPage() {
       });
 
       if (chartData) {
-        console.log("Regenerated chart for:", personToUse.name, chartData);
       }
     } catch (error) {
       console.error("Error regenerating chart:", error);
@@ -191,7 +190,6 @@ export default function ChartPage() {
     setSelectedPerson(person);
     // Also update the global store
     setGlobalSelectedPerson(person?.id || null);
-    console.log('Selected person:', person);
 
     // Only generate chart for selected person if we don't already have a cached chart
     // This prevents disrupting existing chart views when person selector auto-selects
@@ -204,7 +202,6 @@ export default function ChartPage() {
           locationOfBirth: person.birthData.locationOfBirth,
           coordinates: person.birthData.coordinates,
         });
-        console.log('Generated chart for:', person.name);
       } catch (error) {
         console.error('Error generating chart for selected person:', error);
       }
@@ -213,7 +210,6 @@ export default function ChartPage() {
 
   const handleAddPersonClick = () => {
     // This is now handled by ChartQuickActions component
-    console.log('Add person clicked - handled by ChartQuickActions');
   };
 
   // Show chart display

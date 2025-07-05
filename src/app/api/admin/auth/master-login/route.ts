@@ -18,9 +18,7 @@ export async function POST(request: NextRequest) {
         error: 'Unauthorized'
       }, { status: 403 });
     }
-    
-    console.log('🔑 Generating JWT token for master admin:', email);
-    
+
     // Generate a proper JWT token for master admin
     // We'll use a special session ID for master admin that doesn't require database validation
     const tokenPayload: Omit<AdminTokenPayload, 'iat' | 'exp'> = {
@@ -31,9 +29,7 @@ export async function POST(request: NextRequest) {
     };
     
     const token = generateAdminToken(tokenPayload);
-    
-    console.log('✅ Master admin JWT token generated successfully');
-    
+
     return NextResponse.json({
       success: true,
       token: token,

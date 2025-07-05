@@ -7,11 +7,7 @@ const seedData = [];
 
 async function seedDiscussions() {
   try {
-    console.log('🌱 Seeding discussions...');
     await initializeDatabase();
-
-    console.log('✅ No seed data to create - database ready for real content');
-    console.log('🎉 Discussion seeding completed!');
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);
@@ -23,7 +19,6 @@ async function seedDiscussions() {
 if (require.main === module) {
   seedDiscussions()
     .then(() => {
-      console.log('🌟 Database seeded successfully!');
       process.exit(0);
     })
     .catch((error) => {

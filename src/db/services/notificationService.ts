@@ -800,9 +800,7 @@ export class NotificationService {
             allowDirectMessages: true,
             showOnlineStatus: true,
           }).returning();
-          
-          console.log(`✅ Created user ${userId}, retrying notification preferences creation`);
-          
+
           // Retry creating the notification preferences
           const defaultPrefs = this.getDefaultPreferences(userId);
           const retryNow = new Date();

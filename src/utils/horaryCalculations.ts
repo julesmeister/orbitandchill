@@ -82,7 +82,6 @@ export const convertToNatalFormat = async (
   const longitude = coordinates?.lng ?? -0.1278; // London fallback
   
   // Debug logging to verify coordinate usage
-  console.log('🌍 convertToNatalFormat Location Debug:', {
     providedCoordinates: coordinates,
     finalLatitude: latitude,
     finalLongitude: longitude,

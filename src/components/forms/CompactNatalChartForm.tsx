@@ -122,11 +122,8 @@ const CompactNatalChartForm = ({
 
   // Load data when editing a person
   useEffect(() => {
-    console.log('CompactNatalChartForm - editingPerson changed:', editingPerson);
     
     if (editingPerson) {
-      console.log('Setting form data for person:', editingPerson.name);
-      console.log('Birth data:', editingPerson.birthData);
       
       // Update all form fields
       setFormData({
@@ -149,7 +146,6 @@ const CompactNatalChartForm = ({
       // Update time input
       if (editingPerson.birthData?.timeOfBirth) {
         const time12 = convertTo12Hour(editingPerson.birthData.timeOfBirth);
-        console.log('Converted time:', time12);
         setTimeInput(time12);
       } else {
         setTimeInput({ hours: '', minutes: '', period: 'AM' });
@@ -163,7 +159,6 @@ const CompactNatalChartForm = ({
         setDateInput({ month: '', day: '', year: '' });
       }
     } else {
-      console.log('No editingPerson, resetting form');
       // Reset form for new person
       setFormData({
         name: '',
