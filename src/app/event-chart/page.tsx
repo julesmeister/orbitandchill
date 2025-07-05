@@ -114,7 +114,6 @@ function EventChartContent() {
         setErrorToast({ isVisible: false, title: '', message: '' });
       }
     } catch (error) {
-      console.error('Error generating event chart:', error);
 
       // Show error toast
       setErrorToast({

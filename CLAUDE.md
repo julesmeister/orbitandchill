@@ -732,3 +732,16 @@ When working with the `natal` library:
 - All functions must be type hinted
 - Use Google-style docstrings without type information
 - Use `typing.Self` instead of forward reference strings
+
+## User Approval Workflow
+
+When the user says "solved", it means:
+- They have reviewed and approved the fixes or new features
+- Claude should proceed to commit the changes using git
+- The commit message should describe what was fixed or added
+
+Example workflow:
+1. Claude implements a fix or feature
+2. User reviews the changes
+3. User says "solved" to indicate approval
+4. Claude commits the changes with an appropriate commit message

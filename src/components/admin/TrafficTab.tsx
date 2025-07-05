@@ -5,19 +5,8 @@ import TrafficSourcesCard from './traffic/TrafficSourcesCard';
 import TopPagesCard from './traffic/TopPagesCard';
 import LocationAnalyticsCard from './traffic/LocationAnalyticsCard';
 import TrafficTable from './traffic/TrafficTable';
-
-interface TrafficData {
-  date: string;
-  visitors: number;
-  pageViews: number;
-  chartsGenerated: number;
-  topCountries?: Array<{ country: string; count: number; percentage: number }>;
-  locationBreakdown?: {
-    currentLocation: number;
-    birthLocation: number;
-    fallbackLocation: number;
-  };
-}
+import { TrafficData } from '@/store/admin/types';
+import { TimeRange, getFilteredTrafficData } from '@/utils/trafficDataUtils';
 
 interface TrafficTabProps {
   trafficData: TrafficData[];
@@ -25,29 +14,9 @@ interface TrafficTabProps {
 }
 
 export default function TrafficTab({ trafficData, isLoading }: TrafficTabProps) {
-  const [timeRange, setTimeRange] = useState('Last 30 days');
-
-  // Filter traffic data based on time range
-  const getFilteredTrafficData = () => {
-    const now = new Date();
-    let daysBack = 30;
-    
-    switch (timeRange) {
-      case 'Last 7 days':
-        daysBack = 7;
-        break;
-      case 'Last 24 hours':
-        daysBack = 1;
-        break;
-      default:
-        daysBack = 30;
-    }
-    
-    const cutoffDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
-    return trafficData.filter(day => new Date(day.date) >= cutoffDate);
-  };
+  const [timeRange, setTimeRange] = useState<TimeRange>('Last 30 days');
   
-  const filteredTrafficData = getFilteredTrafficData();
+  const filteredTrafficData = getFilteredTrafficData(trafficData, timeRange);
 
   return (
     <div className="px-4 py-6 sm:px-0">

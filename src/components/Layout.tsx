@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="flex-grow">
         {memoizedChildren}
       </main>
-      <footer className="w-screen bg-white mt-auto">
+      <footer className="w-screen bg-white mt-auto" role="contentinfo">
         {/* Newsletter Section - Always render container to prevent layout shift */}
         <NewsletterSection 
           settings={newsletterSettings} 

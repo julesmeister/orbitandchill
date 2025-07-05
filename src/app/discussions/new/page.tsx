@@ -48,7 +48,6 @@ function NewDiscussionContent() {
     const loadData = async () => {
       // Load user profile first
       await loadProfile();
-      console.log('🔍 Loaded user for discussion:', user?.username, user?.id);
       
       // If editing, load the discussion data
       if (isEditMode && editId && user?.id) {
@@ -67,14 +66,7 @@ function NewDiscussionContent() {
               return;
             }
             
-            console.log('🔍 Discussion data loaded for editing:', {
-              id: discussion.id,
-              title: discussion.title,
-              hasEmbeddedChart: !!discussion.embeddedChart,
-              hasEmbeddedVideo: !!discussion.embeddedVideo,
-              embeddedChart: discussion.embeddedChart,
-              embeddedVideo: discussion.embeddedVideo
-            });
+            // Discussion data loaded for editing
 
             setInitialData({
               title: discussion.title,
@@ -92,7 +84,6 @@ function NewDiscussionContent() {
             setTimeout(() => router.push('/discussions'), 2000);
           }
         } catch (error) {
-          console.error('Error loading discussion:', error);
           showToast('Error', 'Failed to load discussion', 'error');
           setTimeout(() => router.push('/discussions'), 2000);
         } finally {
@@ -120,7 +111,6 @@ function NewDiscussionContent() {
       currentUser = useUserStore.getState().user;
     }
     
-    console.log(isEditMode ? '📝 Updating discussion' : '📝 Creating discussion', 'with user:', currentUser?.username, currentUser?.id);
     
     try {
       const discussionData = {
@@ -176,7 +166,6 @@ function NewDiscussionContent() {
         throw new Error(result.error || `Failed to ${isEditMode ? 'update' : 'create'} discussion`);
       }
     } catch (error) {
-      console.error(`Error ${isEditMode ? 'updating' : 'creating'} discussion:`, error);
       showToast('Error', `Failed to ${isEditMode ? 'update' : 'create'} discussion. Please try again.`, 'error');
     } finally {
       setIsLoading(false);

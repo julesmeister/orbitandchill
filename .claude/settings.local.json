@@ -75,7 +75,8 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/store/adminStore.ts)",
       "Bash(touch:*)",
       "Bash(touch:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next build --debug)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next build --debug)",
+      "Bash(true)"
     ],
     "deny": []
   }

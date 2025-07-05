@@ -97,6 +97,8 @@ const VoteButton = React.memo(({
       disabled={disabled}
       className={getButtonClasses()}
       aria-label={isUpvote ? "Upvote" : "Downvote"}
+      aria-pressed={isActive}
+      aria-describedby={isLoading ? "vote-loading" : undefined}
       title={isUpvote ? "Upvote" : "Downvote"}
     >
       {isLoading ? (
@@ -107,9 +109,15 @@ const VoteButton = React.memo(({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           {icon}
         </svg>
+      )}
+      {isLoading && (
+        <span id="vote-loading" className="sr-only">
+          Processing vote...
+        </span>
       )}
     </button>
   );

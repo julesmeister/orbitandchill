@@ -103,8 +103,11 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   });
 
   useEffect(() => {
-    loadThreads();
-  }, [loadThreads]);
+    // Only load threads if not already loaded - AdminDashboard handles initial loading
+    if (threads.length === 0) {
+      loadThreads();
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   // Database-backed category management functions
   const handleAddCategory = async () => {

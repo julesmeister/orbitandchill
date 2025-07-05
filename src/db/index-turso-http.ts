@@ -98,9 +98,9 @@ async function initializeTurso() {
     // Initialize connection pool after successful client creation
     try {
       pool = await initializeConnectionPool(databaseUrl, authToken, {
-        maxConnections: 20,
-        minConnections: 2,
-        acquireTimeoutMs: 10000
+        maxConnections: 6,
+        minConnections: 1,
+        acquireTimeoutMs: 4000
       });
       console.log('✅ Connection pool initialized successfully');
     } catch (poolError) {
@@ -114,14 +114,33 @@ async function initializeTurso() {
   }
 }
 
-// Create a mock db object that uses the HTTP client directly
+// Use connection pool for database operations if available
+const executeQuery = async (sql: string, args?: any[]): Promise<any> => {
+  // Try to use connection pool first
+  try {
+    const pool = getConnectionPool();
+    if (pool) {
+      return await pool.execute(sql, args);
+    }
+  } catch (poolError) {
+    // Fall back to direct client if pool fails
+    console.warn('⚠️ Connection pool failed, using direct client:', poolError);
+  }
+  
+  // Fallback to direct client
+  if (!client) throw new Error('Database not available');
+  
+  return args && args.length > 0 
+    ? await client.execute({ sql, args })
+    : await client.execute(sql);
+};
+
+// Create a mock db object that uses the connection pool
 const createMockDb = () => ({
   client, // Expose the client for raw SQL operations
   insert: (table: any) => ({
     values: (data: any) => ({
       returning: async () => {
-        if (!client) throw new Error('Database not available');
-        
         // Determine table name from schema
         let tableName = '';
         if (table === schema.users) tableName = 'users';
@@ -258,13 +277,8 @@ const createMockDb = () => ({
         
         const query = `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders}) RETURNING *`;
         
-        // Debug logging removed for cleaner output
-        
         try {
-          const result = await client.execute({
-            sql: query,
-            args: processedValues
-          });
+          const result = await executeQuery(query, processedValues);
           
           // Insert successful
           return result.rows || [data];
@@ -329,19 +343,11 @@ const createMockDb = () => ({
         return { sql, params: queryState.whereParams };
       };
       
-      const executeQuery = async () => {
-        if (!client) throw new Error('Database not available');
-        
+      const executeSelectQuery = async () => {
         try {
           const { sql, params } = buildQuery();
           
-          if (!client) {
-            throw new Error('Database client not available');
-          }
-          
-          const result = params.length > 0 
-            ? await client.execute({ sql, args: params })
-            : await client.execute(sql);
+          const result = await executeQuery(sql, params);
           
           // Ensure we always return an array
           const rows = result.rows || [];
@@ -469,9 +475,9 @@ const createMockDb = () => ({
             limit: (n: number) => {
               queryState.limit = n.toString();
               return { 
-                execute: executeQuery,
+                execute: executeSelectQuery,
                 then: (resolve: any, reject: any) => {
-                  return executeQuery().then(resolve, reject);
+                  return executeSelectQuery().then(resolve, reject);
                 }
               };
             },
@@ -487,27 +493,27 @@ const createMockDb = () => ({
                     offset: (o: number) => {
                       queryState.offset = o.toString();
                       return { 
-                        execute: executeQuery,
+                        execute: executeSelectQuery,
                         then: (resolve: any, reject: any) => {
-                          return executeQuery().then(resolve, reject);
+                          return executeSelectQuery().then(resolve, reject);
                         }
                       };
                     },
-                    execute: executeQuery,
+                    execute: executeSelectQuery,
                     then: (resolve: any, reject: any) => {
-                      return executeQuery().then(resolve, reject);
+                      return executeSelectQuery().then(resolve, reject);
                     }
                   };
                 },
-                execute: executeQuery,
+                execute: executeSelectQuery,
                 then: (resolve: any, reject: any) => {
-                  return executeQuery().then(resolve, reject);
+                  return executeSelectQuery().then(resolve, reject);
                 }
               };
             },
-            execute: executeQuery,
+            execute: executeSelectQuery,
             then: (resolve: any, reject: any) => {
-              return executeQuery().then(resolve, reject);
+              return executeSelectQuery().then(resolve, reject);
             }
           };
         },
@@ -526,21 +532,21 @@ const createMockDb = () => ({
                 offset: (o: number) => {
                   queryState.offset = o.toString();
                   return { 
-                    execute: executeQuery,
+                    execute: executeSelectQuery,
                     then: (resolve: any, reject: any) => {
-                      return executeQuery().then(resolve, reject);
+                      return executeSelectQuery().then(resolve, reject);
                     }
                   };
                 },
-                execute: executeQuery,
+                execute: executeSelectQuery,
                 then: (resolve: any, reject: any) => {
-                  return executeQuery().then(resolve, reject);
+                  return executeSelectQuery().then(resolve, reject);
                 }
               };
             },
-            execute: executeQuery,
+            execute: executeSelectQuery,
             then: (resolve: any, reject: any) => {
-              return executeQuery().then(resolve, reject);
+              return executeSelectQuery().then(resolve, reject);
             }
           };
         },
@@ -551,22 +557,22 @@ const createMockDb = () => ({
               queryState.offset = o.toString();
               // Return a promise-like object that executes the query when awaited
               return {
-                execute: executeQuery,
+                execute: executeSelectQuery,
                 then: (resolve: any, reject: any) => {
-                  return executeQuery().then(resolve, reject);
+                  return executeSelectQuery().then(resolve, reject);
                 }
               };
             },
-            execute: executeQuery,
+            execute: executeSelectQuery,
             // Make this awaitable too
             then: (resolve: any, reject: any) => {
-              return executeQuery().then(resolve, reject);
+              return executeSelectQuery().then(resolve, reject);
             }
           };
         },
-        execute: executeQuery,
+        execute: executeSelectQuery,
         then: (resolve: any, reject: any) => {
-          return executeQuery().then(resolve, reject);
+          return executeSelectQuery().then(resolve, reject);
         }
       };
     }
@@ -685,8 +691,6 @@ const createMockDb = () => ({
             }
             
             const executeUpdate = async () => {
-              if (!client) throw new Error('Database not available');
-              
               if (!whereClause) {
                 console.error('❌ UPDATE without WHERE clause is dangerous, aborting');
                 throw new Error('UPDATE requires a WHERE clause');
@@ -696,7 +700,7 @@ const createMockDb = () => ({
               const allParams = [...values, ...whereParams];
               
               try {
-                const result = await client.execute({ sql, args: allParams });
+                const result = await executeQuery(sql, allParams);
                 // Update successful
                 return result;
               } catch (error) {
@@ -796,12 +800,10 @@ const createMockDb = () => ({
         }
         
         const executeDelete = async () => {
-          if (!client) throw new Error('Database not available');
-          
           const sql = `DELETE FROM ${tableName} WHERE ${whereClause}`;
           
           try {
-            const result = await client.execute({ sql, args: whereParams });
+            const result = await executeQuery(sql, whereParams);
             return result;
           } catch (error) {
             console.error('❌ Delete failed:', error);
@@ -853,10 +855,10 @@ const ensureInitialized = async () => {
             if (databaseUrl && authToken) {
               const pool = await initializeConnectionPool(databaseUrl, authToken, {
                 minConnections: 1,
-                maxConnections: 3,     // Reduced from 8 to 3
-                acquireTimeoutMs: 3000, // Reduced from 5s to 3s
-                idleTimeoutMs: 180000,  // Reduced from 5m to 3m
-                maxLifetimeMs: 900000   // Reduced from 30m to 15m
+                maxConnections: 4,     // Conservative pool size
+                acquireTimeoutMs: 3000, // 3 second timeout
+                idleTimeoutMs: 120000,  // 2 minute idle timeout
+                maxLifetimeMs: 600000   // 10 minute max lifetime
               });
               
               if (pool) {
@@ -912,11 +914,11 @@ const startupInitialization = async () => {
       
       if (databaseUrl && authToken) {
         await initializeConnectionPool(databaseUrl, authToken, {
-          minConnections: 2,
-          maxConnections: 8,
-          acquireTimeoutMs: 5000,
-          idleTimeoutMs: 300000, // 5 minutes
-          maxLifetimeMs: 1800000  // 30 minutes
+          minConnections: 1,
+          maxConnections: 6,
+          acquireTimeoutMs: 4000,
+          idleTimeoutMs: 180000,  // 3 minutes
+          maxLifetimeMs: 900000   // 15 minutes
         });
       }
     } catch (poolError) {
@@ -1433,8 +1435,8 @@ export async function enableConnectionPool() {
     
     const pool = await initializeConnectionPool(databaseUrl, authToken, {
       minConnections: 1,
-      maxConnections: 3,
-      acquireTimeoutMs: 5000,
+      maxConnections: 4,
+      acquireTimeoutMs: 3000,
       idleTimeoutMs: 60000,
       maxLifetimeMs: 600000,
       retryAttempts: 2

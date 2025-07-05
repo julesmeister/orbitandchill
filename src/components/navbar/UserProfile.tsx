@@ -171,6 +171,7 @@ const UserProfile = ({
     <Dropdown
       items={profileDropdownItems}
       align="right"
+      ariaLabel={`User menu for ${displayName}`}
       trigger={(isOpen) => (
         <div className="flex items-center space-x-2 xl:space-x-3 text-black hover:text-gray-600 transition-colors cursor-pointer" onMouseEnter={onHoverSound}>
           <div className="hidden xl:block">
@@ -182,7 +183,7 @@ const UserProfile = ({
           <div className="w-8 h-8 xl:w-10 xl:h-10 rounded-full overflow-hidden">
             <Image
               src={user?.preferredAvatar || user?.profilePictureUrl || getAvatarByIdentifier(displayName)}
-              alt={displayName}
+              alt={`Profile picture for ${displayName}`}
               width={40}
               height={40}
               className="w-full h-full object-cover"
@@ -193,6 +194,7 @@ const UserProfile = ({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>

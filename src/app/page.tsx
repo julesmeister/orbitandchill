@@ -72,7 +72,6 @@ export default function Home() {
         showError('Generation Failed', 'Failed to generate chart. Please try again.');
       }
     } catch (error) {
-      console.error("Error generating chart:", error);
       showError('Chart Error', 'An error occurred while generating your chart.');
     }
   };

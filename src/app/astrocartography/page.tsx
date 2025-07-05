@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { usePeopleStore } from '../../store/peopleStore';
 import { useUserStore } from '../../store/userStore';
 import { useAstrocartography } from '../../hooks/useAstrocartography';
@@ -15,7 +15,8 @@ import AstrocartographyHeader from './components/AstrocartographyHeader';
 import AstrocartographyControls from './components/AstrocartographyControls';
 import AstrocartographyMap from './components/AstrocartographyMap';
 import AstrocartographyInfoCards from './components/AstrocartographyInfoCards';
-import FullscreenMapModal from './components/FullscreenMapModal';
+
+const FullscreenMapModal = React.lazy(() => import('./components/FullscreenMapModal'));
 
 // Import hooks
 import { useAstrocartographyState } from './hooks/useAstrocartographyState';
@@ -135,7 +136,6 @@ export default function AstrocartographyPage() {
   // Calculate astrocartography when current person or birth data changes
   useEffect(() => {
     if (birthData && (!hasInitialLoad || !astrocartographyData)) {
-      // Triggering astrocartography calculation
       calculateAstrocartography(birthData).then(() => {
         if (!hasInitialLoad) {
           setHasInitialLoad(true);
@@ -150,23 +150,29 @@ export default function AstrocartographyPage() {
       <style dangerouslySetInnerHTML={{ __html: sliderStyles }} />
 
       {/* Fullscreen Map Modal */}
-      <FullscreenMapModal
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={toggleFullscreen}
-        onCountryClick={handleCountryClick}
-        onMapClick={handleMapClick}
-        astrocartographyLines={astrocartographyLines}
-        parans={parans}
-        onLineHover={handleLineHover}
-        onLineHoverEnd={handleLineHoverEnd}
-        showReferencePoints={showReferencePoints}
-        showParans={showParans}
-        onToggleParans={() => setShowParans(!showParans)}
-        onToggleReferencePoints={() => setShowReferencePoints(!showReferencePoints)}
-        visiblePlanets={visiblePlanets}
-        onTogglePlanet={togglePlanet}
-        isCalculating={isCalculating}
-      />
+      {isFullscreen && (
+        <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="text-white">Loading fullscreen map...</div>
+        </div>}>
+          <FullscreenMapModal
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+            onCountryClick={handleCountryClick}
+            onMapClick={handleMapClick}
+            astrocartographyLines={astrocartographyLines}
+            parans={parans}
+            onLineHover={handleLineHover}
+            onLineHoverEnd={handleLineHoverEnd}
+            showReferencePoints={showReferencePoints}
+            showParans={showParans}
+            onToggleParans={() => setShowParans(!showParans)}
+            onToggleReferencePoints={() => setShowReferencePoints(!showReferencePoints)}
+            visiblePlanets={visiblePlanets}
+            onTogglePlanet={togglePlanet}
+            isCalculating={isCalculating}
+          />
+        </Suspense>
+      )}
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 pb-6">
         {/* Header Section */}

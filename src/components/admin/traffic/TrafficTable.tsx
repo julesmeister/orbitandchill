@@ -2,52 +2,21 @@
 import { useState, useEffect } from 'react';
 import AdminDropdown from '@/components/reusable/AdminDropdown';
 import TablePagination from '@/components/reusable/TablePagination';
-
-interface TrafficData {
-  date: string;
-  visitors: number;
-  pageViews: number;
-  chartsGenerated: number;
-  topCountries?: Array<{ country: string; count: number; percentage: number }>;
-  locationBreakdown?: {
-    currentLocation: number;
-    birthLocation: number;
-    fallbackLocation: number;
-  };
-}
+import { TrafficData } from '@/store/admin/types';
+import { TimeRange, getFilteredTrafficData } from '@/utils/trafficDataUtils';
 
 interface TrafficTableProps {
   trafficData: TrafficData[];
   isLoading: boolean;
-  timeRange: string;
-  onTimeRangeChange: (range: string) => void;
+  timeRange: TimeRange;
+  onTimeRangeChange: (range: TimeRange) => void;
 }
 
 export default function TrafficTable({ trafficData, isLoading, timeRange, onTimeRangeChange }: TrafficTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Filter traffic data based on time range
-  const getFilteredTrafficData = () => {
-    const now = new Date();
-    let daysBack = 30;
-    
-    switch (timeRange) {
-      case 'Last 7 days':
-        daysBack = 7;
-        break;
-      case 'Last 24 hours':
-        daysBack = 1;
-        break;
-      default:
-        daysBack = 30;
-    }
-    
-    const cutoffDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
-    return trafficData.filter(day => new Date(day.date) >= cutoffDate);
-  };
-
-  const filteredTrafficData = getFilteredTrafficData();
+  const filteredTrafficData = getFilteredTrafficData(trafficData, timeRange);
   
   // Pagination calculations
   const totalPages = Math.ceil(filteredTrafficData.length / itemsPerPage);
@@ -89,7 +58,7 @@ export default function TrafficTable({ trafficData, isLoading, timeRange, onTime
             <AdminDropdown
               options={['Last 30 days', 'Last 7 days', 'Last 24 hours']}
               value={timeRange}
-              onChange={onTimeRangeChange}
+              onChange={(value) => onTimeRangeChange(value as TimeRange)}
             />
             <button className="px-4 py-2 text-sm font-medium text-black bg-white border-2 border-black hover:bg-[#6bdbff] hover:text-black transition-colors font-open-sans">
               Export CSV

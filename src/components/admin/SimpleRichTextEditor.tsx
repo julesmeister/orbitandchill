@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useCallback, useMemo, useState, useRef, useEffect } from 'react';
+import { useCallback, useMemo, useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { getTextStats, validateTextLength } from '@/utils/textUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -10,7 +10,8 @@ import {
   faLink, faImage, faUndo, faRedo, faEye, faEdit,
   faExpand, faCompress, faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
-import ImageUploadModal from '../editor/ImageUploadModal';
+
+const ImageUploadModal = lazy(() => import('../editor/ImageUploadModal'));
 
 interface SimpleRichTextEditorProps {
   content: string;
@@ -420,11 +421,15 @@ export default function SimpleRichTextEditor({
       )}
       
       {/* Image Upload Modal */}
-      <ImageUploadModal
-        isOpen={showImageModal}
-        onClose={() => setShowImageModal(false)}
-        onImageSelect={handleImageSelect}
-      />
+      {showImageModal && (
+        <Suspense fallback={<div>Loading image uploader...</div>}>
+          <ImageUploadModal
+            isOpen={showImageModal}
+            onClose={() => setShowImageModal(false)}
+            onImageSelect={handleImageSelect}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

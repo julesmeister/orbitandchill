@@ -266,7 +266,6 @@ export default function EventsPage() {
                 await clearGeneratedEvents(user.id, currentDate);
                 updateProgress(15, "Existing events cleared...");
             } catch (clearError) {
-                console.warn('Warning: Could not clear existing events:', clearError);
                 updateProgress(15, "Proceeding with generation...");
                 // Continue with generation even if clearing fails
             }
@@ -288,7 +287,7 @@ export default function EventsPage() {
                     updateProgress(75, "Validating event data...");
 
                     // Add detailed logging for debugging the validation issue
-                    console.log(`📋 About to save ${newEvents.length} events to database:`, {
+                    // console.log(`📋 About to save ${newEvents.length} events to database:`, {
                         eventCount: newEvents.length,
                         firstEvent: newEvents[0] ? {
                             userId: newEvents[0].userId,
@@ -334,7 +333,7 @@ export default function EventsPage() {
                             }
                         }, 500);
                     } catch (saveError) {
-                        console.error('Error saving events to database:', saveError);
+                        // console.error('Error saving events to database:', saveError);
                         updateProgress(85, "Warning: Events generated but not fully saved...");
 
                         // Still show partial success but with warning
@@ -349,7 +348,7 @@ export default function EventsPage() {
                 }
             });
         } catch (error) {
-            console.error('Error in optimal timing generation:', error);
+            // console.error('Error in optimal timing generation:', error);
             showError(
                 "Generation Failed",
                 error instanceof Error ? error.message : 'Error calculating electional recommendations. Please try again.',
@@ -370,7 +369,7 @@ export default function EventsPage() {
             return;
         }
 
-        console.log('🚀 Starting manual event creation:', {
+        // console.log('🚀 Starting manual event creation:', {
             title: newEvent.title,
             date: newEvent.date,
             time: newEvent.time,
@@ -398,7 +397,7 @@ export default function EventsPage() {
                 longitude
             });
 
-            console.log('📊 Analyzed event data:', analyzedEvent);
+            // console.log('📊 Analyzed event data:', analyzedEvent);
 
             // Add userId to the event before saving
             const eventWithUserId = {
@@ -406,7 +405,7 @@ export default function EventsPage() {
                 userId: user?.id || 'anonymous'
             };
 
-            console.log('💾 Event to be saved:', {
+            // console.log('💾 Event to be saved:', {
                 ...eventWithUserId,
                 isGenerated: eventWithUserId.isGenerated,
                 userId: eventWithUserId.userId
@@ -414,7 +413,7 @@ export default function EventsPage() {
 
             await addEvent(eventWithUserId);
 
-            console.log('✅ Event saved successfully, now updating UI...');
+            // console.log('✅ Event saved successfully, now updating UI...');
 
             // Reset form and hide it
             setNewEvent({ title: '', date: '', time: '', description: '' });
@@ -424,15 +423,15 @@ export default function EventsPage() {
             setShowCalendar(false);
 
             // Switch to manual events tab to show the newly added event
-            console.log('🔄 Switching to manual tab and reloading events...');
+            // console.log('🔄 Switching to manual tab and reloading events...');
             setSelectedTab('manual');
 
             // Force reload events after a short delay to ensure database save is complete
             setTimeout(async () => {
                 if (user?.id) {
-                    console.log('🔄 Force reloading events after manual event creation...');
+                    // console.log('🔄 Force reloading events after manual event creation...');
                     await useEventsStore.getState().loadEvents(user.id);
-                    console.log('📊 Events after reload:', useEventsStore.getState().events.length);
+                    // console.log('📊 Events after reload:', useEventsStore.getState().events.length);
 
                     // Scroll to EventsTable
                     const eventsTable = document.querySelector('[data-events-table]');
@@ -443,7 +442,7 @@ export default function EventsPage() {
             }, 500);
 
         } catch (error) {
-            console.error('❌ Error creating event:', error);
+            // console.error('❌ Error creating event:', error);
             // Fallback to basic event if analysis fails
             const basicEvent: AstrologicalEvent = {
                 id: Date.now().toString(),
@@ -460,7 +459,7 @@ export default function EventsPage() {
                 createdAt: new Date().toISOString()
             };
 
-            console.log('🔄 Using fallback basic event:', {
+            // console.log('🔄 Using fallback basic event:', {
                 ...basicEvent,
                 isGenerated: basicEvent.isGenerated,
                 userId: basicEvent.userId
@@ -468,7 +467,7 @@ export default function EventsPage() {
 
             await addEvent(basicEvent);
 
-            console.log('✅ Fallback event saved successfully, now updating UI...');
+            // console.log('✅ Fallback event saved successfully, now updating UI...');
 
             // Reset form and hide it
             setNewEvent({ title: '', date: '', time: '', description: '' });
@@ -478,15 +477,15 @@ export default function EventsPage() {
             setShowCalendar(false);
 
             // Switch to manual events tab to show the newly added event
-            console.log('🔄 Switching to manual tab and reloading events...');
+            // console.log('🔄 Switching to manual tab and reloading events...');
             setSelectedTab('manual');
 
             // Force reload events after a short delay to ensure database save is complete
             setTimeout(async () => {
                 if (user?.id) {
-                    console.log('🔄 Force reloading events after fallback event creation...');
+                    // console.log('🔄 Force reloading events after fallback event creation...');
                     await useEventsStore.getState().loadEvents(user.id);
-                    console.log('📊 Events after reload:', useEventsStore.getState().events.length);
+                    // console.log('📊 Events after reload:', useEventsStore.getState().events.length);
 
                     // Scroll to EventsTable
                     const eventsTable = document.querySelector('[data-events-table]');
@@ -516,14 +515,14 @@ export default function EventsPage() {
             cancelText: "Cancel",
             confirmButtonColor: "red",
             onConfirm: async () => {
-                console.log('🗑️ Deleting event:', id);
+                // console.log('🗑️ Deleting event:', id);
 
                 // Show loading status
                 showLoading("Deleting Event", "Removing event from your calendar...");
 
                 try {
                     await deleteEvent(id, user.id);
-                    console.log('✅ Event deleted successfully');
+                    // console.log('✅ Event deleted successfully');
 
                     // Show success message
                     showSuccess(
@@ -532,7 +531,7 @@ export default function EventsPage() {
                         3000
                     );
                 } catch (error) {
-                    console.error('❌ Error deleting event:', error);
+                    // console.error('❌ Error deleting event:', error);
                     showError(
                         "Delete Failed",
                         `Failed to delete event: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
@@ -577,7 +576,7 @@ export default function EventsPage() {
                 3000
             );
         } catch (error) {
-            console.error('❌ Error toggling bookmark:', error);
+            // console.error('❌ Error toggling bookmark:', error);
             showError(
                 "Bookmark Failed",
                 `Unable to bookmark this event: ${error instanceof Error ? error.message : 'Please try again.'}`,
@@ -593,16 +592,16 @@ export default function EventsPage() {
     // Handle month changes from calendar navigation
     const handleMonthChange = useCallback(async (month: number, year: number) => {
         if (user?.id) {
-            console.log(`📅 Month changed to ${month + 1}/${year}, loading events...`);
+            // console.log(`📅 Month changed to ${month + 1}/${year}, loading events...`);
             await loadMonthEvents(user.id, month, year);
         }
     }, [user?.id, loadMonthEvents]);
 
     const handleClearAllEvents = () => {
-        console.log('🔄 handleClearAllEvents called, user:', user?.id);
+        // console.log('🔄 handleClearAllEvents called, user:', user?.id);
 
         if (!user?.id) {
-            console.error('❌ No user ID available for clearing events');
+            // console.error('❌ No user ID available for clearing events');
             showError("No User", "Please ensure you have a valid user session before clearing events.");
             return;
         }
@@ -614,23 +613,23 @@ export default function EventsPage() {
             cancelText: "Cancel",
             confirmButtonColor: "red",
             onConfirm: async () => {
-                console.log('🔄 Confirmation accepted, clearing events for user:', user?.id);
+                // console.log('🔄 Confirmation accepted, clearing events for user:', user?.id);
 
                 // Show loading status
                 showLoading("Clearing Events", "Removing generated events from your calendar...");
 
                 if (user?.id) {
                     try {
-                        console.log('🔄 About to call clearGeneratedEvents...');
+                        // console.log('🔄 About to call clearGeneratedEvents...');
                         await clearGeneratedEvents(user.id);
-                        console.log('✅ clearGeneratedEvents completed successfully');
+                        // console.log('✅ clearGeneratedEvents completed successfully');
 
                         // Force reload current month after clearing
-                        console.log('🔄 Reloading current month events after clear...');
-                        console.log('🔍 About to reload month events for user ID:', user.id);
+                        // console.log('🔄 Reloading current month events after clear...');
+                        // console.log('🔍 About to reload month events for user ID:', user.id);
                         await loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
-                        console.log('✅ Month events reloaded after clear');
-                        console.log('📊 Events count after reload:', events.length);
+                        // console.log('✅ Month events reloaded after clear');
+                        // console.log('📊 Events count after reload:', events.length);
 
                         // Show success message with more detail
                         showSuccess(
@@ -639,7 +638,7 @@ export default function EventsPage() {
                             4000
                         );
                     } catch (error) {
-                        console.error('❌ clearGeneratedEvents failed:', error);
+                        // console.error('❌ clearGeneratedEvents failed:', error);
                         showError(
                             "Clear Failed",
                             `Failed to clear events: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,

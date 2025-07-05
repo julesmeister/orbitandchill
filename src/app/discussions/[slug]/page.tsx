@@ -85,11 +85,7 @@ export default function DiscussionDetailPage({
     
     // Cross-check with database discussion.replies count (debounced)
     if (discussion && discussion.replies !== newCount) {
-      console.log(`🔍 Reply count mismatch detected:`, {
-        databaseCount: discussion.replies,
-        actualCount: newCount,
-        discussionId: discussion.id
-      });
+      // Reply count mismatch detected
       
       // PERFORMANCE: Non-blocking database sync
       setTimeout(async () => {
@@ -105,12 +101,9 @@ export default function DiscussionDetailPage({
           });
           
           if (response.ok) {
-            console.log('✅ Database reply count synchronized');
           } else {
-            console.error('❌ Failed to sync reply count');
           }
         } catch (error) {
-          console.error('❌ Error syncing reply count:', error);
         }
       }, 500); // 500ms debounce
     }
@@ -133,21 +126,15 @@ export default function DiscussionDetailPage({
         const actualCount = repliesData.replies.length;
         const databaseCount = discussionData.replies;
         
-        console.log('🔍 Initial reply count check:', {
-          discussionId: discussionData.id,
-          databaseCount,
-          actualCount
-        });
+        // Initial reply count check
         
         if (databaseCount !== actualCount) {
-          console.log('🔧 Reply count mismatch on load, syncing...');
           handleReplyCountUpdate(actualCount).catch(() => {}); // Non-blocking
         } else {
           setRepliesCount(actualCount);
         }
       }
     } catch (error) {
-      console.error('Error cross-checking reply count:', error);
       // Fall back to database count if cross-check fails
       setRepliesCount(discussionData.replies || 0);
     }
@@ -194,7 +181,6 @@ export default function DiscussionDetailPage({
           setDiscussion(null);
         }
       } catch (err) {
-        console.error('Error fetching discussion:', err);
         setError('Failed to load discussion');
         setDiscussion(null);
       } finally {
@@ -241,7 +227,6 @@ export default function DiscussionDetailPage({
         setIsDeleting(false);
       }
     } catch (error) {
-      console.error('Error deleting discussion:', error);
       alert('Failed to delete discussion. Please try again.');
       setIsDeleting(false);
     }

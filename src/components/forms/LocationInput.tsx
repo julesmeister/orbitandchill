@@ -34,10 +34,11 @@ const LocationInput = React.memo(({
       transform: 'translateZ(0)'
     }}
   >
-    <label className="synapsas-label">
+    <label className="synapsas-label" htmlFor="location-input">
       Location of Birth <span className="text-red-500">*</span>
     </label>
     <input
+      id="location-input"
       ref={locationInputRef}
       type="text"
       value={locationQuery}
@@ -50,13 +51,23 @@ const LocationInput = React.memo(({
       className="synapsas-input"
       required
       autoComplete="off"
+      aria-describedby="location-help"
+      aria-required="true"
+      aria-expanded={showLocationDropdown}
+      aria-autocomplete="list"
+      role="combobox"
     />
+    <div id="location-help" className="sr-only">
+      Enter your birth location. Start typing to see suggestions.
+    </div>
 
     {/* Location Dropdown */}
     {showLocationDropdown && isLocationFocused && (
       <div
         ref={dropdownRef}
         className="synapsas-location-dropdown"
+        role="listbox"
+        aria-label="Location suggestions"
         style={{
           zIndex: 4999,
           transform: 'translateZ(0)',
@@ -80,6 +91,8 @@ const LocationInput = React.memo(({
               type="button"
               onClick={() => onLocationSelect(location)}
               className="synapsas-location-option"
+              role="option"
+              aria-label={`Select location: ${location.display_name}`}
             >
               <div className="font-medium text-black truncate">
                 {location.display_name}

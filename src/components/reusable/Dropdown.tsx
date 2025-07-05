@@ -19,6 +19,7 @@ interface DropdownProps {
   align?: 'left' | 'right'
   className?: string
   width?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  ariaLabel?: string
 }
 
 export default function Dropdown({ 
@@ -26,7 +27,8 @@ export default function Dropdown({
   items, 
   align = 'right', 
   className = '',
-  width = 'md'
+  width = 'md',
+  ariaLabel = 'Open menu'
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -96,6 +98,7 @@ export default function Dropdown({
         className="flex items-center focus:outline-none w-full"
         aria-expanded={isOpen}
         aria-haspopup="true"
+        aria-label={ariaLabel}
       >
         {typeof trigger === 'function' ? trigger(isOpen) : trigger}
       </button>

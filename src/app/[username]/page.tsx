@@ -101,7 +101,6 @@ export default function UserProfilePage() {
         setProfileUser(null);
       }
     } catch (err) {
-      console.error('Error fetching user:', err);
       setError('Failed to load user profile');
       setProfileUser(null);
     } finally {
@@ -129,7 +128,6 @@ export default function UserProfilePage() {
           setChartCount(0); // Or fetch from a public API endpoint
         }
       } catch (error) {
-        console.error('Error loading user charts:', error);
         setChartCount(0);
       }
     }

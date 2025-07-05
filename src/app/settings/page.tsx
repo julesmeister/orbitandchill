@@ -70,7 +70,6 @@ export default function SettingsPage() {
       // Redirect to home page
       window.location.href = '/';
     } catch (error) {
-      console.error('Error deleting account:', error);
       setDeleteError(error instanceof Error ? error.message : 'Failed to delete account');
       setIsDeleting(false);
     }

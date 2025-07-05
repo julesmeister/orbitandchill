@@ -75,7 +75,7 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
               <Link href={`/discussions/${discussion.slug}`}>
                 <img 
                   src={thumbnailImage} 
-                  alt={discussion.title}
+                  alt={`Thumbnail image for discussion: ${discussion.title}`}
                   className="w-full h-32 object-cover border border-black hover:opacity-90 transition-opacity"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
@@ -174,7 +174,7 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                   <Link href={`/discussions/${discussion.slug}`}>
                     <img 
                       src={thumbnailImage} 
-                      alt={discussion.title}
+                      alt={`Thumbnail image for discussion: ${discussion.title}`}
                       className="w-24 h-24 object-cover border border-black hover:opacity-90 transition-opacity"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';

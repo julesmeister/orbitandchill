@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useMemo, useEffect, useState } from 'react';
+import { TrafficData } from '@/store/admin/types';
+import { getDailyVisitors, getTotalPageViews, getTotalChartsFromTraffic } from '@/utils/trafficDataUtils';
 
 interface UserAnalytics {
   id: string;
@@ -10,13 +12,6 @@ interface UserAnalytics {
   chartsGenerated: number;
   forumPosts: number;
   isAnonymous: boolean;
-}
-
-interface TrafficData {
-  date: string;
-  visitors: number;
-  pageViews: number;
-  chartsGenerated: number;
 }
 
 interface Thread {
@@ -124,16 +119,15 @@ export function useRealMetrics(
     } else {
       // Fallback to existing calculation
       const userChartCounts = userAnalytics.reduce((sum, u) => sum + (u.chartsGenerated || 0), 0);
-      const trafficChartCounts = trafficData.reduce((sum, d) => sum + (d.chartsGenerated || 0), 0);
+      const trafficChartCounts = getTotalChartsFromTraffic(trafficData);
       chartsGenerated = Math.max(userChartCounts, trafficChartCounts);
     }
     
     // Daily visitors (most recent day)
-    const dailyVisitors = trafficData.length > 0 ? 
-      trafficData[trafficData.length - 1]?.visitors || 0 : 0;
+    const dailyVisitors = getDailyVisitors(trafficData);
     
     // Total page views
-    const totalPageViews = trafficData.reduce((sum, d) => sum + (d.pageViews || 0), 0);
+    const totalPageViews = getTotalPageViews(trafficData);
     
     // ENHANCED: Monthly growth using real user data
     let monthlyGrowth = 0;

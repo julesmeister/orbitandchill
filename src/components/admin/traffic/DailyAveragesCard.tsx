@@ -1,10 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-interface TrafficData {
-  date: string;
-  visitors: number;
-  pageViews: number;
-  chartsGenerated: number;
-}
+import { TrafficData } from '@/store/admin/types';
 
 interface DailyAveragesCardProps {
   filteredTrafficData: TrafficData[];

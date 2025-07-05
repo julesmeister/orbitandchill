@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Initialize auth on mount
     initializeAuth();
-  }, [initializeAuth]);
+  }, []); // Empty dependency array - only run once on mount
 
   useEffect(() => {
     // Load all admin data when authenticated
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
       loadHealthMetrics();
       loadNotifications();
     }
-  }, [isAuthenticated, refreshMetrics, loadUserAnalytics, loadTrafficData, loadThreads, loadHealthMetrics, loadNotifications]);
+  }, [isAuthenticated]); // Only depend on isAuthenticated to avoid function reference loops
 
 
   // Comprehensive refresh function

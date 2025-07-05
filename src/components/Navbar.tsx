@@ -201,6 +201,8 @@ export default function Navbar() {
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="text-black transition-colors p-2 bg-white relative group"
+                aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-expanded={isMenuOpen}
               >
                 {/* Vertex borders on hover - visible corners */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
@@ -213,7 +215,7 @@ export default function Navbar() {
                   {/* Bottom-right corner */}
                   <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-black"></span>
                 </div>
-                <svg className="h-5 w-5 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

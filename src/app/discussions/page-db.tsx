@@ -138,7 +138,6 @@ export default function DiscussionsPage() {
 
         setDiscussions(enhancedDiscussions);
       } catch (apiError) {
-        console.error('API fetch failed, using fallback data:', apiError);
         
         // Fallback to mock data if API fails
         const fallbackDiscussions: Discussion[] = [
@@ -169,7 +168,6 @@ export default function DiscussionsPage() {
         setDiscussions(fallbackDiscussions);
       }
     } catch (err) {
-      console.error('Failed to load discussions:', err);
       setError('Database connection is being set up. Please try again in a moment.');
     } finally {
       setLoading(false);

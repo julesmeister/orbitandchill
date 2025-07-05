@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import NextImage from 'next/image';
 import { useUserStore } from '../../store/userStore';
 import { useChartTab } from '../../store/chartStore';
@@ -9,7 +9,23 @@ import ChartInterpretation from './ChartInterpretation';
 import ChartActions from './ChartActions';
 import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
 import TransitAspectsTab from './TransitAspectsTab';
-import MatrixOfDestiny from './MatrixOfDestiny';
+
+const MatrixOfDestiny = lazy(() => import('./MatrixOfDestiny'));
+
+// Loading skeleton for Matrix of Destiny
+const MatrixLoadingSkeleton = () => (
+  <div className="p-8 bg-white">
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+      <div className="aspect-square bg-gray-200 rounded-lg mb-6 max-w-md mx-auto"></div>
+      <div className="space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      </div>
+    </div>
+  </div>
+);
 
 interface NatalChartDisplayProps {
   svgContent: string;
@@ -112,7 +128,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
       const svgUrl = URL.createObjectURL(svgBlob);
       img.src = svgUrl;
     } catch (error) {
-      console.error('Error downloading PNG:', error);
+      // Error downloading PNG
     }
   };
 
@@ -121,13 +137,11 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
       const result = await generateChartPDF(chartName, personName || user?.username);
       
       if (!result.success) {
-        console.error('PDF generation failed:', result.error);
         alert(`Failed to generate PDF: ${result.error}`);
       }
       
       if (onDownload) onDownload();
     } catch (error) {
-      console.error('PDF generation error:', error);
       alert('Failed to generate PDF. Please try again.');
     }
   };
@@ -243,10 +257,12 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                 // Matrix of Destiny View - Use event data for event charts
                 <div>
                   {stableBirthData ? (
-                    <MatrixOfDestiny 
-                      birthData={stableBirthData} 
-                      personName={personName}
-                    />
+                    <Suspense fallback={<MatrixLoadingSkeleton />}>
+                      <MatrixOfDestiny 
+                        birthData={stableBirthData} 
+                        personName={personName}
+                      />
+                    </Suspense>
                   ) : (
                     <div className="p-8 text-center">
                       <p className="text-gray-600">Birth data is required for Matrix of Destiny calculation.</p>
