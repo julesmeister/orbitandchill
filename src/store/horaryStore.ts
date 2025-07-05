@@ -124,7 +124,6 @@ export const useHoraryStore = create<HoraryState>()(
                 const originalCount = questions.length;
                 questions = questions.filter((q: any) => q.userId === userId);
                 if (questions.length !== originalCount) {
-                  console.warn(`⚠️ Client filter applied: ${originalCount} → ${questions.length} questions`);
                 }
               }
               

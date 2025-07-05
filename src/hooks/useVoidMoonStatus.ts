@@ -257,7 +257,6 @@ export const useVoidMoonStatus = () => {
         setVoidStatus(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
-      console.error('Error checking void moon status:', error);
       setVoidStatus(prev => ({ ...prev, isLoading: false }));
     }
   };

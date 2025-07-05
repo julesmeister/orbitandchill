@@ -54,7 +54,6 @@ export const useHoraryChart = () => {
     }
 
     setIsGenerating(true);
-    console.log('Starting horary chart generation for question:', question.id);
 
     try {
       // For horary, we need the location where the question is being judged
@@ -70,7 +69,6 @@ export const useHoraryChart = () => {
         lng: -74.0060
       });
 
-      console.log('Using location for horary chart:', location);
 
       if (!location) {
         showToast('Location Required', 'Location is required to cast a horary chart', 'error');
@@ -82,11 +80,6 @@ export const useHoraryChart = () => {
       // Convert to Date object if it's a string (from persistence)
       const questionDate = question.date instanceof Date ? question.date : new Date(question.date);
       
-      console.log('Calling generateNatalChart with data:', {
-        dateOfBirth: questionDate.toISOString().split('T')[0],
-        timeOfBirth: questionDate.toTimeString().substring(0, 5),
-        coordinates: location
-      });
 
       const chartData = await generateNatalChart({
         name: `Horary Chart - ${question.question.substring(0, 30)}...`,
@@ -99,16 +92,13 @@ export const useHoraryChart = () => {
         }
       });
 
-      console.log('Chart generation result:', chartData ? 'SUCCESS' : 'FAILED');
 
       if (!chartData) {
         throw new Error('Failed to generate chart');
       }
 
       // Perform traditional horary analysis
-      console.log('Starting horary analysis with chart data:', chartData.metadata?.chartData ? 'AVAILABLE' : 'MISSING');
       const horaryAnalysis = analyzeHoraryChart(chartData.metadata?.chartData, question.question);
-      console.log('Horary analysis result:', horaryAnalysis);
 
       const horaryChart: HoraryChartData = {
         id: `horary_${question.id}_${Date.now()}`,
@@ -131,13 +121,6 @@ export const useHoraryChart = () => {
       };
       
       // Update the question with chart data and analysis
-      console.log('Updating question with analysis:', {
-        questionId: question.id,
-        answer: horaryAnalysis.answer,
-        timing: horaryAnalysis.timing,
-        interpretation: horaryAnalysis.interpretation ? 'PRESENT' : 'MISSING',
-        chartDataSize: horaryChart.svg.length
-      });
       
       // Update question in store with all analysis data
       updateQuestion(question.id, {
@@ -148,15 +131,11 @@ export const useHoraryChart = () => {
       });
       
       // Verify the update was successful - simplified approach
-      console.log('Verifying store update...');
       setTimeout(() => {
         const storeState = useHoraryStore.getState();
         const updatedQuestion = storeState.questions.find(q => q.id === question.id);
         
-        if (updatedQuestion?.answer) {
-          console.log('SUCCESS: Question updated and persisted properly');
-        } else {
-          console.warn('Store update verification: Answer not yet saved, may still be processing');
+        if (!updatedQuestion?.answer) {
           // Try one more update without error logging
           updateQuestion(question.id, {
             answer: horaryAnalysis.answer,
@@ -171,7 +150,6 @@ export const useHoraryChart = () => {
       return horaryChart;
 
     } catch (error) {
-      console.error('Error generating horary chart:', error);
       showToast('Generation Failed', 'Failed to generate horary chart', 'error');
       return null;
     } finally {
@@ -284,7 +262,6 @@ function analyzeHoraryChart(chartData: any, questionText: string): HoraryAnalysi
       significators
     };
   } catch (error) {
-    console.error('Error in horary analysis:', error);
     return generateSimpleAnalysis(questionText);
   }
 }
