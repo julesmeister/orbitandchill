@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Debug: Log received events
+    console.log('Bulk API received events:', {
       count: events.length,
       firstEvent: events[0] ? {
         userId: events[0].userId,
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Validate each event has required fields with enhanced logging
+    console.log(`🔍 Starting validation of ${events.length} events...`);
     
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
@@ -70,6 +72,7 @@ export async function POST(request: NextRequest) {
       
       const { userId, title, date, type, description } = event;
       
+      console.log(`🔍 Validating event ${i + 1}/${events.length}:`, {
         eventIndex: i,
         userId: userId ? `${userId.substring(0, 10)}...` : 'MISSING',
         title: title ? `${title.substring(0, 30)}...` : 'MISSING',
@@ -132,8 +135,11 @@ export async function POST(request: NextRequest) {
       
       // Log progress every few events
       if ((i + 1) % 5 === 0 || i === events.length - 1) {
+        console.log(`✅ Validated ${i + 1}/${events.length} events successfully`);
       }
     }
+    
+    console.log(`🎉 All ${events.length} events passed validation!`);
 
     // Create all events in bulk
     let createdEvents;
@@ -145,6 +151,7 @@ export async function POST(request: NextRequest) {
       // Check if events were created as local-only (database unavailable)
       if (createdEvents.length > 0 && createdEvents[0].id.startsWith('local_')) {
         isDatabaseUnavailable = true;
+        console.log('⚠️ Events created as local-only due to database unavailability');
       }
       
     } catch (dbError) {

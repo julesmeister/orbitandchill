@@ -79,6 +79,7 @@ export async function validateAdminSession(sessionId: string, userId: string): P
   try {
     // Special case: Master admin sessions don't need database validation
     if (sessionId.startsWith('master_session_')) {
+      console.log('🔑 Validating master admin session:', sessionId);
       return true;
     }
 

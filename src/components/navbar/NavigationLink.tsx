@@ -41,10 +41,7 @@ const NavigationLink = React.memo(({
           : isLoading 
             ? 'bg-transparent text-black cursor-wait' 
             : 'text-black font-medium transition-colors duration-200'
-      } font-space-grotesk text-sm xl:text-base px-3 py-1 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2`}
-      aria-current={isActive ? 'page' : undefined}
-      aria-label={`Navigate to ${children}${isActive ? ' (current page)' : ''}${isLoading ? ' (loading)' : ''}`}
-      role="menuitem"
+      } font-space-grotesk text-sm xl:text-base px-3 py-1`}
     >
       {/* Vertex borders on hover - only show when not active and not loading */}
       <VertexCorners show={!isActive && !isLoading} />

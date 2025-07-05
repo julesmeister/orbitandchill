@@ -94,6 +94,7 @@ export async function POST(
     }
 
     // Log the promotion action
+    console.log(`✅ User promoted: ${currentUser.username} (${currentUser.role} → ${targetRole}) by ${adminContext.user.username}`);
 
     return NextResponse.json({
       success: true,

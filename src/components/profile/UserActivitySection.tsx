@@ -47,6 +47,7 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
       const activitiesResponse = await fetch(`/api/users/activity?userId=${userId}&limit=10`);
       if (activitiesResponse.ok) {
         const activitiesData = await activitiesResponse.json();
+        console.log('Fetched activities:', activitiesData.data.activities);
         setRecentActivities(activitiesData.data.activities || []);
       } else {
         console.warn('Failed to fetch user activity, using fallback data');

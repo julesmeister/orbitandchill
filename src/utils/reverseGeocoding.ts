@@ -45,6 +45,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Location
     const address = data.address;
     
     // Debug logging to see what we're getting
+    console.log('Reverse geocoding result:', {
       display_name: data.display_name,
       address: address
     });
@@ -99,6 +100,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Location
       }
     }
 
+    console.log('Final location result:', {
       city: finalCity,
       state,
       country,

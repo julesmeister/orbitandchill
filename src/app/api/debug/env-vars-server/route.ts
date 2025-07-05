@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // DEBUG: Check environment variables from server-side
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Server-side environment check...');
     
     const databaseUrl = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
     const tursoKeys = allEnvKeys.filter(key => key.includes('TURSO') || key.includes('turso'));
     const nodeEnv = process.env.NODE_ENV;
     
+    console.log('🔍 Environment variables found:', {
       hasDatabaseUrl: !!databaseUrl,
       hasAuthToken: !!authToken,
       databaseUrlLength: databaseUrl ? databaseUrl.length : 0,

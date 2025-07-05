@@ -93,6 +93,7 @@ export function useAdminSettings(selectedCategory: string, searchQuery: string) 
         showNotification('success', 'Settings saved successfully');
         
         // Dispatch custom event to notify other components of settings update
+        console.log('🔔 Dispatching adminSettingsUpdated event...');
         window.dispatchEvent(new CustomEvent('adminSettingsUpdated'));
       } else {
         showNotification('error', data.error || 'Failed to save settings');

@@ -293,6 +293,7 @@ export class PremiumFeatureService {
       const existingFeatures = await db.select().from(premiumFeatures);
       
       if (existingFeatures.length > 0) {
+        console.log('Premium features already exist, skipping seed');
         return;
       }
       
@@ -312,6 +313,7 @@ export class PremiumFeatureService {
       }));
       
       await db.insert(premiumFeatures).values(insertData);
+      console.log(`Seeded ${DEFAULT_FEATURES.length} premium features`);
     }, undefined);
   }
 

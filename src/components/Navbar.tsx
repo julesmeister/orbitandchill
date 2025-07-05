@@ -200,10 +200,7 @@ export default function Navbar() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-black transition-colors p-2 bg-white relative group min-h-[44px] min-w-[44px] flex items-center justify-center"
-                aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-                aria-expanded={isMenuOpen}
-                aria-controls="mobile-menu"
+                className="text-black transition-colors p-2 bg-white relative group"
               >
                 {/* Vertex borders on hover - visible corners */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">

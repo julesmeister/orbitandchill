@@ -46,6 +46,7 @@ export class AnalyticsNotificationService {
     try {
       const adminUserId = await this.getAdminUserId();
       if (!adminUserId) {
+        console.log('⚠️ Admin user not found, skipping analytics notification');
         return;
       }
 
@@ -66,6 +67,7 @@ export class AnalyticsNotificationService {
         }
       });
 
+      console.log(`📊 Analytics notification sent to admin for ${date}`);
     } catch (error) {
       console.error('Error sending daily aggregation notification:', error);
     }
@@ -78,6 +80,7 @@ export class AnalyticsNotificationService {
     try {
       const adminUserId = await this.getAdminUserId();
       if (!adminUserId) {
+        console.log('⚠️ Admin user not found, skipping analytics error notification');
         return;
       }
 
@@ -98,6 +101,7 @@ export class AnalyticsNotificationService {
         }
       });
 
+      console.log(`🚨 Analytics error notification sent to admin for ${date}`);
     } catch (error) {
       console.error('Error sending daily aggregation error notification:', error);
     }
@@ -132,6 +136,7 @@ export class AnalyticsNotificationService {
         }
       });
 
+      console.log(`${isSuccess ? '✅' : '❌'} Cron job notification sent to admin`);
     } catch (error) {
       console.error('Error sending cron job notification:', error);
     }
@@ -166,6 +171,7 @@ export class AnalyticsNotificationService {
         }
       });
 
+      console.log(`📈 Traffic spike notification sent to admin for ${date}`);
     } catch (error) {
       console.error('Error sending traffic spike notification:', error);
     }
@@ -199,6 +205,7 @@ export class AnalyticsNotificationService {
         }
       });
 
+      console.log('📊 Weekly summary notification sent to admin');
     } catch (error) {
       console.error('Error sending weekly summary notification:', error);
     }
@@ -232,6 +239,7 @@ export class AnalyticsNotificationService {
         }
       });
 
+      console.log(`${isHealthy ? '💚' : '🔴'} System health notification sent to admin`);
     } catch (error) {
       console.error('Error sending system health notification:', error);
     }

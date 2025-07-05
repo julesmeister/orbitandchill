@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   try {
     // Temporarily disable database imports to isolate issue
+    console.log('Tags API called');
     
     const searchParams = request.nextUrl.searchParams;
     const popularOnly = searchParams.get('popular') === 'true';

@@ -145,6 +145,7 @@ export function useGoogleAuth() {
 
         if (response.ok) {
           const result = await response.json();
+          console.log(`✅ User persisted to server database:`, {
             action: result.action,
             userId: googleUser.id,
             userType: 'google'
@@ -168,8 +169,10 @@ export function useGoogleAuth() {
             setTimeout(() => {
               const currentState = useUserStore.getState();
               if (currentState.user) {
+                console.log('✅ Local store updated with server user data, user persisted to localStorage');
               }
             }, 100);
+            console.log('✅ Local store updated with server user data');
           } else {
             // Fallback to local user data if server doesn't return user
             await updateUser({
@@ -182,6 +185,7 @@ export function useGoogleAuth() {
               createdAt: new Date(),
               updatedAt: new Date()
             });
+            console.log('✅ Local store updated with fallback user data');
           }
         } else {
           console.warn('⚠️ Failed to persist user to server database:', response.status);

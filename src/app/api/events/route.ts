@@ -4,14 +4,17 @@ import { EventService } from '@/db/services/eventService';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('📥 Events API GET endpoint called');
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
+    console.log('🔍 Request params:', {
       userId,
       allParams: Object.fromEntries(searchParams.entries())
     });
     const type = searchParams.get('type') as 'all' | 'benefic' | 'challenging' | 'neutral' | null;
     const tab = searchParams.get('tab') as 'all' | 'bookmarked' | 'manual' | null;
+    console.log('📊 Tab parameter:', tab || 'NOT_PROVIDED');
     const isGenerated = searchParams.get('isGenerated');
     const isBookmarked = searchParams.get('isBookmarked');
     const searchTerm = searchParams.get('searchTerm');
@@ -78,6 +81,7 @@ export async function GET(request: NextRequest) {
         filters.dateFrom = startDate.toISOString().split('T')[0];
         filters.dateTo = endDate.toISOString().split('T')[0];
         
+        console.log(`🗓️ Filtering events for month ${monthNum + 1}/${yearNum}: ${filters.dateFrom} to ${filters.dateTo}`);
       }
     }
 
@@ -85,6 +89,7 @@ export async function GET(request: NextRequest) {
     let events;
     // If no tab specified or tab is 'all', show all user's events
     const shouldUseAllBranch = (!tab || tab === 'all');
+    console.log('🔀 Branch decision:', {
       tab,
       isGenerated,
       isBookmarked,
@@ -221,6 +226,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('📝 Creating event via API with data:', {
       userId: body.userId,
       title: body.title,
       hasLocationData: !!(body.locationName || body.latitude || body.longitude),
@@ -238,6 +244,7 @@ export async function POST(request: NextRequest) {
     try {
       event = await EventService.createEvent(body);
       
+      console.log('💾 EventService.createEvent returned:', {
         hasEvent: !!event,
         eventId: event?.id,
         eventTitle: event?.title,

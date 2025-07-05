@@ -35,6 +35,7 @@ export function usePDFGeneration() {
     element: HTMLElement,
     quality: number
   ): Promise<HTMLCanvasElement> => {
+    console.log('Attempting direct capture of element:', {
       tagName: element.tagName,
       className: element.className,
       id: element.id,
@@ -52,12 +53,14 @@ export function usePDFGeneration() {
     const rect = element.getBoundingClientRect();
     
     // For direct capture, we want to preserve the original element's aspect ratio
+    console.log('Original element dimensions:', {
       width: rect.width,
       height: rect.height,
       aspectRatio: rect.width / rect.height
     });
     
     // Preserve original aspect ratio - don't force square
+    console.log('Preserving original aspect ratio:', {
       originalWidth: rect.width,
       originalHeight: rect.height,
       aspectRatio: rect.width / rect.height
@@ -75,11 +78,14 @@ export function usePDFGeneration() {
     ctx.fillRect(0, 0, rect.width, rect.height);
     
     const tagNameUpper = element.tagName.toUpperCase();
+    console.log('Element tagName:', element.tagName, 'normalized:', tagNameUpper, 'typeof:', typeof element.tagName);
     
     if (tagNameUpper === 'CANVAS') {
       // Direct canvas copy - preserve original dimensions
+      console.log('Copying canvas directly');
       const sourceCanvas = element as HTMLCanvasElement;
       
+      console.log('Source canvas dimensions:', {
         width: sourceCanvas.width,
         height: sourceCanvas.height,
         displayWidth: rect.width,
@@ -92,13 +98,16 @@ export function usePDFGeneration() {
       return canvas;
     } else if (tagNameUpper === 'SVG') {
       // Convert SVG to image
+      console.log('Converting SVG to canvas');
       const svgElement = element as unknown as SVGElement;
+      console.log('SVG element details:', {
         tagName: svgElement.tagName,
         nodeName: svgElement.nodeName,
         outerHTML: svgElement.outerHTML.substring(0, 200)
       });
       
       const svgData = new XMLSerializer().serializeToString(svgElement);
+      console.log('Serialized SVG data length:', svgData.length);
       
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
@@ -106,6 +115,7 @@ export function usePDFGeneration() {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
+          console.log('SVG loaded successfully as image');
           // Draw the SVG at original size
           ctx.drawImage(img, 0, 0, rect.width, rect.height);
           URL.revokeObjectURL(svgUrl);
@@ -120,11 +130,13 @@ export function usePDFGeneration() {
       });
     } else {
       // For container elements, look for canvas/svg children
+      console.log('Looking for chart children in container element');
       
       const childCanvas = element.querySelector('canvas');
       const childSvg = element.querySelector('svg');
       
       if (childCanvas) {
+        console.log('Found child canvas, copying it');
         const childRect = childCanvas.getBoundingClientRect();
         const parentRect = element.getBoundingClientRect();
         
@@ -135,6 +147,7 @@ export function usePDFGeneration() {
         ctx.drawImage(childCanvas, offsetX, offsetY, childRect.width, childRect.height);
         return canvas;
       } else if (childSvg) {
+        console.log('Found child SVG, converting it');
         const svgData = new XMLSerializer().serializeToString(childSvg);
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const svgUrl = URL.createObjectURL(svgBlob);
@@ -158,6 +171,7 @@ export function usePDFGeneration() {
           img.src = svgUrl;
         });
       } else {
+        console.log('No suitable child elements found in container');
         throw new Error(`Element type ${element.tagName} not supported for direct capture and no suitable children found`);
       }
     }
@@ -280,6 +294,7 @@ export function usePDFGeneration() {
       const actualWidth = canvas.width / quality;  // Divide by quality to get original size
       const actualHeight = canvas.height / quality;
       
+      console.log('Canvas dimensions for PDF:', {
         canvasWidth: canvas.width,
         canvasHeight: canvas.height,
         quality: quality,
@@ -292,6 +307,7 @@ export function usePDFGeneration() {
       const finalWidth = actualWidth;
       const finalHeight = actualHeight;
       
+      console.log('Using original dimensions:', {
         width: finalWidth,
         height: finalHeight,
         aspectRatio: finalWidth / finalHeight
@@ -323,6 +339,7 @@ export function usePDFGeneration() {
       const scaledWidth = imgWidthMm * scale;
       const scaledHeight = imgHeightMm * scale;
       
+      console.log('PDF scaling details:', {
         originalSize: { width: actualWidth, height: actualHeight },
         finalSize: { width: finalWidth, height: finalHeight },
         originalSizeMm: { width: imgWidthMm, height: imgHeightMm },
@@ -361,6 +378,7 @@ export function usePDFGeneration() {
         yOffset = margins.top;
       }
       
+      console.log('PDF positioning:', {
         xOffset,
         yOffset,
         scaledWidth,
@@ -432,6 +450,7 @@ export function usePDFGeneration() {
             const naturalHeight = img.naturalHeight || img.height;
             const aspectRatio = naturalWidth / naturalHeight;
             
+            console.log('SVG image dimensions:', {
               naturalWidth,
               naturalHeight,
               aspectRatio,
@@ -451,6 +470,7 @@ export function usePDFGeneration() {
               canvas.height = canvasSize;
             }
 
+            console.log('Canvas created with dimensions:', {
               width: canvas.width,
               height: canvas.height,
               aspectRatio: canvas.width / canvas.height
@@ -497,6 +517,7 @@ export function usePDFGeneration() {
             const xOffset = margins + (availableWidth - pdfWidth) / 2;
             const yOffset = margins + (availableHeight - pdfHeight) / 2;
             
+            console.log('PDF layout:', {
               canvasAspectRatio,
               availableSize: { width: availableWidth, height: availableHeight },
               pdfSize: { width: pdfWidth, height: pdfHeight },
@@ -555,11 +576,13 @@ export function usePDFGeneration() {
     // First try to find SVG content directly (like PNG does)
     const svgElement = document.querySelector('svg');
     if (svgElement) {
+      console.log('Found SVG element, using direct SVG approach');
       const svgData = new XMLSerializer().serializeToString(svgElement);
       return generateSVGBasedPDF(svgData, chartName);
     }
 
     // Fallback to element-based approach
+    console.log('No SVG found, using element detection approach');
     
     // Look for chart elements in a more reliable way
     let chartElement: HTMLElement | null = null;
@@ -585,6 +608,7 @@ export function usePDFGeneration() {
       }
       
       if (bestCanvas) {
+        console.log('Found canvas element for PDF:', {
           width: bestCanvas.offsetWidth,
           height: bestCanvas.offsetHeight,
           tagName: bestCanvas.tagName
@@ -658,6 +682,7 @@ export function usePDFGeneration() {
       return bestElement;
     };
     
+    console.log('Starting chart element search...');
     chartElement = findChartElement();
     
     if (!chartElement) {
@@ -698,6 +723,7 @@ export function usePDFGeneration() {
       };
     }
     
+    console.log('Found chart element:', {
       tagName: chartElement.tagName,
       className: chartElement.className,
       id: chartElement.id,

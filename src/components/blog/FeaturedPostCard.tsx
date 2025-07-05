@@ -88,12 +88,12 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
           {/* Author */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <Image
+              <img
                 src={post.authorAvatar}
                 alt={post.author}
                 width={40}
                 height={40}
-                className="mr-3 object-cover rounded-full"
+                className="mr-3 object-cover"
                 onError={(e) => {
                   e.currentTarget.src = '/images/default-avatar.svg';
                 }}

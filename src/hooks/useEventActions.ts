@@ -41,12 +41,14 @@ export const useEventActions = (options: UseEventActionsOptions) => {
       cancelText: "Cancel",
       confirmButtonColor: "red",
       onConfirm: async () => {
+        console.log('🗑️ Deleting event:', id);
 
         // Show loading status
         showLoading("Deleting Event", "Removing event from your calendar...");
 
         try {
           await deleteEvent(id, user.id);
+          console.log('✅ Event deleted successfully');
 
           // Show success message
           showSuccess(
@@ -114,6 +116,7 @@ export const useEventActions = (options: UseEventActionsOptions) => {
   };
 
   const handleClearAllEvents = (currentDate: Date) => {
+    console.log('🔄 handleClearAllEvents called, user:', user?.id);
 
     if (!user?.id) {
       console.error('❌ No user ID available for clearing events');
@@ -128,16 +131,23 @@ export const useEventActions = (options: UseEventActionsOptions) => {
       cancelText: "Cancel",
       confirmButtonColor: "red",
       onConfirm: async () => {
+        console.log('🔄 Confirmation accepted, clearing events for user:', user?.id);
 
         // Show loading status
         showLoading("Clearing Events", "Removing generated events from your calendar...");
 
         if (user?.id) {
           try {
+            console.log('🔄 About to call clearGeneratedEvents...');
             await clearGeneratedEvents(user.id);
+            console.log('✅ clearGeneratedEvents completed successfully');
 
             // Force reload current month after clearing
+            console.log('🔄 Reloading current month events after clear...');
+            console.log('🔍 About to reload month events for user ID:', user.id);
             await loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
+            console.log('✅ Month events reloaded after clear');
+            console.log('📊 Events count after reload:', events.length);
 
             // Show success message with more detail
             showSuccess(

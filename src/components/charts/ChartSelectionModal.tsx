@@ -20,9 +20,14 @@ export default function ChartSelectionModal({ isOpen, onClose, onChartSelect }: 
   const { user } = useUserStore();
   const { cachedChart, generateChart } = useNatalChart();
 
+  console.log('ChartSelectionModal render - isOpen:', isOpen);
+
   if (!isOpen) {
+    console.log('Modal not open, returning null');
     return null;
   }
+
+  console.log('Modal should be visible now');
 
   const handleGenerateAndAttach = async (chartType: 'natal' | 'horary' | 'event') => {
     if (!user) return;

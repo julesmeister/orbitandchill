@@ -89,12 +89,12 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         {/* Author */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Image
+            <img
               src={post.authorAvatar}
               alt={post.author}
               width={32}
               height={32}
-              className="mr-3 object-cover rounded-full"
+              className="mr-3 object-cover"
               onError={(e) => {
                 e.currentTarget.src = '/images/default-avatar.svg';
               }}

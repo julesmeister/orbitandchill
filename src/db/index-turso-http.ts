@@ -21,6 +21,7 @@ async function initializeTurso() {
     // If environment variables are missing, try to load them manually from .env.local
     // Only attempt this on server-side (Node.js environment)
     if (!databaseUrl || !authToken) {
+      console.log('🔍 Environment variables missing, attempting manual load...');
       
       // Check if we're in a server environment (Node.js)
       if (typeof window === 'undefined' && typeof process !== 'undefined' && process.cwd) {
@@ -39,9 +40,11 @@ async function initializeTurso() {
                 const value = valueParts.join('=').trim();
                 if (key.trim() === 'TURSO_DATABASE_URL' && !databaseUrl) {
                   databaseUrl = value;
+                  console.log('✅ Loaded TURSO_DATABASE_URL from .env.local');
                 }
                 if (key.trim() === 'TURSO_AUTH_TOKEN' && !authToken) {
                   authToken = value;
+                  console.log('✅ Loaded TURSO_AUTH_TOKEN from .env.local');
                 }
               }
             }
@@ -50,6 +53,7 @@ async function initializeTurso() {
           console.warn('⚠️ Could not manually load .env.local:', loadError);
         }
       } else {
+        console.log('🌐 Running in browser environment, skipping .env.local file loading');
       }
     }
     
@@ -98,6 +102,7 @@ async function initializeTurso() {
         minConnections: 2,
         acquireTimeoutMs: 10000
       });
+      console.log('✅ Connection pool initialized successfully');
     } catch (poolError) {
       console.warn('⚠️ Connection pool initialization failed, falling back to single client:', poolError);
     }
@@ -976,6 +981,7 @@ export async function initializeDatabase() {
     // Turso database ready
     return { client, db };
   } else {
+    console.log('⚠️  Database not available, using fallback mode');
     return { client: null, db: null };
   }
 }
@@ -994,6 +1000,7 @@ async function createTablesIfNeeded() {
     const horaryResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="horary_questions"');
     
     if (discussionsResult.rows.length === 0 || repliesResult.rows.length === 0 || eventsResult.rows.length === 0 || horaryResult.rows.length === 0) {
+      console.log('📋 Creating/recreating database schema...');
       
       // Create basic tables for now
       await client.execute(`
@@ -1287,11 +1294,13 @@ async function createTablesIfNeeded() {
         )
       `);
       
+      console.log('✅ All tables (including analytics, charts, premium features, astrological events, audit logs, account deletion, and horary questions) created successfully');
     } else {
       // Some tables exist, checking astrological_events specifically
       
       // Force create astrological_events table if it doesn't exist
       if (eventsResult.rows.length === 0) {
+        console.log('🔧 Creating missing astrological_events table...');
         await client.execute(`
           CREATE TABLE IF NOT EXISTS astrological_events (
             id TEXT PRIMARY KEY,
@@ -1321,6 +1330,7 @@ async function createTablesIfNeeded() {
       
       // Force create horary_questions table if it doesn't exist
       if (horaryResult.rows.length === 0) {
+        console.log('🔧 Creating missing horary_questions table...');
         await client.execute(`
           CREATE TABLE IF NOT EXISTS horary_questions (
             id TEXT PRIMARY KEY,
@@ -1354,7 +1364,9 @@ async function createTablesIfNeeded() {
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
           )
         `);
+        console.log('✅ horary_questions table created successfully');
       } else {
+        console.log('✅ horary_questions table already exists');
       }
     }
   } catch (error) {
@@ -1404,6 +1416,7 @@ export function getConnectionPoolInstance() {
 // Enable connection pool at runtime
 export async function enableConnectionPool() {
   if (isUsingConnectionPool()) {
+    console.log('Connection pool already enabled');
     return true;
   }
 
@@ -1415,6 +1428,7 @@ export async function enableConnectionPool() {
       throw new Error('Missing database credentials');
     }
 
+    console.log('🔄 Enabling connection pool at runtime...');
     const { initializeConnectionPool, executePooledQuery } = await import('./connectionPool');
     
     const pool = await initializeConnectionPool(databaseUrl, authToken, {
@@ -1428,6 +1442,7 @@ export async function enableConnectionPool() {
 
     // Test the pool
     await executePooledQuery('SELECT 1 as test');
+    console.log('✅ Connection pool enabled successfully');
 
     // Replace the client with a pooled version
     const oldClient = client;

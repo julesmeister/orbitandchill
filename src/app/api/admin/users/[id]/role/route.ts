@@ -102,6 +102,8 @@ export async function PATCH(
       changes.push('permissions updated');
     }
 
+    console.log(`🔄 User modified: ${currentUser.username} (${changes.join(', ')}) by ${adminContext.user.username}`);
+
     return NextResponse.json({
       success: true,
       message: `User ${changes.length > 0 ? 'updated successfully' : 'no changes made'}`,

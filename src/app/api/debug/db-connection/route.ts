@@ -4,10 +4,12 @@ import { NextRequest, NextResponse } from 'next/server';
 // DEBUG: Test direct database connection
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 DEBUG: Testing direct database connection...');
     
     const databaseUrl = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
     
+    console.log('🔍 Environment variables:', {
       hasDatabaseUrl: !!databaseUrl,
       hasAuthToken: !!authToken,
       databaseUrlLength: databaseUrl?.length,
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Try to create a direct connection
+    console.log('🔍 Creating libsql client...');
     const { createClient } = await import('@libsql/client/http');
     
     const client = createClient({
@@ -33,14 +36,18 @@ export async function GET(request: NextRequest) {
       authToken: authToken,
     });
     
+    console.log('🔍 Testing connection with simple query...');
     const result = await client.execute('SELECT 1 as test');
+    console.log('✅ Connection test successful:', result);
     
     // Try to list tables
+    console.log('🔍 Listing tables...');
     const tablesResult = await client.execute(
       'SELECT name FROM sqlite_master WHERE type="table" ORDER BY name'
     );
     
     const tables = tablesResult.rows?.map(row => row.name) || [];
+    console.log('📊 Found tables:', tables);
     
     return NextResponse.json({
       success: true,

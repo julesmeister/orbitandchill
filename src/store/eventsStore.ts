@@ -149,12 +149,14 @@ export const useEventsStore = create<EventsState>()(
         const cacheExpiry = 10 * 60 * 1000; // 10 minutes cache
         
         if (cached && (Date.now() - cached.loadedAt < cacheExpiry)) {
+          console.log(`📋 Using cached events for ${monthKey} (${cached.events.length} events)`);
           set({ events: cached.events });
           return;
         }
 
         try {
           set({ isLoading: true, error: null });
+          console.log(`🔄 Loading events for ${monthKey} (month: ${month}, year: ${year})`);
           
           const params = new URLSearchParams({
             userId,
@@ -197,6 +199,7 @@ export const useEventsStore = create<EventsState>()(
               loadedMonths: new Set([...get().loadedMonths, monthKey])
             });
             
+            console.log(`✅ Loaded and cached ${data.events.length} events for ${monthKey}`);
           } else {
             throw new Error(data.error || 'Failed to load month events');
           }
@@ -310,9 +313,11 @@ export const useEventsStore = create<EventsState>()(
         
         const duplicateCount = newEvents.length - uniqueNewEvents.length;
         if (duplicateCount > 0) {
+          console.log(`🔄 Deduplicated ${duplicateCount} duplicate events out of ${newEvents.length}`);
         }
         
         if (uniqueNewEvents.length === 0) {
+          console.log('✅ No new unique events to add locally');
           return;
         }
         
@@ -327,6 +332,8 @@ export const useEventsStore = create<EventsState>()(
           events: [...eventsWithLocalIds, ...state.events] 
         }));
         
+        console.log(`✅ Added ${eventsWithLocalIds.length} events to local state (no database save)`);
+        console.log(`📊 Total events in store after local add: ${get().events.length}`);
       },
 
       // Add multiple events via API using bulk endpoint
@@ -350,9 +357,11 @@ export const useEventsStore = create<EventsState>()(
           
           const duplicateCount = newEvents.length - uniqueNewEvents.length;
           if (duplicateCount > 0) {
+            console.log(`🔄 Deduplicated ${duplicateCount} duplicate events out of ${newEvents.length}`);
           }
           
           if (uniqueNewEvents.length === 0) {
+            console.log('✅ No new unique events to add');
             return;
           }
           
@@ -388,6 +397,9 @@ export const useEventsStore = create<EventsState>()(
           }
           
           // Debug: Log events being sent to API
+          console.log(`📤 Sending ${uniqueNewEvents.length} validated unique events to bulk API:`);
+          console.log('First event sample:', JSON.stringify(uniqueNewEvents[0], null, 2));
+          console.log('Event structure check:', {
             hasUserId: !!uniqueNewEvents[0]?.userId,
             hasTitle: !!uniqueNewEvents[0]?.title,
             hasDate: !!uniqueNewEvents[0]?.date,
@@ -414,11 +426,13 @@ export const useEventsStore = create<EventsState>()(
               }));
               
               if (data.localOnly) {
+                console.log(`⚠️ Events created as local-only: ${data.events.length} events (database unavailable)`);
                 // Set a warning that will be handled by the UI
                 set({ 
                   error: `Events generated successfully but database is unavailable. ${data.events.length} events are stored locally and may not persist between sessions.`
                 });
               } else {
+                console.log(`✅ Successfully saved ${data.events.length} events to database`);
               }
             } else {
               throw new Error(data.error || 'Bulk creation failed');
@@ -568,6 +582,7 @@ export const useEventsStore = create<EventsState>()(
           if (storedData) {
             const parsedData = JSON.parse(storedData);
             if (parsedData.state && parsedData.state.events) {
+              console.log('🧹 Clearing persisted events from localStorage...');
               delete parsedData.state.events;
               localStorage.setItem('luckstrology-events-storage', JSON.stringify(parsedData));
             }
@@ -580,7 +595,9 @@ export const useEventsStore = create<EventsState>()(
       clearGeneratedEvents: async (userId: string, targetDate?: Date) => {
         try {
           set({ error: null });
-
+          
+          console.log(`🗑️ Clearing generated events for user ${userId}${targetDate ? ` for ${targetDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : ' (all months)'}...`);
+          
           // Clear any persisted events from localStorage first
           const { clearPersistedEvents } = get();
           clearPersistedEvents();
@@ -635,8 +652,10 @@ export const useEventsStore = create<EventsState>()(
             }
             
             const data = await response.json();
+            console.log(`🔄 API Response:`, data);
             
             if (data.success) {
+              console.log(`✅ Successfully cleared ${data.deletedCount} generated events from database`);
               
               // Get current state for before/after comparison
               const currentState = get();
@@ -677,8 +696,11 @@ export const useEventsStore = create<EventsState>()(
               const afterState = get();
               const afterCount = afterState.events.length;
               const localRemovedCount = beforeCount - afterCount;
-
+              
+              console.log(`🔄 Local state updated: ${beforeCount} → ${afterCount} events (removed ${localRemovedCount} locally)`);
+              
               // Reload events from database to ensure consistency
+              console.log('🔄 Reloading events from database to ensure consistency...');
               const { loadEvents } = get();
               await loadEvents(userId);
               
@@ -713,6 +735,7 @@ export const useEventsStore = create<EventsState>()(
         }
       },
 
+      
       setShowCalendar: (show) => set({ showCalendar: show }),
       
       setCurrentDate: (date) => set({ currentDate: date }),

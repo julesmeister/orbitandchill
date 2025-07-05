@@ -119,11 +119,14 @@ export class LuckstrologyDatabase extends Dexie {
   }
 
   async getCurrentUserProfile(): Promise<UserProfile | null> {
+    console.log("🔍 [getCurrentUserProfile] Fetching current user profile from IndexedDB");
     try {
       // Get the most recently updated profile
       const profiles = await this.userProfiles.toArray();
+      console.log("🔍 [getCurrentUserProfile] Found profiles in database:", profiles.length);
       
       if (profiles.length === 0) {
+        console.log("🔍 [getCurrentUserProfile] No profiles found in database");
         return null;
       }
 
@@ -134,6 +137,7 @@ export class LuckstrologyDatabase extends Dexie {
       );
       
       const mostRecentProfile = profiles[0];
+      console.log("🔍 [getCurrentUserProfile] Most recent profile:", mostRecentProfile);
       return mostRecentProfile;
     } catch (error) {
       console.error('🔍 [getCurrentUserProfile] Error fetching profile:', error);
@@ -143,6 +147,8 @@ export class LuckstrologyDatabase extends Dexie {
 
   // Utility method to convert UserProfile to User type
   userProfileToUser(profile: UserProfile): import("../types/user").User {
+    console.log("🔍 [userProfileToUser] Converting profile to user:", profile);
+    console.log("🔍 [userProfileToUser] Profile date fields:", {
       createdAt: profile.createdAt,
       createdAtType: typeof profile.createdAt,
       updatedAt: profile.updatedAt,
@@ -186,6 +192,8 @@ export class LuckstrologyDatabase extends Dexie {
       }
     };
     
+    console.log("🔍 [userProfileToUser] Final user object:", user);
+    console.log("🔍 [userProfileToUser] User date field types after conversion:", {
       createdAtType: typeof user.createdAt,
       createdAtIsDate: user.createdAt instanceof Date,
       updatedAtType: typeof user.updatedAt,
@@ -197,6 +205,8 @@ export class LuckstrologyDatabase extends Dexie {
 
   // Utility method to convert User type to UserProfile for storage
   userToUserProfile(user: import("../types/user").User): UserProfile {
+    console.log("🔍 [userToUserProfile] Converting user to profile:", user);
+    console.log("🔍 [userToUserProfile] Date field types:", {
       createdAt: user.createdAt,
       createdAtType: typeof user.createdAt,
       createdAtIsDate: user.createdAt instanceof Date,
@@ -236,6 +246,7 @@ export class LuckstrologyDatabase extends Dexie {
       showOnlineStatus: user.privacy.showOnlineStatus,
     };
     
+    console.log("🔍 [userToUserProfile] Final profile object:", profile);
     return profile;
   }
 

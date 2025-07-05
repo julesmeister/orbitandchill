@@ -5,6 +5,8 @@ import { db } from '@/db';
 // DEBUG: Manually create horary_questions table
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔧 DEBUG: Manual horary_questions table creation started');
+    console.log('🔍 Database instance available:', !!db);
     
     if (!db) {
       return NextResponse.json({
@@ -18,11 +20,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if table already exists
+    console.log('🔍 Checking if horary_questions table exists...');
     const existsResult = await db.client.execute(
       'SELECT name FROM sqlite_master WHERE type="table" AND name="horary_questions"'
     );
     
     const tableExists = existsResult.rows && existsResult.rows.length > 0;
+    console.log('📊 Table existence check:', { tableExists, rowsFound: existsResult.rows?.length });
 
     if (tableExists) {
       return NextResponse.json({
@@ -36,6 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the table
+    console.log('🔧 Creating horary_questions table...');
     await db.client.execute(`
       CREATE TABLE IF NOT EXISTS horary_questions (
         id TEXT PRIMARY KEY,
@@ -70,12 +75,15 @@ export async function POST(request: NextRequest) {
       )
     `);
 
+    console.log('✅ horary_questions table created successfully');
+
     // Verify the table was created
     const verifyResult = await db.client.execute(
       'SELECT name FROM sqlite_master WHERE type="table" AND name="horary_questions"'
     );
     
     const createdSuccessfully = verifyResult.rows && verifyResult.rows.length > 0;
+    console.log('✅ Table creation verified:', { createdSuccessfully });
 
     return NextResponse.json({
       success: true,

@@ -87,6 +87,7 @@ export default function AstrocartographyLines({
 }: AstrocartographyLinesProps) {
   
   // Debug logging
+  console.log('AstrocartographyLines Props:', {
     birthData: birthData ? 'present' : 'missing',
     planetaryDataCount: planetaryData.length,
     planetaryData,
@@ -103,6 +104,7 @@ export default function AstrocartographyLines({
       visiblePlanets.includes(planet.name)
     );
 
+    console.log('AstrocartographyLines Calculation:', {
       allPlanets: planetaryData,
       validPlanets,
       visiblePlanets,
@@ -110,6 +112,7 @@ export default function AstrocartographyLines({
     });
 
     if (validPlanets.length === 0) {
+      console.log('No valid planets for astrocartography calculation');
       return null;
     }
 
@@ -122,6 +125,7 @@ export default function AstrocartographyLines({
       birthData
     );
 
+    console.log('Astrocartography calculation result:', result);
     return result;
   }, [birthData, planetaryData, visiblePlanets]);
 
@@ -133,6 +137,7 @@ export default function AstrocartographyLines({
       
       // Log correction details for debugging
       if (process.env.NODE_ENV === 'development') {
+        console.log(`Coordinate conversion: (${lat.toFixed(3)}, ${lng.toFixed(3)}) → (${result.x.toFixed(1)}, ${result.y.toFixed(1)}) [zone: ${result.zoneUsed}]`);
       }
       
       return { x: result.x, y: result.y };
@@ -204,6 +209,8 @@ export default function AstrocartographyLines({
       });
     });
 
+    console.log('AstrocartographyLines: Generated SVG paths:', paths);
+    
     return paths;
   }, [astrocartographyData, geoToSVG, visibleLineTypes]);
 
@@ -225,6 +232,7 @@ export default function AstrocartographyLines({
     );
   }
 
+  console.log('AstrocartographyLines: Final render:', {
     svgPathsCount: svgPaths.length,
     mapDimensions,
     astrocartographyData: !!astrocartographyData

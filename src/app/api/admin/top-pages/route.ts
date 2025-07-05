@@ -7,7 +7,9 @@ import { initializeDatabase } from '@/db/index';
 export async function GET(request: NextRequest) {
   try {
     await initializeDatabase();
-
+    
+    console.log('📊 API: Loading real top pages data...');
+    
     // ENHANCED APPROACH: Get page data from both traffic aggregation and user activities
     
     // Method 1: Try to get from traffic data (stored during aggregation)
@@ -33,6 +35,7 @@ export async function GET(request: NextRequest) {
     
     // Method 2: If no aggregated data, try user activities (fallback)
     if (totalViews === 0) {
+      console.log('📊 API: No aggregated page data found, checking user activities...');
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
@@ -57,7 +60,9 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 10); // Top 10 pages
-
+    
+    console.log(`📊 API: Found ${pages.length} pages with ${totalViews} total views from ${totalViews > 0 ? 'aggregated traffic data' : 'user activities'}`);
+    
     // Return real data if we have any
     if (pages.length > 0) {
       return NextResponse.json({
@@ -69,6 +74,7 @@ export async function GET(request: NextRequest) {
     }
     
     // No page-level data found, return empty instead of fallback
+    console.log('⚠️ API: No page-level data found, returning empty data');
     
     return NextResponse.json({
       success: true,

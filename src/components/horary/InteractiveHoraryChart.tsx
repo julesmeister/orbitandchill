@@ -91,6 +91,7 @@ const InteractiveHoraryChart: React.FC<InteractiveHoraryChartProps> = ({
         // Priority 3: convertToNatalFormat will fallback to London if no coordinates provided
 
         // Debug logging to verify location usage
+        console.log('🗺️ Horary Chart Location Debug:', {
           questionId: question?.id,
           customLocation: question?.customLocation,
           birthDataCoordinates: user?.birthData?.coordinates,
@@ -176,6 +177,7 @@ const InteractiveHoraryChart: React.FC<InteractiveHoraryChartProps> = ({
 
     // Debug logging for Ascendant position
     if (Math.abs(astroLongitude - ascendantLongitude) < 1) {
+      console.log(`🎯 Ascendant Debug:`, {
         ascendantLongitude,
         astroLongitude,
         relativeAngle,
@@ -356,6 +358,8 @@ const InteractiveHoraryChart: React.FC<InteractiveHoraryChartProps> = ({
     setTooltip(prev => ({ ...prev, visible: false }));
   };
 
+
+
   return (
     <div
       ref={containerRef}
@@ -402,6 +406,7 @@ const InteractiveHoraryChart: React.FC<InteractiveHoraryChartProps> = ({
             ))}
           </g>
 
+
           {/* Angular markers (ASC, DSC, MC, IC) */}
           <AngularMarkers
             houses={processedHouses}
@@ -409,6 +414,7 @@ const InteractiveHoraryChart: React.FC<InteractiveHoraryChartProps> = ({
             onMouseEnter={handleAngularMarkerHover}
             onMouseLeave={handleHoverEnd}
           />
+
 
           {/* Planet information stack - from outer to inner - using unified coordinates */}
           <PlanetInfoStack

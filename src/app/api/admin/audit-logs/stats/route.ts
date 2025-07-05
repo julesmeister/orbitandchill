@@ -9,7 +9,9 @@ export async function GET(request: NextRequest) {
     // Get the number of days for statistics (default: 30)
     const days = parseInt(searchParams.get('days') || '30');
     const validDays = Math.min(Math.max(days, 1), 365); // Between 1 and 365 days
-
+    
+    console.log(`📊 Fetching audit log statistics for last ${validDays} days`);
+    
     const statistics = await AdminAuditService.getStatistics(validDays);
     
     return NextResponse.json({

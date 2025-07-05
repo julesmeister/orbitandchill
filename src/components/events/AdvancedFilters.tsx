@@ -135,6 +135,7 @@ export default function AdvancedFilters({
                     <button
                       key={option.value}
                       onClick={() => {
+                        console.log(`${filter.label} ${option.label} clicked, current filter:`, currentValue);
                         setAdvancedFilterState(filter.key, option.value);
                       }}
                       className={`px-2 py-1 text-xs font-medium transition-all duration-200 rounded ${

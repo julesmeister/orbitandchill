@@ -2,7 +2,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import VoteButtons from '@/components/reusable/VoteButtons';
 import { createCleanExcerpt } from '@/utils/textUtils';
 
@@ -74,11 +73,9 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
           {thumbnailImage && (
             <div className="mb-3">
               <Link href={`/discussions/${discussion.slug}`}>
-                <Image 
+                <img 
                   src={thumbnailImage} 
                   alt={discussion.title}
-                  width={400}
-                  height={128}
                   className="w-full h-32 object-cover border border-black hover:opacity-90 transition-opacity"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
@@ -175,11 +172,9 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
               {thumbnailImage && (
                 <div className="float-right ml-4 mb-2">
                   <Link href={`/discussions/${discussion.slug}`}>
-                    <Image 
+                    <img 
                       src={thumbnailImage} 
                       alt={discussion.title}
-                      width={96}
-                      height={96}
                       className="w-24 h-24 object-cover border border-black hover:opacity-90 transition-opacity"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';

@@ -164,6 +164,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AdminLogi
     }
 
     // Log successful admin login
+    console.log(`✅ Admin login successful: ${user.username} (${user.email}) from ${ipAddress}`);
 
     return NextResponse.json({
       success: true,

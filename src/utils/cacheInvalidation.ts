@@ -24,6 +24,7 @@ export async function clearAllNatalChartCaches(userId: string): Promise<void> {
       await db.cache.delete(key);
     }
 
+    console.log(`Cleared ${natalChartCacheKeys.length} natal chart caches for user ${userId}`);
   } catch (error) {
     console.error('Error clearing natal chart caches:', error);
     throw error;
@@ -42,6 +43,7 @@ export async function clearSpecificNatalChartCache(
 ): Promise<void> {
   const cacheKey = `natal_chart_${personId}_${dateOfBirth}_${timeOfBirth}_${lat}_${lon}`;
   await db.cache.delete(cacheKey);
+  console.log(`Cleared cache for key: ${cacheKey}`);
 }
 
 /**
@@ -83,6 +85,7 @@ export async function clearOutdatedNatalChartCaches(): Promise<number> {
       }
     }
 
+    console.log(`Cleared ${clearedCount} outdated natal chart caches`);
     return clearedCount;
   } catch (error) {
     console.error('Error clearing outdated caches:', error);

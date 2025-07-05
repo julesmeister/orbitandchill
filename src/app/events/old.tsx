@@ -288,6 +288,7 @@ export default function EventsPage() {
                     updateProgress(75, "Validating event data...");
 
                     // Add detailed logging for debugging the validation issue
+                    console.log(`📋 About to save ${newEvents.length} events to database:`, {
                         eventCount: newEvents.length,
                         firstEvent: newEvents[0] ? {
                             userId: newEvents[0].userId,
@@ -358,6 +359,7 @@ export default function EventsPage() {
         }
     };
 
+
     const handleAddEvent = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newEvent.title || !newEvent.date) return;
@@ -368,6 +370,7 @@ export default function EventsPage() {
             return;
         }
 
+        console.log('🚀 Starting manual event creation:', {
             title: newEvent.title,
             date: newEvent.date,
             time: newEvent.time,
@@ -395,18 +398,23 @@ export default function EventsPage() {
                 longitude
             });
 
+            console.log('📊 Analyzed event data:', analyzedEvent);
+
             // Add userId to the event before saving
             const eventWithUserId = {
                 ...analyzedEvent,
                 userId: user?.id || 'anonymous'
             };
 
+            console.log('💾 Event to be saved:', {
                 ...eventWithUserId,
                 isGenerated: eventWithUserId.isGenerated,
                 userId: eventWithUserId.userId
             });
 
             await addEvent(eventWithUserId);
+
+            console.log('✅ Event saved successfully, now updating UI...');
 
             // Reset form and hide it
             setNewEvent({ title: '', date: '', time: '', description: '' });
@@ -416,12 +424,15 @@ export default function EventsPage() {
             setShowCalendar(false);
 
             // Switch to manual events tab to show the newly added event
+            console.log('🔄 Switching to manual tab and reloading events...');
             setSelectedTab('manual');
 
             // Force reload events after a short delay to ensure database save is complete
             setTimeout(async () => {
                 if (user?.id) {
+                    console.log('🔄 Force reloading events after manual event creation...');
                     await useEventsStore.getState().loadEvents(user.id);
+                    console.log('📊 Events after reload:', useEventsStore.getState().events.length);
 
                     // Scroll to EventsTable
                     const eventsTable = document.querySelector('[data-events-table]');
@@ -449,12 +460,15 @@ export default function EventsPage() {
                 createdAt: new Date().toISOString()
             };
 
+            console.log('🔄 Using fallback basic event:', {
                 ...basicEvent,
                 isGenerated: basicEvent.isGenerated,
                 userId: basicEvent.userId
             });
 
             await addEvent(basicEvent);
+
+            console.log('✅ Fallback event saved successfully, now updating UI...');
 
             // Reset form and hide it
             setNewEvent({ title: '', date: '', time: '', description: '' });
@@ -464,12 +478,15 @@ export default function EventsPage() {
             setShowCalendar(false);
 
             // Switch to manual events tab to show the newly added event
+            console.log('🔄 Switching to manual tab and reloading events...');
             setSelectedTab('manual');
 
             // Force reload events after a short delay to ensure database save is complete
             setTimeout(async () => {
                 if (user?.id) {
+                    console.log('🔄 Force reloading events after fallback event creation...');
                     await useEventsStore.getState().loadEvents(user.id);
+                    console.log('📊 Events after reload:', useEventsStore.getState().events.length);
 
                     // Scroll to EventsTable
                     const eventsTable = document.querySelector('[data-events-table]');
@@ -499,12 +516,14 @@ export default function EventsPage() {
             cancelText: "Cancel",
             confirmButtonColor: "red",
             onConfirm: async () => {
+                console.log('🗑️ Deleting event:', id);
 
                 // Show loading status
                 showLoading("Deleting Event", "Removing event from your calendar...");
 
                 try {
                     await deleteEvent(id, user.id);
+                    console.log('✅ Event deleted successfully');
 
                     // Show success message
                     showSuccess(
@@ -574,11 +593,13 @@ export default function EventsPage() {
     // Handle month changes from calendar navigation
     const handleMonthChange = useCallback(async (month: number, year: number) => {
         if (user?.id) {
+            console.log(`📅 Month changed to ${month + 1}/${year}, loading events...`);
             await loadMonthEvents(user.id, month, year);
         }
     }, [user?.id, loadMonthEvents]);
 
     const handleClearAllEvents = () => {
+        console.log('🔄 handleClearAllEvents called, user:', user?.id);
 
         if (!user?.id) {
             console.error('❌ No user ID available for clearing events');
@@ -593,16 +614,23 @@ export default function EventsPage() {
             cancelText: "Cancel",
             confirmButtonColor: "red",
             onConfirm: async () => {
+                console.log('🔄 Confirmation accepted, clearing events for user:', user?.id);
 
                 // Show loading status
                 showLoading("Clearing Events", "Removing generated events from your calendar...");
 
                 if (user?.id) {
                     try {
+                        console.log('🔄 About to call clearGeneratedEvents...');
                         await clearGeneratedEvents(user.id);
+                        console.log('✅ clearGeneratedEvents completed successfully');
 
                         // Force reload current month after clearing
+                        console.log('🔄 Reloading current month events after clear...');
+                        console.log('🔍 About to reload month events for user ID:', user.id);
                         await loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
+                        console.log('✅ Month events reloaded after clear');
+                        console.log('📊 Events count after reload:', events.length);
 
                         // Show success message with more detail
                         showSuccess(
@@ -623,6 +651,7 @@ export default function EventsPage() {
         });
     };
 
+
     const handleEventClick = (event: AstrologicalEvent) => {
         const params = new URLSearchParams({
             date: event.date,
@@ -641,6 +670,7 @@ export default function EventsPage() {
 
         router.push(`/event-chart?${params.toString()}`);
     };
+
 
     return (
         <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
@@ -826,6 +856,7 @@ export default function EventsPage() {
                                     </button>
                                 </div>
 
+
                                 {/* Compact Priority Selection */}
                                 <div className="space-y-4">
                                     <p className="text-sm text-black/70 font-inter">
@@ -1010,6 +1041,7 @@ export default function EventsPage() {
                         </div>
                     </section>
                 )}
+
 
                 {/* Main Content */}
                 <section className="px-6 md:px-12 lg:px-20 py-12">

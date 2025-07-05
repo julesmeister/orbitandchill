@@ -339,6 +339,7 @@ class MemoryPressureManager {
 
       // 2. Create emergency memory dump if possible
       if (process.env.NODE_ENV === 'development') {
+        console.log('   Consider creating heap dump for analysis');
         // In development, you could trigger heap dumps here
       }
 
@@ -415,6 +416,7 @@ export function getMemoryPressureStatus() {
 if (false && typeof process !== 'undefined') {
   // Check every 10 minutes for reduced noise
   const interval = 600000; // 10 minutes
+  console.log(`🔍 Memory pressure monitoring started (checking every ${interval/1000/60}m)`);
   setInterval(checkAndHandleMemoryPressure, interval);
 }
 

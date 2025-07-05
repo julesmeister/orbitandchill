@@ -45,11 +45,15 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
   // Load features from API
   useEffect(() => {
     const loadFeatures = async () => {
+      console.log('🎯 [PremiumTab] Loading premium features...');
       try {
         const response = await fetch('/api/admin/premium-features');
+        console.log('📡 [PremiumTab] Response status:', response.status);
         const data = await response.json();
+        console.log('📦 [PremiumTab] Response data:', data);
         
         if (data.success) {
+          console.log(`✅ [PremiumTab] Loaded ${data.features?.length || 0} features`);
           setFeatures(data.features || []);
           
           if (data.message) {

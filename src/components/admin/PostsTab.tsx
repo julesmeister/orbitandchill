@@ -198,6 +198,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     });
   };
 
+
   const handleFormSubmit = async (formData: PostFormData, shouldPublish?: boolean) => {
     // If shouldPublish is not explicitly passed, this might be an auto-submit - ignore it
     if (shouldPublish === undefined) {
@@ -235,15 +236,19 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       isLocked: false, // Default to unlocked for new posts
     };
     
+    console.log('🔍 Saving post data:', {
       title: postData.title,
       isPublished: postData.isPublished,
       contentLength: postData.content?.length,
       contentPreview: postData.content?.substring(0, 100) + '...'
     });
+    
 
     try {
       if (editingPost) {
+        console.log('🔍 Updating thread ID:', editingPost);
         await updateThread(editingPost, postData);
+        console.log('✅ Thread updated successfully');
         setEditingPost(null);
         setShowCreateForm(false);
         
@@ -256,6 +261,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         });
       } else {
         await createThread(postData);
+        console.log('✅ Thread created successfully');
         setShowCreateForm(false);
         
         // Show success toast
@@ -281,6 +287,8 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
   // Auto-save for admin options when editing
   const handleAdminOptionsSave = async (formData: PostFormData) => {
+    console.log('🔍 handleAdminOptionsSave called with formData:', formData);
+    console.log('🔍 handleAdminOptionsSave - authorName from formData:', formData.authorName);
     
     if (!editingPost) {
       return; // Only auto-save when editing existing posts
@@ -329,9 +337,13 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       isPinned: formData.isPinned ?? currentThread.isPinned,
       isLocked: currentThread.isLocked ?? false,
     };
+    
+    console.log('🔍 handleAdminOptionsSave - Final postData authorName:', postData.authorName);
 
     try {
+      console.log('🔍 Auto-save: About to update thread');
       await updateThread(editingPost, postData);
+      console.log('🔍 Auto-save: Thread updated successfully');
       
       // Show quick success toast for auto-save
       setToast({
@@ -420,6 +432,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
   // Function to handle button-triggered submissions
   const handleButtonSubmit = async (shouldPublish: boolean) => {
+    console.log('🔍 Button clicked: shouldPublish =', shouldPublish);
     
     // Always extract fresh data from the DOM to ensure we have the latest changes
     const titleInput = document.querySelector('input[name="title"], input[placeholder*="title" i]') as HTMLInputElement;
@@ -436,6 +449,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     const isBlogPostCheckbox = document.querySelector('input[type="checkbox"][name="isBlogPost"], input[type="checkbox"][id*="blog"]') as HTMLInputElement;
     const isPinnedCheckbox = document.querySelector('input[type="checkbox"][name="isPinned"], input[type="checkbox"][id*="pin"]') as HTMLInputElement;
     
+    console.log('🔍 Found form elements:', {
       titleInput: titleInput?.value,
       contentLength: contentElement?.innerHTML?.length,
       excerptLength: excerptElement?.value?.length,
@@ -447,6 +461,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     });
     
     if (!titleInput || !contentElement) {
+      console.log('❌ Could not find required form elements');
       return;
     }
     
@@ -461,6 +476,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       isPinned: isPinnedCheckbox?.checked ?? formDataRef.current?.isPinned ?? false,
     };
     
+    console.log('🔍 Extracted form data:', {
       title: extractedFormData.title,
       contentLength: extractedFormData.content.length,
       contentPreview: extractedFormData.content.substring(0, 100) + '...',
@@ -506,6 +522,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   const forumThreads = threads.filter((t: Thread) => !t.isBlogPost);
   const publishedCount = threads.filter((t: Thread) => t.isPublished).length;
   const featuredCount = threads.filter((t: Thread) => t.isPinned).length;
+
 
   return (
     <div className="space-y-6">
@@ -820,6 +837,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                   handleCancel();
                 }}
                 onAdminOptionsChange={(formData) => {
+                  console.log('🔍 Form data updated:', {
                     title: formData.title,
                     contentLength: formData.content?.length,
                     contentPreview: formData.content?.substring(0, 100) + '...'

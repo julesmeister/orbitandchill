@@ -86,6 +86,7 @@ export default function AstrocartographyPage() {
     closeAnalysis
   } = useAstrocartographyState();
 
+
   // Use astrocartography hook to calculate planetary lines
   const {
     astrocartographyData,
@@ -125,9 +126,16 @@ export default function AstrocartographyPage() {
     setHoveredLine
   });
 
+
+
+
+
+
+
   // Calculate astrocartography when current person or birth data changes
   useEffect(() => {
     if (birthData && (!hasInitialLoad || !astrocartographyData)) {
+      console.log('🔄 ASTRO: Triggering astrocartography calculation', {
         hasInitialLoad,
         hasAstroData: !!astrocartographyData,
         birthDate: birthData.date.toISOString()
@@ -139,6 +147,7 @@ export default function AstrocartographyPage() {
       });
     }
   }, [birthData, currentPerson?.id, calculateAstrocartography, hasInitialLoad, astrocartographyData, setHasInitialLoad]);
+
 
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
@@ -239,6 +248,9 @@ export default function AstrocartographyPage() {
             className=""
           />
         </div>
+
+
+
 
         {/* Astrocartography Analysis Modal */}
         <AstrocartographyAnalysisComponent

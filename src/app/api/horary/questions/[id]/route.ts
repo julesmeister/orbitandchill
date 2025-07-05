@@ -19,6 +19,7 @@ export async function GET(
     let question = null;
     
     if (isUsingConnectionPool()) {
+      console.log('🔄 Using connection pool for GET query');
       try {
         const rawResult = await executePooledQueryDirect(
           'SELECT * FROM horary_questions WHERE id = ? LIMIT 1',
@@ -65,6 +66,7 @@ export async function GET(
     
     // Fallback to Drizzle ORM if pool not available or failed
     if (!question) {
+      console.log('🔄 Using Drizzle ORM for GET query');
       const [result] = await db
         .select()
         .from(horaryQuestions)
@@ -134,6 +136,7 @@ export async function PATCH(
   try {
     // Ensure database is initialized
     const dbInstance = db || await getDbAsync();
+    console.log('🔍 Database instance in PATCH:', !!dbInstance);
     
     const resolvedParams = await params;
     const questionId = resolvedParams.id;
@@ -185,6 +188,7 @@ export async function PATCH(
     if (shareToken !== undefined) updateData.shareToken = shareToken;
 
     // Update the question with explicit error handling
+    console.log('🔍 Attempting to update horary question:', {
       questionId,
       updateFields: Object.keys(updateData),
       hasChartData: !!updateData.chartData,
@@ -193,6 +197,7 @@ export async function PATCH(
     
     let updatedQuestion = null;
     try {
+      console.log('🔍 Database instance available for update:', !!dbInstance);
       
       if (!dbInstance) {
         console.error('❌ Database instance is null/undefined for update');
@@ -205,6 +210,7 @@ export async function PATCH(
         .where(eq(horaryQuestions.id, questionId))
         .returning();
         
+      console.log('✅ Database update successful:', { questionId, hasResult: !!result });
       updatedQuestion = result;
     } catch (dbError) {
       console.error('❌ Database update error details:', {
@@ -224,6 +230,8 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    console.log(`🔮 Updated horary question: ${questionId} - Answer: ${answer || 'pending'}`);
 
     // Transform updated question for response
     const transformedQuestion = {
@@ -291,11 +299,14 @@ export async function DELETE(
       userId = searchParams.get('userId');
     }
 
+    console.log('🗑️ DELETE request:', { questionId, userId });
+
     // Use connection pool if available, otherwise fallback to Drizzle ORM
     let existingQuestion = null;
     let deleteResult = null;
     
     if (isUsingConnectionPool()) {
+      console.log('🔄 Using connection pool for DELETE operations');
       try {
         // First check if question exists
         const checkResult = await executePooledQueryDirect(
@@ -313,6 +324,7 @@ export async function DELETE(
             location: row.location
           };
           
+          console.log('🔍 Question found in DB:', {
             requestedId: questionId,
             foundId: existingQuestion.id,
             idMatch: questionId === existingQuestion.id,
@@ -323,6 +335,7 @@ export async function DELETE(
           
           // Check ownership if userId provided
           if (userId && existingQuestion.userId !== userId) {
+            console.log('❌ Permission denied:', { requestingUserId: userId, questionOwner: existingQuestion.userId });
             return NextResponse.json(
               { success: false, error: 'Access denied - you can only delete your own questions' },
               { status: 403 }
@@ -330,11 +343,13 @@ export async function DELETE(
           }
           
           // Delete the question
+          console.log('🗑️ Deleting question:', questionId);
           deleteResult = await executePooledQueryDirect(
             'DELETE FROM horary_questions WHERE id = ?',
             [questionId]
           );
           
+          console.log('✅ Direct SQL delete result:', deleteResult);
         }
         
       } catch (poolError) {
@@ -345,6 +360,7 @@ export async function DELETE(
     
     // Fallback to Drizzle ORM if pool not available or failed
     if (!existingQuestion) {
+      console.log('🔄 Using Drizzle ORM for DELETE operations');
       
       try {
         // First check if question exists using raw SQL to avoid WHERE clause parsing issues
@@ -409,6 +425,7 @@ export async function DELETE(
         
         existingQuestion = foundQuestion;
         
+        console.log('🔍 Question found in DB:', {
           requestedId: questionId,
           foundId: existingQuestion.id,
           questionOwner: existingQuestion.userId,
@@ -418,6 +435,7 @@ export async function DELETE(
         
         // Check ownership if userId provided
         if (userId && existingQuestion.userId !== userId) {
+          console.log('❌ Permission denied:', { requestingUserId: userId, questionOwner: existingQuestion.userId });
           return NextResponse.json(
             { success: false, error: 'Access denied - you can only delete your own questions' },
             { status: 403 }
@@ -425,12 +443,15 @@ export async function DELETE(
         }
 
         // Delete the question using direct SQL to avoid WHERE clause parsing issues
+        console.log('🗑️ Deleting question with direct SQL:', questionId);
         try {
           const sqlDeleteResult = await db.client.execute({
             sql: 'DELETE FROM horary_questions WHERE id = ?',
             args: [questionId]
           });
 
+          console.log('✅ Direct SQL delete result:', sqlDeleteResult);
+          
           if (sqlDeleteResult.rowsAffected === 0) {
             return NextResponse.json(
               { success: false, error: 'Question not found or already deleted' },
@@ -470,6 +491,8 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    console.log(`🗑️ Deleted horary question: ${questionId} - "${existingQuestion.question.substring(0, 50)}..."`);
 
     return NextResponse.json({
       success: true,

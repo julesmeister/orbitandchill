@@ -56,6 +56,7 @@ export class DiscussionService {
     return discussion[0];
   }
 
+
   static async getAllDiscussions(options: {
     category?: string;
     isBlogPost?: boolean;
@@ -230,6 +231,7 @@ export class DiscussionService {
     
     // PERFORMANCE FIX: Skip user votes lookup to prevent database timeouts
     // User votes will be loaded separately on the client side if needed
+    console.log('⚡ Skipping votes lookup for performance - returning discussions without user votes');
     
     return finalResults;
   }
@@ -258,10 +260,14 @@ export class DiscussionService {
         sql: 'SELECT * FROM discussions WHERE slug = ? AND is_published = 1',
         args: [slug]
       });
-
+      
+      console.log('🔍 Searching for slug:', slug);
+      console.log('🔍 Raw SQL result rows:', rawResult.rows?.length || 0);
+      
       if (rawResult.rows && rawResult.rows.length > 0) {
         // Found discussion with matching slug
         const row = rawResult.rows[0];
+        console.log('🔍 Found matching discussion:', { 
           id: row.id, 
           title: row.title,
           slug: row.slug
@@ -294,6 +300,7 @@ export class DiscussionService {
             };
         }
       
+      console.log('🔍 No discussion found with slug:', slug);
       return null;
     } catch (rawError) {
       console.error('❌ Raw SQL query failed:', rawError);
@@ -327,9 +334,12 @@ export class DiscussionService {
         sql: 'SELECT * FROM discussions WHERE id = ? AND is_published = 1 LIMIT 1',
         args: [id]
       });
-
+      
+      console.log('🔍 Raw SQL result rows:', rawResult.rows?.length || 0);
+      
       if (rawResult.rows && rawResult.rows.length > 0) {
         const row = rawResult.rows[0] as any;
+        console.log('🔍 Raw SQL found discussion:', { 
           id: row.id, 
           title: row.title 
         });
@@ -441,6 +451,7 @@ export class DiscussionService {
         filteredUpdateData[field] = updateData[field];
       }
     }
+    
 
     // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
     try {
@@ -512,7 +523,8 @@ export class DiscussionService {
       
       const sql = `UPDATE discussions SET ${mappedUpdates.join(', ')} WHERE id = ?`;
       params.push(id);
-
+      
+      
       const result = await client.execute({ sql, args: params });
       
       // Return the updated discussion
@@ -586,7 +598,9 @@ export class DiscussionService {
           sql: 'DELETE FROM discussions WHERE id = ?',
           args: [id]
         });
-
+        
+        console.log('✅ Raw DELETE successful:', result);
+        
         // Return true if rows were affected
         return result.rowsAffected && result.rowsAffected > 0 ? { id } : null;
       } catch (rawError) {
@@ -687,12 +701,15 @@ export class DiscussionService {
     }
     
     try {
+      console.log('🔍 Fetching replies for discussion:', discussionId);
       
       const rawResult = await client.execute({
         sql: 'SELECT * FROM discussion_replies WHERE discussion_id = ? ORDER BY created_at ASC',
         args: [discussionId]
       });
-
+      
+      console.log('🔍 Raw SQL result rows for replies:', rawResult.rows?.length || 0);
+      
       if (rawResult.rows && rawResult.rows.length > 0) {
         const replies = rawResult.rows.map((row: any) => ({
           id: row.id,
@@ -706,9 +723,11 @@ export class DiscussionService {
           downvotes: row.downvotes || 0
         }));
         
+        console.log('🔍 Mapped replies:', replies.length);
         return replies;
       }
       
+      console.log('🔍 No replies found for discussion:', discussionId);
       return [];
     } catch (error) {
       console.error('❌ Raw SQL query failed for replies:', error);
@@ -735,6 +754,7 @@ export class DiscussionService {
     }
     
     try {
+      console.log('🔍 Fetching replies with authors for discussion:', discussionId);
       
       // Single optimized query with LEFT JOIN to get replies and author info
       const rawResult = await client.execute({
@@ -759,7 +779,9 @@ export class DiscussionService {
         `,
         args: [discussionId, limit, offset]
       });
-
+      
+      console.log('🔍 Optimized query result rows:', rawResult.rows?.length || 0);
+      
       if (rawResult.rows && rawResult.rows.length > 0) {
         const replies = rawResult.rows.map((row: any) => ({
           id: row.id,
@@ -776,9 +798,11 @@ export class DiscussionService {
           authorAvatar: row.author_avatar
         }));
         
+        console.log('🔍 Mapped replies with authors:', replies.length);
         return replies;
       }
       
+      console.log('🔍 No replies found for discussion:', discussionId);
       return [];
     } catch (error) {
       console.error('❌ Optimized replies query failed:', error);

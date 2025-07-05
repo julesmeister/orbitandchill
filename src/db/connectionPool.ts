@@ -303,6 +303,7 @@ export class TursoConnectionPool {
     );
     
     if (connectionsNeeded > 0) {
+      console.log(`📈 Scaling up: Creating ${connectionsNeeded} additional connections (queue: ${queueLength})`);
       
       for (let i = 0; i < connectionsNeeded; i++) {
         this.createConnection()

@@ -7,9 +7,11 @@ import { eq } from 'drizzle-orm';
 // DEBUG: Test horary question creation with enhanced logging
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔧 DEBUG: Testing horary question creation...');
     
     // Test database initialization exactly like the real API
     const dbInstance = db || await getDbAsync();
+    console.log('🔍 Database instance in debug test:', !!dbInstance);
     
     if (!dbInstance) {
       return NextResponse.json({
@@ -24,12 +26,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Test simple database query first
+    console.log('🔍 Testing simple database query...');
     const testQuery = await dbInstance.client.execute('SELECT 1 as test');
+    console.log('✅ Simple query successful:', testQuery);
 
     // First, create a test user to avoid foreign key constraint issues
     const testUserId = `debug_user_${Date.now()}`;
     const now = new Date();
     
+    console.log('🔍 Creating test user first...');
     try {
       const testUser = await dbInstance.insert(users).values({
         id: testUserId,
@@ -38,6 +43,7 @@ export async function POST(request: NextRequest) {
         createdAt: now,
         updatedAt: now,
       }).returning();
+      console.log('✅ Test user created:', { userId: testUser[0].id });
     } catch (userError) {
       console.warn('⚠️ Failed to create test user, using anonymous instead:', userError);
       // Continue with null userId for anonymous question
@@ -68,6 +74,8 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     };
 
+    console.log('🔍 Attempting to insert test horary question...');
+    console.log('🔍 Test data:', { 
       questionId, 
       userId: testData.userId,
       question: testData.question.substring(0, 30) + '...',
@@ -83,6 +91,8 @@ export async function POST(request: NextRequest) {
 
     // Test database insert using the same method as the real API
     const [result] = await dbInstance.insert(horaryQuestions).values(testData).returning();
+    
+    console.log('✅ Test question created successfully:', { questionId: result.id });
 
     // Test query to verify it was saved
     const [savedQuestion] = await dbInstance
@@ -91,10 +101,14 @@ export async function POST(request: NextRequest) {
       .where(eq(horaryQuestions.id, questionId))
       .limit(1);
 
+    console.log('✅ Test question verified in database:', !!savedQuestion);
+
     // Cleanup: Remove test data
+    console.log('🧹 Cleaning up test data...');
     try {
       await dbInstance.delete(horaryQuestions).where(eq(horaryQuestions.id, questionId));
       await dbInstance.delete(users).where(eq(users.id, testUserId));
+      console.log('✅ Test data cleaned up successfully');
     } catch (cleanupError) {
       console.warn('⚠️ Cleanup failed (non-critical):', cleanupError);
     }

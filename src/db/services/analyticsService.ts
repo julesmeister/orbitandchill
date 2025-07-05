@@ -447,6 +447,7 @@ export class AnalyticsService {
       // Save aggregated data
       await this.recordTrafficData(metrics);
       
+      console.log(`📊 Aggregated traffic data for ${targetDate}:`, metrics);
       return metrics;
 
     } catch (error) {
@@ -680,5 +681,6 @@ export class AnalyticsService {
     }
 
     await Promise.all(promises);
+    console.log(`✅ Generated mock analytics data for ${days} days`);
   }
 }

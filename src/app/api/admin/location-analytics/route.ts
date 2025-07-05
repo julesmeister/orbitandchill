@@ -7,7 +7,9 @@ import { initializeDatabase } from '@/db/index';
 export async function GET(request: NextRequest) {
   try {
     await initializeDatabase();
-
+    
+    console.log('📍 API: Loading real location analytics data...');
+    
     // Try to get real geographic data from AnalyticsService (database)
     const realGeoData = await AnalyticsService.getGeographicData(30);
     
@@ -143,7 +145,9 @@ export async function GET(request: NextRequest) {
 
     const dataSource = realGeoData.totalRequests >= 10 ? 'real' : 
                       (analyticsSummary.totalRequests >= 5 ? 'hybrid' : 'demo');
-
+    
+    console.log(`✅ API: Location analytics loaded - ${dataSource} data (${stats.totalRequests} total requests)`);
+    
     return NextResponse.json({
       success: true,
       stats,

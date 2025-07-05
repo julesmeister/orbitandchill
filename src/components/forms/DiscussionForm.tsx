@@ -217,7 +217,8 @@ export default function DiscussionForm({
       // Clear the flag
       delete (window as any).__shouldPublish;
     }
-
+    
+    
     onSubmit(submissionData);
   };
 
@@ -311,6 +312,7 @@ export default function DiscussionForm({
                               <AuthorAutocomplete
                                 value={formData.authorName || ''}
                                 onChange={(value) => {
+                                  console.log('🔍 AuthorAutocomplete onChange called with:', value);
                                   updateFormData({ authorName: value });
                                 }}
                                 onBlur={handleAuthorBlur}
@@ -436,6 +438,8 @@ export default function DiscussionForm({
               </div>
             )}
           </div>
+
+
 
           {/* Content Section */}
           <div className="p-6">

@@ -55,8 +55,10 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, refreshMetrics, loadUserAnalytics, loadTrafficData, loadThreads, loadHealthMetrics, loadNotifications]);
 
+
   // Comprehensive refresh function
   const handleRefresh = async () => {
+    console.log('🔄 Comprehensive admin data refresh initiated...');
     try {
       await Promise.all([
         refreshMetrics(),
@@ -66,6 +68,7 @@ export default function AdminDashboard() {
         loadHealthMetrics(),
         loadNotifications()
       ]);
+      console.log('✅ All admin data refreshed successfully');
     } catch (error) {
       console.error('❌ Error during admin data refresh:', error);
     }

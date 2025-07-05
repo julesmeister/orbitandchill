@@ -42,6 +42,9 @@ export default function AuthorAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  console.log('🔍 AuthorAutocomplete rendered with value:', value, 'searchTerm:', searchTerm);
+  console.log('🔍 AuthorAutocomplete suggestions:', suggestions.length, 'isOpen:', isOpen);
+
   // Update search term when value prop changes
   useEffect(() => {
     setSearchTerm(value);
@@ -81,9 +84,11 @@ export default function AuthorAutocomplete({
           });
         }
 
+        console.log('🔍 Search results for:', searchTerm, 'found:', filteredUsers.length, 'users');
         setSuggestions(filteredUsers);
         setIsOpen(filteredUsers.length > 0);
         if (filteredUsers.length > 0) {
+          console.log('🔍 First few suggestions:', filteredUsers.slice(0, 3).map((u: any) => u.username));
         }
         setHighlightedIndex(-1);
       } catch (error) {
@@ -108,6 +113,7 @@ export default function AuthorAutocomplete({
 
   // Handle suggestion selection
   const handleSuggestionClick = (user: User) => {
+    console.log('🔍 handleSuggestionClick called with user:', user.username);
     
     // Immediately close dropdown and clear suggestions to prevent reopening
     setIsOpen(false);
@@ -116,6 +122,7 @@ export default function AuthorAutocomplete({
     
     // Update values
     setSearchTerm(user.username);
+    console.log('🔍 Calling onChange with:', user.username);
     onChange(user.username);
     
     // Blur input and trigger parent onBlur to exit editing mode

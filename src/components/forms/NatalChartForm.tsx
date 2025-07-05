@@ -450,29 +450,21 @@ const NatalChartForm = ({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6" noValidate role="form" aria-label="Natal chart birth information form">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name Field */}
         <div className="synapsas-input-group">
-          <label htmlFor="name-input" className="synapsas-label">
+          <label className="synapsas-label">
             {mode === 'person' ? 'Name' : 'Name (Optional)'}
-            {mode === 'person' && <span className="text-red-500 ml-1" aria-label="required">*</span>}
+            {mode === 'person' && <span className="text-red-500 ml-1">*</span>}
           </label>
           <input
-            id="name-input"
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
             placeholder={mode === 'person' ? "Enter person's name" : "Enter your name"}
             className="synapsas-input"
             required={mode === 'person'}
-            aria-required={mode === 'person'}
-            aria-describedby={mode === 'person' ? "name-help" : undefined}
           />
-          {mode === 'person' && (
-            <div id="name-help" className="sr-only">
-              Name is required for person mode
-            </div>
-          )}
         </div>
 
         {/* Person Mode Fields */}
@@ -488,10 +480,10 @@ const NatalChartForm = ({
         )}
 
         {/* Date and Time of Birth */}
-        <fieldset className="synapsas-input-group">
-          <legend className="synapsas-label mb-4">
-            Date & Time of Birth <span className="text-red-500" aria-label="required">*</span>
-          </legend>
+        <div className="synapsas-input-group">
+          <label className="synapsas-label mb-4">
+            Date & Time of Birth <span className="text-red-500">*</span>
+          </label>
 
           {/* Date Section */}
           <div className="synapsas-datetime-section">
@@ -509,13 +501,13 @@ const NatalChartForm = ({
             />
           </div>
 
-          <div className="synapsas-helper-text" role="note" aria-label="Helpful information about date and time input">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div className="synapsas-helper-text">
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Enter your exact birth date and time for accurate astrological calculations</span>
           </div>
-        </fieldset>
+        </div>
 
         {/* Location of Birth */}
         <LocationInput

@@ -38,13 +38,7 @@ export default function SearchAndFilters({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
             placeholder="Search discussions, topics, or tags..."
-            aria-label="Search discussions, topics, or tags"
-            role="searchbox"
-            aria-describedby="search-help"
           />
-          <div id="search-help" className="sr-only">
-            Search for discussions by title, content, tags, or author name
-          </div>
         </div>
 
         {/* Sort */}

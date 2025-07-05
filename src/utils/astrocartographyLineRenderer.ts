@@ -70,6 +70,7 @@ export function geoToWorldMapSVG(lat: number, lng: number, _svgElement?: SVGSVGE
   
   // Log correction details for debugging astrocartography lines
   if (process.env.NODE_ENV === 'development') {
+    console.log(`Astro line coord: (${lat.toFixed(3)}, ${lng.toFixed(3)}) → (${result.x.toFixed(1)}, ${result.y.toFixed(1)}) [zone: ${result.zoneUsed}]`);
   }
   
   return { x: result.x, y: result.y };

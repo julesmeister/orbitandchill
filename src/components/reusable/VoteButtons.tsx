@@ -95,10 +95,9 @@ const VoteButton = React.memo(({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${getButtonClasses()} min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1`}
-      aria-label={`${isUpvote ? "Upvote" : "Downvote"} this ${type || "content"}${isActive ? " (currently voted)" : ""}${isLoading ? " (voting in progress)" : ""}`}
-      aria-pressed={isActive}
-      title={`${isUpvote ? "Upvote" : "Downvote"} this ${type || "content"}`}
+      className={getButtonClasses()}
+      aria-label={isUpvote ? "Upvote" : "Downvote"}
+      title={isUpvote ? "Upvote" : "Downvote"}
     >
       {isLoading ? (
         <div className={`${sizeConfig.iconSize} animate-spin rounded-full border-2 border-current border-t-transparent`} />
@@ -127,16 +126,9 @@ const VoteCount = React.memo(({
   sizeConfig: typeof SIZE_CONFIG[keyof typeof SIZE_CONFIG];
   layout: keyof typeof LAYOUT_CONFIG;
 }) => (
-  <div 
-    className={`flex items-center justify-center ${sizeConfig.elementPadding} ${sizeConfig.textSize} font-semibold text-white bg-black font-inter ${sizeConfig.minWidth}`}
-    role="status"
-    aria-label={`${count} vote${count !== 1 ? 's' : ''}`}
-  >
+  <div className={`flex items-center justify-center ${sizeConfig.elementPadding} ${sizeConfig.textSize} font-semibold text-white bg-black font-inter ${sizeConfig.minWidth}`}>
     {count}
     {layout === 'compact' && <span className="ml-1">votes</span>}
-    <span className="sr-only">
-      {count} vote{count !== 1 ? 's' : ''} for this content
-    </span>
   </div>
 ));
 

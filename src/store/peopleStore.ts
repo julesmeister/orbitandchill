@@ -278,6 +278,7 @@ export const usePeopleStore = create<PeopleState>()(
       }),
       onRehydrateStorage: () => (state, error) => {
         if (error) {
+          console.log('People store hydration error:', error);
           return;
         }
         
