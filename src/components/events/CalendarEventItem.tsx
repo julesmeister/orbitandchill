@@ -26,6 +26,15 @@ export default function CalendarEventItem({ event }: CalendarEventItemProps) {
         </p>
         <p className="font-open-sans text-sm text-black/60">
           {event.type} • {RARITY_BADGES[event.rarity].text}
+          {event.duration && (
+            <span>
+              {' • '}
+              {event.duration.hours && `${event.duration.hours}h`}
+              {event.duration.days && `${event.duration.days}d`}
+              {event.duration.weeks && `${event.duration.weeks}w`}
+              {event.duration.isOngoing && ' ongoing'}
+            </span>
+          )}
         </p>
       </div>
     </div>

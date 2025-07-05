@@ -288,16 +288,16 @@ export default function EventsPage() {
 
                     // Add detailed logging for debugging the validation issue
                     // console.log(`📋 About to save ${newEvents.length} events to database:`, {
-                        eventCount: newEvents.length,
-                        firstEvent: newEvents[0] ? {
-                            userId: newEvents[0].userId,
-                            title: newEvents[0].title?.substring(0, 30),
-                            date: newEvents[0].date,
-                            type: newEvents[0].type,
-                            hasDescription: !!newEvents[0].description
-                        } : null,
-                        allEventsValid: newEvents.every(e => e.userId && e.title && e.date && e.type && e.description)
-                    });
+                    //     eventCount: newEvents.length,
+                    //     firstEvent: newEvents[0] ? {
+                    //         userId: newEvents[0].userId,
+                    //         title: newEvents[0].title?.substring(0, 30),
+                    //         date: newEvents[0].date,
+                    //         type: newEvents[0].type,
+                    //         hasDescription: !!newEvents[0].description
+                    //     } : null,
+                    //     allEventsValid: newEvents.every(e => e.userId && e.title && e.date && e.type && e.description)
+                    // });
 
                     updateProgress(80, "Saving events to database...");
 
@@ -370,12 +370,12 @@ export default function EventsPage() {
         }
 
         // console.log('🚀 Starting manual event creation:', {
-            title: newEvent.title,
-            date: newEvent.date,
-            time: newEvent.time,
-            description: newEvent.description,
-            userId: user?.id
-        });
+        //     title: newEvent.title,
+        //     date: newEvent.date,
+        //     time: newEvent.time,
+        //     description: newEvent.description,
+        //     userId: user?.id
+        // });
 
         // Check for location
         const locationData = getLocationForGeneration();
@@ -406,10 +406,10 @@ export default function EventsPage() {
             };
 
             // console.log('💾 Event to be saved:', {
-                ...eventWithUserId,
-                isGenerated: eventWithUserId.isGenerated,
-                userId: eventWithUserId.userId
-            });
+            //     ...eventWithUserId,
+            //     isGenerated: eventWithUserId.isGenerated,
+            //     userId: eventWithUserId.userId
+            // });
 
             await addEvent(eventWithUserId);
 
@@ -460,10 +460,10 @@ export default function EventsPage() {
             };
 
             // console.log('🔄 Using fallback basic event:', {
-                ...basicEvent,
-                isGenerated: basicEvent.isGenerated,
-                userId: basicEvent.userId
-            });
+            //     ...basicEvent,
+            //     isGenerated: basicEvent.isGenerated,
+            //     userId: basicEvent.userId
+            // });
 
             await addEvent(basicEvent);
 

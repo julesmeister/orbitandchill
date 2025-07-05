@@ -26,6 +26,14 @@ export interface AstrologicalEvent {
   emoji: string;
   rarity: 'common' | 'uncommon' | 'rare' | 'veryRare';
   impact: string;
+  // Duration information
+  endDate?: Date;
+  duration?: {
+    hours?: number;
+    days?: number;
+    weeks?: number;
+    isOngoing?: boolean; // For events like retrogrades that last weeks/months
+  };
 }
 
 /**
@@ -37,6 +45,24 @@ export const detectRetrogrades = async (date: Date): Promise<AstrologicalEvent[]
   
   positions.planets.forEach(planet => {
     if (planet.retrograde && ['mercury', 'venus', 'mars', 'jupiter', 'saturn'].includes(planet.name.toLowerCase())) {
+      // Retrograde durations vary by planet
+      const getDuration = (planetName: string) => {
+        switch(planetName.toLowerCase()) {
+          case 'mercury': return { weeks: 3 };
+          case 'venus': return { weeks: 6 };
+          case 'mars': return { weeks: 10 };
+          case 'jupiter': return { weeks: 16 };
+          case 'saturn': return { weeks: 20 };
+          default: return { weeks: 3 };
+        }
+      };
+      
+      const duration = getDuration(planet.name);
+      const endDate = new Date(date);
+      if (duration.weeks) {
+        endDate.setDate(endDate.getDate() + (duration.weeks * 7));
+      }
+      
       events.push({
         id: `retro_${planet.name}_${date.getTime()}`,
         name: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} Retrograde in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
@@ -47,7 +73,9 @@ export const detectRetrogrades = async (date: Date): Promise<AstrologicalEvent[]
         rarity: planet.name.toLowerCase() === 'mercury' ? 'common' : 'uncommon',
         impact: planet.name.toLowerCase() === 'mercury' 
           ? 'Review communications, back up data, reconnect with the past'
-          : `Reassess ${planet.name.toLowerCase()} themes in your life`
+          : `Reassess ${planet.name.toLowerCase()} themes in your life`,
+        endDate,
+        duration: { ...duration, isOngoing: true }
       });
     }
   });
@@ -73,15 +101,25 @@ export const detectStelliums = async (date: Date): Promise<AstrologicalEvent[]> 
   Object.entries(planetsBySign).forEach(([sign, planets]) => {
     if (planets.length >= 3) {
       const planetNames = planets.map(p => p.name).join(', ');
+      
+      // Stelliums last weeks to months depending on planet speeds
+      const endDate = new Date(date);
+      endDate.setDate(endDate.getDate() + 21); // ~3 weeks average
+      
+      // Create unique ID based on planets involved
+      const planetList = planets.map(p => p.name.toLowerCase()).sort().join('-');
+      
       events.push({
-        id: `stellium_${sign}_${date.getTime()}`,
+        id: `stellium_${sign}_${planetList}_${date.getTime()}`,
         name: `Stellium in ${sign.charAt(0).toUpperCase() + sign.slice(1)}`,
         date: new Date(date),
         type: 'stellium',
         description: `${planets.length} planets gather in ${sign}: ${planetNames}`,
         emoji: '✨',
         rarity: planets.length >= 4 ? 'rare' : 'uncommon',
-        impact: `Intense focus on ${sign} themes: ${getSignThemes(sign)}`
+        impact: `Intense focus on ${sign} themes: ${getSignThemes(sign)}`,
+        endDate,
+        duration: { weeks: 3, isOngoing: true }
       });
     }
   });
@@ -108,6 +146,36 @@ export const detectGrandTrines = async (date: Date): Promise<AstrologicalEvent[]
         // Check if angles are close to 120° (within 8° orb)
         if ([angle1, angle2, angle3].every(angle => Math.abs(angle - 120) <= 8 || Math.abs(angle - 240) <= 8)) {
           const element = getElementFromSign(planets[i].sign);
+          
+          // Grand trine duration depends on the planets involved
+          const getGrandTrineDuration = (planet1: string, planet2: string, planet3: string) => {
+            const slowPlanets = ['jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+            const fastPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars'];
+            
+            const planetsInvolved = [planet1, planet2, planet3];
+            const slowCount = planetsInvolved.filter(p => slowPlanets.includes(p.toLowerCase())).length;
+            
+            if (slowCount >= 2) {
+              // Multiple slow planets: grand trine lasts weeks/months
+              return { weeks: 6 };
+            } else if (slowCount === 1) {
+              // One slow planet: grand trine lasts days/weeks
+              return { weeks: 2 };
+            } else {
+              // All fast planets: grand trine lasts days
+              return { days: 5 };
+            }
+          };
+          
+          const duration = getGrandTrineDuration(planets[i].name, planets[j].name, planets[k].name);
+          const endDate = new Date(date);
+          
+          if (duration.weeks) {
+            endDate.setDate(endDate.getDate() + (duration.weeks * 7));
+          } else if (duration.days) {
+            endDate.setDate(endDate.getDate() + duration.days);
+          }
+          
           events.push({
             id: `trine_${i}_${j}_${k}_${date.getTime()}`,
             name: `Grand ${element} Trine`,
@@ -116,7 +184,9 @@ export const detectGrandTrines = async (date: Date): Promise<AstrologicalEvent[]
             description: `${planets[i].name}, ${planets[j].name}, and ${planets[k].name} form a perfect triangle`,
             emoji: '🔺',
             rarity: 'rare',
-            impact: `Harmonious flow of ${element.toLowerCase()} energy enhancing ${getElementThemes(element)}`
+            impact: `Harmonious flow of ${element.toLowerCase()} energy enhancing ${getElementThemes(element)}`,
+            endDate,
+            duration: { ...duration, isOngoing: duration.weeks ? true : false }
           });
           break;
         }
@@ -144,6 +214,36 @@ export const detectConjunctions = async (date: Date): Promise<AstrologicalEvent[
         if (planets[i].name.toLowerCase() === 'moon' || planets[j].name.toLowerCase() === 'moon') continue;
         
         const rarity = getConjunctionRarity(planets[i].name, planets[j].name);
+        
+        // Conjunction duration depends on planet speeds
+        const getConjunctionDuration = (planet1: string, planet2: string) => {
+          const slowPlanets = ['jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+          const fastPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars'];
+          
+          const p1Slow = slowPlanets.includes(planet1.toLowerCase());
+          const p2Slow = slowPlanets.includes(planet2.toLowerCase());
+          
+          if (p1Slow && p2Slow) {
+            // Both slow planets: conjunction lasts weeks/months
+            return { weeks: 4 };
+          } else if (p1Slow || p2Slow) {
+            // One slow, one fast: conjunction lasts days/weeks
+            return { weeks: 1 };
+          } else {
+            // Both fast planets: conjunction lasts hours/days
+            return { days: 2 };
+          }
+        };
+        
+        const duration = getConjunctionDuration(planets[i].name, planets[j].name);
+        const endDate = new Date(date);
+        
+        if (duration.weeks) {
+          endDate.setDate(endDate.getDate() + (duration.weeks * 7));
+        } else if (duration.days) {
+          endDate.setDate(endDate.getDate() + duration.days);
+        }
+        
         events.push({
           id: `conj_${i}_${j}_${date.getTime()}`,
           name: `${planets[i].name}-${planets[j].name} Conjunction`,
@@ -152,7 +252,9 @@ export const detectConjunctions = async (date: Date): Promise<AstrologicalEvent[
           description: `${planets[i].name} and ${planets[j].name} unite in ${planets[i].sign}`,
           emoji: '🌊',
           rarity,
-          impact: getConjunctionImpact(planets[i].name, planets[j].name)
+          impact: getConjunctionImpact(planets[i].name, planets[j].name),
+          endDate,
+          duration: { ...duration, isOngoing: duration.weeks ? true : false }
         });
       }
     }
@@ -175,14 +277,17 @@ export const detectMoonPhases = async (date: Date): Promise<AstrologicalEvent[]>
   if (!moon || !sun) return events;
   
   // Calculate moon phase based on sun-moon angle
-  let moonSunAngle = Math.abs(moon.longitude - sun.longitude);
-  if (moonSunAngle > 180) moonSunAngle = 360 - moonSunAngle;
+  let moonSunAngle = moon.longitude - sun.longitude;
+  if (moonSunAngle < 0) moonSunAngle += 360;
+  if (moonSunAngle > 360) moonSunAngle -= 360;
   
-  // Detect major moon phases (within 3 degrees)
-  const phaseThreshold = 3;
+  // Detect major moon phases (within 5 degrees for better detection)
+  const phaseThreshold = 5;
   
-  if (moonSunAngle <= phaseThreshold) {
-    // New Moon
+  if (moonSunAngle <= phaseThreshold || moonSunAngle >= (360 - phaseThreshold)) {
+    // New Moon (0 degrees)
+    const endDate = new Date(date);
+    endDate.setHours(endDate.getHours() + 8);
     events.push({
       id: `new_moon_${date.getTime()}`,
       name: `New Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
@@ -191,22 +296,14 @@ export const detectMoonPhases = async (date: Date): Promise<AstrologicalEvent[]>
       description: `The Moon and Sun unite in ${moon.sign}, bringing fresh starts and new intentions`,
       emoji: '🌑',
       rarity: 'common',
-      impact: 'Perfect for setting intentions, starting new projects, and planting seeds for future growth'
-    });
-  } else if (Math.abs(moonSunAngle - 180) <= phaseThreshold) {
-    // Full Moon
-    events.push({
-      id: `full_moon_${date.getTime()}`,
-      name: `Full Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
-      date: new Date(date),
-      type: 'moonPhase',
-      description: `The Moon reaches fullness in ${moon.sign}, illuminating emotions and bringing clarity`,
-      emoji: '🌕',
-      rarity: 'common',
-      impact: 'Time for completion, releasing what no longer serves, and emotional breakthroughs'
+      impact: 'Perfect for setting intentions, starting new projects, and planting seeds for future growth',
+      endDate,
+      duration: { hours: 8 }
     });
   } else if (Math.abs(moonSunAngle - 90) <= phaseThreshold) {
-    // First Quarter
+    // First Quarter (90 degrees - waxing)
+    const endDate = new Date(date);
+    endDate.setHours(endDate.getHours() + 8);
     events.push({
       id: `first_quarter_${date.getTime()}`,
       name: `First Quarter Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
@@ -215,10 +312,30 @@ export const detectMoonPhases = async (date: Date): Promise<AstrologicalEvent[]>
       description: `The Moon reaches first quarter in ${moon.sign}, bringing challenges and decisions`,
       emoji: '🌓',
       rarity: 'common',
-      impact: 'Time to take action, overcome obstacles, and make important decisions'
+      impact: 'Time to take action, overcome obstacles, and make important decisions',
+      endDate,
+      duration: { hours: 8 }
     });
-  } else if (Math.abs(moonSunAngle - 270) <= phaseThreshold || Math.abs(moonSunAngle + 90) <= phaseThreshold) {
-    // Last Quarter
+  } else if (Math.abs(moonSunAngle - 180) <= phaseThreshold) {
+    // Full Moon (180 degrees)
+    const endDate = new Date(date);
+    endDate.setHours(endDate.getHours() + 8);
+    events.push({
+      id: `full_moon_${date.getTime()}`,
+      name: `Full Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
+      date: new Date(date),
+      type: 'moonPhase',
+      description: `The Moon reaches fullness in ${moon.sign}, illuminating emotions and bringing clarity`,
+      emoji: '🌕',
+      rarity: 'common',
+      impact: 'Time for completion, releasing what no longer serves, and emotional breakthroughs',
+      endDate,
+      duration: { hours: 8 }
+    });
+  } else if (Math.abs(moonSunAngle - 270) <= phaseThreshold) {
+    // Last Quarter (270 degrees - waning)
+    const endDate = new Date(date);
+    endDate.setHours(endDate.getHours() + 8);
     events.push({
       id: `last_quarter_${date.getTime()}`,
       name: `Last Quarter Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
@@ -227,7 +344,9 @@ export const detectMoonPhases = async (date: Date): Promise<AstrologicalEvent[]>
       description: `The Moon reaches last quarter in ${moon.sign}, encouraging release and forgiveness`,
       emoji: '🌗',
       rarity: 'common',
-      impact: 'Time to let go, forgive, and clear away what no longer serves your growth'
+      impact: 'Time to let go, forgive, and clear away what no longer serves your growth',
+      endDate,
+      duration: { hours: 8 }
     });
   }
   
@@ -255,6 +374,10 @@ export const detectVoidMoon = async (date: Date): Promise<AstrologicalEvent[]> =
   if (degreesToNextSign <= 5) {
     const nextSign = getNextSign(moon.sign);
     
+    // Void moon periods typically last a few hours to a day
+    const endDate = new Date(date);
+    endDate.setHours(endDate.getHours() + 12); // Average 12 hours
+    
     events.push({
       id: `void_moon_${date.getTime()}`,
       name: `Void of Course Moon in ${moon.sign.charAt(0).toUpperCase() + moon.sign.slice(1)}`,
@@ -263,7 +386,9 @@ export const detectVoidMoon = async (date: Date): Promise<AstrologicalEvent[]> =
       description: `The Moon is void of course in ${moon.sign} before entering ${nextSign}`,
       emoji: '🌫️',
       rarity: 'common',
-      impact: 'Avoid making important decisions. Focus on routine tasks, rest, and reflection'
+      impact: 'Avoid making important decisions. Focus on routine tasks, rest, and reflection',
+      endDate,
+      duration: { hours: 12 }
     });
   }
   
@@ -288,6 +413,11 @@ export const detectMoonSignChanges = async (date: Date): Promise<AstrologicalEve
   if (degreesToNextSign <= 1) {
     const nextSign = getNextSign(moon.sign);
     
+    // Moon spends ~2.5 days in each sign
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 2);
+    endDate.setHours(endDate.getHours() + 12); // ~2.5 days
+    
     events.push({
       id: `moon_sign_change_${date.getTime()}`,
       name: `Moon Enters ${nextSign.charAt(0).toUpperCase() + nextSign.slice(1)}`,
@@ -296,7 +426,9 @@ export const detectMoonSignChanges = async (date: Date): Promise<AstrologicalEve
       description: `The Moon transitions from ${moon.sign} into ${nextSign}`,
       emoji: '🌙',
       rarity: 'common',
-      impact: `Shift in emotional energy: ${getSignThemes(nextSign)}`
+      impact: `Shift in emotional energy: ${getSignThemes(nextSign)}`,
+      endDate,
+      duration: { days: 2.5 }
     });
   }
   

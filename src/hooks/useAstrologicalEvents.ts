@@ -12,13 +12,14 @@ import React from 'react';
 import { differenceInDays } from 'date-fns';
 import { 
   AstrologicalEvent,
-  detectRetrogrades,
-  detectStelliums,
-  detectGrandTrines,
-  detectConjunctions,
+  detectAllEvents,
   detectMoonPhases,
   detectVoidMoon,
-  detectMoonSignChanges
+  detectMoonSignChanges,
+  detectRetrogrades,
+  detectConjunctions,
+  detectStelliums,
+  detectGrandTrines
 } from '../utils/astrologicalEventDetection';
 
 interface UseAstrologicalEventsResult {
@@ -56,28 +57,36 @@ export const useAstrologicalEvents = (): UseAstrologicalEventsResult => {
       date.setDate(date.getDate() + i);
       
       try {
-        // Check conjunctions less frequently since they last for weeks
-        if (i % 14 === 0) { // Every 2 weeks for slow-moving planet conjunctions
-          const [retrogrades, stelliums, grandTrines, conjunctions] = await Promise.all([
+        // Use comprehensive detection with smart frequency
+        // Check at different intervals based on event types
+        if (i === 0 || i % 14 === 0) {
+          // Every 14 days: Check retrogrades and grand trines (very slow)
+          const verySlowEvents = await Promise.all([
             detectRetrogrades(date),
-            detectStelliums(date), 
-            detectGrandTrines(date),
-            detectConjunctions(date)
+            detectGrandTrines(date)
           ]);
-          
-          events.push(...retrogrades, ...stelliums, ...grandTrines, ...conjunctions);
+          events.push(...verySlowEvents.flat());
         }
         
-        // Check moon events every few days since they change more frequently
-        if (i % 3 === 0) {
-          const [moonPhases, voidMoon, moonSignChanges] = await Promise.all([
-            detectMoonPhases(date),
-            detectVoidMoon(date),
-            detectMoonSignChanges(date)
-          ]);
-          
-          events.push(...moonPhases, ...voidMoon, ...moonSignChanges);
+        if (i === 0 || i % 5 === 0) {
+          // Every 5 days: Check stelliums (they can change with fast planets)
+          const stelliumEvents = await detectStelliums(date);
+          events.push(...stelliumEvents);
         }
+        
+        if (i === 0 || i % 7 === 0) {
+          // Every 7 days: Check conjunctions (faster than retrogrades but slower than moon)
+          const conjunctionEvents = await detectConjunctions(date);
+          events.push(...conjunctionEvents);
+        }
+        
+        // Check moon events daily (they are precise astronomical events)
+        const moonEvents = await Promise.all([
+          detectMoonPhases(date),
+          detectVoidMoon(date), 
+          detectMoonSignChanges(date)
+        ]);
+        events.push(...moonEvents.flat());
       } catch (error) {
         console.warn(`Error calculating events for ${date.toDateString()}:`, error);
       }
@@ -90,22 +99,67 @@ export const useAstrologicalEvents = (): UseAstrologicalEventsResult => {
     
     // Deduplicate events more intelligently
     const uniqueEvents = events.filter((event, index, array) => {
-      // First occurrence of this ID
-      const firstOccurrence = array.findIndex(e => e.id === event.id) === index;
-      if (firstOccurrence) return true;
-      
-      // For conjunctions, avoid duplicates within 1 week
-      if (event.type === 'conjunction') {
+      // For ongoing events (retrogrades, conjunctions, stelliums), only show the first occurrence
+      if (event.type === 'retrograde') {
+        // Retrogrades last weeks/months - dedupe within their full duration
+        const getDedupeDays = (eventName: string) => {
+          if (eventName.toLowerCase().includes('mercury')) return 21; // 3 weeks
+          if (eventName.toLowerCase().includes('venus')) return 42; // 6 weeks  
+          if (eventName.toLowerCase().includes('mars')) return 70; // 10 weeks
+          if (eventName.toLowerCase().includes('jupiter')) return 112; // 16 weeks
+          if (eventName.toLowerCase().includes('saturn')) return 140; // 20 weeks
+          return 21; // Default 3 weeks
+        };
+        
+        const dedupeDays = getDedupeDays(event.name);
         const isDuplicate = array.some((e, i) => 
           i < index && 
           e.name === event.name && 
-          Math.abs(e.date.getTime() - event.date.getTime()) < 7 * 24 * 60 * 60 * 1000
+          Math.abs(e.date.getTime() - event.date.getTime()) < dedupeDays * 24 * 60 * 60 * 1000
         );
         return !isDuplicate;
       }
       
-      // For other events, check exact date and name match
-      return array.findIndex(e => e.name === event.name && e.date.getTime() === event.date.getTime()) === index;
+      if (event.type === 'conjunction') {
+        // Longer deduplication window for conjunctions (they can last weeks for slow planets)
+        const isDuplicate = array.some((e, i) => 
+          i < index && 
+          e.name === event.name && 
+          Math.abs(e.date.getTime() - event.date.getTime()) < 21 * 24 * 60 * 60 * 1000 // 3 weeks
+        );
+        return !isDuplicate;
+      }
+      
+      if (event.type === 'stellium') {
+        // Stelliums can change composition, so be more lenient with deduplication
+        const isDuplicate = array.some((e, i) => 
+          i < index && 
+          e.name === event.name && 
+          Math.abs(e.date.getTime() - event.date.getTime()) < 7 * 24 * 60 * 60 * 1000 // 1 week
+        );
+        return !isDuplicate;
+      }
+      
+      // For moon events and other short-term events, check by exact name and day
+      // But be more lenient with moon phases since they're distinct events
+      if (event.type === 'moonPhase') {
+        // Allow different moon phases on the same day, but not identical ones
+        const isDuplicate = array.some((e, i) => 
+          i < index && 
+          e.name === event.name && 
+          Math.abs(e.date.getTime() - event.date.getTime()) < 12 * 60 * 60 * 1000 // 12 hours
+        );
+        return !isDuplicate;
+      }
+      
+      // For other events, use 1-day deduplication
+      const dayMs = 24 * 60 * 60 * 1000;
+      const isDuplicate = array.some((e, i) => 
+        i < index && 
+        e.name === event.name && 
+        Math.abs(e.date.getTime() - event.date.getTime()) < dayMs
+      );
+      return !isDuplicate;
     });
     
     setRealTimeEvents(uniqueEvents.sort((a, b) => a.date.getTime() - b.date.getTime()));

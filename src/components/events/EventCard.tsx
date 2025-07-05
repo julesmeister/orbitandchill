@@ -58,11 +58,36 @@ export default function EventCard({ event, showCountdown = false, countdown }: E
           </p>
           
           {showCountdown && countdown && (
-            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-              <span className="font-open-sans text-sm text-black/60">Time until event:</span>
-              <span className="font-space-grotesk font-bold text-lg text-black">
-                {countdown}
-              </span>
+            <div className="space-y-2 pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="font-open-sans text-sm text-black/60">Time until event:</span>
+                <span className="font-space-grotesk font-bold text-lg text-black">
+                  {countdown}
+                </span>
+              </div>
+              
+              {/* Show duration information */}
+              {event.duration && (
+                <div className="flex items-center justify-between">
+                  <span className="font-open-sans text-sm text-black/60">Duration:</span>
+                  <span className="font-space-grotesk font-semibold text-sm text-black/80">
+                    {event.duration.hours && `${event.duration.hours}h`}
+                    {event.duration.days && `${event.duration.days}d`}
+                    {event.duration.weeks && `${event.duration.weeks}w`}
+                    {event.duration.isOngoing && ' (ongoing)'}
+                  </span>
+                </div>
+              )}
+              
+              {/* Show end date if available */}
+              {event.endDate && (
+                <div className="flex items-center justify-between">
+                  <span className="font-open-sans text-sm text-black/60">Ends:</span>
+                  <span className="font-open-sans text-sm text-black/80">
+                    {format(event.endDate, 'MMM d, h:mm a')}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>

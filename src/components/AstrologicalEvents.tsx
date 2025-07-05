@@ -168,11 +168,18 @@ export default function AstrologicalEvents() {
         <div className="min-h-[400px]">
           {/* Loading State */}
           {isLoading && (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-                <p className="font-open-sans text-black/80">Calculating real-time astronomical events...</p>
+            <div className="text-center py-20">
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-3 h-3 bg-black animate-bounce"></div>
               </div>
+              <h2 className="font-space-grotesk text-2xl font-bold text-black mb-2">
+                Calculating Events
+              </h2>
+              <p className="font-open-sans text-black/70">
+                Scanning 90 days of astronomical data for rare celestial phenomena...
+              </p>
             </div>
           )}
 
