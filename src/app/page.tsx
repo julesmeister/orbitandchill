@@ -81,7 +81,7 @@ export default function Home() {
   const shouldShowChart = hasStoredData && isProfileComplete && cachedChart && !showingForm;
 
   const handleCountryClick = (countryId: string, event?: MouseEvent) => {
-    console.log('Country clicked:', countryId);
+    // Country selection analytics could be tracked here
     // Add any future country click functionality here
   };
 

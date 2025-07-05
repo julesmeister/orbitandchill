@@ -135,11 +135,7 @@ export default function AstrocartographyPage() {
   // Calculate astrocartography when current person or birth data changes
   useEffect(() => {
     if (birthData && (!hasInitialLoad || !astrocartographyData)) {
-      console.log('🔄 ASTRO: Triggering astrocartography calculation', {
-        hasInitialLoad,
-        hasAstroData: !!astrocartographyData,
-        birthDate: birthData.date.toISOString()
-      });
+      // Triggering astrocartography calculation
       calculateAstrocartography(birthData).then(() => {
         if (!hasInitialLoad) {
           setHasInitialLoad(true);

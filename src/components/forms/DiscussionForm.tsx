@@ -312,7 +312,6 @@ export default function DiscussionForm({
                               <AuthorAutocomplete
                                 value={formData.authorName || ''}
                                 onChange={(value) => {
-                                  console.log('🔍 AuthorAutocomplete onChange called with:', value);
                                   updateFormData({ authorName: value });
                                 }}
                                 onBlur={handleAuthorBlur}

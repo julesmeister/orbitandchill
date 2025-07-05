@@ -41,17 +41,14 @@ function makeRequest(page, referrer, userAgent) {
     };
 
     const req = https.request(options, (res) => {
-      console.log(`✅ ${res.statusCode} - ${page} (from: ${referrer || 'direct'})`);
       resolve();
     });
 
     req.on('error', (e) => {
-      console.log(`❌ Error visiting ${page}: ${e.message}`);
       resolve();
     });
 
     req.setTimeout(5000, () => {
-      console.log(`⏰ Timeout visiting ${page}`);
       req.destroy();
       resolve();
     });
@@ -61,7 +58,6 @@ function makeRequest(page, referrer, userAgent) {
 }
 
 async function generateTraffic() {
-  console.log('🚀 Generating test traffic for orbitandchill.com...');
   
   const promises = [];
   
@@ -81,8 +77,6 @@ async function generateTraffic() {
   
   await Promise.all(promises);
   
-  console.log('🎉 Test traffic generation complete!');
-  console.log('📊 Now run: curl -X POST "http://orbitandchill.com/api/admin/analytics-cron"');
 }
 
 generateTraffic();

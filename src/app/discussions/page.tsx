@@ -60,20 +60,10 @@ export default function DiscussionsPage() {
     cacheAge,
   } = useDiscussions();
 
-  // Log discussions to check for blog posts
+  // Track discussions data for analytics
   useEffect(() => {
     if (discussions.length > 0) {
-      console.log('🔍 Discussions loaded:', discussions.length);
-      discussions.forEach((discussion, index) => {
-        console.log(`Discussion ${index + 1}:`, {
-          id: discussion.id,
-          title: discussion.title,
-          isBlogPost: discussion.isBlogPost,
-          category: discussion.category,
-          author: discussion.author,
-          type: discussion.isBlogPost ? '📝 BLOG POST' : '💬 DISCUSSION'
-        });
-      });
+      // Analytics tracking could go here if needed
     }
   }, [discussions]);
 

@@ -81,7 +81,6 @@ function valide(date, name) {
   const nameValide = new RegExp("^[а-яё\\- ]*[a-z\\- ]*$", "i");
 
   if(date === 'Invalid Date'){
-    console.log('la date est invalide');
   }
 
   if (name === '' || isNaN(date.getFullYear()) === true) {
