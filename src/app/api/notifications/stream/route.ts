@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest } from 'next/server';
 import { NotificationService } from '@/db/services/notificationService';
+import { registerConnection, removeConnection } from '@/utils/notificationBroadcast';
 
 /**
  * Server-Sent Events (SSE) endpoint for real-time notifications
  * GET /api/notifications/stream?userId=xxx
  */
-
-// Store active connections
-const connections = new Map<string, WritableStream>();
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -63,11 +61,11 @@ export async function GET(request: NextRequest) {
         },
         close() {
           clearInterval(heartbeat);
-          connections.delete(userId);
+          removeConnection(userId);
         }
       });
       
-      connections.set(userId, writable);
+      registerConnection(userId, writable);
 
       // Check for new notifications periodically
       const notificationCheck = setInterval(async () => {
@@ -101,7 +99,7 @@ export async function GET(request: NextRequest) {
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeat);
         clearInterval(notificationCheck);
-        connections.delete(userId);
+        removeConnection(userId);
         if (controller) {
           controller.close();
         }
@@ -120,51 +118,4 @@ export async function GET(request: NextRequest) {
   });
 }
 
-/**
- * Broadcast notification to specific user
- */
-export async function broadcastToUser(userId: string, notification: any) {
-  const connection = connections.get(userId);
-  if (connection) {
-    const writer = connection.getWriter();
-    try {
-      const data = JSON.stringify({
-        type: 'notification',
-        data: notification,
-        timestamp: new Date().toISOString()
-      });
-      
-      await writer.write(`data: ${data}\n\n`);
-      writer.releaseLock();
-    } catch (error) {
-      console.error('Error broadcasting to user:', error);
-      // Remove failed connection
-      connections.delete(userId);
-    }
-  }
-}
-
-/**
- * Broadcast to all connected users
- */
-export async function broadcastToAll(notification: any) {
-  const promises = Array.from(connections.entries()).map(([userId, connection]) => {
-    return broadcastToUser(userId, notification);
-  });
-  
-  await Promise.allSettled(promises);
-}
-
-/**
- * Get active connection count
- */
-export function getActiveConnectionCount(): number {
-  return connections.size;
-}
-
-/**
- * Get connected user IDs
- */
-export function getConnectedUsers(): string[] {
-  return Array.from(connections.keys());
-}
+// Move utility functions to separate file to avoid Next.js route export issues
