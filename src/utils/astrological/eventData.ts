@@ -16,7 +16,10 @@ export const EVENT_TYPE_COLORS = {
   retrograde: '#ff9f40',
   conjunction: '#40c4ff',
   moonPhase: '#c084fc',
-  voidMoon: '#64748b'
+  voidMoon: '#64748b',
+  planetSignChange: '#10b981',
+  planetInSign: '#059669',
+  planetarySigns: '#059669' // Combined planetary signs category
 };
 
 // Rarity classification with frequency indicators

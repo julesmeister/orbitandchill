@@ -22,17 +22,29 @@ interface UseCountdownTimerResult {
  * Formats the time difference into a readable countdown string
  */
 const formatCountdown = (timeDiff: number): string => {
-  if (timeDiff <= 0) return 'Now';
+  // For current/ongoing events (very close to now)
+  if (Math.abs(timeDiff) < 60000) return 'Now'; // Within 1 minute
   
-  const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+  const absDiff = Math.abs(timeDiff);
+  const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
   
+  let timeString;
   if (days > 0) {
-    return `${days}d ${hours}h`;
+    // Only show hours if they're greater than 0
+    timeString = hours > 0 ? `${days}d ${hours}h` : `${days}d`;
   } else {
-    return `${hours}h ${minutes}m`;
+    timeString = `${hours}h ${minutes}m`;
   }
+  
+  // For past events, show "X ago"
+  if (timeDiff < 0) {
+    return `${timeString} ago`;
+  }
+  
+  // For future events, just show the time
+  return timeString;
 };
 
 /**

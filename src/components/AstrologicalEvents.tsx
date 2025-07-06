@@ -107,59 +107,78 @@ export default function AstrologicalEvents() {
           </div>
         </div>
 
-        {/* Primary Tab Navigation */}
-        <div className="flex gap-0 mb-0 border border-black overflow-hidden">
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className={`flex-1 px-6 py-4 font-space-grotesk font-semibold transition-all duration-300 ${
-              activeTab === 'upcoming'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            Upcoming Events
-          </button>
-          <button
-            onClick={() => setActiveTab('calendar')}
-            className={`flex-1 px-6 py-4 font-space-grotesk font-semibold transition-all duration-300 border-l border-black ${
-              activeTab === 'calendar'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            Calendar View
-          </button>
+        {/* Navigation tabs */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          {/* Primary Tab Navigation */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${
+                activeTab === 'upcoming'
+                  ? 'bg-black text-white'
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
+              }`}
+            >
+              📅 Upcoming Events
+            </button>
+            <button
+              onClick={() => setActiveTab('calendar')}
+              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${
+                activeTab === 'calendar'
+                  ? 'bg-black text-white'
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
+              }`}
+            >
+              🗓️ Calendar View
+            </button>
+          </div>
         </div>
 
-        {/* Secondary Type Filter Tabs - Connected */}
+        {/* Secondary Type Filter Tabs */}
         {!isLoading && Object.keys(eventsByType).length > 0 && (
-          <div className="border-l border-r border-b border-black overflow-hidden mb-8">
-            <div className="flex flex-wrap gap-0">
-              <button
-                onClick={() => setSelectedType(null)}
-                className={`px-6 py-3 font-space-grotesk font-medium transition-all duration-300 border-r border-black ${
-                  selectedType === null
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-              >
-                All Types
-              </button>
-              {Object.keys(eventsByType).map((type, index) => (
+          <div className="mb-8">
+            <div className="bg-white border border-black p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1.5 h-1.5 bg-black"></div>
+                <span className="font-space-grotesk text-sm font-medium text-black">Filter by Event Type</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={type}
-                  onClick={() => setSelectedType(type)}
-                  className={`px-6 py-3 font-space-grotesk font-medium transition-all duration-300 ${
-                    index < Object.keys(eventsByType).length - 1 ? 'border-r border-black' : ''
-                  } ${
-                    selectedType === type
+                  onClick={() => setSelectedType(null)}
+                  className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
+                    selectedType === null
                       ? 'bg-black text-white'
-                      : 'bg-white text-black hover:bg-gray-100'
+                      : 'bg-white text-black hover:bg-gray-50'
                   }`}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)} ({eventsByType[type]?.length || 0})
+                  All Types
                 </button>
-              ))}
+                {Object.keys(eventsByType).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedType(type)}
+                    className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
+                      selectedType === type
+                        ? 'bg-black text-white'
+                        : 'bg-white text-black hover:bg-gray-50'
+                    }`}
+                  >
+                    {(() => {
+                      // Handle special cases and convert camelCase to readable text
+                      let readable;
+                      if (type === 'planetarySigns') {
+                        readable = 'Planetary Signs';
+                      } else {
+                        readable = type
+                          .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                          .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
+                          .trim();
+                      }
+                      return `${readable} (${eventsByType[type]?.length || 0})`;
+                    })()}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -189,7 +208,9 @@ export default function AstrologicalEvents() {
               {/* Filter events based on selectedType */}
               {(() => {
                 const eventsToShow = selectedType 
-                  ? upcomingEvents.filter(event => event.type === selectedType)
+                  ? selectedType === 'planetarySigns'
+                    ? upcomingEvents.filter(event => event.type === 'planetInSign' || event.type === 'planetSignChange')
+                    : upcomingEvents.filter(event => event.type === selectedType)
                   : upcomingEvents;
                 
                 return eventsToShow.length > 0 ? (
@@ -228,7 +249,9 @@ export default function AstrologicalEvents() {
                 <div className="space-y-4">
                   {(() => {
                     const eventsToShow = selectedType 
-                      ? upcomingEvents.filter(event => event.type === selectedType)
+                      ? selectedType === 'planetarySigns'
+                        ? upcomingEvents.filter(event => event.type === 'planetInSign' || event.type === 'planetSignChange')
+                        : upcomingEvents.filter(event => event.type === selectedType)
                       : upcomingEvents;
                     
                     return eventsToShow.length > 0 ? (

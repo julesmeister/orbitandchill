@@ -21,17 +21,20 @@ export interface AstrologicalEvent {
   id: string;
   name: string;
   date: Date;
-  type: 'eclipse' | 'stellium' | 'grandTrine' | 'alignment' | 'retrograde' | 'conjunction' | 'moonPhase' | 'voidMoon';
+  type: 'eclipse' | 'stellium' | 'grandTrine' | 'alignment' | 'retrograde' | 'conjunction' | 'moonPhase' | 'voidMoon' | 'planetSignChange' | 'planetInSign';
   description: string;
   emoji: string;
   rarity: 'common' | 'uncommon' | 'rare' | 'veryRare';
   impact: string;
   // Duration information
   endDate?: Date;
+  startDate?: Date; // For ongoing transits, when they actually started
   duration?: {
     hours?: number;
     days?: number;
     weeks?: number;
+    months?: number;
+    years?: number;
     isOngoing?: boolean; // For events like retrogrades that last weeks/months
   };
 }
@@ -396,6 +399,287 @@ export const detectVoidMoon = async (date: Date): Promise<AstrologicalEvent[]> =
 };
 
 /**
+ * Find when a planet entered its current sign by scanning backwards
+ */
+const findSignChangeDate = async (planetName: string, currentSign: string, currentDate: Date): Promise<Date> => {
+  // Estimate how far back to scan based on planet speed
+  const scanDays = {
+    sun: 35,
+    mercury: 60, // Can vary due to retrogrades
+    venus: 35,
+    mars: 70,
+    jupiter: 400, // ~13 months
+    saturn: 1000, // ~2.5 years
+    uranus: 2800, // ~7-8 years
+    neptune: 5500, // ~14-15 years
+    pluto: 8000 // ~20+ years
+  }[planetName.toLowerCase()] || 400;
+  
+  // Scan backwards day by day to find when planet entered this sign
+  for (let i = 1; i <= scanDays; i++) {
+    const testDate = new Date(currentDate);
+    testDate.setDate(testDate.getDate() - i);
+    
+    try {
+      const positions = await calculatePlanetaryPositions(testDate, 0, 0);
+      const planet = positions.planets.find(p => p.name.toLowerCase() === planetName.toLowerCase());
+      
+      if (planet && planet.sign.toLowerCase() !== currentSign.toLowerCase()) {
+        // Found the boundary - planet was in different sign on this date
+        // So it entered current sign on the next day
+        const entryDate = new Date(testDate);
+        entryDate.setDate(entryDate.getDate() + 1);
+        return entryDate;
+      }
+    } catch (error) {
+      console.warn(`Error checking position for ${planetName} on ${testDate.toDateString()}`);
+    }
+  }
+  
+  // Fallback if we can't find the entry date
+  const fallbackDate = new Date(currentDate);
+  fallbackDate.setDate(fallbackDate.getDate() - Math.floor(scanDays / 2));
+  return fallbackDate;
+};
+
+/**
+ * Find when a planet will leave its current sign by scanning forwards
+ */
+const findSignExitDate = async (planetName: string, currentSign: string, currentDate: Date): Promise<Date> => {
+  // Estimate how far forward to scan based on planet speed
+  const scanDays = {
+    sun: 35,
+    mercury: 60,
+    venus: 35, 
+    mars: 70,
+    jupiter: 400,
+    saturn: 1000,
+    uranus: 2800,
+    neptune: 5500, // ~14 years per sign
+    pluto: 8000
+  }[planetName.toLowerCase()] || 400;
+  
+  // For very slow planets, scan less frequently to avoid performance issues
+  const stepSize = planetName.toLowerCase() === 'neptune' || planetName.toLowerCase() === 'pluto' ? 30 : 1;
+  
+  // Scan forwards to find when planet will leave this sign
+  for (let i = stepSize; i <= scanDays; i += stepSize) {
+    const testDate = new Date(currentDate);
+    testDate.setDate(testDate.getDate() + i);
+    
+    try {
+      const positions = await calculatePlanetaryPositions(testDate, 0, 0);
+      const planet = positions.planets.find(p => p.name.toLowerCase() === planetName.toLowerCase());
+      
+      if (planet && planet.sign.toLowerCase() !== currentSign.toLowerCase()) {
+        // Found when planet will be in different sign
+        // For slow planets, backtrack daily to find exact date
+        if (stepSize > 1) {
+          for (let j = Math.max(1, i - stepSize + 1); j <= i; j++) {
+            const exactDate = new Date(currentDate);
+            exactDate.setDate(exactDate.getDate() + j);
+            
+            const exactPositions = await calculatePlanetaryPositions(exactDate, 0, 0);
+            const exactPlanet = exactPositions.planets.find(p => p.name.toLowerCase() === planetName.toLowerCase());
+            
+            if (exactPlanet && exactPlanet.sign.toLowerCase() !== currentSign.toLowerCase()) {
+              return exactDate;
+            }
+          }
+        }
+        return testDate;
+      }
+    } catch (error) {
+      console.warn(`Error checking future position for ${planetName} on ${testDate.toDateString()}`);
+    }
+  }
+  
+  // Fallback if we can't find the exit date
+  const fallbackDate = new Date(currentDate);
+  fallbackDate.setDate(fallbackDate.getDate() + Math.floor(scanDays / 2));
+  return fallbackDate;
+};
+
+/**
+ * Detects current planetary positions (ongoing transits) using astronomy engine
+ */
+export const detectCurrentPlanetaryPositions = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  
+  // Only show this once - check if it's within the first few days of scanning
+  const today = new Date();
+  const daysDifference = Math.abs((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Only show on today or very close to today (within 3 days)
+  if (daysDifference > 3) return events;
+  
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  // Check major planets (exclude sun, moon as they change too frequently)
+  const planetsToCheck = positions.planets.filter(p => 
+    ['jupiter', 'saturn', 'uranus', 'neptune', 'pluto'].includes(p.name.toLowerCase())
+  );
+  
+  for (const planet of planetsToCheck) {
+    try {
+      // Use astronomy engine to find actual entry and exit dates
+      const entryDate = await findSignChangeDate(planet.name, planet.sign, today);
+      const exitDate = await findSignExitDate(planet.name, planet.sign, today);
+      
+      // Calculate remaining time dynamically
+      const timeRemaining = exitDate.getTime() - today.getTime();
+      const daysRemaining = Math.max(1, Math.floor(timeRemaining / (1000 * 60 * 60 * 24)));
+      const monthsRemaining = Math.floor(daysRemaining / 30.44);
+      const yearsRemaining = monthsRemaining / 12;
+      
+      // Smart duration display - be more generous with year thresholds
+      const smartDuration = yearsRemaining >= 1 
+        ? { years: Math.round(yearsRemaining), isOngoing: true }
+        : monthsRemaining >= 1 
+          ? { months: Math.round(monthsRemaining), isOngoing: true }
+          : { days: daysRemaining, isOngoing: true };
+      
+      // Determine rarity based on planet
+      const getRarity = (planetName: string) => {
+        switch(planetName.toLowerCase()) {
+          case 'jupiter': return 'uncommon';
+          case 'saturn': return 'rare';
+          case 'uranus':
+          case 'neptune':
+          case 'pluto': return 'veryRare';
+          default: return 'common';
+        }
+      };
+      
+      const planetEmoji = {
+        jupiter: '♃',
+        saturn: '♄', 
+        uranus: '♅',
+        neptune: '♆',
+        pluto: '♇'
+      }[planet.name.toLowerCase()] || '🪐';
+      
+      events.push({
+        id: `planet_in_sign_${planet.name}_${planet.sign}_current`,
+        name: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+        date: today, // Set to today so "Time until event" shows "Now"
+        type: 'planetInSign',
+        description: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} is currently transiting through ${planet.sign}`,
+        emoji: planetEmoji,
+        rarity: getRarity(planet.name),
+        impact: `Current ${planet.name.toLowerCase()} themes: ${getSignThemes(planet.sign)}`,
+        endDate: exitDate, // When planet will leave this sign
+        startDate: entryDate, // When planet actually entered this sign
+        duration: smartDuration
+      });
+    } catch (error) {
+      console.warn(`Error processing ${planet.name} in ${planet.sign}:`, error);
+    }
+  }
+  
+  return events;
+};
+
+/**
+ * Detects upcoming planetary sign changes for all planets
+ */
+export const detectUpcomingPlanetarySignChanges = async (date: Date): Promise<AstrologicalEvent[]> => {
+  const events: AstrologicalEvent[] = [];
+  
+  // Only scan for upcoming sign changes, not past ones
+  const today = new Date();
+  if (date < today) return events;
+  
+  // Check if this date is within 90 days from today
+  const daysFromToday = Math.floor((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysFromToday > 90) return events;
+  
+  const positions = await calculatePlanetaryPositions(date, 0, 0);
+  
+  // Check ALL planets for sign changes (including faster ones)
+  const planetsToCheck = positions.planets.filter(p => 
+    ['sun', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'].includes(p.name.toLowerCase())
+  );
+  
+  for (const planet of planetsToCheck) {
+    try {
+      // Check if planet is changing signs on this date by comparing with previous day
+      const previousDay = new Date(date);
+      previousDay.setDate(previousDay.getDate() - 1);
+      
+      const prevPositions = await calculatePlanetaryPositions(previousDay, 0, 0);
+      const prevPlanet = prevPositions.planets.find(p => p.name.toLowerCase() === planet.name.toLowerCase());
+      
+      if (prevPlanet && prevPlanet.sign.toLowerCase() !== planet.sign.toLowerCase()) {
+        // Planet changed signs! This is a sign ingress
+        
+        // Calculate how long this planet will stay in the new sign
+        const exitDate = await findSignExitDate(planet.name, planet.sign, date);
+        const timeInSign = exitDate.getTime() - date.getTime();
+        const daysInSign = Math.floor(timeInSign / (1000 * 60 * 60 * 24));
+        const monthsInSign = Math.floor(daysInSign / 30.44);
+        const yearsInSign = monthsInSign / 12;
+        
+        // Smart duration display
+        const smartDuration = yearsInSign > 1.5 
+          ? { years: Math.round(yearsInSign), isOngoing: true }
+          : monthsInSign > 0 
+            ? { months: monthsInSign, isOngoing: true }
+            : daysInSign > 0
+              ? { days: daysInSign, isOngoing: true }
+              : { days: 1, isOngoing: true };
+        
+        // Determine rarity based on planet
+        const getRarity = (planetName: string) => {
+          switch(planetName.toLowerCase()) {
+            case 'sun':
+            case 'mercury':
+            case 'venus':
+            case 'mars': return 'common';
+            case 'jupiter': return 'uncommon';
+            case 'saturn': return 'rare';
+            case 'uranus':
+            case 'neptune':
+            case 'pluto': return 'veryRare';
+            default: return 'common';
+          }
+        };
+        
+        const planetEmoji = {
+          sun: '☀️',
+          mercury: '☿️',
+          venus: '♀️',
+          mars: '♂️',
+          jupiter: '♃',
+          saturn: '♄',
+          uranus: '♅',
+          neptune: '♆',
+          pluto: '♇'
+        }[planet.name.toLowerCase()] || '🪐';
+        
+        events.push({
+          id: `planet_enters_${planet.name}_${planet.sign}_${date.getTime()}`,
+          name: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} Enters ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+          date: new Date(date),
+          type: 'planetSignChange',
+          description: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} transitions from ${prevPlanet.sign} into ${planet.sign}`,
+          emoji: planetEmoji,
+          rarity: getRarity(planet.name),
+          impact: `New ${planet.name.toLowerCase()} themes: ${getSignThemes(planet.sign)}`,
+          endDate: exitDate,
+          startDate: new Date(date), // This is when it starts in the new sign
+          duration: smartDuration
+        });
+      }
+    } catch (error) {
+      console.warn(`Error checking sign change for ${planet.name} on ${date.toDateString()}:`, error);
+    }
+  }
+  
+  return events;
+};
+
+/**
  * Detects moon sign changes for a given date
  */
 export const detectMoonSignChanges = async (date: Date): Promise<AstrologicalEvent[]> => {
@@ -422,7 +706,7 @@ export const detectMoonSignChanges = async (date: Date): Promise<AstrologicalEve
       id: `moon_sign_change_${date.getTime()}`,
       name: `Moon Enters ${nextSign.charAt(0).toUpperCase() + nextSign.slice(1)}`,
       date: new Date(date),
-      type: 'moonPhase',
+      type: 'planetSignChange',
       description: `The Moon transitions from ${moon.sign} into ${nextSign}`,
       emoji: '🌙',
       rarity: 'common',
@@ -447,7 +731,9 @@ export const detectAllEvents = async (date: Date): Promise<AstrologicalEvent[]> 
       conjunctions,
       moonPhases,
       voidMoon,
-      moonSignChanges
+      moonSignChanges,
+      currentPlanetaryPositions,
+      upcomingSignChanges
     ] = await Promise.all([
       detectRetrogrades(date),
       detectStelliums(date),
@@ -455,7 +741,9 @@ export const detectAllEvents = async (date: Date): Promise<AstrologicalEvent[]> 
       detectConjunctions(date),
       detectMoonPhases(date),
       detectVoidMoon(date),
-      detectMoonSignChanges(date)
+      detectMoonSignChanges(date),
+      detectCurrentPlanetaryPositions(date),
+      detectUpcomingPlanetarySignChanges(date)
     ]);
     
     return [
@@ -465,7 +753,9 @@ export const detectAllEvents = async (date: Date): Promise<AstrologicalEvent[]> 
       ...conjunctions,
       ...moonPhases,
       ...voidMoon,
-      ...moonSignChanges
+      ...moonSignChanges,
+      ...currentPlanetaryPositions,
+      ...upcomingSignChanges
     ];
   } catch (error) {
     console.warn(`Error detecting events for ${date.toDateString()}:`, error);

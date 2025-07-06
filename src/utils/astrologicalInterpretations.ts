@@ -26,6 +26,20 @@ import {
   getHouseTheme,
   getHouseInfo,
 } from "./astrological/houseThemes";
+import {
+  EventActionableAdvice,
+  EventInterpretation,
+  getEventInterpretation,
+  hasEventInterpretation,
+  RETROGRADE_INTERPRETATIONS,
+  MOON_PHASE_INTERPRETATIONS,
+  PLANETARY_SIGN_INTERPRETATIONS,
+  CONJUNCTION_INTERPRETATIONS,
+  STELLIUM_INTERPRETATIONS,
+  GRAND_TRINE_INTERPRETATIONS,
+  VOID_MOON_INTERPRETATIONS,
+  ECLIPSE_INTERPRETATIONS,
+} from "./astrological/eventInterpretations";
 
 // Import transit and event data from new split modules
 import {
@@ -54,7 +68,7 @@ import {
 } from "./astrological/eventData";
 
 // Re-export all functions and types for backward compatibility
-export type { AspectInfo, TransitAdviceTemplate };
+export type { AspectInfo, TransitAdviceTemplate, EventActionableAdvice, EventInterpretation };
 export {
   // Aspect utilities
   getAspectType,
@@ -102,6 +116,18 @@ export {
   getConjunctionRarity,
   getConjunctionImpact,
   getNextSign,
+  
+  // Event interpretations
+  getEventInterpretation,
+  hasEventInterpretation,
+  RETROGRADE_INTERPRETATIONS,
+  MOON_PHASE_INTERPRETATIONS,
+  PLANETARY_SIGN_INTERPRETATIONS,
+  CONJUNCTION_INTERPRETATIONS,
+  STELLIUM_INTERPRETATIONS,
+  GRAND_TRINE_INTERPRETATIONS,
+  VOID_MOON_INTERPRETATIONS,
+  ECLIPSE_INTERPRETATIONS,
 };
 
 // Comprehensive planetary interpretation combining sign, house, and dignity
