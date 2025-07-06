@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NotificationService } from '@/db/services/notificationService';
-import type { CreateNotificationData } from '@/db/services/notificationService';
+import type { CreateNotificationData, EntityType } from '@/db/services/notificationService';
 import { BRAND } from '@/config/brand';
 import { BatchNotificationManager } from './batchNotifications';
 import { createReliableNotification } from './notificationReliability';
@@ -83,7 +83,7 @@ const createEnhancedNotification = async (
     } else {
       // Simplified path without rate limiting
       const notification = await NotificationService.createNotification(notificationData);
-      success = notification && notification.id !== undefined;
+      success = !!(notification && notification.id !== undefined);
       return notification;
     }
   } catch (error) {
@@ -755,6 +755,27 @@ export const createModerationRequiredNotification = async (
   reason: string,
   reporterName?: string
 ) => {
+  // Map contentType to valid EntityType
+  const getEntityType = (type: string): EntityType => {
+    const lowerType = type.toLowerCase();
+    switch (lowerType) {
+      case 'discussion':
+        return 'discussion';
+      case 'reply':
+        return 'reply';
+      case 'chart':
+        return 'chart';
+      case 'event':
+        return 'event';
+      case 'user':
+        return 'user';
+      case 'analytics':
+        return 'analytics';
+      default:
+        return 'system';
+    }
+  };
+
   return createEnhancedNotification({
     userId,
     type: 'moderation_required',
@@ -763,7 +784,7 @@ export const createModerationRequiredNotification = async (
     icon: '🚨',
     priority: 'high',
     category: 'admin',
-    entityType: contentType.toLowerCase(),
+    entityType: getEntityType(contentType),
     entityId: contentId,
     entityUrl: `/admin/moderation/${contentType.toLowerCase()}/${contentId}`,
     data: { contentType, contentId, reason, reporterName }
@@ -1079,23 +1100,6 @@ export const createBatchedDiscussionReply = async (
   });
 };
 
-export const createBatchedDiscussionLike = async (
-  userId: string,
-  likerName: string,
-  discussionTitle: string,
-  discussionId: string
-) => {
-  return BatchNotificationManager.addToBatch({
-    userId,
-    type: 'discussion_like',
-    entityType: 'discussion',
-    entityId: discussionId,
-    actorName: likerName,
-    contextTitle: discussionTitle,
-    timestamp: new Date()
-  });
-};
-
 // Force process all pending batches (useful for testing/cleanup)
 export const processPendingBatches = async () => {
   return BatchNotificationManager.processAllPendingBatches();
@@ -1146,23 +1150,7 @@ export const testNotificationReliability = async (userId: string) => {
   console.log('Reliability test complete. Check system health for results.');
 };
 
-// Batch notification helpers for new types
-export const createBatchedChartLike = async (
-  userId: string,
-  likerName: string,
-  chartTitle: string,
-  chartId: string
-) => {
-  return BatchNotificationManager.addToBatch({
-    userId,
-    type: 'chart_like',
-    entityType: 'chart',
-    entityId: chartId,
-    actorName: likerName,
-    contextTitle: chartTitle,
-    timestamp: new Date()
-  });
-};
+// Note: createBatchedChartLike already defined above
 
 export const createBatchedProfileView = async (
   userId: string,
@@ -1233,6 +1221,46 @@ export const createNotificationByType = async (
       return createSystemUpdateNotification(userId, data.updateTitle, data.updateDescription, data.updateUrl);
     case 'welcome':
       return createWelcomeNotification(userId, data.username, data.isNewUser);
+    case 'follow_new':
+      return createFollowNotification(userId, data.followerName, data.followerId);
+    case 'profile_view':
+      return createProfileViewNotification(userId, data.viewerName, data.viewerId, data.enableBatching);
+    case 'event_update':
+      return createEventUpdateNotification(userId, data.eventTitle, data.updateType, data.eventId);
+    case 'system_update':
+      return createSystemUpdateNotification(userId, data.updateTitle, data.updateDescription, data.updateUrl);
+    case 'premium_renewal':
+      return createPremiumRenewalNotification(userId, data.tier, data.renewalDate);
+    case 'premium_trial':
+      return createPremiumTrialNotification(userId, data.trialStatus, data.daysLeft, data.tier);
+    case 'educational_content':
+      return createEducationalContentNotification(userId, data.contentTitle, data.contentType, data.contentUrl, data.description);
+    case 'feature_tour':
+      return createFeatureTourNotification(userId, data.featureName, data.tourUrl, data.description);
+    case 'newsletter':
+      return createNewsletterNotification(userId, data.subject, data.summary, data.newsletterUrl);
+    case 'data_aggregation':
+      return createDataAggregationNotification(userId, data.dataType, data.recordsProcessed, data.resultsUrl);
+    case 'account_security':
+      return createAccountSecurityNotification(userId, data.securityEvent, data.details, data.actionRequired);
+    case 'data_export':
+      return createDataExportNotification(userId, data.exportType, data.downloadUrl, data.expiresAt);
+    case 'moderation_required':
+      return createModerationRequiredNotification(userId, data.contentType, data.contentId, data.reason, data.reporterName);
+    case 'user_report':
+      return createUserReportNotification(userId, data.reportedUserId, data.reportedUsername, data.reportReason, data.reporterName);
+    case 'analytics_success':
+      return createAnalyticsSuccessNotification(userId, data.analyticsType, data.resultsUrl);
+    case 'analytics_failure':
+      return createAnalyticsFailureNotification(userId, data.analyticsType, data.errorMessage);
+    case 'cron_success':
+      return createCronSuccessNotification(userId, data.jobName, data.jobDetails);
+    case 'cron_failure':
+      return createCronFailureNotification(userId, data.jobName, data.errorMessage);
+    case 'traffic_spike':
+      return createTrafficSpikeNotification(userId, data.trafficIncrease, data.currentLoad);
+    case 'system_health':
+      return createSystemHealthNotification(userId, data.healthStatus, data.details);
     default:
       throw new Error(`Unknown notification type: ${type}`);
   }

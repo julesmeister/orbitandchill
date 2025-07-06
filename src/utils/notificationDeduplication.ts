@@ -58,8 +58,8 @@ export class NotificationDeduplicator {
     userId: string,
     type: string,
     entityId?: string,
-    actorId?: string,
-    customTimeWindow?: number
+    customTimeWindow?: number,
+    actorId?: string
   ): Promise<DuplicateCheckResult> {
     try {
       const rule = this.DEFAULT_RULES[type as keyof typeof this.DEFAULT_RULES];
@@ -94,9 +94,9 @@ export class NotificationDeduplicator {
       const existingNotifications = await this.findSimilarNotifications(
         userId,
         type,
+        cutoffTime,
         entityId,
-        rule.allowMultiple ? actorId : undefined,
-        cutoffTime
+        rule.allowMultiple ? actorId : undefined
       );
 
       if (existingNotifications.length > 0) {
@@ -155,9 +155,9 @@ export class NotificationDeduplicator {
   private async findSimilarNotifications(
     userId: string,
     type: string,
+    cutoffTime: Date,
     entityId?: string,
-    actorId?: string,
-    cutoffTime: Date
+    actorId?: string
   ): Promise<any[]> {
     try {
       // Build conditions for similarity check
@@ -176,7 +176,7 @@ export class NotificationDeduplicator {
       }
 
       // Use NotificationService to find similar notifications
-      const notifications = await NotificationService.getUserNotifications(userId, {
+      const notifications = await NotificationService.getNotifications(userId, {
         isRead: undefined,
         limit: 10,
         offset: 0
@@ -187,7 +187,8 @@ export class NotificationDeduplicator {
         if (notification.type !== type) return false;
         if (new Date(notification.createdAt) < cutoffTime) return false;
         if (entityId && notification.entityId !== entityId) return false;
-        if (actorId && notification.actorId !== actorId) return false;
+        // Note: actorId not in notification record, this would need to be stored in data field
+        // if (actorId && notification.data?.actorId !== actorId) return false;
         
         return true;
       });
@@ -291,6 +292,7 @@ export async function createNotificationWithDeduplication(
       notificationData.userId,
       notificationData.type,
       notificationData.entityId,
+      undefined, // customTimeWindow
       notificationData.actorId
     );
 

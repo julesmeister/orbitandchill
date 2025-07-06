@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { BRAND } from '../../../config/brand';
 import DiscussionDetailPageClient from './DiscussionDetailPageClient';
 import DiscussionDetailStructuredData from '../../../components/SEO/DiscussionDetailStructuredData';
@@ -159,12 +160,12 @@ export default async function DiscussionDetailPage({
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               Discussion Not Found
             </h1>
-            <a
+            <Link
               href="/discussions"
               className="text-blue-600 hover:text-blue-700"
             >
               ← Back to Discussions
-            </a>
+            </Link>
           </div>
         </div>
       </>

@@ -9,17 +9,22 @@ import { UserService } from './userService';
 export type NotificationType = 
   | 'discussion_reply' | 'discussion_like' | 'discussion_mention'
   | 'chart_shared' | 'chart_comment' | 'chart_like'
-  | 'event_reminder' | 'event_bookmark'
+  | 'event_reminder' | 'event_bookmark' | 'event_update'
   | 'system_announcement' | 'system_maintenance' | 'system_update' | 'system_health'
-  | 'admin_message' | 'admin_warning'
-  | 'premium_upgrade' | 'premium_expiry'
-  | 'welcome' | 'newsletter'
-  | 'analytics_success' | 'analytics_failure' | 'cron_success' | 'cron_failure' | 'traffic_spike';
+  | 'admin_message' | 'admin_warning' | 'moderation_required' | 'user_report'
+  | 'premium_upgrade' | 'premium_expiry' | 'premium_renewal' | 'premium_trial'
+  | 'welcome' | 'newsletter' | 'educational_content' | 'feature_tour'
+  | 'analytics_success' | 'analytics_failure' | 'cron_success' | 'cron_failure' | 'traffic_spike'
+  | 'data_aggregation' | 'account_security' | 'data_export' | 'follow_new' | 'profile_view'
+  | 'rate_limit_warning';
 
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type NotificationCategory = 'social' | 'system' | 'admin' | 'premium' | 'reminder' | 'achievement';
 export type EntityType = 'discussion' | 'reply' | 'chart' | 'event' | 'user' | 'system' | 'analytics';
 export type DeliveryMethod = 'in_app' | 'email' | 'push' | 'sms';
+
+// Alias for backward compatibility
+export type NotificationData = NotificationRecord;
 
 export interface CreateNotificationData {
   userId: string;
@@ -966,6 +971,73 @@ export class NotificationService {
     } catch (error) {
       console.error('Error deleting archived notifications:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Get a single notification by ID
+   */
+  static async getNotificationById(notificationId: string): Promise<NotificationRecord | null> {
+    const db = getDb();
+    if (!db) {
+      return null;
+    }
+
+    try {
+      const result = await executeRawSelect(db, {
+        table: 'notifications',
+        conditions: [{ column: 'id', value: notificationId }],
+        limit: 1
+      });
+
+      if (result.length === 0) return null;
+      
+      return this.transformNotification(transformDatabaseRow(result[0]));
+    } catch (error) {
+      console.error('Error getting notification by ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update a notification with partial data
+   */
+  static async updateNotification(
+    notificationId: string, 
+    updates: Partial<Pick<NotificationRecord, 'title' | 'message' | 'isRead' | 'readAt' | 'isArchived' | 'archivedAt' | 'deliveredAt' | 'emailSent' | 'emailSentAt' | 'data' | 'tags'>> & { metadata?: string }
+  ): Promise<boolean> {
+    const db = getDb();
+    if (!db) {
+      return false;
+    }
+
+    try {
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+
+      // Map updates to database format
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.message !== undefined) updateData.message = updates.message;
+      if (updates.isRead !== undefined) updateData.isRead = updates.isRead;
+      if (updates.readAt !== undefined) updateData.readAt = updates.readAt;
+      if (updates.isArchived !== undefined) updateData.isArchived = updates.isArchived;
+      if (updates.archivedAt !== undefined) updateData.archivedAt = updates.archivedAt;
+      if (updates.deliveredAt !== undefined) updateData.deliveredAt = updates.deliveredAt;
+      if (updates.emailSent !== undefined) updateData.emailSent = updates.emailSent;
+      if (updates.emailSentAt !== undefined) updateData.emailSentAt = updates.emailSentAt;
+      if (updates.data !== undefined) updateData.data = JSON.stringify(updates.data);
+      if (updates.tags !== undefined) updateData.tags = JSON.stringify(updates.tags);
+      if (updates.metadata !== undefined) updateData.metadata = updates.metadata;
+
+      const rowsAffected = await executeRawUpdate(db, 'notifications', updateData, [
+        { column: 'id', value: notificationId }
+      ]);
+
+      return rowsAffected > 0;
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      return false;
     }
   }
 }

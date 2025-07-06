@@ -112,12 +112,12 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'batch_chart_like':
-        const { likerName: cLikerName, chartTitle, chartId } = params;
+        const { likerName: cLikerName, chartTitle: batchChartTitle, chartId: batchChartId } = params;
         result = await createBatchedChartLike(
           userId,
           cLikerName || 'Chart Batch Liker',
-          chartTitle || 'Test Chart for Batching',
-          chartId || 'chart-batch-test-id'
+          batchChartTitle || 'Test Chart for Batching',
+          batchChartId || 'chart-batch-test-id'
         );
         break;
 
@@ -286,11 +286,11 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'moderation_required':
-        const { contentType, contentId, reason, reporterName } = params;
+        const { contentType: modContentType, contentId: modContentId, reason, reporterName } = params;
         result = await createModerationRequiredNotification(
           userId,
-          contentType || 'Discussion',
-          contentId || 'discussion-123',
+          modContentType || 'Discussion',
+          modContentId || 'discussion-123',
           reason || 'Inappropriate content',
           reporterName
         );

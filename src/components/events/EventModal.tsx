@@ -18,18 +18,6 @@ interface EventModalProps {
 }
 
 export default function EventModal({ event, isOpen, onClose }: EventModalProps) {
-  if (!isOpen) return null;
-
-  // Get interpretation for this event
-  const interpretation = getEventInterpretation(event.type, event.name, event.description);
-
-  // Close modal when clicking outside
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   // Close modal on Escape key
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -48,6 +36,18 @@ export default function EventModal({ event, isOpen, onClose }: EventModalProps) 
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  // Get interpretation for this event
+  const interpretation = getEventInterpretation(event.type, event.name, event.description);
+
+  // Close modal when clicking outside
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   const formatDuration = (duration?: AstrologicalEvent['duration']) => {
     if (!duration) return '';

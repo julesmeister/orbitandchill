@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     
     // Clean up the test notification
     if (testNotification?.id) {
-      await NotificationService.deleteNotification(testNotification.id);
+      await NotificationService.deleteNotification(testNotification.id, testUserId);
     }
 
     return NextResponse.json({

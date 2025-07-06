@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NotificationService } from '@/db/services/notificationService';
-import type { NotificationType, NotificationPriority } from '@/db/services/notificationService';
+import type { NotificationType, NotificationPriority, NotificationCategory, EntityType } from '@/db/services/notificationService';
 
 interface BatchableNotification {
   userId: string;
   type: NotificationType;
-  entityType: string;
+  entityType: EntityType;
   entityId: string;
   actorName: string;
   contextTitle: string;
@@ -19,8 +19,8 @@ interface BatchedNotification {
   message: string;
   icon: string;
   priority: NotificationPriority;
-  category: string;
-  entityType: string;
+  category: NotificationCategory;
+  entityType: EntityType;
   entityId: string;
   entityUrl: string;
   data: {
@@ -280,12 +280,18 @@ export class BatchNotificationManager {
   /**
    * Get entity URL for navigation
    */
-  private static getEntityUrl(entityType: string, entityId: string): string {
+  private static getEntityUrl(entityType: EntityType, entityId: string): string {
     switch (entityType) {
       case 'discussion':
         return `/discussions/${entityId}`;
       case 'chart':
         return `/chart/${entityId}`;
+      case 'user':
+        return `/profile/${entityId}`;
+      case 'event':
+        return `/events/${entityId}`;
+      case 'analytics':
+      case 'system':
       default:
         return '/notifications';
     }

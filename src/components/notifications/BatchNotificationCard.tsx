@@ -135,7 +135,7 @@ export const BatchNotificationCard: React.FC<BatchNotificationCardProps> = ({
                     {actors.length} people involved:
                   </h5>
                   <div className="flex flex-wrap gap-1">
-                    {actors.map((actor, index) => (
+                    {actors.map((actor: string, index: number) => (
                       <span
                         key={actor}
                         className="px-2 py-1 text-xs bg-white text-gray-700 rounded border"

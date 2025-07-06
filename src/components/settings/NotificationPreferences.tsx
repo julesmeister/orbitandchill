@@ -130,8 +130,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.emailEnabled || false}
-                onChange={(e) => handlePreferenceChange('emailEnabled', e.target.checked)}
+                checked={localPreferences.enableEmail || false}
+                onChange={(e) => handlePreferenceChange('enableEmail', e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">Enable email notifications</span>
@@ -140,9 +140,9 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center ml-6">
               <input
                 type="checkbox"
-                checked={localPreferences.emailDigestEnabled || false}
-                onChange={(e) => handlePreferenceChange('emailDigestEnabled', e.target.checked)}
-                disabled={!localPreferences.emailEnabled}
+                checked={localPreferences.dailyDigest || false}
+                onChange={(e) => handlePreferenceChange('dailyDigest', e.target.checked)}
+                disabled={!localPreferences.enableEmail}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
               />
               <span className="ml-2 text-gray-700">Daily email digest</span>
@@ -157,8 +157,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.browserNotificationsEnabled || false}
-                onChange={(e) => handlePreferenceChange('browserNotificationsEnabled', e.target.checked)}
+                checked={localPreferences.enablePush || false}
+                onChange={(e) => handlePreferenceChange('enablePush', e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">Show browser notifications</span>
@@ -167,9 +167,9 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center ml-6">
               <input
                 type="checkbox"
-                checked={localPreferences.notificationSoundEnabled || false}
-                onChange={(e) => handlePreferenceChange('notificationSoundEnabled', e.target.checked)}
-                disabled={!localPreferences.browserNotificationsEnabled}
+                checked={localPreferences.enableInApp || false}
+                onChange={(e) => handlePreferenceChange('enableInApp', e.target.checked)}
+                disabled={!localPreferences.enablePush}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
               />
               <span className="ml-2 text-gray-700">Play notification sound</span>
@@ -184,8 +184,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.discussionReplies !== false}
-                onChange={(e) => handlePreferenceChange('discussionReplies', e.target.checked)}
+                checked={localPreferences.socialNotifications?.in_app !== false}
+                onChange={(e) => handlePreferenceChange('socialNotifications', { ...localPreferences.socialNotifications, in_app: e.target.checked })}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">Discussion replies</span>
@@ -194,8 +194,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.discussionLikes !== false}
-                onChange={(e) => handlePreferenceChange('discussionLikes', e.target.checked)}
+                checked={localPreferences.socialNotifications?.in_app !== false}
+                onChange={(e) => handlePreferenceChange('socialNotifications', { ...localPreferences.socialNotifications, in_app: e.target.checked })}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">Likes and reactions</span>
@@ -204,8 +204,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.mentions !== false}
-                onChange={(e) => handlePreferenceChange('mentions', e.target.checked)}
+                checked={localPreferences.socialNotifications?.in_app !== false}
+                onChange={(e) => handlePreferenceChange('socialNotifications', { ...localPreferences.socialNotifications, in_app: e.target.checked })}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">@Mentions</span>
@@ -214,8 +214,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.systemAnnouncements !== false}
-                onChange={(e) => handlePreferenceChange('systemAnnouncements', e.target.checked)}
+                checked={localPreferences.systemNotifications?.in_app !== false}
+                onChange={(e) => handlePreferenceChange('systemNotifications', { ...localPreferences.systemNotifications, in_app: e.target.checked })}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">System announcements</span>
@@ -224,8 +224,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.chartComments !== false}
-                onChange={(e) => handlePreferenceChange('chartComments', e.target.checked)}
+                checked={localPreferences.socialNotifications?.in_app !== false}
+                onChange={(e) => handlePreferenceChange('socialNotifications', { ...localPreferences.socialNotifications, in_app: e.target.checked })}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">Chart comments</span>
@@ -234,8 +234,8 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={localPreferences.eventReminders !== false}
-                onChange={(e) => handlePreferenceChange('eventReminders', e.target.checked)}
+                checked={localPreferences.reminderNotifications?.in_app !== false}
+                onChange={(e) => handlePreferenceChange('reminderNotifications', { ...localPreferences.reminderNotifications, in_app: e.target.checked })}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-gray-700">Event reminders</span>
@@ -250,12 +250,13 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
             <div>
               <label className="block text-sm text-gray-700 mb-1">Digest frequency</label>
               <select
-                value={localPreferences.digestFrequency || 'daily'}
-                onChange={(e) => handlePreferenceChange('digestFrequency', e.target.value)}
+                value={localPreferences.weeklyDigest ? 'weekly' : (localPreferences.dailyDigest ? 'daily' : 'never')}
+                onChange={(e) => {
+                  handlePreferenceChange('dailyDigest', e.target.value === 'daily');
+                  handlePreferenceChange('weeklyDigest', e.target.value === 'weekly');
+                }}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="immediate">Immediate</option>
-                <option value="hourly">Hourly</option>
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="never">Never</option>

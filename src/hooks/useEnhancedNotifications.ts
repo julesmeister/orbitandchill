@@ -205,12 +205,12 @@ export const useEnhancedNotifications = (
   const combinedNotifications = [
     ...realtimeNotifications.map(n => ({
       ...n,
-      createdAt: new Date(n.createdAt!),
-      updatedAt: new Date(n.updatedAt!),
-      readAt: n.readAt ? new Date(n.readAt) : null,
-      archivedAt: n.archivedAt ? new Date(n.archivedAt) : null,
-      expiresAt: n.expiresAt ? new Date(n.expiresAt) : null,
-      scheduledFor: n.scheduledFor ? new Date(n.scheduledFor) : null
+      createdAt: n.createdAt instanceof Date ? n.createdAt : new Date(n.createdAt),
+      updatedAt: n.updatedAt instanceof Date ? n.updatedAt : new Date(n.updatedAt),
+      readAt: n.readAt ? (n.readAt instanceof Date ? n.readAt : new Date(n.readAt)) : undefined,
+      archivedAt: n.archivedAt ? (n.archivedAt instanceof Date ? n.archivedAt : new Date(n.archivedAt)) : undefined,
+      expiresAt: n.expiresAt ? (n.expiresAt instanceof Date ? n.expiresAt : new Date(n.expiresAt)) : undefined,
+      scheduledFor: n.scheduledFor ? (n.scheduledFor instanceof Date ? n.scheduledFor : new Date(n.scheduledFor)) : undefined
     } as NotificationRecord)),
     ...baseNotifications.filter(baseN => 
       !realtimeNotifications.some(rtN => rtN.id === baseN.id)

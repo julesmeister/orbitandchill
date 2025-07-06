@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
       isArchived: true,
       limit,
       offset,
-      category,
-      priority,
-      type
+      category: category as any,
+      priority: priority as any,
+      type: type as any
     });
 
     // If search term provided, filter by title or message
