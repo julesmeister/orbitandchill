@@ -9,6 +9,7 @@ This guide explains how to test the newly implemented notification system for di
 - **Reply Notifications**: When someone replies to your discussion
 - **Comment Reply Notifications**: When someone replies to your comment
 - **Like Notifications**: When someone likes your discussion or comment
+- **Mention Notifications**: When someone mentions you with @username in a discussion
 - **Nested Reply Support**: Notifications for threaded conversations
 
 ### System Infrastructure
@@ -16,6 +17,8 @@ This guide explains how to test the newly implemented notification system for di
 - **Notification API**: Full CRUD operations for notifications
 - **Notification Service**: Database layer for notification management
 - **Helper Functions**: Utility functions for creating common notification types
+- **Real-time Updates**: Server-Sent Events (SSE) for instant notification delivery
+- **Connection Status**: Visual indicators for real-time connection health
 
 ## 🔧 Testing APIs
 
@@ -41,6 +44,17 @@ curl -X POST http://localhost:3000/api/test-notifications \
     "likerName": "Jane Smith",
     "discussionTitle": "Moon Phases Explained",
     "discussionId": "discussion-456"
+  }'
+
+# Test mention notification
+curl -X POST http://localhost:3000/api/test-notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "discussion_mention",
+    "userId": "your-user-id",
+    "mentionerName": "Alex Johnson", 
+    "discussionTitle": "Saturn Return Experience",
+    "discussionId": "discussion-789"
   }'
 
 # Test welcome notification
@@ -72,6 +86,10 @@ curl http://localhost:3000/api/notifications-status
 curl -X POST http://localhost:3000/api/notifications-status \
   -H "Content-Type: application/json" \
   -d '{"userId": "your-user-id"}'
+
+# Test real-time notification stream (SSE)
+curl -N -H "Accept: text/event-stream" \
+  "http://localhost:3000/api/notifications/stream?userId=your-user-id"
 ```
 
 ### 3. Notification Management
@@ -120,11 +138,28 @@ curl -X POST http://localhost:3000/api/notifications/mark-all-read \
 5. User C likes User A's comment
 6. Check User A's notifications (should see comment like notification)
 
-### 4. UI Testing
+### 4. Mention Testing
+1. User A creates a discussion
+2. User B writes a reply with "@UserC what do you think about this?"
+3. Check User C's notifications (should see mention notification)
+4. User C should receive high-priority notification with @ icon
+5. Test multiple mentions in one reply: "@UserA @UserB great discussion!"
+
+### 5. Real-time Testing
+1. Open two browser windows/tabs with different users
+2. Create a discussion with User A
+3. In User B's window, reply to the discussion
+4. User A should see notification appear instantly (without page refresh)
+5. Check connection status indicator shows "Connected" with green dot
+6. Test with poor connection: disable network briefly, reconnect
+
+### 6. UI Testing
 1. **Notification Bell**: Should show red badge with count when unread notifications exist
 2. **Dropdown Panel**: Should show notifications with proper icons and timestamps
 3. **Mark as Read**: Should remove unread indicator when clicked
 4. **Navigation**: Should navigate to correct discussion when notification is clicked
+5. **Mention Display**: @mentions should be highlighted in discussion content
+6. **Connection Status**: Should show real-time connection health indicator
 
 ## 🎯 Expected Behavior
 
@@ -136,15 +171,18 @@ curl -X POST http://localhost:3000/api/notifications/mark-all-read \
 
 ### Notification Types & Priorities
 - **Reply Notifications**: `medium` priority, 30-day expiry
-- **Like Notifications**: `low` priority, 7-day expiry  
+- **Like Notifications**: `low` priority, 7-day expiry
+- **Mention Notifications**: `high` priority, 14-day expiry
 - **Welcome Notifications**: `medium` priority, no expiry
 - **System Announcements**: `medium` priority, 30-day expiry
 
 ### UI Behavior
 - **Unread Count**: Shows in red badge on notification bell
-- **Real-time Updates**: Currently requires page refresh (WebSocket support planned)
+- **Real-time Updates**: Instant updates via Server-Sent Events (SSE)
+- **Connection Status**: Visual indicator for real-time connection health
 - **Mobile Responsive**: Notification panel adapts to mobile screens
 - **Keyboard Accessible**: Can be navigated with keyboard
+- **Auto-reconnection**: Automatic reconnection on connection loss
 
 ## 🔍 Debugging
 
@@ -182,17 +220,19 @@ Check server logs for these messages:
 - ✅ `Discussion reply notification created`
 - ✅ `Discussion like notification created`
 - ✅ `Parent reply notification created`
-- ❌ `Failed to create reply notification`
+- ✅ `Mention notification created for user: [userId]`
+- ❌ `Failed to create notifications`
 
 ## 🚀 Future Enhancements
 
 ### Planned Features
-- **Real-time Notifications**: WebSocket integration for instant updates
+- **Enhanced Real-time Features**: WebSocket upgrade from SSE for bidirectional communication
 - **Email Notifications**: HTML email templates for important notifications
 - **Push Notifications**: Browser and mobile push notification support
-- **Mention Notifications**: @username mention detection and notifications
+- **Enhanced Mention Features**: Mention autocomplete in text editor, multiple mentions per message
 - **Notification Preferences**: User settings for notification types and frequency
 - **Batch Notifications**: Group similar notifications (e.g., "3 people liked your post")
+- **Typing Indicators**: Show when users are typing in real-time
 
 ### Performance Optimizations
 - **Notification Queuing**: Background job processing for high-volume notifications

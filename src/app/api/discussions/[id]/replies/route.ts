@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
 import { UserService } from '@/db/services/userService';
 import { initializeDatabase } from '@/db/index';
-import { createDiscussionReplyNotification } from '@/utils/notificationHelpers';
+import { createDiscussionReplyNotification, createDiscussionMentionNotification } from '@/utils/notificationHelpers';
+import { processMentions } from '@/utils/mentionUtils';
 
 // Helper function to format timestamp for display
 const formatTimestamp = (date: Date | string | number) => {
@@ -250,9 +251,11 @@ export async function POST(
       children: []
     };
     
-    // Create notification for discussion author (async, don't block response)
+    // Create notifications (async, don't block response)
     try {
       const discussion = await DiscussionService.getDiscussionById(discussionId);
+      
+      // 1. Create reply notification for discussion author
       if (discussion && discussion.authorId !== authorId) {
         // Don't notify if replying to your own discussion
         await createDiscussionReplyNotification(
@@ -264,7 +267,7 @@ export async function POST(
         console.log('✅ Discussion reply notification created');
       }
       
-      // If this is a reply to another reply, also notify the parent reply author
+      // 2. Create reply notification for parent reply author
       if (parentReplyId) {
         const parentReply = await DiscussionService.getReplyById(parentReplyId);
         if (parentReply && parentReply.authorId !== authorId && parentReply.authorId !== discussion?.authorId) {
@@ -278,9 +281,32 @@ export async function POST(
           console.log('✅ Parent reply notification created');
         }
       }
+
+      // 3. Create mention notifications for @mentioned users
+      const mentionedUserIds = await processMentions(content);
+      if (mentionedUserIds.length > 0) {
+        // Filter out self-mentions and users already notified
+        const alreadyNotified = new Set([
+          authorId, // Don't notify self
+          discussion?.authorId, // Discussion author already notified
+          ...(parentReplyId ? [await DiscussionService.getReplyById(parentReplyId)?.then(r => r?.authorId)].filter(Boolean) : [])
+        ]);
+
+        const usersToNotify = mentionedUserIds.filter(userId => !alreadyNotified.has(userId));
+        
+        for (const userId of usersToNotify) {
+          await createDiscussionMentionNotification(
+            userId,
+            authorName,
+            discussion?.title || 'Discussion',
+            discussionId
+          );
+          console.log(`✅ Mention notification created for user: ${userId}`);
+        }
+      }
     } catch (notificationError) {
       // Don't fail the request if notification fails
-      console.error('Failed to create reply notification:', notificationError);
+      console.error('Failed to create notifications:', notificationError);
     }
 
     return NextResponse.json({

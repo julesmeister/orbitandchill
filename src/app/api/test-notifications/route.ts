@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   createDiscussionReplyNotification,
   createDiscussionLikeNotification,
+  createDiscussionMentionNotification,
   createWelcomeNotification,
   createSystemAnnouncementNotification
 } from '@/utils/notificationHelpers';
@@ -43,6 +44,16 @@ export async function POST(request: NextRequest) {
           likerName || 'Test Liker',
           title || 'Test Discussion',
           id || 'test-id'
+        );
+        break;
+
+      case 'discussion_mention':
+        const { mentionerName, discussionTitle: mentionTitle, discussionId: mentionId } = params;
+        result = await createDiscussionMentionNotification(
+          userId,
+          mentionerName || 'Test Mentioner',
+          mentionTitle || 'Test Discussion',
+          mentionId || 'test-id'
         );
         break;
 
@@ -121,6 +132,13 @@ export async function GET() {
           discussionId: 'discussion-456'
         },
         {
+          type: 'discussion_mention',
+          userId: 'user-id',
+          mentionerName: 'Alex Johnson',
+          discussionTitle: 'Saturn Return Experience',
+          discussionId: 'discussion-789'
+        },
+        {
           type: 'welcome',
           userId: 'user-id',
           username: 'NewUser123'
@@ -135,7 +153,8 @@ export async function GET() {
     },
     notificationTypes: [
       'discussion_reply',
-      'discussion_like', 
+      'discussion_like',
+      'discussion_mention',
       'welcome',
       'system_announcement'
     ]

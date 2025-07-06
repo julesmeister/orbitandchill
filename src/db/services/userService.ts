@@ -165,6 +165,27 @@ export class UserService {
     });
   }
 
+  static async getUserByUsername(username: string) {
+    return resilient.item(db, 'getUserByUsername', async () => {
+      // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
+      const userData = await executeRawSelectOne(db, {
+        table: 'users',
+        conditions: [{ column: 'username', value: username }]
+      });
+      
+      if (!userData) return null;
+      
+      // Transform snake_case to camelCase and parse JSON fields
+      const transformedUser = transformDatabaseRow(userData);
+      return {
+        ...transformedUser,
+        stelliumSigns: userData.stellium_signs ? JSON.parse(userData.stellium_signs) : [],
+        stelliumHouses: userData.stellium_houses ? JSON.parse(userData.stellium_houses) : [],
+        detailedStelliums: userData.detailed_stelliums ? JSON.parse(userData.detailed_stelliums) : [],
+      };
+    });
+  }
+
   static async updateUser(id: string, data: UpdateUserData) {
     return resilient.item(db, 'updateUser', async () => {
       const updateData: any = {
