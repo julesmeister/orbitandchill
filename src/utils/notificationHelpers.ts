@@ -2,6 +2,7 @@
 import { NotificationService } from '@/db/services/notificationService';
 import type { CreateNotificationData } from '@/db/services/notificationService';
 import { BRAND } from '@/config/brand';
+import { BatchNotificationManager } from './batchNotifications';
 
 /**
  * Helper functions to create common notifications
@@ -33,8 +34,23 @@ export const createDiscussionLikeNotification = async (
   userId: string,
   likerName: string,
   discussionTitle: string,
-  discussionId: string
+  discussionId: string,
+  enableBatching: boolean = true
 ) => {
+  if (enableBatching) {
+    // Use batch notification system for likes
+    return BatchNotificationManager.addToBatch({
+      userId,
+      type: 'discussion_like',
+      entityType: 'discussion',
+      entityId: discussionId,
+      actorName: likerName,
+      contextTitle: discussionTitle,
+      timestamp: new Date()
+    });
+  }
+
+  // Fallback to immediate notification
   return NotificationService.createNotification({
     userId,
     type: 'discussion_like',
@@ -54,8 +70,23 @@ export const createReplyLikeNotification = async (
   userId: string,
   likerName: string,
   discussionTitle: string,
-  discussionId: string
+  discussionId: string,
+  enableBatching: boolean = true
 ) => {
+  if (enableBatching) {
+    // Use batch notification system for reply likes
+    return BatchNotificationManager.addToBatch({
+      userId,
+      type: 'discussion_like',
+      entityType: 'discussion',
+      entityId: discussionId,
+      actorName: likerName,
+      contextTitle: discussionTitle,
+      timestamp: new Date()
+    });
+  }
+
+  // Fallback to immediate notification
   return NotificationService.createNotification({
     userId,
     type: 'discussion_like', // Reuse discussion_like type for reply likes
@@ -388,6 +419,68 @@ export const scheduleNotification = async (
     ...notificationData,
     scheduledFor: scheduleFor
   });
+};
+
+// Batch notification helpers
+export const createBatchedDiscussionLike = async (
+  userId: string,
+  likerName: string,
+  discussionTitle: string,
+  discussionId: string
+) => {
+  return BatchNotificationManager.addToBatch({
+    userId,
+    type: 'discussion_like',
+    entityType: 'discussion',
+    entityId: discussionId,
+    actorName: likerName,
+    contextTitle: discussionTitle,
+    timestamp: new Date()
+  });
+};
+
+export const createBatchedChartLike = async (
+  userId: string,
+  likerName: string,
+  chartTitle: string,
+  chartId: string
+) => {
+  return BatchNotificationManager.addToBatch({
+    userId,
+    type: 'chart_like',
+    entityType: 'chart',
+    entityId: chartId,
+    actorName: likerName,
+    contextTitle: chartTitle,
+    timestamp: new Date()
+  });
+};
+
+export const createBatchedDiscussionReply = async (
+  userId: string,
+  replierName: string,
+  discussionTitle: string,
+  discussionId: string
+) => {
+  return BatchNotificationManager.addToBatch({
+    userId,
+    type: 'discussion_reply',
+    entityType: 'discussion',
+    entityId: discussionId,
+    actorName: replierName,
+    contextTitle: discussionTitle,
+    timestamp: new Date()
+  });
+};
+
+// Force process all pending batches (useful for testing/cleanup)
+export const processPendingBatches = async () => {
+  return BatchNotificationManager.processAllPendingBatches();
+};
+
+// Get batch statistics
+export const getBatchStats = () => {
+  return BatchNotificationManager.getBatchStats();
 };
 
 // Helper to create expiring notifications

@@ -5,7 +5,10 @@ import {
   createDiscussionLikeNotification,
   createDiscussionMentionNotification,
   createWelcomeNotification,
-  createSystemAnnouncementNotification
+  createSystemAnnouncementNotification,
+  createBatchedDiscussionLike,
+  createBatchedChartLike,
+  createBatchedDiscussionReply
 } from '@/utils/notificationHelpers';
 
 /**
@@ -72,6 +75,36 @@ export async function POST(request: NextRequest) {
           userId,
           announcementTitle || 'Test Announcement',
           message || 'This is a test system announcement'
+        );
+        break;
+
+      case 'batch_discussion_like':
+        const { likerName: bLikerName, discussionTitle: bTitle, discussionId: bId } = params;
+        result = await createBatchedDiscussionLike(
+          userId,
+          bLikerName || 'Batch Test Liker',
+          bTitle || 'Test Discussion for Batching',
+          bId || 'batch-test-id'
+        );
+        break;
+
+      case 'batch_chart_like':
+        const { likerName: cLikerName, chartTitle, chartId } = params;
+        result = await createBatchedChartLike(
+          userId,
+          cLikerName || 'Chart Batch Liker',
+          chartTitle || 'Test Chart for Batching',
+          chartId || 'chart-batch-test-id'
+        );
+        break;
+
+      case 'batch_discussion_reply':
+        const { replierName, discussionTitle: rTitle, discussionId: rId } = params;
+        result = await createBatchedDiscussionReply(
+          userId,
+          replierName || 'Batch Replier',
+          rTitle || 'Test Discussion for Reply Batching',
+          rId || 'reply-batch-test-id'
         );
         break;
 
@@ -148,6 +181,27 @@ export async function GET() {
           userId: 'user-id',
           title: 'New Feature Available',
           message: 'We have added new astrological insights to your dashboard'
+        },
+        {
+          type: 'batch_discussion_like',
+          userId: 'user-id',
+          likerName: 'Batch Test User',
+          discussionTitle: 'Understanding Mercury Retrograde',
+          discussionId: 'batch-test-123'
+        },
+        {
+          type: 'batch_chart_like',
+          userId: 'user-id',
+          likerName: 'Chart Enthusiast',
+          chartTitle: 'My Natal Chart Analysis',
+          chartId: 'chart-batch-456'
+        },
+        {
+          type: 'batch_discussion_reply',
+          userId: 'user-id',
+          replierName: 'Active Commenter',
+          discussionTitle: 'Saturn Return Experiences',
+          discussionId: 'reply-batch-789'
         }
       ]
     },
@@ -156,7 +210,10 @@ export async function GET() {
       'discussion_like',
       'discussion_mention',
       'welcome',
-      'system_announcement'
+      'system_announcement',
+      'batch_discussion_like',
+      'batch_chart_like',
+      'batch_discussion_reply'
     ]
   });
 }

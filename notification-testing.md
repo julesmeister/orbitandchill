@@ -21,6 +21,8 @@ This guide explains how to test the newly implemented notification system for di
 - **Connection Status**: Visual indicators for real-time connection health
 - **Archive System**: Complete notification history and archive management
 - **Bulk Operations**: Multi-select archive, restore, and delete operations
+- **Batch Processing**: Smart grouping of similar notifications to reduce spam
+- **Intelligent Timing**: Configurable delays and batch sizes for optimal user experience
 
 ## 🔧 Testing APIs
 
@@ -77,6 +79,28 @@ curl -X POST http://localhost:3000/api/test-notifications \
     "title": "New Feature Available",
     "message": "We have added new astrological insights to your dashboard"
   }'
+
+# Test batch discussion like (will be grouped with similar events)
+curl -X POST http://localhost:3000/api/test-notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "batch_discussion_like",
+    "userId": "your-user-id",
+    "likerName": "John Doe",
+    "discussionTitle": "Understanding Mercury Retrograde",
+    "discussionId": "discussion-123"
+  }'
+
+# Test batch chart like
+curl -X POST http://localhost:3000/api/test-notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "batch_chart_like",
+    "userId": "your-user-id",
+    "likerName": "Jane Smith",
+    "chartTitle": "My Natal Chart Analysis",
+    "chartId": "chart-456"
+  }'
 ```
 
 ### 2. Check System Status
@@ -126,7 +150,34 @@ curl -X PATCH http://localhost:3000/api/notifications/notification-id \
   -d '{"userId": "your-user-id", "action": "unarchive"}'
 ```
 
-### 4. Archive Management
+### 4. Batch Notification Management
+```bash
+# Get batch statistics
+curl http://localhost:3000/api/notifications/batch
+
+# Process all pending batches immediately
+curl -X POST http://localhost:3000/api/notifications/batch \
+  -H "Content-Type: application/json" \
+  -d '{"action": "process_all"}'
+
+# Add notification to batch manually
+curl -X POST http://localhost:3000/api/notifications/batch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "add_to_batch",
+    "userId": "your-user-id",
+    "type": "discussion_like",
+    "entityType": "discussion",
+    "entityId": "discussion-123",
+    "actorName": "Test User",
+    "contextTitle": "Sample Discussion"
+  }'
+
+# Clear all pending batches
+curl -X DELETE http://localhost:3000/api/notifications/batch
+```
+
+### 5. Archive Management
 ```bash
 # Get archived notifications
 curl "http://localhost:3000/api/notifications/archive?userId=your-user-id"
@@ -190,7 +241,18 @@ curl -X DELETE http://localhost:3000/api/notifications/archive \
 5. Check connection status indicator shows "Connected" with green dot
 6. Test with poor connection: disable network briefly, reconnect
 
-### 6. Archive Testing
+### 6. Batch Notification Testing
+1. Create multiple similar events rapidly (e.g., multiple likes on same discussion)
+2. Verify events are batched together instead of creating separate notifications
+3. Wait for batch delay (5 minutes) or trigger max batch size (10 events)
+4. Check that grouped notification appears: "John, Sarah and 3 others liked your post"
+5. Test batch notification display with expandable details
+6. Verify individual actors are listed when expanding batched notification
+7. Test batch statistics in admin panel
+8. Test immediate processing of pending batches
+9. Verify high-priority notifications (mentions) bypass batching
+
+### 7. Archive Testing
 1. Archive several notifications by clicking archive button
 2. Check that notifications disappear from main list
 3. Go to notification history/archive page
@@ -201,7 +263,7 @@ curl -X DELETE http://localhost:3000/api/notifications/archive \
 8. Test bulk archive operations
 9. Test archive clearing with different time periods
 
-### 7. UI Testing
+### 8. UI Testing
 1. **Notification Bell**: Should show red badge with count when unread notifications exist
 2. **Dropdown Panel**: Should show notifications with proper icons and timestamps
 3. **Mark as Read**: Should remove unread indicator when clicked
@@ -210,6 +272,8 @@ curl -X DELETE http://localhost:3000/api/notifications/archive \
 6. **Connection Status**: Should show real-time connection health indicator
 7. **Archive Interface**: Archive history with search, filters, and bulk operations
 8. **Statistics**: Archive stats showing counts by category and priority
+9. **Batch Notifications**: Grouped notifications with expandable actor details
+10. **Batch Admin Panel**: Batch statistics and management controls
 
 ## 🎯 Expected Behavior
 
