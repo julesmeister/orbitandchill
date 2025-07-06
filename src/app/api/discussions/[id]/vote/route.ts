@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
+import { UserService } from '@/db/services/userService';
 import { initializeDatabase, db } from '@/db/index';
+import { createDiscussionLikeNotification } from '@/utils/notificationHelpers';
 
 export async function POST(
   request: NextRequest,
@@ -51,6 +53,24 @@ export async function POST(
         { success: false, error: 'Discussion not found' },
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Create notification for upvotes (async, don't block response)
+    if (voteType === 'up' && updatedDiscussion.authorId !== userId) {
+      try {
+        const voter = await UserService.getUserById(userId);
+        const voterName = voter?.username || 'Someone';
+        
+        await createDiscussionLikeNotification(
+          updatedDiscussion.authorId,
+          voterName,
+          updatedDiscussion.title,
+          discussionId
+        );
+        console.log('✅ Discussion like notification created');
+      } catch (notificationError) {
+        console.error('Failed to create like notification:', notificationError);
+      }
     }
 
     return NextResponse.json({

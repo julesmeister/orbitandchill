@@ -50,6 +50,27 @@ export const createDiscussionLikeNotification = async (
   });
 };
 
+export const createReplyLikeNotification = async (
+  userId: string,
+  likerName: string,
+  discussionTitle: string,
+  discussionId: string
+) => {
+  return NotificationService.createNotification({
+    userId,
+    type: 'discussion_like', // Reuse discussion_like type for reply likes
+    title: 'Your comment was liked',
+    message: `${likerName} liked your comment in "${discussionTitle.substring(0, 50)}${discussionTitle.length > 50 ? '...' : ''}"`,
+    icon: '👍',
+    priority: 'low',
+    category: 'social',
+    entityType: 'discussion',
+    entityId: discussionId,
+    entityUrl: `/discussions/${discussionId}`,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+  });
+};
+
 export const createDiscussionMentionNotification = async (
   userId: string,
   mentionerName: string,

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
 import { UserService } from '@/db/services/userService';
 import { initializeDatabase } from '@/db/index';
+import { createDiscussionReplyNotification } from '@/utils/notificationHelpers';
 
 // Helper function to format timestamp for display
 const formatTimestamp = (date: Date | string | number) => {
@@ -249,6 +250,38 @@ export async function POST(
       children: []
     };
     
+    // Create notification for discussion author (async, don't block response)
+    try {
+      const discussion = await DiscussionService.getDiscussionById(discussionId);
+      if (discussion && discussion.authorId !== authorId) {
+        // Don't notify if replying to your own discussion
+        await createDiscussionReplyNotification(
+          discussion.authorId,
+          authorName,
+          discussion.title,
+          discussionId
+        );
+        console.log('✅ Discussion reply notification created');
+      }
+      
+      // If this is a reply to another reply, also notify the parent reply author
+      if (parentReplyId) {
+        const parentReply = await DiscussionService.getReplyById(parentReplyId);
+        if (parentReply && parentReply.authorId !== authorId && parentReply.authorId !== discussion?.authorId) {
+          // Don't notify if replying to yourself or if parent is discussion author (already notified)
+          await createDiscussionReplyNotification(
+            parentReply.authorId,
+            authorName,
+            discussion?.title || 'Discussion',
+            discussionId
+          );
+          console.log('✅ Parent reply notification created');
+        }
+      }
+    } catch (notificationError) {
+      // Don't fail the request if notification fails
+      console.error('Failed to create reply notification:', notificationError);
+    }
 
     return NextResponse.json({
       success: true,
