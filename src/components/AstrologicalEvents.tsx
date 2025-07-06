@@ -79,7 +79,7 @@ export default function AstrologicalEvents() {
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="font-space-grotesk text-4xl lg:text-5xl font-bold text-black mb-4">
-            Rare Celestial Events
+            Celestial Events
           </h2>
           <p className="font-open-sans text-lg text-black/80 max-w-3xl mx-auto mb-6">
             Track upcoming astrological phenomena, from eclipses and retrogrades to rare planetary alignments. 

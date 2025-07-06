@@ -8,7 +8,30 @@ import {
   createSystemAnnouncementNotification,
   createBatchedDiscussionLike,
   createBatchedChartLike,
-  createBatchedDiscussionReply
+  createBatchedDiscussionReply,
+  testNotificationReliability,
+  getNotificationSystemHealth,
+  getSystemDiagnostics,
+  createChartLikeNotification,
+  createFollowNotification,
+  createProfileViewNotification,
+  createEventUpdateNotification,
+  createSystemUpdateNotification,
+  createSystemHealthNotification,
+  createAnalyticsSuccessNotification,
+  createAnalyticsFailureNotification,
+  createCronSuccessNotification,
+  createCronFailureNotification,
+  createTrafficSpikeNotification,
+  createDataAggregationNotification,
+  createAccountSecurityNotification,
+  createDataExportNotification,
+  createModerationRequiredNotification,
+  createUserReportNotification,
+  createPremiumRenewalNotification,
+  createPremiumTrialNotification,
+  createEducationalContentNotification,
+  createFeatureTourNotification
 } from '@/utils/notificationHelpers';
 
 /**
@@ -108,6 +131,222 @@ export async function POST(request: NextRequest) {
         );
         break;
 
+      case 'test_reliability':
+        await testNotificationReliability(userId);
+        result = { id: 'reliability_test_completed' };
+        break;
+
+      case 'health_check':
+        const health = await getNotificationSystemHealth();
+        return NextResponse.json({
+          success: true,
+          message: 'Health check completed',
+          health
+        });
+
+      case 'system_diagnostics':
+        const diagnostics = await getSystemDiagnostics();
+        return NextResponse.json({
+          success: true,
+          message: 'System diagnostics retrieved',
+          diagnostics
+        });
+
+      // New notification types
+      case 'chart_like':
+        const { likerName: chartLiker, chartTitle, chartId } = params;
+        result = await createChartLikeNotification(
+          userId,
+          chartLiker || 'Chart Liker',
+          chartTitle || 'Test Chart',
+          chartId || 'chart-test-id'
+        );
+        break;
+
+      case 'follow_new':
+        const { followerName, followerId } = params;
+        result = await createFollowNotification(
+          userId,
+          followerName || 'New Follower',
+          followerId || 'follower-test-id'
+        );
+        break;
+
+      case 'profile_view':
+        const { viewerName, viewerId } = params;
+        result = await createProfileViewNotification(
+          userId,
+          viewerName || 'Profile Viewer',
+          viewerId || 'viewer-test-id'
+        );
+        break;
+
+      case 'event_update':
+        const { eventTitle: eTitle, updateType, eventId: eId } = params;
+        result = await createEventUpdateNotification(
+          userId,
+          eTitle || 'Test Event',
+          updateType || 'Time changed',
+          eId || 'event-test-id'
+        );
+        break;
+
+      case 'system_update':
+        const { updateTitle, updateDescription, updateUrl } = params;
+        result = await createSystemUpdateNotification(
+          userId,
+          updateTitle || 'New Feature',
+          updateDescription || 'We have added a new feature to enhance your experience',
+          updateUrl
+        );
+        break;
+
+      case 'system_health':
+        const { healthStatus, details } = params;
+        result = await createSystemHealthNotification(
+          userId,
+          healthStatus || 'healthy',
+          details || 'All systems operational'
+        );
+        break;
+
+      case 'analytics_success':
+        const { analyticsType, resultsUrl } = params;
+        result = await createAnalyticsSuccessNotification(
+          userId,
+          analyticsType || 'User Activity',
+          resultsUrl
+        );
+        break;
+
+      case 'analytics_failure':
+        const { analyticsType: failType, errorMessage } = params;
+        result = await createAnalyticsFailureNotification(
+          userId,
+          failType || 'Traffic Analysis',
+          errorMessage || 'Database connection timeout'
+        );
+        break;
+
+      case 'cron_success':
+        const { jobName, jobDetails } = params;
+        result = await createCronSuccessNotification(
+          userId,
+          jobName || 'Daily Backup',
+          jobDetails || 'Completed in 45 seconds'
+        );
+        break;
+
+      case 'cron_failure':
+        const { jobName: failJob, errorMessage: cronError } = params;
+        result = await createCronFailureNotification(
+          userId,
+          failJob || 'Weekly Report',
+          cronError || 'Unable to connect to email service'
+        );
+        break;
+
+      case 'traffic_spike':
+        const { trafficIncrease, currentLoad } = params;
+        result = await createTrafficSpikeNotification(
+          userId,
+          trafficIncrease || '300%',
+          currentLoad || '85% CPU usage'
+        );
+        break;
+
+      case 'data_aggregation':
+        const { dataType, recordsProcessed, resultsUrl: aggUrl } = params;
+        result = await createDataAggregationNotification(
+          userId,
+          dataType || 'User Activity',
+          recordsProcessed || 15420,
+          aggUrl
+        );
+        break;
+
+      case 'account_security':
+        const { securityEvent, details: secDetails, actionRequired } = params;
+        result = await createAccountSecurityNotification(
+          userId,
+          securityEvent || 'New login from unknown device',
+          secDetails || 'Location: San Francisco, CA',
+          actionRequired || false
+        );
+        break;
+
+      case 'data_export':
+        const { exportType, downloadUrl, expiresAt } = params;
+        result = await createDataExportNotification(
+          userId,
+          exportType || 'User Data',
+          downloadUrl || '/downloads/user-data-export.zip',
+          expiresAt ? new Date(expiresAt) : undefined
+        );
+        break;
+
+      case 'moderation_required':
+        const { contentType, contentId, reason, reporterName } = params;
+        result = await createModerationRequiredNotification(
+          userId,
+          contentType || 'Discussion',
+          contentId || 'discussion-123',
+          reason || 'Inappropriate content',
+          reporterName
+        );
+        break;
+
+      case 'user_report':
+        const { reportedUserId, reportedUsername, reportReason, reporterName: reporter } = params;
+        result = await createUserReportNotification(
+          userId,
+          reportedUserId || 'user-456',
+          reportedUsername || 'TestUser',
+          reportReason || 'Spam behavior',
+          reporter
+        );
+        break;
+
+      case 'premium_renewal':
+        const { tier, renewalDate } = params;
+        result = await createPremiumRenewalNotification(
+          userId,
+          tier || 'Pro',
+          renewalDate || '2024-12-31'
+        );
+        break;
+
+      case 'premium_trial':
+        const { trialStatus, daysLeft, tier: trialTier } = params;
+        result = await createPremiumTrialNotification(
+          userId,
+          trialStatus || 'started',
+          daysLeft || 7,
+          trialTier || 'Pro'
+        );
+        break;
+
+      case 'educational_content':
+        const { contentTitle, contentType, contentUrl, description } = params;
+        result = await createEducationalContentNotification(
+          userId,
+          contentTitle || 'Understanding Mercury Retrograde',
+          contentType || 'Guide',
+          contentUrl || '/guides/mercury-retrograde',
+          description
+        );
+        break;
+
+      case 'feature_tour':
+        const { featureName, tourUrl, description: tourDesc } = params;
+        result = await createFeatureTourNotification(
+          userId,
+          featureName || 'Advanced Chart Analysis',
+          tourUrl || '/tour/chart-analysis',
+          tourDesc
+        );
+        break;
+
       default:
         return NextResponse.json(
           { error: `Unknown notification type: ${type}` },
@@ -202,18 +441,61 @@ export async function GET() {
           replierName: 'Active Commenter',
           discussionTitle: 'Saturn Return Experiences',
           discussionId: 'reply-batch-789'
+        },
+        {
+          type: 'test_reliability',
+          userId: 'user-id'
+        },
+        {
+          type: 'health_check',
+          userId: 'user-id'
+        },
+        {
+          type: 'system_diagnostics',
+          userId: 'user-id'
         }
       ]
     },
     notificationTypes: [
+      // Social notifications
       'discussion_reply',
-      'discussion_like',
+      'discussion_like', 
       'discussion_mention',
+      'chart_like',
+      'follow_new',
+      'profile_view',
+      // Event notifications
+      'event_update',
+      // System notifications
       'welcome',
       'system_announcement',
+      'system_update',
+      'system_health',
+      'analytics_success',
+      'analytics_failure',
+      'cron_success',
+      'cron_failure',
+      'traffic_spike',
+      'data_aggregation',
+      'account_security',
+      'data_export',
+      // Admin notifications
+      'moderation_required',
+      'user_report',
+      // Premium notifications
+      'premium_renewal',
+      'premium_trial',
+      // Content notifications
+      'educational_content',
+      'feature_tour',
+      // Batch notifications
       'batch_discussion_like',
       'batch_chart_like',
-      'batch_discussion_reply'
+      'batch_discussion_reply',
+      // System utilities
+      'test_reliability',
+      'health_check',
+      'system_diagnostics'
     ]
   });
 }
