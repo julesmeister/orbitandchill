@@ -19,6 +19,8 @@ This guide explains how to test the newly implemented notification system for di
 - **Helper Functions**: Utility functions for creating common notification types
 - **Real-time Updates**: Server-Sent Events (SSE) for instant notification delivery
 - **Connection Status**: Visual indicators for real-time connection health
+- **Archive System**: Complete notification history and archive management
+- **Bulk Operations**: Multi-select archive, restore, and delete operations
 
 ## 🔧 Testing APIs
 
@@ -112,6 +114,41 @@ curl -X PATCH http://localhost:3000/api/notifications/notification-id \
 curl -X POST http://localhost:3000/api/notifications/mark-all-read \
   -H "Content-Type: application/json" \
   -d '{"userId": "your-user-id"}'
+
+# Archive a notification
+curl -X PATCH http://localhost:3000/api/notifications/notification-id \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "your-user-id", "action": "archive"}'
+
+# Restore notification from archive
+curl -X PATCH http://localhost:3000/api/notifications/notification-id \
+  -H "Content-Type: application/json" \
+  -d '{"userId": "your-user-id", "action": "unarchive"}'
+```
+
+### 4. Archive Management
+```bash
+# Get archived notifications
+curl "http://localhost:3000/api/notifications/archive?userId=your-user-id"
+
+# Get archived notifications with filters
+curl "http://localhost:3000/api/notifications/archive?userId=your-user-id&category=social&priority=high&search=mars"
+
+# Archive multiple notifications
+curl -X POST http://localhost:3000/api/notifications/archive \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "your-user-id",
+    "notificationIds": ["notif-1", "notif-2", "notif-3"]
+  }'
+
+# Clear archive (delete old archived notifications)
+curl -X DELETE http://localhost:3000/api/notifications/archive \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "your-user-id",
+    "olderThanDays": 90
+  }'
 ```
 
 ## 🧪 Manual Testing Flow
@@ -153,13 +190,26 @@ curl -X POST http://localhost:3000/api/notifications/mark-all-read \
 5. Check connection status indicator shows "Connected" with green dot
 6. Test with poor connection: disable network briefly, reconnect
 
-### 6. UI Testing
+### 6. Archive Testing
+1. Archive several notifications by clicking archive button
+2. Check that notifications disappear from main list
+3. Go to notification history/archive page
+4. Verify archived notifications appear with archive timestamp
+5. Test search and filtering in archive
+6. Select multiple notifications and restore them
+7. Verify restored notifications appear in main notification list
+8. Test bulk archive operations
+9. Test archive clearing with different time periods
+
+### 7. UI Testing
 1. **Notification Bell**: Should show red badge with count when unread notifications exist
 2. **Dropdown Panel**: Should show notifications with proper icons and timestamps
 3. **Mark as Read**: Should remove unread indicator when clicked
 4. **Navigation**: Should navigate to correct discussion when notification is clicked
 5. **Mention Display**: @mentions should be highlighted in discussion content
 6. **Connection Status**: Should show real-time connection health indicator
+7. **Archive Interface**: Archive history with search, filters, and bulk operations
+8. **Statistics**: Archive stats showing counts by category and priority
 
 ## 🎯 Expected Behavior
 

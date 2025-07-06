@@ -843,4 +843,129 @@ export class NotificationService {
       return this.getDefaultPreferences(userId);
     }
   }
+
+  /**
+   * Unarchive notification (restore from archive)
+   */
+  static async unarchiveNotification(notificationId: string, userId: string): Promise<boolean> {
+    const db = getDb();
+    if (!db) {
+      return false;
+    }
+
+    try {
+      await db.update(notifications)
+        .set({ 
+          isArchived: false, 
+          archivedAt: null,
+          updatedAt: new Date() 
+        })
+        .where(and(
+          eq(notifications.id, notificationId),
+          eq(notifications.userId, userId)
+        ));
+
+      return true;
+    } catch (error) {
+      console.error('Error unarchiving notification:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get archive statistics for a user
+   */
+  static async getArchiveStats(userId: string): Promise<any> {
+    const db = getDb();
+    if (!db) {
+      return {
+        total: 0,
+        byCategory: {},
+        byPriority: {},
+        oldestDate: null,
+        newestDate: null
+      };
+    }
+
+    try {
+      // Get all archived notifications
+      const archivedNotifications = await db.select()
+        .from(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.isArchived, true)
+        ))
+        .orderBy(desc(notifications.archivedAt));
+
+      const total = archivedNotifications.length;
+
+      if (total === 0) {
+        return {
+          total: 0,
+          byCategory: {},
+          byPriority: {},
+          oldestDate: null,
+          newestDate: null
+        };
+      }
+
+      // Count by category
+      const byCategory = archivedNotifications.reduce((acc: any, notification: any) => {
+        const category = notification.category;
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Count by priority
+      const byPriority = archivedNotifications.reduce((acc: any, notification: any) => {
+        const priority = notification.priority;
+        acc[priority] = (acc[priority] || 0) + 1;
+        return acc;
+      }, {});
+
+      const oldestDate = archivedNotifications[archivedNotifications.length - 1]?.archivedAt;
+      const newestDate = archivedNotifications[0]?.archivedAt;
+
+      return {
+        total,
+        byCategory,
+        byPriority,
+        oldestDate,
+        newestDate
+      };
+    } catch (error) {
+      console.error('Error getting archive stats:', error);
+      return {
+        total: 0,
+        byCategory: {},
+        byPriority: {},
+        oldestDate: null,
+        newestDate: null
+      };
+    }
+  }
+
+  /**
+   * Delete archived notifications older than a specific date
+   */
+  static async deleteArchivedNotifications(userId: string, cutoffDate: Date): Promise<number> {
+    const db = getDb();
+    if (!db) {
+      return 0;
+    }
+
+    try {
+      const result = await db.delete(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.isArchived, true),
+          sql`${notifications.archivedAt} < ${cutoffDate.toISOString()}`
+        ));
+
+      return result.rowsAffected || 0;
+    } catch (error) {
+      console.error('Error deleting archived notifications:', error);
+      return 0;
+    }
+  }
 }

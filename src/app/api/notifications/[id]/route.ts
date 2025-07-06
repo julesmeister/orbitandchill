@@ -27,9 +27,12 @@ export async function PATCH(
       case 'archive':
         success = await NotificationService.archiveNotification(id, userId);
         break;
+      case 'unarchive':
+        success = await NotificationService.unarchiveNotification(id, userId);
+        break;
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Use "mark_read" or "archive"' },
+          { error: 'Invalid action. Use "mark_read", "archive", or "unarchive"' },
           { status: 400 }
         );
     }
@@ -41,9 +44,15 @@ export async function PATCH(
       );
     }
 
+    const messages = {
+      'mark_read': 'marked as read',
+      'archive': 'archived',
+      'unarchive': 'restored from archive'
+    };
+
     return NextResponse.json({
       success: true,
-      message: `Notification ${action === 'mark_read' ? 'marked as read' : 'archived'} successfully`
+      message: `Notification ${messages[action as keyof typeof messages] || action} successfully`
     });
   } catch (error) {
     console.error('Error updating notification:', error);
