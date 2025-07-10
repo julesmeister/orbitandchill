@@ -304,7 +304,8 @@ export default function EventsPage() {
     handleRenameEvent,
     handleClearAllEvents: handleClearAllEventsFromHook
   } = useEventActions({
-    onLocationRequired: showLocationToast
+    onLocationRequired: showLocationToast,
+    showConfirmation
   });
 
   // Create wrapper for manual event handler to match form structure

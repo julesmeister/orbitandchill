@@ -78,28 +78,6 @@ export default function EventsTable({
     { value: '50', label: '50' },
     { value: '100', label: '100' }
   ];
-  // Enhanced delete handler with focus reset to prevent input field blocking
-  const handleDeleteEvent = async (eventId: string) => {
-    deleteEvent(eventId);
-    
-    // Focus reset to prevent input blocking (web-compatible version of Electron solution)
-    setTimeout(async () => {
-      try {
-        // Web fallback for focus reset
-        window.blur();
-        await new Promise(resolve => setTimeout(resolve, 50));
-        window.focus();
-        
-        // Additional DOM focus cleanup
-        if (document.activeElement && document.activeElement !== document.body) {
-          (document.activeElement as HTMLElement).blur();
-        }
-        document.body.focus();
-      } catch (error) {
-        console.warn('Focus reset failed:', error);
-      }
-    }, 200);
-  };
 
   // Rename handlers
   const handleRenameEvent = (eventId: string, currentTitle: string) => {
@@ -447,7 +425,7 @@ export default function EventsTable({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteEvent(event.id);
+                          deleteEvent(event.id);
                         }}
                         className="inline-flex items-center justify-center w-8 h-8 bg-white text-black hover:bg-red-500 hover:text-white transition-all duration-200 border border-black"
                         title="Delete event"

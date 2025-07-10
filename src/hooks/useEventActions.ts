@@ -7,6 +7,14 @@ import { useEventsLimits } from './useEventsLimits';
 
 interface UseEventActionsOptions {
   onLocationRequired: () => void;
+  showConfirmation?: (options: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    confirmButtonColor?: 'red' | 'green' | 'blue';
+  }) => void;
 }
 
 export const useEventActions = (options: UseEventActionsOptions) => {
@@ -21,8 +29,11 @@ export const useEventActions = (options: UseEventActionsOptions) => {
   } = useEventsStore();
   
   const { showError, showSuccess, showLoading } = useStatusToast();
-  const { showConfirmation } = useConfirmationToast();
+  const { showConfirmation: fallbackShowConfirmation } = useConfirmationToast();
   const eventsLimits = useEventsLimits();
+  
+  // Use the passed showConfirmation or fall back to the hook's own
+  const showConfirmation = options.showConfirmation || fallbackShowConfirmation;
 
   const handleDeleteEvent = async (id: string) => {
     if (!user?.id) {

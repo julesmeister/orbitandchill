@@ -82,10 +82,10 @@ export default function AstrologicalEvents() {
             Celestial Events
           </h2>
           <p className="font-open-sans text-lg text-black/80 max-w-3xl mx-auto mb-6">
-            Track upcoming astrological phenomena, from eclipses and retrogrades to rare planetary alignments. 
+            Track upcoming astrological phenomena, from eclipses and retrogrades to rare planetary alignments.
             Never miss a cosmic moment.
           </p>
-          
+
           {/* Location Display */}
           <div className="flex items-center justify-center gap-2 text-sm text-black/60">
             <span>📍</span>
@@ -94,8 +94,8 @@ export default function AstrologicalEvents() {
                 <>Times shown for <strong>{locationDisplay.name}</strong></>
               ) : (
                 <>
-                  Using default location - 
-                  <button 
+                  Using default location -
+                  <button
                     onClick={showLocationToast}
                     className="ml-1 underline hover:text-black transition-colors"
                   >
@@ -113,21 +113,19 @@ export default function AstrologicalEvents() {
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('upcoming')}
-              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${
-                activeTab === 'upcoming'
+              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${activeTab === 'upcoming'
                   ? 'bg-black text-white'
                   : 'bg-gray-200 text-black hover:bg-gray-300'
-              }`}
+                }`}
             >
               📅 Upcoming Events
             </button>
             <button
               onClick={() => setActiveTab('calendar')}
-              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${
-                activeTab === 'calendar'
+              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${activeTab === 'calendar'
                   ? 'bg-black text-white'
                   : 'bg-gray-200 text-black hover:bg-gray-300'
-              }`}
+                }`}
             >
               🗓️ Calendar View
             </button>
@@ -145,11 +143,10 @@ export default function AstrologicalEvents() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedType(null)}
-                  className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
-                    selectedType === null
+                  className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${selectedType === null
                       ? 'bg-black text-white'
                       : 'bg-white text-black hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   All Types
                 </button>
@@ -157,11 +154,10 @@ export default function AstrologicalEvents() {
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
-                    className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${
-                      selectedType === type
+                    className={`px-3 py-2 text-sm font-medium transition-all duration-200 border border-black ${selectedType === type
                         ? 'bg-black text-white'
                         : 'bg-white text-black hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {(() => {
                       // Handle special cases and convert camelCase to readable text
@@ -207,17 +203,17 @@ export default function AstrologicalEvents() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Filter events based on selectedType */}
               {(() => {
-                const eventsToShow = selectedType 
+                const eventsToShow = selectedType
                   ? selectedType === 'planetarySigns'
                     ? upcomingEvents.filter(event => event.type === 'planetInSign' || event.type === 'planetSignChange')
                     : upcomingEvents.filter(event => event.type === selectedType)
                   : upcomingEvents;
-                
+
                 return eventsToShow.length > 0 ? (
                   eventsToShow.map(event => (
-                    <EventCard 
+                    <EventCard
                       key={event.id}
-                      event={event} 
+                      event={event}
                       showCountdown={true}
                       countdown={countdowns[event.id]}
                     />
@@ -225,7 +221,7 @@ export default function AstrologicalEvents() {
                 ) : (
                   <div className="col-span-full text-center py-12">
                     <p className="font-open-sans text-black/60 text-lg">
-                      {selectedType 
+                      {selectedType
                         ? `No ${selectedType} events detected in the next 90 days.`
                         : 'No rare astronomical events detected in the next 90 days.'
                       }
@@ -244,25 +240,25 @@ export default function AstrologicalEvents() {
                 <h3 className="font-space-grotesk text-2xl font-bold text-black mb-6">
                   Next 30 Days
                 </h3>
-                
+
                 {/* Timeline */}
                 <div className="space-y-4">
                   {(() => {
-                    const eventsToShow = selectedType 
+                    const eventsToShow = selectedType
                       ? selectedType === 'planetarySigns'
                         ? upcomingEvents.filter(event => event.type === 'planetInSign' || event.type === 'planetSignChange')
                         : upcomingEvents.filter(event => event.type === selectedType)
                       : upcomingEvents;
-                    
+
                     return eventsToShow.length > 0 ? (
                       Array.from({ length: 30 }, (_, i) => {
                         const date = addDays(new Date(), i);
-                        const dayEvents = eventsToShow.filter(event => 
+                        const dayEvents = eventsToShow.filter(event =>
                           format(event.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
                         );
-                        
+
                         if (dayEvents.length === 0) return null;
-                        
+
                         return (
                           <div key={i} className="flex gap-4 items-start">
                             <div className="flex-shrink-0 w-32 text-right">
@@ -275,9 +271,9 @@ export default function AstrologicalEvents() {
                             </div>
                             <div className="flex-1 space-y-2">
                               {dayEvents.map(event => (
-                                <CalendarEventItem 
+                                <CalendarEventItem
                                   key={event.id}
-                                  event={event} 
+                                  event={event}
                                 />
                               ))}
                             </div>
@@ -287,7 +283,7 @@ export default function AstrologicalEvents() {
                     ) : (
                       <div className="text-center py-12">
                         <p className="font-open-sans text-black/60 text-lg">
-                          {selectedType 
+                          {selectedType
                             ? `No ${selectedType} events detected in the next 30 days.`
                             : 'No astronomical events detected in the next 30 days.'
                           }
@@ -318,7 +314,7 @@ export default function AstrologicalEvents() {
               <div>
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Most Common Event</h4>
                 <p className="font-open-sans text-black/80">
-                  {mostCommonEventType 
+                  {mostCommonEventType
                     ? `${mostCommonEventType.charAt(0).toUpperCase()}${mostCommonEventType.slice(1)} events`
                     : 'Stable planetary period'
                   }
@@ -327,7 +323,7 @@ export default function AstrologicalEvents() {
               <div>
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Next Major Event</h4>
                 <p className="font-open-sans text-black/80">
-                  {nextMajorEvent 
+                  {nextMajorEvent
                     ? `${nextMajorEvent.name} on ${format(nextMajorEvent.date, 'MMM d')}`
                     : 'No major events approaching'
                   }

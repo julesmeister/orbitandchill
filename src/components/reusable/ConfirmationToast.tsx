@@ -60,7 +60,7 @@ export default function ConfirmationToast({
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100]">
+    <div className="fixed bottom-4 right-4 z-[9999]">
       <div 
         className={`
           px-6 py-5 bg-white border-2 border-black shadow-xl max-w-md w-full
