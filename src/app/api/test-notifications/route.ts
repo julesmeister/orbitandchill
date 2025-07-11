@@ -154,11 +154,11 @@ export async function POST(request: NextRequest) {
 
       // New notification types
       case 'chart_like':
-        const { likerName: chartLiker, chartTitle, chartId } = params;
+        const { likerName: chartLiker, chartTitle: singleChartTitle, chartId } = params;
         result = await createChartLikeNotification(
           userId,
           chartLiker || 'Chart Liker',
-          chartTitle || 'Test Chart',
+          singleChartTitle || 'Test Chart',
           chartId || 'chart-test-id'
         );
         break;
