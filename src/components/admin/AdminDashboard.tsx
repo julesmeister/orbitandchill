@@ -12,6 +12,7 @@ import PostsTab from './PostsTab';
 import SEOTab from './SEOTab';
 import PremiumTab from './PremiumTab';
 import EventsTab from './EventsTab';
+import SeedingTab from './SeedingTab';
 import AuditLogsTab from './AuditLogsTab';
 import SettingsTab from './SettingsTab';
 
@@ -154,6 +155,15 @@ export default function AdminDashboard() {
       )
     },
     { 
+      id: 'seeding', 
+      label: 'Data Seeding',
+      icon: (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      )
+    },
+    { 
       id: 'audit', 
       label: 'Audit Logs',
       icon: (
@@ -187,6 +197,8 @@ export default function AdminDashboard() {
         return <SEOTab isLoading={isLoading} />;
       case 'premium':
         return <PremiumTab isLoading={isLoading} />;
+      case 'seeding':
+        return <SeedingTab isLoading={isLoading} />;
       case 'settings':
         return <SettingsTab isLoading={isLoading} />;
       case 'audit':

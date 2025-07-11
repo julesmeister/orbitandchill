@@ -32,7 +32,7 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
       clearInterval(healthInterval);
       clearInterval(notificationInterval);
     };
-  }, [loadHealthMetrics, loadNotifications]);
+  }, []); // Remove functions from dependencies to prevent infinite loop
 
   const currentTime = new Date().toLocaleTimeString('en-US', { 
     hour: '2-digit', 

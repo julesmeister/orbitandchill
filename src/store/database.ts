@@ -59,20 +59,64 @@ export interface CacheEntry {
   createdAt: string;
 }
 
+// Seeding-specific interfaces
+export interface SeedUserConfig {
+  id: string;
+  userId: string;
+  writingStyle: string;
+  expertiseAreas: string[];
+  responsePattern: string;
+  replyProbability: number;
+  votingBehavior: string;
+  aiPromptTemplate?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SeedingBatch {
+  id: string;
+  sourceType: string;
+  contentInput?: string;
+  aiConfig?: {
+    provider: string;
+    model: string;
+    apiKey: string;
+    temperature: number;
+  };
+  generationSettings?: {
+    discussionsToGenerate: number;
+    repliesPerDiscussion: { min: number; max: number };
+    maxNestingDepth: number;
+    contentVariation: number;
+  };
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdDiscussions: number;
+  createdReplies: number;
+  createdVotes: number;
+  errorMessage?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
 export class LuckstrologyDatabase extends Dexie {
   userProfiles!: Table<UserProfile>;
   natalCharts!: Table<NatalChartStorage>;
   people!: Table<PersonStorage>;
   cache!: Table<CacheEntry>;
+  seedUserConfigs!: Table<SeedUserConfig>;
+  seedingBatches!: Table<SeedingBatch>;
 
   constructor() {
     super("LuckstrologyDB");
 
-    this.version(1).stores({
+    this.version(2).stores({
       userProfiles: "id, username, authProvider, updatedAt, email",
       natalCharts: "id, userId, chartType, createdAt",
       people: "id, userId, name, relationship, updatedAt, isDefault",
       cache: "key, expiry",
+      seedUserConfigs: "id, userId, writingStyle, isActive, updatedAt",
+      seedingBatches: "id, status, createdAt, completedAt",
     });
   }
 
@@ -357,6 +401,253 @@ export class LuckstrologyDatabase extends Dexie {
       updatedAt: person.updatedAt.toISOString(),
       isDefault: person.isDefault
     };
+  }
+
+  // Seed user configuration methods
+  async saveSeedUserConfig(config: SeedUserConfig): Promise<void> {
+    await this.seedUserConfigs.put(config);
+  }
+
+  async getSeedUserConfig(id: string): Promise<SeedUserConfig | null> {
+    const config = await this.seedUserConfigs.get(id);
+    return config || null;
+  }
+
+  async getAllSeedUserConfigs(): Promise<SeedUserConfig[]> {
+    const configs = await this.seedUserConfigs
+      .where("isActive")
+      .equals(true)
+      .toArray();
+    
+    return configs.sort((a, b) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+  }
+
+  async getSeedUserConfigByUserId(userId: string): Promise<SeedUserConfig | null> {
+    const config = await this.seedUserConfigs
+      .where("userId")
+      .equals(userId)
+      .first();
+    return config || null;
+  }
+
+  async deleteSeedUserConfig(id: string): Promise<void> {
+    await this.seedUserConfigs.delete(id);
+  }
+
+  // Seeding batch methods
+  async saveSeedingBatch(batch: SeedingBatch): Promise<void> {
+    await this.seedingBatches.put(batch);
+  }
+
+  async getSeedingBatch(id: string): Promise<SeedingBatch | null> {
+    const batch = await this.seedingBatches.get(id);
+    return batch || null;
+  }
+
+  async getAllSeedingBatches(): Promise<SeedingBatch[]> {
+    const batches = await this.seedingBatches.toArray();
+    return batches.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async updateSeedingBatchStatus(
+    id: string, 
+    status: SeedingBatch['status'], 
+    stats?: Partial<Pick<SeedingBatch, 'createdDiscussions' | 'createdReplies' | 'createdVotes' | 'errorMessage'>>
+  ): Promise<void> {
+    const updateData: Partial<SeedingBatch> = { status };
+    
+    if (stats) {
+      Object.assign(updateData, stats);
+    }
+    
+    if (status === 'completed' || status === 'failed') {
+      updateData.completedAt = new Date().toISOString();
+    }
+    
+    await this.seedingBatches.update(id, updateData);
+  }
+
+  async deleteSeedingBatch(id: string): Promise<void> {
+    await this.seedingBatches.delete(id);
+  }
+
+  // Utility method to create initial seed users
+  async createInitialSeedUsers(): Promise<void> {
+    const seedUsers = [
+      {
+        id: 'seed_user_astromaven',
+        username: 'AstroMaven',
+        email: 'astromaven@example.com',
+        authProvider: 'anonymous' as const,
+        subscriptionTier: 'premium' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        dateOfBirth: '1975-04-15',
+        timeOfBirth: '15:45',
+        locationOfBirth: 'Los Angeles, CA',
+        coordinates: { lat: '34.0522', lon: '-118.2437' },
+        hasNatalChart: true,
+        showZodiacPublicly: true,
+        showStelliumsPublicly: true,
+        showBirthInfoPublicly: false,
+        allowDirectMessages: true,
+        showOnlineStatus: true
+      },
+      {
+        id: 'seed_user_starseeker23',
+        username: 'StarSeeker23',
+        email: 'starseeker23@example.com',
+        authProvider: 'anonymous' as const,
+        subscriptionTier: 'free' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        dateOfBirth: '1990-09-03',
+        timeOfBirth: '07:30',
+        locationOfBirth: 'New York, NY',
+        coordinates: { lat: '40.7128', lon: '-74.0060' },
+        hasNatalChart: true,
+        showZodiacPublicly: true,
+        showStelliumsPublicly: false,
+        showBirthInfoPublicly: false,
+        allowDirectMessages: true,
+        showOnlineStatus: true
+      },
+      {
+        id: 'seed_user_cosmicskeptic',
+        username: 'CosmicSkeptic',
+        email: 'cosmicskeptic@example.com',
+        authProvider: 'anonymous' as const,
+        subscriptionTier: 'free' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        dateOfBirth: '1985-12-10',
+        timeOfBirth: '',
+        locationOfBirth: '',
+        coordinates: { lat: '', lon: '' },
+        hasNatalChart: false,
+        showZodiacPublicly: false,
+        showStelliumsPublicly: false,
+        showBirthInfoPublicly: false,
+        allowDirectMessages: false,
+        showOnlineStatus: false
+      },
+      {
+        id: 'seed_user_moonchild92',
+        username: 'MoonChild92',
+        email: 'moonchild92@example.com',
+        authProvider: 'anonymous' as const,
+        subscriptionTier: 'free' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        hasNatalChart: false,
+        showZodiacPublicly: false,
+        showStelliumsPublicly: false,
+        showBirthInfoPublicly: false,
+        allowDirectMessages: true,
+        showOnlineStatus: true
+      },
+      {
+        id: 'seed_user_retroguru',
+        username: 'RetroGuru',
+        email: 'retroguru@example.com',
+        authProvider: 'anonymous' as const,
+        subscriptionTier: 'premium' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        dateOfBirth: '1980-06-21',
+        timeOfBirth: '12:00',
+        locationOfBirth: 'San Francisco, CA',
+        coordinates: { lat: '37.7749', lon: '-122.4194' },
+        hasNatalChart: true,
+        showZodiacPublicly: true,
+        showStelliumsPublicly: true,
+        showBirthInfoPublicly: true,
+        allowDirectMessages: true,
+        showOnlineStatus: true
+      }
+    ];
+
+    const seedConfigs = [
+      {
+        id: 'config_astromaven',
+        userId: 'seed_user_astromaven',
+        writingStyle: 'professional_educational',
+        expertiseAreas: ['natal_charts', 'transits', 'aspects', 'houses'],
+        responsePattern: 'detailed_explanations',
+        replyProbability: 0.8,
+        votingBehavior: 'upvotes_quality_content',
+        aiPromptTemplate: 'Respond as AstroMaven, a professional astrologer. Be educational, detailed, and helpful. Reference chart elements when appropriate.',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'config_starseeker23',
+        userId: 'seed_user_starseeker23',
+        writingStyle: 'enthusiastic_personal',
+        expertiseAreas: ['relationships', 'personal_experience', 'learning'],
+        responsePattern: 'questions_and_sharing',
+        replyProbability: 0.6,
+        votingBehavior: 'supportive_upvoting',
+        aiPromptTemplate: 'Respond as StarSeeker23, an enthusiastic student. Share personal experiences, ask thoughtful questions, and show excitement about learning.',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'config_cosmicskeptic',
+        userId: 'seed_user_cosmicskeptic',
+        writingStyle: 'analytical_questioning',
+        expertiseAreas: ['research', 'statistics', 'methodology', 'critical_thinking'],
+        responsePattern: 'challenging_questions',
+        replyProbability: 0.4,
+        votingBehavior: 'selective_critical',
+        aiPromptTemplate: 'Respond as CosmicSkeptic, analytically minded. Ask challenging questions, seek evidence, and approach topics from a scientific perspective.',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'config_moonchild92',
+        userId: 'seed_user_moonchild92',
+        writingStyle: 'beginner_enthusiastic',
+        expertiseAreas: ['learning', 'basic_concepts', 'curiosity'],
+        responsePattern: 'grateful_questions',
+        replyProbability: 0.5,
+        votingBehavior: 'thankful_upvoting',
+        aiPromptTemplate: 'Respond as MoonChild92, a beginner. Ask basic questions, show gratitude for help, and express excitement about learning.',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'config_retroguru',
+        userId: 'seed_user_retroguru',
+        writingStyle: 'specialist_timing',
+        expertiseAreas: ['retrogrades', 'timing', 'transits', 'electional'],
+        responsePattern: 'timing_advice',
+        replyProbability: 0.7,
+        votingBehavior: 'expertise_focused',
+        aiPromptTemplate: 'Respond as RetroGuru, a timing specialist. Focus on planetary movements, retrograde periods, and optimal timing.',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+
+    // Create user profiles
+    for (const user of seedUsers) {
+      await this.saveUserProfile(user);
+    }
+
+    // Create seed user configurations
+    for (const config of seedConfigs) {
+      await this.saveSeedUserConfig(config);
+    }
   }
 }
 

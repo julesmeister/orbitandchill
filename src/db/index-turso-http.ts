@@ -163,6 +163,8 @@ const createMockDb = () => ({
         else if (table === schema.adminSettings) tableName = 'admin_settings';
         else if (table === schema.userActivity) tableName = 'user_activity';
         else if (table === schema.horaryQuestions) tableName = 'horary_questions';
+        else if (table === schema.seedUserConfigs) tableName = 'seed_user_configs';
+        else if (table === schema.seedingBatches) tableName = 'seeding_batches';
         else throw new Error('Unknown table');
         
         // Build INSERT query with camelCase to snake_case conversion
@@ -1000,8 +1002,10 @@ async function createTablesIfNeeded() {
     const repliesResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="discussion_replies"');
     const eventsResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="astrological_events"');
     const horaryResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="horary_questions"');
+    const seedConfigsResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="seed_user_configs"');
+    const seedBatchesResult = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="seeding_batches"');
     
-    if (discussionsResult.rows.length === 0 || repliesResult.rows.length === 0 || eventsResult.rows.length === 0 || horaryResult.rows.length === 0) {
+    if (discussionsResult.rows.length === 0 || repliesResult.rows.length === 0 || eventsResult.rows.length === 0 || horaryResult.rows.length === 0 || seedConfigsResult.rows.length === 0 || seedBatchesResult.rows.length === 0) {
       console.log('📋 Creating/recreating database schema...');
       
       // Create basic tables for now
@@ -1296,7 +1300,41 @@ async function createTablesIfNeeded() {
         )
       `);
       
-      console.log('✅ All tables (including analytics, charts, premium features, astrological events, audit logs, account deletion, and horary questions) created successfully');
+      // Create seeding tables
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS seed_user_configs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          writing_style TEXT NOT NULL,
+          expertise_areas TEXT NOT NULL,
+          response_pattern TEXT NOT NULL,
+          reply_probability REAL NOT NULL,
+          voting_behavior TEXT NOT NULL,
+          ai_prompt_template TEXT,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS seeding_batches (
+          id TEXT PRIMARY KEY,
+          source_type TEXT NOT NULL,
+          source_content TEXT NOT NULL,
+          processed_content TEXT,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+          discussions_created INTEGER NOT NULL DEFAULT 0,
+          replies_created INTEGER NOT NULL DEFAULT 0,
+          votes_created INTEGER NOT NULL DEFAULT 0,
+          errors TEXT,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        )
+      `);
+
+      console.log('✅ All tables (including analytics, charts, premium features, astrological events, audit logs, account deletion, horary questions, and seeding tables) created successfully');
     } else {
       // Some tables exist, checking astrological_events specifically
       
@@ -1369,6 +1407,54 @@ async function createTablesIfNeeded() {
         console.log('✅ horary_questions table created successfully');
       } else {
         console.log('✅ horary_questions table already exists');
+      }
+      
+      // Check and create seeding tables if missing
+      const seedConfigsCheck = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="seed_user_configs"');
+      if (seedConfigsCheck.rows.length === 0) {
+        console.log('🔧 Creating missing seed_user_configs table...');
+        await client.execute(`
+          CREATE TABLE IF NOT EXISTS seed_user_configs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            writing_style TEXT NOT NULL,
+            expertise_areas TEXT NOT NULL,
+            response_pattern TEXT NOT NULL,
+            reply_probability REAL NOT NULL,
+            voting_behavior TEXT NOT NULL,
+            ai_prompt_template TEXT,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+        console.log('✅ seed_user_configs table created successfully');
+      } else {
+        console.log('✅ seed_user_configs table already exists');
+      }
+      
+      const seedBatchesCheck = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="seeding_batches"');
+      if (seedBatchesCheck.rows.length === 0) {
+        console.log('🔧 Creating missing seeding_batches table...');
+        await client.execute(`
+          CREATE TABLE IF NOT EXISTS seeding_batches (
+            id TEXT PRIMARY KEY,
+            source_type TEXT NOT NULL,
+            source_content TEXT NOT NULL,
+            processed_content TEXT,
+            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+            discussions_created INTEGER NOT NULL DEFAULT 0,
+            replies_created INTEGER NOT NULL DEFAULT 0,
+            votes_created INTEGER NOT NULL DEFAULT 0,
+            errors TEXT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          )
+        `);
+        console.log('✅ seeding_batches table created successfully');
+      } else {
+        console.log('✅ seeding_batches table already exists');
       }
     }
   } catch (error) {

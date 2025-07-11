@@ -301,9 +301,8 @@ export default function EventsLeftPanel({
               <ActionButton
                 onClick={() => setShowTimingOptions(true)}
                 disabled={isTimingGenerating}
-                variant="primary"
+                variant="secondary"
                 icon="✨"
-                className="hover:shadow-lg"
               >
                 Generate Optimal Times
               </ActionButton>

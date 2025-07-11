@@ -624,3 +624,51 @@ export const categories = sqliteTable('categories', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+// Seed User Configurations - AI-powered user personas for content seeding
+export const seedUserConfigs = sqliteTable('seed_user_configs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // AI behavior configuration
+  writingStyle: text('writing_style').notNull(), // 'professional_educational', 'enthusiastic_personal', etc.
+  expertiseAreas: text('expertise_areas').notNull(), // JSON array: ['natal_charts', 'transits', etc.]
+  responsePattern: text('response_pattern').notNull(), // 'detailed_explanations', 'questions_and_sharing', etc.
+  replyProbability: real('reply_probability').notNull(), // 0.0 to 1.0
+  votingBehavior: text('voting_behavior').notNull(), // 'upvotes_quality_content', 'supportive_upvoting', etc.
+  
+  // AI prompt configuration
+  aiPromptTemplate: text('ai_prompt_template'), // Custom prompt template for this persona
+  
+  // Status and management
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Seeding Batches - Track content seeding operations
+export const seedingBatches = sqliteTable('seeding_batches', {
+  id: text('id').primaryKey(),
+  
+  // Source information
+  sourceType: text('source_type').notNull(), // 'pasted_content', 'reddit_scraping', 'manual_input'
+  sourceContent: text('source_content').notNull(), // Original raw content
+  processedContent: text('processed_content'), // AI-processed content (JSON)
+  
+  // Processing status
+  status: text('status', { 
+    enum: ['pending', 'processing', 'completed', 'failed'] 
+  }).notNull().default('pending'),
+  
+  // Results tracking
+  discussionsCreated: integer('discussions_created').notNull().default(0),
+  repliesCreated: integer('replies_created').notNull().default(0),
+  votesCreated: integer('votes_created').notNull().default(0),
+  
+  // Error tracking
+  errors: text('errors'), // JSON array of error messages
+  
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});

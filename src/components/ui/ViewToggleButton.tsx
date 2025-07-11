@@ -24,7 +24,7 @@ export default function ViewToggleButton({
       className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-all duration-300 hover:-translate-y-0.5 ${
         isActive
           ? 'bg-black text-white border-black'
-          : 'bg-white text-black border-black hover:bg-gray-50'
+          : 'bg-white text-black border-gray-300 hover:bg-black hover:text-white hover:border-black'
       } ${className}`}
     >
       {icon && <span className="text-base">{icon}</span>}
