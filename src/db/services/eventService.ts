@@ -584,7 +584,7 @@ export class EventService {
 
   // Delete an event
   static async deleteEvent(id: string, userId?: string): Promise<boolean> {
-    return resilient.item(db, 'deleteEvent', async () => {
+    const result = await resilient.item(db, 'deleteEvent', async () => {
       console.log('🗑️ Deleting event with ID:', id, 'by user:', userId);
       
       // Security check: if userId provided, verify ownership first
@@ -620,6 +620,9 @@ export class EventService {
       
       return (deleteResult.rowsAffected || 0) > 0;
     });
+    
+    // Handle null result from resilient wrapper (e.g., database unavailable)
+    return result ?? false;
   }
 
   // Toggle bookmark status
