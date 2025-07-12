@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllSeedingBatches, deleteSeedingBatch } from '@/db/services/seedUserService';
+import { db } from '@/db';
 
 // DELETE - Clear all seeded content and batches
 export async function DELETE() {
@@ -59,18 +60,18 @@ export async function DELETE() {
 export async function GET() {
   try {
     // Get all seeding batches
-    const batches = await db.getAllSeedingBatches();
+    const batches = await getAllSeedingBatches();
     
     // Calculate summary statistics
     const summary = {
       totalBatches: batches.length,
-      completedBatches: batches.filter(b => b.status === 'completed').length,
-      failedBatches: batches.filter(b => b.status === 'failed').length,
-      processingBatches: batches.filter(b => b.status === 'processing').length,
-      pendingBatches: batches.filter(b => b.status === 'pending').length,
-      totalDiscussions: batches.reduce((sum, b) => sum + (b.createdDiscussions || 0), 0),
-      totalReplies: batches.reduce((sum, b) => sum + (b.createdReplies || 0), 0),
-      totalVotes: batches.reduce((sum, b) => sum + (b.createdVotes || 0), 0)
+      completedBatches: batches.filter((b: any) => b.status === 'completed').length,
+      failedBatches: batches.filter((b: any) => b.status === 'failed').length,
+      processingBatches: batches.filter((b: any) => b.status === 'processing').length,
+      pendingBatches: batches.filter((b: any) => b.status === 'pending').length,
+      totalDiscussions: batches.reduce((sum: any, b: any) => sum + (b.createdDiscussions || 0), 0),
+      totalReplies: batches.reduce((sum: any, b: any) => sum + (b.createdReplies || 0), 0),
+      totalVotes: batches.reduce((sum: any, b: any) => sum + (b.createdVotes || 0), 0)
     };
     
     // Get cache statistics
@@ -78,7 +79,7 @@ export async function GET() {
     try {
       const allCacheEntries = await db.cache.toArray();
       cacheStats.total = allCacheEntries.length;
-      cacheStats.seededContent = allCacheEntries.filter(entry => 
+      cacheStats.seededContent = allCacheEntries.filter((entry: any) => 
         entry.key.startsWith('seeded_discussion_') || 
         entry.key.startsWith('seeded_reply_')
       ).length;
@@ -88,9 +89,9 @@ export async function GET() {
     
     // Get recent batches for display
     const recentBatches = batches
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 10)
-      .map(batch => ({
+      .map((batch: any) => ({
         id: batch.id,
         status: batch.status,
         createdAt: batch.createdAt,

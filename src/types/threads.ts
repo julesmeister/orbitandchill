@@ -64,6 +64,7 @@ export interface ThreadTemp {
   slug?: string; // URL-friendly slug for SEO
   excerpt: string;
   author: string;
+  authorId?: string;
   avatar: string;
   category: string;
   replies: number;
@@ -78,6 +79,7 @@ export interface ThreadTemp {
   content?: string;
   createdAt?: Date | string | number;
   updatedAt?: Date | string | number;
+  isBlogPost?: boolean;
   embeddedChart?: EmbeddedChart;
   embeddedVideo?: EmbeddedVideo;
 }

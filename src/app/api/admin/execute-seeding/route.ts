@@ -253,7 +253,7 @@ async function generateRepliesForDiscussion(
       results.votesCreated += replyData.upvotes + replyData.downvotes;
       
       // Store the reply ID for potential nested replies
-      replyId = createdReplyId;
+      const parentReplyId = createdReplyId;
     } else {
       continue; // Skip nested replies if parent failed
     }
@@ -262,7 +262,7 @@ async function generateRepliesForDiscussion(
     if (maxNestingDepth > 1 && Math.random() < 0.4) {
       const nestedResults = await generateNestedReplies(
         discussionId,
-        replyId,
+        createdReplyId,
         seedConfigs,
         maxNestingDepth - 1,
         replyCreatedAt,
@@ -326,7 +326,7 @@ async function generateNestedReplies(
       results.votesCreated += replyData.upvotes + replyData.downvotes;
       
       // Store the reply ID for potential deeper nesting
-      replyId = createdReplyId;
+      const deeperReplyId = createdReplyId;
     } else {
       continue; // Skip deeper nesting if this reply failed
     }
@@ -335,7 +335,7 @@ async function generateNestedReplies(
     if (maxDepth > 1 && Math.random() < 0.2) {
       const deeperResults = await generateNestedReplies(
         discussionId,
-        replyId,
+        createdReplyId,
         seedConfigs,
         maxDepth - 1,
         replyCreatedAt,

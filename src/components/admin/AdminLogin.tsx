@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useAdminStore } from '@/store/adminStore';
 import { useUserStore } from '@/store/userStore';
 import { BRAND } from '@/config/brand';
+import LoadingSpinner from '../reusable/LoadingSpinner';
 
 export default function AdminLogin() {
   const { 
@@ -54,14 +55,12 @@ export default function AdminLogin() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="p-12 border border-black bg-white max-w-md w-full">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-6">
-              <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-3 h-3 bg-black animate-bounce"></div>
-            </div>
-            <p className="font-space-grotesk text-black">Checking admin access...</p>
-          </div>
+          <LoadingSpinner
+            variant="dots"
+            size="md"
+            subtitle="Checking admin access..."
+            centered={true}
+          />
         </div>
       </div>
     );

@@ -67,10 +67,13 @@ export function useRealMetrics(
 
   // Fetch real chart data from natal_charts table
   useEffect(() => {
+    let isMounted = true;
+
     const fetchChartsData = async () => {
+      if (!isMounted) return;
       try {
         const response = await fetch('/api/admin/charts-analytics');
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const result = await response.json();
           if (result.success && result.data) {
             setChartsData(result.data);
@@ -82,9 +85,10 @@ export function useRealMetrics(
     };
 
     const fetchRealUserData = async () => {
+      if (!isMounted) return;
       try {
         const response = await fetch('/api/admin/real-user-analytics');
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const result = await response.json();
           if (result.success && result.data) {
             setRealUserData(result.data);
@@ -97,6 +101,10 @@ export function useRealMetrics(
 
     fetchChartsData();
     fetchRealUserData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return useMemo(() => {
@@ -190,5 +198,5 @@ export function useRealMetrics(
       totalPageViews,
       conversionRate
     };
-  }, [userAnalytics, trafficData, threads, chartsData, realUserData]);
+  }, [userAnalytics, trafficData, threads.length, chartsData, realUserData]);
 }

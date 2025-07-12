@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import AdminDropdown from '../reusable/AdminDropdown';
 import StatusToast from '../reusable/StatusToast';
+import { usePremiumFilters } from '@/hooks/usePremiumFilters';
+import { getCategoryIcon, getCategoryColor } from '@/utils/premiumHelpers';
 
 interface PremiumFeature {
   id: string;
@@ -22,8 +24,6 @@ interface PremiumTabProps {
 
 export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
   const [features, setFeatures] = useState<PremiumFeature[]>([]);
-  const [filterCategory, setFilterCategory] = useState<string>('All Categories');
-  const [filterStatus, setFilterStatus] = useState<string>('All Features');
   const [hasChanges, setHasChanges] = useState(false);
   
   // StatusToast state
@@ -41,6 +41,20 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
   const hideToast = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
+
+  // Use filter hook
+  const {
+    filterCategory,
+    setFilterCategory,
+    filterStatus,
+    setFilterStatus,
+    activeSection,
+    setActiveSection,
+    categoryOptions,
+    statusOptions,
+    sectionTabs,
+    filteredFeatures,
+  } = usePremiumFilters(features);
 
   // Load features from API
   useEffect(() => {
@@ -72,37 +86,6 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
 
     loadFeatures();
   }, []);
-
-  const categoryOptions = ['All Categories', 'Chart Display', 'Interpretation', 'Sharing', 'Analysis'];
-  const statusOptions = ['All Features', 'Enabled', 'Disabled', 'Premium Only', 'Free Features'];
-  
-  // Section tabs for filtering by section
-  const sectionTabs = ['All Sections', 'Chart Display', 'Interpretations', 'Sharing', 'Analysis', 'Horary', 'Events'];
-  const [activeSection, setActiveSection] = useState('All Sections');
-
-  const filteredFeatures = features.filter(feature => {
-    const categoryMatch = filterCategory === 'All Categories' || 
-      (filterCategory === 'Chart Display' && feature.category === 'chart') ||
-      (filterCategory === 'Interpretation' && feature.category === 'interpretation') ||
-      (filterCategory === 'Sharing' && feature.category === 'sharing') ||
-      (filterCategory === 'Analysis' && feature.category === 'analysis');
-
-    const statusMatch = filterStatus === 'All Features' ||
-      (filterStatus === 'Enabled' && feature.isEnabled) ||
-      (filterStatus === 'Disabled' && !feature.isEnabled) ||
-      (filterStatus === 'Premium Only' && feature.isPremium) ||
-      (filterStatus === 'Free Features' && !feature.isPremium);
-
-    const sectionMatch = activeSection === 'All Sections' ||
-      (activeSection === 'Chart Display' && feature.section === 'chart-display') ||
-      (activeSection === 'Interpretations' && feature.section === 'interpretations') ||
-      (activeSection === 'Sharing' && feature.section === 'sharing') ||
-      (activeSection === 'Analysis' && feature.section === 'analysis') ||
-      (activeSection === 'Horary' && feature.section === 'horary') ||
-      (activeSection === 'Events' && feature.section === 'events');
-
-    return categoryMatch && statusMatch && sectionMatch;
-  });
 
   const handleFeatureToggle = (featureId: string, field: 'isEnabled' | 'isPremium') => {
     setFeatures(prev => prev.map(feature => 
@@ -156,36 +139,6 @@ export default function PremiumTab({ isLoading = false }: PremiumTabProps) {
       `${value ? 'Enabled' : 'Disabled'} all ${field === 'isEnabled' ? 'features' : 'premium status'} for visible features`,
       'info'
     );
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'chart':
-        return '📊';
-      case 'interpretation':
-        return '🔮';
-      case 'sharing':
-        return '🔗';
-      case 'analysis':
-        return '⚡';
-      default:
-        return '⭐';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'chart':
-        return '#6bdbff';
-      case 'interpretation':
-        return '#ff91e9';
-      case 'sharing':
-        return '#f2e356';
-      case 'analysis':
-        return '#51bd94';
-      default:
-        return '#f3f4f6';
-    }
   };
 
   const getEnabledCount = (category?: string) => {

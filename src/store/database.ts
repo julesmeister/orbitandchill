@@ -416,7 +416,7 @@ export class LuckstrologyDatabase extends Dexie {
   async getAllSeedUserConfigs(): Promise<SeedUserConfig[]> {
     const configs = await this.seedUserConfigs
       .where("isActive")
-      .equals(true)
+      .equals(1)
       .toArray();
     
     return configs.sort((a, b) => 

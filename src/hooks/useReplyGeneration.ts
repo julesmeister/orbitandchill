@@ -82,12 +82,12 @@ export const useReplyGeneration = (): UseReplyGenerationReturn => {
         const existingReplies = discussionData.replies || [];
         
         // Check for duplicate users (same user can't reply twice)
-        const isDuplicateUser = existingReplies.some(reply => 
+        const isDuplicateUser = existingReplies.some((reply: any) => 
           reply.authorName === result.data.authorName
         );
         
         // Check for similar content (prevent very similar replies)
-        const isDuplicateContent = existingReplies.some(reply => {
+        const isDuplicateContent = existingReplies.some((reply: any) => {
           const similarity = calculateSimilarity(reply.content || '', result.data.content || '');
           return similarity > 0.7; // 70% similarity threshold
         });
@@ -179,7 +179,7 @@ export const useReplyGeneration = (): UseReplyGenerationReturn => {
         const updatedItem = { ...item };
         if (updatedItem.replies) {
           // Filter out the reply with the specific ID
-          const newReplies = updatedItem.replies.filter(reply => reply.id !== replyId);
+          const newReplies = updatedItem.replies.filter((reply: any) => reply.id !== replyId);
           updatedItem.replies = newReplies;
           updatedItem.actualReplyCount = newReplies.length;
         }

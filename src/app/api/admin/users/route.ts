@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     const usersQuery = `
       SELECT 
         id, username, email, auth_provider, created_at, updated_at, 
-        has_natal_chart, role, is_active, is_suspended
+        has_natal_chart, role, is_active
       FROM users 
       ${whereClause} 
       ${orderClause} 
@@ -142,9 +142,9 @@ export async function GET(request: NextRequest) {
       discussionCount: discussionCounts[row.id as string] || 0,
       isActive: Boolean(row.is_active),
       lastActivity: row.updated_at as string,
-      role: row.role as string || 'user',
-      isSuspended: Boolean(row.is_suspended)
+      role: row.role as string || 'user'
     }));
+
 
     return NextResponse.json({
       success: true,

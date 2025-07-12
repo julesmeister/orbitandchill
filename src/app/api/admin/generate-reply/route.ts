@@ -65,7 +65,7 @@ function getMoodInstructions(mood: string) {
     'empathetic': 'Be understanding and caring. Share how you relate to others\' experiences. Use compassionate, connecting language.'
   };
   
-  return moodMap[mood] || moodMap['supportive'];
+  return moodMap[mood as keyof typeof moodMap] || moodMap['supportive'];
 }
 
 // Get detailed personality information for each user
@@ -121,7 +121,7 @@ function getPersonalityDetails(user: any) {
     }
   };
   
-  return personalityMap[user.username] || {
+  return personalityMap[user.username as keyof typeof personalityMap] || {
     personality: 'Astrology enthusiast',
     emojis: '✨ 🌟',
     background: 'Interested in astrology',
@@ -139,8 +139,8 @@ async function generateReplyWithDeepSeek(discussionData: any, seedConfigs: any[]
   
   // Get existing replies to avoid repetition
   const existingReplies = discussionData.replies || [];
-  const existingContent = existingReplies.map(r => r.content).join('\n\n');
-  const usedAuthors = new Set(existingReplies.map(r => r.authorName || r.authorId));
+  const existingContent = existingReplies.map((r: any) => r.content).join('\n\n');
+  const usedAuthors = new Set(existingReplies.map((r: any) => r.authorName || r.authorId));
   
   console.log('Existing authors:', Array.from(usedAuthors));
   console.log('Available users:', availableUsers.map(u => u.username));

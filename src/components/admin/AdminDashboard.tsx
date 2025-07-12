@@ -186,7 +186,7 @@ export default function AdminDashboard() {
           />
         );
       case 'users':
-        return <UsersTab userAnalytics={userAnalytics} isLoading={isLoading} />;
+        return <UsersTab />;
       case 'traffic':
         return <TrafficTab trafficData={trafficData} isLoading={isLoading} />;
       case 'posts':

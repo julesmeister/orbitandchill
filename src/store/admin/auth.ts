@@ -16,8 +16,19 @@ export const createAuthSlice = (set: any, get: any) => ({
   // Authentication actions
   initializeAuth: () => {
     if (typeof window !== 'undefined') {
+      // Prevent duplicate initialization
+      const state = get();
+      if (state.isAuthenticated || state.authLoading) {
+        return;
+      }
+
       // First check if current user is master admin
       setTimeout(async () => {
+        const currentState = get();
+        if (currentState.isAuthenticated || currentState.authLoading) {
+          return; // Already authenticated or in progress
+        }
+
         const isAdmin = await get().checkCurrentUserAdmin();
         if (!isAdmin) {
           // If not master admin, check for stored admin token
@@ -130,6 +141,12 @@ export const createAuthSlice = (set: any, get: any) => ({
   },
 
   checkCurrentUserAdmin: async (): Promise<boolean> => {
+    // Check if already authenticated to prevent duplicate calls
+    const currentState = get();
+    if (currentState.isAuthenticated) {
+      return true;
+    }
+
     // Import here to avoid circular dependency
     const { useUserStore } = await import('@/store/userStore');
     const currentUser = useUserStore.getState().user;
@@ -144,6 +161,9 @@ export const createAuthSlice = (set: any, get: any) => ({
     // Check if current user is the master admin
     if (currentUser.email === MASTER_ADMIN_EMAIL) {
       try {
+        // Set loading state to prevent duplicate calls
+        set({ authLoading: true });
+
         const data = await authApi.masterLogin(currentUser.id, currentUser.email);
 
         if (data.success && data.token) {
@@ -164,9 +184,11 @@ export const createAuthSlice = (set: any, get: any) => ({
 
           return true;
         } else {
+          set({ authLoading: false });
           return false;
         }
       } catch (error) {
+        set({ authLoading: false });
         return false;
       }
     }

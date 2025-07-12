@@ -49,17 +49,17 @@ export async function PUT(
     }
 
     // Validate status values
-    const validStatuses = ['active', 'inactive', 'suspended'];
+    const validStatuses = ['active', 'inactive'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
-        { error: 'Invalid status. Must be one of: active, inactive, suspended' },
+        { error: 'Invalid status. Must be one of: active, inactive' },
         { status: 400 }
       );
     }
 
     // Check if user exists
     const userCheck = await client.execute({
-      sql: 'SELECT id, username, email, role FROM users WHERE id = ? LIMIT 1',
+      sql: 'SELECT id, username, email, role, is_active FROM users WHERE id = ? LIMIT 1',
       args: [userId]
     });
 
@@ -76,32 +76,23 @@ export async function PUT(
     const updateFields = [];
     const updateValues = [];
 
-    if (username !== existingUser.username) {
-      updateFields.push('username = ?');
-      updateValues.push(username);
-    }
+    // Always update username, email, and role to ensure consistency
+    updateFields.push('username = ?');
+    updateValues.push(username);
 
-    if (email && email !== existingUser.email) {
+    if (email) {
       updateFields.push('email = ?');
       updateValues.push(email);
     }
 
-    if (role !== existingUser.role) {
-      updateFields.push('role = ?');
-      updateValues.push(role);
-    }
+    updateFields.push('role = ?');
+    updateValues.push(role);
 
     // Map status to database fields
+    // Convert status to is_active boolean
+    const isActive = status === 'active' ? 1 : 0;
     updateFields.push('is_active = ?');
-    updateValues.push(status === 'active' ? 1 : 0);
-
-    if (status === 'suspended') {
-      updateFields.push('is_suspended = ?');
-      updateValues.push(1);
-    } else {
-      updateFields.push('is_suspended = ?');
-      updateValues.push(0);
-    }
+    updateValues.push(isActive);
 
     // Always update the updated_at timestamp
     updateFields.push('updated_at = ?');
@@ -117,42 +108,17 @@ export async function PUT(
       WHERE id = ?
     `;
 
-    await client.execute({
+    const updateResult = await client.execute({
       sql: updateQuery,
       args: updateValues
     });
 
-    // Log the admin action for audit trail
-    try {
-      await client.execute({
-        sql: `
-          INSERT INTO admin_audit_logs (admin_user_id, action_type, resource_type, resource_id, details, timestamp)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        args: [
-          adminUserId || 'system',
-          'update_user',
-          'user',
-          userId,
-          JSON.stringify({
-            previousRole: existingUser.role,
-            newRole: role,
-            previousStatus: existingUser.is_active ? 'active' : 'inactive',
-            newStatus: status,
-            updatedFields: updateFields.map(field => field.split(' = ')[0])
-          }),
-          new Date().toISOString()
-        ]
-      });
-    } catch (auditError) {
-      console.warn('Failed to log audit trail:', auditError);
-      // Continue execution - audit logging failure shouldn't break the update
-    }
+    // TODO: Log the admin action for audit trail when admin_audit_logs table exists
 
     // Fetch updated user data to return
     const updatedUserResult = await client.execute({
       sql: `
-        SELECT id, username, email, role, is_active, is_suspended, updated_at
+        SELECT id, username, email, role, is_active, updated_at
         FROM users 
         WHERE id = ? 
         LIMIT 1
@@ -170,7 +136,7 @@ export async function PUT(
         username: updatedUser.username,
         email: updatedUser.email,
         role: updatedUser.role,
-        status: updatedUser.is_active ? (updatedUser.is_suspended ? 'suspended' : 'active') : 'inactive',
+        status: updatedUser.is_active ? 'active' : 'inactive',
         updatedAt: updatedUser.updated_at
       }
     });

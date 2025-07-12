@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react';
+import LoadingSpinner from '../../reusable/LoadingSpinner';
 
 interface ActivityItem {
   id: string;
@@ -20,14 +21,12 @@ export default function ActivityTimelineChart({ activities, isLoading }: Activit
   if (isLoading) {
     return (
       <div className="h-64 flex items-center justify-center bg-white border border-black">
-        <div className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-            <div className="w-3 h-3 bg-black animate-bounce"></div>
-          </div>
-          <p className="font-open-sans text-black/60 text-sm">Loading activity...</p>
-        </div>
+        <LoadingSpinner
+          variant="dots"
+          size="sm"
+          subtitle="Loading activity..."
+          centered={true}
+        />
       </div>
     );
   }

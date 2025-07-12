@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         : await simulateAITransformation(parsedContent, seedConfigs, generationSettings);
       
       // Update batch status to completed
-      const totalReplies = transformedContent.reduce((sum, item) => sum + (item.actualReplyCount || 0), 0);
+      const totalReplies = transformedContent.reduce((sum: any, item: any) => sum + (item.actualReplyCount || 0), 0);
       await updateSeedingBatch(batchId, {
         status: 'completed',
         processedContent: JSON.stringify(transformedContent),
@@ -70,12 +70,12 @@ export async function POST(request: NextRequest) {
         data: transformedContent,
         summary: {
           discussionsCreated: transformedContent.length,
-          totalReplies: transformedContent.reduce((sum, item) => sum + (item.actualReplyCount || 0), 0),
-          mainAuthor: transformedContent[0]?.assignedAuthor,
-          category: transformedContent[0]?.category,
-          replyAuthors: transformedContent[0]?.replies?.map(r => r.authorName) || []
+          totalReplies: transformedContent.reduce((sum: any, item: any) => sum + (item.actualReplyCount || 0), 0),
+          mainAuthor: (transformedContent[0] as any)?.assignedAuthor,
+          category: (transformedContent[0] as any)?.category,
+          replyAuthors: (transformedContent[0] as any)?.replies?.map((r: any) => r.authorName) || []
         },
-        message: `Successfully created ${transformedContent.length} discussion(s) with ${transformedContent[0]?.actualReplyCount || 0} replies`
+        message: `Successfully created ${transformedContent.length} discussion(s) with ${(transformedContent[0] as any)?.actualReplyCount || 0} replies`
       });
     } catch (aiError) {
       // Update batch status to failed

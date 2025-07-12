@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { AdminLogEntry } from '@/db/services/adminAuditService';
+import LoadingSpinner from '../reusable/LoadingSpinner';
 
 interface AuditLogsTabProps {
   isLoading: boolean;
@@ -458,13 +459,11 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                   {isLoading ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center">
-                        <div className="flex justify-center">
-                          <div className="flex items-center justify-center space-x-2">
-                            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-                            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-                            <div className="w-3 h-3 bg-black animate-bounce"></div>
-                          </div>
-                        </div>
+                        <LoadingSpinner
+                          variant="dots"
+                          size="sm"
+                          centered={true}
+                        />
                       </td>
                     </tr>
                   ) : logs.length === 0 ? (

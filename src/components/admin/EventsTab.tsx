@@ -1,16 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState, useEffect } from 'react';
 import { Search, Plus, Calendar, Star, Trash2, Edit3, Bookmark } from 'lucide-react';
 import { useAdminEvents } from '@/hooks/useAdminEvents';
-
-interface EventFormData {
-  title: string;
-  date: string;
-  time: string;
-  type: 'benefic' | 'challenging' | 'neutral';
-  description: string;
-  timingMethod: 'electional' | 'aspects' | 'houses';
-}
+import { useEventsFilters } from '@/hooks/useEventsFilters';
+import { useAdminEventForm, EventFormData } from '@/hooks/useAdminEventForm';
+import { useEventSelection } from '@/hooks/useEventSelection';
+import { 
+  getGeneratedPercentage, 
+  getBeneficPercentage, 
+  getBookmarkPercentage, 
+  getManualPercentage 
+} from '@/utils/analyticsHelpers';
 
 interface EventsTabProps {
   isLoading: boolean;
@@ -32,38 +31,37 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     refreshData
   } = useAdminEvents();
 
-  // Local state for UI
-  const [filteredEvents, setFilteredEvents] = useState<typeof events>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<'all' | 'benefic' | 'challenging' | 'neutral'>('all');
-  const [selectedSource, setSelectedSource] = useState<'all' | 'generated' | 'manual'>('all');
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<typeof events[0] | null>(null);
-  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
-  const [formData, setFormData] = useState<EventFormData>({
-    title: '',
-    date: '',
-    time: '12:00',
-    type: 'neutral',
-    description: '',
-    timingMethod: 'electional'
-  });
+  // Use extracted hooks
+  const {
+    filteredEvents,
+    searchQuery,
+    setSearchQuery,
+    selectedType,
+    setSelectedType,
+    selectedSource,
+    setSelectedSource,
+  } = useEventsFilters(events);
 
-  // Filter events based on search and filters
-  useEffect(() => {
-    let filtered = events.filter(event => {
-      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           event.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = selectedType === 'all' || event.type === selectedType;
-      const matchesSource = selectedSource === 'all' || 
-                           (selectedSource === 'generated' && event.isGenerated) ||
-                           (selectedSource === 'manual' && !event.isGenerated);
-      
-      return matchesSearch && matchesType && matchesSource;
-    });
-    
-    setFilteredEvents(filtered);
-  }, [events, searchQuery, selectedType, selectedSource]);
+  const {
+    showCreateForm,
+    setShowCreateForm,
+    editingEvent,
+    formData,
+    setFormData,
+    resetForm,
+    openCreateForm,
+    openEditForm,
+  } = useAdminEventForm();
+
+  const {
+    selectedEvents,
+    setSelectedEvents,
+    toggleEventSelection,
+    selectAllEvents: selectAllEventsBase,
+    clearSelection,
+  } = useEventSelection();
+
+  const selectAllEvents = () => selectAllEventsBase(filteredEvents);
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,33 +71,11 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         score: formData.type === 'benefic' ? 8 : formData.type === 'challenging' ? 3 : 5,
       });
       
-      // Reset form
-      setFormData({
-        title: '',
-        date: '',
-        time: '12:00',
-        type: 'neutral',
-        description: '',
-        timingMethod: 'electional'
-      });
-      setShowCreateForm(false);
+      resetForm();
     } catch (error) {
       console.error('Error creating event:', error);
       alert('Failed to create event. Please try again.');
     }
-  };
-
-  const handleEditEvent = (event: typeof events[0]) => {
-    setEditingEvent(event);
-    setFormData({
-      title: event.title,
-      date: event.date,
-      time: event.time,
-      type: event.type,
-      description: event.description,
-      timingMethod: event.timingMethod || 'electional'
-    });
-    setShowCreateForm(true);
   };
 
   const handleUpdateEvent = async (e: React.FormEvent) => {
@@ -108,18 +84,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     
     try {
       await updateEvent(editingEvent.id, formData);
-      
-      // Reset form
-      setFormData({
-        title: '',
-        date: '',
-        time: '12:00',
-        type: 'neutral',
-        description: '',
-        timingMethod: 'electional'
-      });
-      setEditingEvent(null);
-      setShowCreateForm(false);
+      resetForm();
     } catch (error) {
       console.error('Error updating event:', error);
       alert('Failed to update event. Please try again.');
@@ -143,27 +108,11 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     
     try {
       await bulkDeleteEvents(selectedEvents);
-      setSelectedEvents([]);
+      clearSelection();
     } catch (error) {
       console.error('Error bulk deleting events:', error);
       alert('Failed to delete some events. Please try again.');
     }
-  };
-
-  const toggleEventSelection = (eventId: string) => {
-    setSelectedEvents(prev => 
-      prev.includes(eventId) 
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
-  };
-
-  const selectAllEvents = () => {
-    setSelectedEvents(filteredEvents.map(event => event.id));
-  };
-
-  const clearSelection = () => {
-    setSelectedEvents([]);
   };
 
   // Show error only if both data sources fail
@@ -201,18 +150,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => {
-              setEditingEvent(null);
-              setFormData({
-                title: '',
-                date: '',
-                time: '12:00',
-                type: 'neutral',
-                description: '',
-                timingMethod: 'electional'
-              });
-              setShowCreateForm(true);
-            }}
+            onClick={openCreateForm}
             className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white border border-black font-medium hover:bg-gray-800 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -393,9 +331,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-6 border border-black">
             <div className="text-3xl font-space-grotesk font-bold text-black mb-2">
-              {analytics && analytics.totalEvents > 0 
-                ? Math.round((analytics.generationStats.generated / analytics.totalEvents) * 100) 
-                : 0}%
+              {getGeneratedPercentage(analytics)}%
             </div>
             <div className="font-open-sans text-sm text-black/60">Generated Events</div>
             <div className="font-open-sans text-xs text-black/40 mt-1">
@@ -405,9 +341,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
           
           <div className="text-center p-6 border border-black">
             <div className="text-3xl font-space-grotesk font-bold text-black mb-2">
-              {analytics && analytics.totalEvents > 0 
-                ? Math.round((analytics.eventsByType.benefic / analytics.totalEvents) * 100) 
-                : 0}%
+              {getBeneficPercentage(analytics)}%
             </div>
             <div className="font-open-sans text-sm text-black/60">Benefic Events</div>
             <div className="font-open-sans text-xs text-black/40 mt-1">
@@ -417,9 +351,7 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
           
           <div className="text-center p-6 border border-black">
             <div className="text-3xl font-space-grotesk font-bold text-black mb-2">
-              {analytics && analytics.totalEvents > 0 
-                ? Math.round((analytics.engagementStats.bookmarked / analytics.totalEvents) * 100) 
-                : 0}%
+              {getBookmarkPercentage(analytics)}%
             </div>
             <div className="font-open-sans text-sm text-black/60">Bookmark Rate</div>
             <div className="font-open-sans text-xs text-black/40 mt-1">
@@ -440,16 +372,12 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                 <div 
                   className="bg-blue-600 h-2 rounded-full" 
                   style={{ 
-                    width: analytics && analytics.totalEvents > 0 
-                      ? `${(analytics.generationStats.generated / analytics.totalEvents) * 100}%` 
-                      : '0%' 
+                    width: `${getGeneratedPercentage(analytics)}%` 
                   }}
                 ></div>
               </div>
               <span className="font-open-sans text-xs text-black/60 w-12">
-                {analytics && analytics.totalEvents > 0 
-                  ? Math.round((analytics.generationStats.generated / analytics.totalEvents) * 100) 
-                  : 0}%
+                {getGeneratedPercentage(analytics)}%
               </span>
             </div>
           </div>
@@ -461,16 +389,12 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                 <div 
                   className="bg-green-600 h-2 rounded-full" 
                   style={{ 
-                    width: analytics && analytics.totalEvents > 0 
-                      ? `${(analytics.generationStats.manual / analytics.totalEvents) * 100}%` 
-                      : '0%' 
+                    width: `${getManualPercentage(analytics)}%` 
                   }}
                 ></div>
               </div>
               <span className="font-open-sans text-xs text-black/60 w-12">
-                {analytics && analytics.totalEvents > 0 
-                  ? Math.round((analytics.generationStats.manual / analytics.totalEvents) * 100) 
-                  : 0}%
+                {getManualPercentage(analytics)}%
               </span>
             </div>
           </div>
@@ -482,16 +406,12 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
                 <div 
                   className="bg-purple-600 h-2 rounded-full" 
                   style={{ 
-                    width: analytics && analytics.totalEvents > 0 
-                      ? `${(analytics.engagementStats.bookmarked / analytics.totalEvents) * 100}%` 
-                      : '0%' 
+                    width: `${getBookmarkPercentage(analytics)}%` 
                   }}
                 ></div>
               </div>
               <span className="font-open-sans text-xs text-black/60 w-12">
-                {analytics && analytics.totalEvents > 0 
-                  ? Math.round((analytics.engagementStats.bookmarked / analytics.totalEvents) * 100) 
-                  : 0}%
+                {getBookmarkPercentage(analytics)}%
               </span>
             </div>
           </div>
