@@ -4,10 +4,10 @@ import { getSeedingBatch, deleteSeedingBatch } from '@/db/services/seedUserServi
 // GET - Check seeding progress for a specific batch
 export async function GET(
   request: NextRequest,
-  { params }: { params: { batchId: string } }
+  { params }: { params: Promise<{ batchId: string }> }
 ) {
   try {
-    const { batchId } = params;
+    const { batchId } = await params;
     
     if (!batchId) {
       return NextResponse.json(
@@ -110,10 +110,10 @@ export async function GET(
 // DELETE - Cancel or remove a seeding batch
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { batchId: string } }
+  { params }: { params: Promise<{ batchId: string }> }
 ) {
   try {
-    const { batchId } = params;
+    const { batchId } = await params;
     
     if (!batchId) {
       return NextResponse.json(
