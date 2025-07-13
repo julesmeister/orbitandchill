@@ -24,7 +24,7 @@ export const AI_PROVIDERS = [
 ];
 
 // Custom model interface
-interface CustomAiModel {
+export interface CustomAiModel {
   id: string;
   userId: string;
   providerId: string;
