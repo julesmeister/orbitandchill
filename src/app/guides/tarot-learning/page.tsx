@@ -1,284 +1,43 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { tarotCards, getRandomCard, TarotCard } from '@/data/tarotCards';
-import { BRAND } from '@/config/brand';
 import { useUserStore } from '@/store/userStore';
 import { hasPremiumAccess } from '@/utils/premiumHelpers';
-import { useSituationGeneration } from '@/hooks/useSituationGeneration';
-import { useSeedingPersistence } from '@/hooks/useSeedingPersistence';
+import { useTarotGame } from '@/hooks/useTarotGame';
 import CardMasteryGrid from '@/components/tarot/CardMasteryGrid';
-import LevelBadge, { calculateLevel, getLevelInfo } from '@/components/tarot/LevelBadge';
+import LevelBadge, { calculateLevel } from '@/components/tarot/LevelBadge';
 import TarotPremiumModal from '@/components/tarot/TarotPremiumModal';
 import TarotLeaderboard from '@/components/tarot/TarotLeaderboard';
-import TarotGameGuide from '@/components/tarot/TarotGameGuide';
 import TarotGameInterface from '@/components/tarot/TarotGameInterface';
-
-interface GameState {
-  isPlaying: boolean;
-  currentCard: TarotCard | null;
-  cardOrientation: 'upright' | 'reversed';
-  situation: string;
-  userInterpretation: string;
-  feedback: string | null;
-  score: number;
-  cardsCompleted: number;
-  isLoading: boolean;
-}
-
-interface LeaderboardEntry {
-  id: string;
-  username: string;
-  score: number;
-  cardsCompleted: number;
-  accuracy: number;
-  lastPlayed: string;
-}
-
-const situations = [
-  "A young professional is considering a major career change and has drawn this card for guidance.",
-  "Someone is facing relationship challenges and wants to understand what this card reveals about their situation.",
-  "A person is dealing with family conflicts and seeks insight from this card.",
-  "An entrepreneur is launching a new business and draws this card for advice on their venture.",
-  "Someone is struggling with self-doubt and personal growth, and this card appears in their reading.",
-  "A person is making an important financial decision and this card comes up in their spread.",
-  "Someone is dealing with grief and loss, and this card appears as guidance for healing.",
-  "A student is facing academic challenges and draws this card for educational insight.",
-  "A person is considering relocating to a new city and this card appears in their reading.",
-  "Someone is dealing with health concerns and seeks guidance from this card."
-];
 
 export default function TarotLearningPage() {
   const { user } = useUserStore();
-  
-  // Get persisted AI configuration and situation generation hook
-  const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
-  const { generateSituation, generateFallbackSituation } = useSituationGeneration();
-  
-  // AI config with fallback
-  const aiConfig = {
-    provider: aiProvider as 'openrouter' | 'openai' | 'claude' | 'gemini',
-    model: aiModel || 'deepseek/deepseek-r1-distill-llama-70b:free',
-    apiKey: aiApiKey || '',
-    temperature: temperature || 0.7
-  };
-  
-  const [gameState, setGameState] = useState<GameState>({
-    isPlaying: false,
-    currentCard: null,
-    cardOrientation: 'upright',
-    situation: '',
-    userInterpretation: '',
-    feedback: null,
-    score: 0,
-    cardsCompleted: 0,
-    isLoading: false
-  });
-
-  const [userProgress, setUserProgress] = useState({
-    totalScore: 0,
-    totalCards: 0,
-    accuracy: 0,
-    level: 'Novice'
-  });
-
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // Check if user has premium access
   const userHasPremium = hasPremiumAccess(user);
 
-  useEffect(() => {
-    loadUserProgress();
-    loadLeaderboard();
-  }, [user?.id]);
-
-  const loadUserProgress = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const response = await fetch(`/api/tarot/progress?userId=${user.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setUserProgress(data.progress);
-      }
-    } catch (error) {
-      console.warn('Failed to load user progress:', error);
-    }
-  };
-
-  const loadLeaderboard = async () => {
-    try {
-      const response = await fetch('/api/tarot/leaderboard');
-      if (response.ok) {
-        const data = await response.json();
-        setLeaderboard(data.leaderboard);
-      }
-    } catch (error) {
-      console.warn('Failed to load leaderboard:', error);
-    }
-  };
+  // Use the extracted tarot game hook
+  const {
+    gameState,
+    setGameState,
+    userProgress,
+    leaderboard,
+    startGame: gameStartGame,
+    submitInterpretation,
+    nextCard,
+    endGame,
+    getUserLevelFromProgress
+  } = useTarotGame(user?.id);
 
   const startGame = async () => {
     if (!userHasPremium) {
       setShowPremiumModal(true);
       return;
     }
-
-    const randomCard = getRandomCard();
-    const initialOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
-    
-    setGameState({
-      ...gameState,
-      isPlaying: true,
-      currentCard: randomCard,
-      cardOrientation: initialOrientation,
-      situation: '',
-      userInterpretation: '',
-      feedback: null,
-      isLoading: true
-    });
-
-    // Generate AI situation for the starting card
-    try {
-      const generated = await generateSituation({
-        card: randomCard,
-        aiConfig,
-        previousSituations: []
-      });
-      
-      const fullSituation = `${generated.situation}\n\n${generated.question}`;
-      
-      setGameState(prev => ({
-        ...prev,
-        situation: fullSituation,
-        isLoading: false
-      }));
-    } catch (error) {
-      console.error('Failed to generate starting situation:', error);
-      
-      // Emergency fallback
-      const emergency = generateFallbackSituation(randomCard);
-      const fullSituation = `${emergency.situation}\n\n${emergency.question}`;
-      
-      setGameState(prev => ({
-        ...prev,
-        situation: fullSituation,
-        isLoading: false
-      }));
-    }
-  };
-
-  const submitInterpretation = async (): Promise<void> => {
-    if (!gameState.currentCard || !gameState.userInterpretation.trim()) return;
-
-    setGameState(prev => ({ ...prev, isLoading: true }));
-
-    try {
-      const response = await fetch('/api/tarot/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id,
-          cardId: gameState.currentCard.id,
-          cardOrientation: gameState.cardOrientation,
-          situation: gameState.situation,
-          interpretation: gameState.userInterpretation,
-          cardMeaning: gameState.cardOrientation === 'upright' 
-            ? gameState.currentCard.uprightMeaning 
-            : gameState.currentCard.reversedMeaning,
-          cardKeywords: gameState.cardOrientation === 'upright'
-            ? gameState.currentCard.keywords.upright
-            : gameState.currentCard.keywords.reversed,
-          aiConfig: aiConfig
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setGameState(prev => ({
-          ...prev,
-          feedback: result.feedback,
-          score: prev.score + result.score,
-          cardsCompleted: prev.cardsCompleted + 1,
-          isLoading: false
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to submit interpretation:', error);
-      setGameState(prev => ({ ...prev, isLoading: false }));
-    }
-  };
-
-  const nextCard = async () => {
-    const randomCard = getRandomCard();
-    const nextOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
-    
-    setGameState(prev => ({
-      ...prev,
-      currentCard: randomCard,
-      cardOrientation: nextOrientation,
-      userInterpretation: '',
-      feedback: null,
-      isLoading: true
-    }));
-
-    // Generate AI situation for the new card
-    try {
-      const generated = await generateSituation({
-        card: randomCard,
-        aiConfig,
-        previousSituations: [] // Could track previous situations here too
-      });
-      
-      const fullSituation = `${generated.situation}\n\n${generated.question}`;
-      
-      setGameState(prev => ({
-        ...prev,
-        situation: fullSituation,
-        isLoading: false
-      }));
-    } catch (error) {
-      console.error('Failed to generate situation for next card:', error);
-      
-      // Emergency fallback
-      const emergency = generateFallbackSituation(randomCard);
-      const fullSituation = `${emergency.situation}\n\n${emergency.question}`;
-      
-      setGameState(prev => ({
-        ...prev,
-        situation: fullSituation,
-        isLoading: false
-      }));
-    }
-  };
-
-  const endGame = () => {
-    setGameState({
-      isPlaying: false,
-      currentCard: null,
-      cardOrientation: 'upright',
-      situation: '',
-      userInterpretation: '',
-      feedback: null,
-      score: 0,
-      cardsCompleted: 0,
-      isLoading: false
-    });
-  };
-
-  const getUserLevel = (totalScore: number) => {
-    if (totalScore >= 25000) return 'Grandmaster';
-    if (totalScore >= 10000) return 'Master';
-    if (totalScore >= 5000) return 'Adept';
-    if (totalScore >= 1000) return 'Apprentice';
-    return 'Novice';
-  };
-  
-  const getUserLevelFromProgress = (userProgress: any) => {
-    return getUserLevel(userProgress.totalScore);
+    await gameStartGame();
   };
 
   return (
