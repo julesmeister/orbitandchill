@@ -174,7 +174,7 @@ async function handlePageView(data: any, date: string, context: any) {
 
     // Record user activity (for both authenticated and anonymous users)
     await UserActivityService.recordActivity({
-      userId: userId || 'anonymous',
+      userId: userId || null, // Use null for anonymous users instead of 'anonymous' string
       activityType: 'page_view',
       entityType: 'page',
       description: `Viewed page: ${page || '/'}`,

@@ -29,13 +29,12 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
   onMoodSelect,
   onToggleExpandReplies,
 }) => {
-  console.log('🔄 PreviewContentDisplay render - previewContent length:', previewContent?.length || 0);
+  // Debug: Log when content is available
   if (previewContent && previewContent.length > 0) {
-    console.log('🔄 PreviewContentDisplay - First discussion:', previewContent[0]?.title);
-    console.log('🔄 PreviewContentDisplay - Full content:', previewContent);
+    console.log('🔄 PreviewContentDisplay rendering', previewContent.length, 'discussions');
   }
   
-  if (previewContent.length === 0) {
+  if (!previewContent || previewContent.length === 0) {
     return null;
   }
 
@@ -65,16 +64,31 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
       </div>
       <div className="p-4 space-y-6">
         {previewContent.map((item, index) => {
+          // Validate required fields
+          if (!item.transformedTitle || !item.transformedContent) {
+            console.error(`🔄 Preview item ${index} missing required fields:`, {
+              hasTransformedTitle: !!item.transformedTitle,
+              hasTransformedContent: !!item.transformedContent,
+              itemKeys: Object.keys(item)
+            });
+            return (
+              <div key={index} className="border border-red-300 bg-red-50 p-4">
+                <p className="text-red-600">Error: Discussion {index + 1} is missing required data.</p>
+                <p className="text-sm text-red-500">Missing: {!item.transformedTitle ? 'title' : ''} {!item.transformedContent ? 'content' : ''}</p>
+              </div>
+            );
+          }
+
           // Convert preview item to DiscussionTemp format for proper rendering
           const discussionForPreview: DiscussionTemp = {
             id: `preview_${index}`,
             title: item.transformedTitle,
             excerpt: item.summary || item.transformedContent.substring(0, 200) + '...',
             content: item.transformedContent,
-            author: item.assignedAuthor,
+            author: item.assignedAuthor || 'Unknown Author',
             authorId: item.assignedAuthorId || 'unknown',
             avatar: '/avatars/default.png',
-            category: item.category,
+            category: item.category || 'General Discussion',
             replies: item.actualReplyCount || 0,
             views: Math.floor(Math.random() * 500) + 50, // Mock views for preview
             lastActivity: new Date().toISOString(),
@@ -176,14 +190,17 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
                       const uniqueKey = `${index}-${replyIdx}-${reply.id || Date.now()}-${reply.authorName || 'unknown'}`;
                       
                       return (
-                        <div key={uniqueKey} className="bg-white p-4 rounded border border-blue-200 relative">
-                          {/* Delete Button */}
+                        <div key={uniqueKey} className="bg-white p-4 rounded border border-blue-200 relative group hover:border-blue-300 transition-colors duration-200">
+                          {/* Delete Button - Modern Design */}
                           <button
                             onClick={() => onDeleteReply(index, reply.id)}
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-100 hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 px-2 py-1 text-xs font-medium flex items-center gap-1 transition-all duration-200 hover:shadow-sm"
                             title="Delete this reply"
                           >
-                            ×
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
                           </button>
                           
                           <div className="flex items-start gap-3 pr-8">

@@ -19,7 +19,7 @@ export type EntityType =
   | 'chart' | 'discussion' | 'reply' | 'event' | 'user' | 'page' | 'search' | 'settings' | 'premium_feature' | 'horary';
 
 export interface CreateUserActivityData {
-  userId: string;
+  userId: string | null; // Allow null for anonymous users
   activityType: ActivityType;
   entityType?: EntityType;
   entityId?: string;
@@ -34,7 +34,7 @@ export interface CreateUserActivityData {
 
 export interface UserActivityRecord {
   id: string;
-  userId: string;
+  userId: string | null; // Allow null for anonymous users
   activityType: ActivityType;
   entityType?: EntityType;
   entityId?: string;
@@ -98,6 +98,18 @@ export class UserActivityService {
       const id = nanoid(12);
       const now = new Date();
 
+      // Validate userId exists if not null, or skip recording for invalid users
+      if (data.userId && typeof data.userId === 'string' && data.userId !== 'anonymous') {
+        // For valid user IDs, proceed normally
+      } else if (data.userId === 'anonymous' || data.userId === null) {
+        // For anonymous users, set userId to null
+        data.userId = null;
+      } else {
+        // Skip recording for invalid user IDs
+        console.log('⚠️ Skipping user activity recording for invalid userId:', data.userId);
+        return null;
+      }
+
       const activity = await db.insert(userActivity).values({
         id,
         userId: data.userId,
@@ -122,6 +134,12 @@ export class UserActivityService {
         metadata: activityData.metadata ? JSON.parse(activityData.metadata) : undefined,
       };
     } catch (error) {
+      // Handle foreign key constraint errors specifically
+      if (error instanceof Error && error.message.includes('FOREIGN KEY constraint failed')) {
+        console.log('⚠️ Foreign key constraint failed for user activity - likely anonymous user with invalid userId. Skipping record.');
+        return null;
+      }
+      
       console.error('Error recording user activity:', error);
       return null;
     }

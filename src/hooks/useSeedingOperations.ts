@@ -174,6 +174,12 @@ export const useSeedingOperations = () => {
         console.log('🔄 Setting preview content from AI transformation:', result.data?.length, 'discussions');
         if (result.data && result.data.length > 0) {
           console.log('🔄 First discussion API response:', result.data[0]);
+          console.log('🔄 First discussion structure keys:', Object.keys(result.data[0]));
+          console.log('🔄 Has required fields:', {
+            transformedTitle: !!result.data[0].transformedTitle,
+            transformedContent: !!result.data[0].transformedContent,
+            assignedAuthor: !!result.data[0].assignedAuthor
+          });
         }
         setExpandedReplies({}); // Clear expanded state for new content
         
@@ -298,7 +304,9 @@ export const useSeedingOperations = () => {
     discussionIndex: number,
     previewContent: any[],
     aiConfig: any,
-    setPreviewContent: (updater: (prev: any[]) => any[]) => void
+    setPreviewContent: (updater: (prev: any[]) => any[]) => void,
+    activePersonas: string[] = [],
+    selectedMood?: string
   ) => {
     if (!aiConfig.apiKey.trim()) {
       return {
@@ -317,6 +325,15 @@ export const useSeedingOperations = () => {
     try {
       const discussionData = previewContent[discussionIndex];
       const currentReplyCount = discussionData.replies ? discussionData.replies.length : 0;
+      const finalMood = selectedMood || selectedMoodForIndex[discussionIndex] || 'supportive';
+      
+      // Debug: Log mood selection
+      console.log('🎭 Frontend mood debug:');
+      console.log('🎭 discussionIndex:', discussionIndex);
+      console.log('🎭 selectedMood param:', selectedMood);
+      console.log('🎭 selectedMoodForIndex:', selectedMoodForIndex);
+      console.log('🎭 selectedMoodForIndex[discussionIndex]:', selectedMoodForIndex[discussionIndex]);
+      console.log('🎭 Final mood being sent:', finalMood);
 
       const response = await fetch('/api/admin/generate-reply', {
         method: 'POST',
@@ -327,7 +344,8 @@ export const useSeedingOperations = () => {
           discussionData,
           aiConfig,
           replyIndex: currentReplyCount,
-          selectedMood: selectedMoodForIndex[discussionIndex] || 'supportive'
+          selectedMood: selectedMood || selectedMoodForIndex[discussionIndex] || 'supportive',
+          activePersonas
         }),
       });
 

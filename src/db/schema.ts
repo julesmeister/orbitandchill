@@ -326,7 +326,7 @@ export const premiumFeatures = sqliteTable('premium_features', {
 // User activity tracking - tracks all user actions for timeline and analytics
 export const userActivity = sqliteTable('user_activity', {
   id: text('id').primaryKey(),
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }), // Nullable for anonymous users
   
   // Activity details
   activityType: text('activity_type', {
@@ -668,6 +668,154 @@ export const seedingBatches = sqliteTable('seeding_batches', {
   
   // Error tracking
   errors: text('errors'), // JSON array of error messages
+  
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Custom AI Models - user-defined AI model endpoints
+export const customAiModels = sqliteTable('custom_ai_models', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  
+  // Model configuration
+  providerId: text('provider_id').notNull(), // 'openrouter', 'openai', 'claude', etc.
+  modelName: text('model_name').notNull(), // The model identifier/endpoint
+  displayName: text('display_name').notNull(), // User-friendly name for the model
+  description: text('description'), // Optional description
+  
+  // Model settings
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+  
+  // Usage tracking
+  usageCount: integer('usage_count').notNull().default(0),
+  lastUsed: integer('last_used', { mode: 'timestamp' }),
+  
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Tarot Learning Progress - tracks user progress for each of the 78 tarot cards
+export const tarotProgress = sqliteTable('tarot_progress', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  cardId: text('card_id').notNull(), // tarot card ID from tarotCards.ts
+  
+  // Progress metrics
+  totalAttempts: integer('total_attempts').notNull().default(0),
+  correctInterpretations: integer('correct_interpretations').notNull().default(0),
+  totalScore: integer('total_score').notNull().default(0), // Sum of all scores for this card
+  averageScore: real('average_score').notNull().default(0), // Average score for this card
+  highestScore: integer('highest_score').notNull().default(0),
+  
+  // Upright vs Reversed specific tracking
+  uprightAttempts: integer('upright_attempts').notNull().default(0),
+  uprightScore: integer('upright_score').notNull().default(0),
+  uprightAverage: real('upright_average').notNull().default(0),
+  reversedAttempts: integer('reversed_attempts').notNull().default(0),
+  reversedScore: integer('reversed_score').notNull().default(0),
+  reversedAverage: real('reversed_average').notNull().default(0),
+  
+  // Familiarity tracking (calculated from performance)
+  familiarityLevel: text('familiarity_level', { 
+    enum: ['novice', 'apprentice', 'intermediate', 'advanced', 'expert', 'master'] 
+  }).notNull().default('novice'),
+  masteryPercentage: real('mastery_percentage').notNull().default(0), // 0-100
+  
+  // Learning metadata
+  lastPlayed: integer('last_played', { mode: 'timestamp' }),
+  firstPlayed: integer('first_played', { mode: 'timestamp' }),
+  consecutiveCorrect: integer('consecutive_correct').notNull().default(0),
+  learningStreak: integer('learning_streak').notNull().default(0), // Days played in a row
+  
+  // Performance tracking over time
+  recentPerformance: text('recent_performance'), // JSON array of last 10 scores
+  weaknessAreas: text('weakness_areas'), // JSON array of areas needing improvement
+  
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Tarot Learning Sessions - individual game sessions and attempts
+export const tarotSessions = sqliteTable('tarot_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  cardId: text('card_id').notNull(), // tarot card ID from tarotCards.ts
+  
+  // Session details
+  situation: text('situation').notNull(), // The scenario presented to the user
+  userInterpretation: text('user_interpretation').notNull(),
+  aiEvaluation: text('ai_evaluation').notNull(), // AI feedback and scoring
+  
+  // Scoring details
+  score: integer('score').notNull(), // 0-100 points for this interpretation
+  accuracyRating: text('accuracy_rating', { 
+    enum: ['excellent', 'good', 'fair', 'needs_improvement'] 
+  }).notNull(),
+  
+  // Analysis breakdown
+  keywordAccuracy: real('keyword_accuracy').notNull().default(0), // 0-1 scale
+  contextRelevance: real('context_relevance').notNull().default(0), // 0-1 scale
+  traditionalAlignment: real('traditional_alignment').notNull().default(0), // 0-1 scale
+  creativityBonus: real('creativity_bonus').notNull().default(0), // 0-1 scale
+  
+  // Learning insights
+  strengthsIdentified: text('strengths_identified'), // JSON array
+  improvementAreas: text('improvement_areas'), // JSON array
+  recommendedStudy: text('recommended_study'), // JSON array of study suggestions
+  
+  // Session metadata
+  timeSpent: integer('time_spent'), // seconds spent on interpretation
+  sessionType: text('session_type', { enum: ['practice', 'challenge', 'review'] }).notNull().default('practice'),
+  
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+// Tarot Learning Leaderboard - global rankings for the tarot learning game
+export const tarotLeaderboard = sqliteTable('tarot_leaderboard', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  username: text('username').notNull(), // Store username for display
+  
+  // Overall performance metrics
+  totalScore: integer('total_score').notNull().default(0),
+  totalCards: integer('total_cards').notNull().default(0), // Total cards attempted
+  cardsCompleted: integer('cards_completed').notNull().default(0), // Cards with at least one attempt
+  cardsMastered: integer('cards_mastered').notNull().default(0), // Cards with mastery >= 80%
+  
+  // Accuracy and skill metrics
+  overallAccuracy: real('overall_accuracy').notNull().default(0), // 0-100
+  averageScore: real('average_score').notNull().default(0), // Average score across all attempts
+  highestSingleScore: integer('highest_single_score').notNull().default(0),
+  perfectInterpretations: integer('perfect_interpretations').notNull().default(0), // 100-point scores
+  
+  // Activity metrics
+  gamesPlayed: integer('games_played').notNull().default(0),
+  sessionsThisWeek: integer('sessions_this_week').notNull().default(0),
+  currentStreak: integer('current_streak').notNull().default(0), // Days played consecutively
+  longestStreak: integer('longest_streak').notNull().default(0),
+  
+  // Achievement tracking
+  level: text('level', { 
+    enum: ['novice', 'apprentice', 'intermediate', 'advanced', 'expert', 'master'] 
+  }).notNull().default('novice'),
+  achievements: text('achievements'), // JSON array of unlocked achievements
+  badges: text('badges'), // JSON array of earned badges
+  
+  // Ranking metadata
+  rank: integer('rank'), // Current global rank (updated periodically)
+  categoryRanks: text('category_ranks'), // JSON object with ranks per card category
+  
+  // Time tracking
+  totalTimeSpent: integer('total_time_spent').notNull().default(0), // Total seconds spent learning
+  lastPlayed: integer('last_played', { mode: 'timestamp' }),
+  firstPlayed: integer('first_played', { mode: 'timestamp' }),
+  
+  // Weekly reset tracking (for competitions)
+  weeklyScore: integer('weekly_score').notNull().default(0),
+  weeklyGames: integer('weekly_games').notNull().default(0),
+  weekStartDate: text('week_start_date'), // YYYY-MM-DD format
   
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),

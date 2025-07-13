@@ -165,6 +165,7 @@ const createMockDb = () => ({
         else if (table === schema.horaryQuestions) tableName = 'horary_questions';
         else if (table === schema.seedUserConfigs) tableName = 'seed_user_configs';
         else if (table === schema.seedingBatches) tableName = 'seeding_batches';
+        else if (table === schema.customAiModels) tableName = 'custom_ai_models';
         else throw new Error('Unknown table');
         
         // Build INSERT query with camelCase to snake_case conversion

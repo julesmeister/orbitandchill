@@ -15,25 +15,95 @@ interface SeedingPersistenceData {
 }
 
 export const useSeedingPersistence = () => {
+  
   const [pastedContent, setPastedContent] = useState('');
   const [scrapedContent, setScrapedContent] = useState<any[]>([]);
   const [previewContent, setPreviewContent] = useState<any[]>(() => {
-    console.log('🔄 Initial preview content state set to empty array');
+    // Try to load from localStorage immediately during initialization
+    if (typeof window !== 'undefined') {
+      try {
+        const savedPreviewContent = localStorage.getItem('seeding_preview_content');
+        if (savedPreviewContent) {
+          const parsedContent = JSON.parse(savedPreviewContent);
+          
+          if (parsedContent.length > 0) {
+            // Apply field migration immediately during initialization
+            const migratedContent = parsedContent.map((item: any) => {
+              if (!item.assignedAuthor && item.assignedAuthorUsername) {
+                return {
+                  ...item,
+                  assignedAuthor: item.assignedAuthorUsername
+                };
+              }
+              return item;
+            });
+            
+            console.log('🔄 Preview content loaded from localStorage:', migratedContent.length, 'discussions');
+            return migratedContent;
+          }
+        }
+        
+        // If previewContent is empty, try to restore from seedingResults.data
+        const savedSeedingResults = localStorage.getItem('seeding_results');
+        if (savedSeedingResults) {
+          try {
+            const parsedResults = JSON.parse(savedSeedingResults);
+            if (parsedResults.success && parsedResults.data && Array.isArray(parsedResults.data) && parsedResults.data.length > 0) {
+              console.log('🔄 Restoring preview content from seedingResults:', parsedResults.data.length, 'discussions');
+              
+              // Apply field migration to restored data
+              const migratedContent = parsedResults.data.map((item: any) => {
+                if (!item.assignedAuthor && item.assignedAuthorUsername) {
+                  return {
+                    ...item,
+                    assignedAuthor: item.assignedAuthorUsername
+                  };
+                }
+                return item;
+              });
+              
+              return migratedContent;
+            }
+          } catch (e) {
+            console.error('Failed to parse seedingResults for preview restoration:', e);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse preview content during initialization:', e);
+      }
+    }
     return [];
   });
   const [seedingResults, setSeedingResults] = useState<any>(null);
 
   // AI Configuration State
-  const [aiProvider, setAiProvider] = useState('deepseek');
-  const [aiModel, setAiModel] = useState('deepseek-r1-distill-llama-70b');
+  const [aiProvider, setAiProvider] = useState('openrouter');
+  const [aiModel, setAiModel] = useState('deepseek/deepseek-r1-distill-llama-70b:free');
   const [aiApiKey, setAiApiKey] = useState('');
   const [temperature, setTemperature] = useState(0.7);
+  
+  // Active Personas State (default to all active)
+  const [activePersonas, setActivePersonas] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('seeding_active_personas');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse saved active personas:', e);
+        }
+      }
+    }
+    // Default to all personas active
+    return [];
+  });
 
   // Load saved settings from localStorage on component mount
   useEffect(() => {
     // Load AI settings
     const savedApiKey = localStorage.getItem('seeding_ai_api_key');
     const savedProvider = localStorage.getItem('seeding_ai_provider');
+    const savedModel = localStorage.getItem('seeding_ai_model');
     const savedTemperature = localStorage.getItem('seeding_ai_temperature');
     
     if (savedApiKey) {
@@ -41,6 +111,20 @@ export const useSeedingPersistence = () => {
     }
     if (savedProvider) {
       setAiProvider(savedProvider);
+    }
+    if (savedModel) {
+      console.log('🔍 DEBUG: Loading saved AI model from localStorage:', savedModel);
+      // Check if it's the problematic old model
+      if (savedModel === 'meta-llama/llama-3.1-70b-instruct:free') {
+        console.log('🚨 Found old meta-llama model in localStorage, updating to working model');
+        const newModel = 'deepseek/deepseek-r1-distill-llama-70b:free';
+        setAiModel(newModel);
+        localStorage.setItem('seeding_ai_model', newModel);
+      } else {
+        setAiModel(savedModel);
+      }
+    } else {
+      console.log('🔍 DEBUG: No saved AI model found, using default:', aiModel);
     }
     if (savedTemperature) {
       setTemperature(parseFloat(savedTemperature));
@@ -70,31 +154,9 @@ export const useSeedingPersistence = () => {
         console.error('Failed to parse saved scraped content:', e);
       }
     }
-    if (savedPreviewContent) {
-      try {
-        const parsedContent = JSON.parse(savedPreviewContent);
-        console.log('Parsed preview content from localStorage:', parsedContent);
-        console.log('Number of discussions:', parsedContent.length);
-        if (parsedContent.length > 0) {
-          console.log('First discussion:', parsedContent[0]);
-          console.log('Has replies?', parsedContent[0].replies?.length || 0);
-        }
-        console.log('🔄 Setting preview content from localStorage restore:', parsedContent.length, 'discussions');
-        setPreviewContent(parsedContent);
-        
-        // Show a subtle notification that data was restored
-        if (parsedContent.length > 0) {
-          setSeedingResults((prev: any) => ({
-            ...prev,
-            restoredFromCache: true,
-            restoredMessage: `Restored ${parsedContent.length} discussions with replies from previous session`
-          }));
-        }
-      } catch (e) {
-        console.error('Failed to parse saved preview content:', e);
-        console.error('Raw content that failed to parse:', savedPreviewContent);
-      }
-    }
+    // Note: previewContent is now loaded during useState initialization
+    // This useEffect only handles other localStorage items that couldn't be loaded during init
+    console.log('🔄 useEffect: Preview content was loaded during useState initialization, skipping duplicate load');
     if (savedSeedingResults) {
       try {
         setSeedingResults(JSON.parse(savedSeedingResults));
@@ -104,10 +166,23 @@ export const useSeedingPersistence = () => {
     }
   }, []);
 
+  // Handle restoration notification after component mounts (migration already done in initializer)
+  useEffect(() => {
+    if (previewContent.length > 0) {
+      console.log('🔄 Preview content detected after mount:', previewContent.length, 'discussions');
+      
+      // Show restoration notification
+      setSeedingResults((prev: any) => ({
+        ...prev,
+        restoredFromCache: true,
+        restoredMessage: `Restored ${previewContent.length} discussions with replies from previous session`
+      }));
+    }
+  }, []); // Empty dependency - only run once after mount
+
   // Save pasted content to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('seeding_pasted_content', pastedContent);
-    console.log('Saved pasted content to localStorage:', pastedContent.length, 'chars');
   }, [pastedContent]);
 
   // Save scraped content to localStorage whenever it changes
@@ -118,10 +193,8 @@ export const useSeedingPersistence = () => {
   // Save preview content to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('seeding_preview_content', JSON.stringify(previewContent));
-    console.log('🔄 Preview content changed - saved to localStorage:', previewContent.length, 'discussions');
     if (previewContent.length > 0) {
-      console.log('🔄 First discussion title:', previewContent[0]?.title);
-      console.log('🔄 First discussion replies:', previewContent[0]?.replies?.length || 0);
+      console.log('🔄 Preview content saved:', previewContent.length, 'discussions');
     }
   }, [previewContent]);
 
@@ -154,8 +227,36 @@ export const useSeedingPersistence = () => {
     localStorage.setItem('seeding_ai_temperature', newTemperature.toString());
   };
 
+  const handleModelChange = (newModel: string) => {
+    setAiModel(newModel);
+    localStorage.setItem('seeding_ai_model', newModel);
+  };
+
+  // Save active personas to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('seeding_active_personas', JSON.stringify(activePersonas));
+  }, [activePersonas]);
+
+  const togglePersonaActive = (personaId: string) => {
+    setActivePersonas(prev => {
+      if (prev.includes(personaId)) {
+        return prev.filter(id => id !== personaId);
+      } else {
+        return [...prev, personaId];
+      }
+    });
+  };
+
+  const setAllPersonasActive = (personas: string[], active: boolean) => {
+    if (active) {
+      setActivePersonas(personas);
+    } else {
+      setActivePersonas([]);
+    }
+  };
+
   const clearAllContent = () => {
-    console.log('🔄 Clearing all content - setting preview content to empty array');
+    console.log('🔄 Clearing all seeding content');
     // Clear state
     setPastedContent('');
     setScrapedContent([]);
@@ -169,19 +270,31 @@ export const useSeedingPersistence = () => {
     localStorage.removeItem('seeding_results');
   };
 
+  const clearAIConfiguration = () => {
+    console.log('🔄 Clearing AI configuration');
+    // Reset state to defaults
+    setAiProvider('openrouter');
+    setAiModel('deepseek/deepseek-r1-distill-llama-70b:free');
+    setAiApiKey('');
+    setTemperature(0.7);
+    
+    // Clear localStorage
+    localStorage.removeItem('seeding_ai_provider');
+    localStorage.removeItem('seeding_ai_model');
+    localStorage.removeItem('seeding_ai_api_key');
+    localStorage.removeItem('seeding_ai_temperature');
+  };
+
   // Enhanced setPreviewContent with logging
   const setPreviewContentWithLogging = (newContent: any[] | ((prev: any[]) => any[])) => {
     if (typeof newContent === 'function') {
       setPreviewContent(prev => {
         const result = newContent(prev);
-        console.log('🔄 setPreviewContent (function) called - prev:', prev.length, 'new:', result.length);
+        console.log('🔄 setPreviewContent updated:', prev.length, '→', result.length, 'discussions');
         return result;
       });
     } else {
-      console.log('🔄 setPreviewContent (direct) called with:', newContent?.length || 0, 'discussions');
-      if (newContent && newContent.length > 0) {
-        console.log('🔄 Setting first discussion:', newContent[0]);
-      }
+      console.log('🔄 setPreviewContent set to:', newContent?.length || 0, 'discussions');
       setPreviewContent(newContent);
     }
   };
@@ -196,6 +309,7 @@ export const useSeedingPersistence = () => {
     aiModel,
     aiApiKey,
     temperature,
+    activePersonas,
     
     // Setters
     setPastedContent,
@@ -203,11 +317,16 @@ export const useSeedingPersistence = () => {
     setPreviewContent: setPreviewContentWithLogging,
     setSeedingResults,
     setAiModel,
+    setActivePersonas,
     
     // Handlers
     handleApiKeyChange,
     handleProviderChange,
+    handleModelChange,
     handleTemperatureChange,
+    togglePersonaActive,
+    setAllPersonasActive,
     clearAllContent,
+    clearAIConfiguration,
   };
 };

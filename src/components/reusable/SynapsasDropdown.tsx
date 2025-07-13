@@ -6,6 +6,8 @@ import { createPortal } from 'react-dom';
 interface DropdownOption {
   value: string;
   label: string;
+  isCustom?: boolean;
+  customModelId?: string;
 }
 
 interface SynapsasDropdownProps {
@@ -16,6 +18,7 @@ interface SynapsasDropdownProps {
   className?: string;
   variant?: 'default' | 'thin';
   direction?: 'down' | 'up';
+  onDeleteCustomModel?: (modelId: string, modelName: string) => void;
 }
 
 export default function SynapsasDropdown({
@@ -25,7 +28,8 @@ export default function SynapsasDropdown({
   placeholder = "Select option",
   className = "",
   variant = "default",
-  direction = "down"
+  direction = "down",
+  onDeleteCustomModel
 }: SynapsasDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -127,14 +131,38 @@ export default function SynapsasDropdown({
           }}
         >
           {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleSelect(option.value)}
-              className={`synapsas-sort-option ${value === option.value ? 'selected' : ''}`}
-            >
-              {option.label}
-            </button>
+            <div key={option.value} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => handleSelect(option.value)}
+                className={`synapsas-sort-option ${value === option.value ? 'selected' : ''}`}
+                style={{ 
+                  width: '100%', 
+                  textAlign: 'left',
+                  paddingRight: option.isCustom ? '40px' : '12px'
+                }}
+              >
+                {option.label}
+              </button>
+              
+              {option.isCustom && option.customModelId && onDeleteCustomModel && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteCustomModel(option.customModelId!, option.value);
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center text-white bg-red-600 hover:text-red-600 hover:bg-white transition-all duration-200"
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                  }}
+                  title="Delete custom model"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           ))}
         </div>,
         document.body

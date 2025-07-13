@@ -12,7 +12,7 @@ interface UseReplyGenerationReturn {
   expandedReplies: Record<number, boolean>;
   
   // Actions
-  handleAddReply: (discussionIndex: number, previewContent: any[], aiConfig: any, updatePreviewContent: (updater: (prev: any[]) => any[]) => void, onResult: (result: any) => void) => Promise<void>;
+  handleAddReply: (discussionIndex: number, previewContent: any[], aiConfig: any, updatePreviewContent: (updater: (prev: any[]) => any[]) => void, onResult: (result: any) => void, activePersonas?: string[]) => Promise<void>;
   handleDeleteReplyById: (discussionIndex: number, replyId: string, previewContent: any[], updatePreviewContent: (updater: (prev: any[]) => any[]) => void, onResult: (result: any) => void) => void;
   toggleExpandedReplies: (index: number) => void;
   setGeneratingReplyForIndex: (index: number | null) => void;
@@ -43,7 +43,8 @@ export const useReplyGeneration = (): UseReplyGenerationReturn => {
     previewContent: any[], 
     aiConfig: any, 
     updatePreviewContent: (updater: (prev: any[]) => any[]) => void,
-    onResult: (result: any) => void
+    onResult: (result: any) => void,
+    activePersonas: string[] = []
   ) => {
     if (!aiConfig.apiKey?.trim()) {
       onResult({
@@ -72,7 +73,8 @@ export const useReplyGeneration = (): UseReplyGenerationReturn => {
             apiKey: aiConfig.apiKey,
             temperature: aiConfig.temperature
           },
-          replyIndex: currentReplyCount
+          replyIndex: currentReplyCount,
+          activePersonas
         }),
       });
 

@@ -242,21 +242,82 @@ export default function GuidesPage() {
       <div className="min-h-screen bg-white">
         {/* Hero Section */}
         <section className="px-6 md:px-12 lg:px-20 py-8 md:py-10 lg:py-20">
-            <div className="text-center max-w-4xl mx-auto">
-              <div className="mb-2 md:mb-3 lg:mb-4">
-                <span className="inline-block px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full">
-                  Learning Resources
-                </span>
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
+              {/* Left content */}
+              <div className="flex-1 text-left">
+                <div className="mb-2 md:mb-3 lg:mb-4">
+                  <span className="inline-block px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full">
+                    Learning Resources
+                  </span>
+                </div>
+                <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 mb-3 md:mb-4 lg:mb-6 leading-tight font-space-grotesk">
+                  Master Astrology with
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mt-1 lg:mt-2">
+                    Expert Guides
+                  </span>
+                </h1>
+                <p className="text-base md:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl">
+                  From natal chart basics to advanced techniques, explore our comprehensive collection of astrology guides designed for every level of expertise.
+                </p>
               </div>
-              <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 mb-3 md:mb-4 lg:mb-6 leading-tight font-space-grotesk">
-                Master Astrology with
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mt-1 lg:mt-2">
-                  Expert Guides
-                </span>
-              </h1>
-              <p className="text-base md:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-                From natal chart basics to advanced techniques, explore our comprehensive collection of astrology guides designed for every level of expertise.
-              </p>
+
+              {/* Right content - Tarot Learning Card */}
+              <div className="flex-shrink-0 w-full lg:w-96">
+                <div className="bg-gradient-to-br from-purple-600 to-indigo-800 rounded-2xl p-8 text-white relative overflow-hidden border border-black shadow-lg">
+                  {/* Background pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-2xl"></div>
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full blur-xl"></div>
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        🔮
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded-full">
+                          PREMIUM
+                        </span>
+                        <span className="text-purple-200 text-sm">New Feature</span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold mb-3 font-space-grotesk">
+                      Tarot Learning Game
+                    </h3>
+                    
+                    <p className="text-purple-100 mb-6 text-sm leading-relaxed">
+                      Master the meanings of all 78 tarot cards through interactive scenarios. Get AI-powered feedback on your interpretations and climb the leaderboard!
+                    </p>
+                    
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-purple-300 rounded-full"></div>
+                        <span>Interactive card interpretation challenges</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-purple-300 rounded-full"></div>
+                        <span>AI-powered feedback & scoring</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-purple-300 rounded-full"></div>
+                        <span>Global leaderboard & progress tracking</span>
+                      </div>
+                    </div>
+                    
+                    <Link
+                      href="/guides/tarot-learning"
+                      className="inline-flex items-center gap-3 bg-white text-purple-700 px-6 py-3 rounded-xl font-semibold hover:bg-purple-50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 w-full justify-center"
+                    >
+                      <span>Start Learning Tarot</span>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
         </section>
 

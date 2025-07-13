@@ -8,11 +8,14 @@ import {
 } from '@/db/services/seedUserService';
 
 // POST - Create all default seed users and their configurations
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const url = new URL(request.url);
+    const forceComplete = url.searchParams.get('forceComplete') === 'true';
+    
     // Check if seed users already exist
     const existingConfigs = await getAllSeedUserConfigs();
-    if (existingConfigs.length > 0) {
+    if (existingConfigs.length > 0 && !forceComplete) {
       return NextResponse.json({
         success: false,
         error: 'Seed users already exist. Use DELETE first to recreate.',

@@ -610,6 +610,45 @@ export class DiscussionService {
     }
   }
 
+  /**
+   * Get discussion counts grouped by author ID
+   * This is much more efficient than fetching all discussions and filtering
+   */
+  static async getDiscussionCountsByAuthor(dbInstance?: any): Promise<Record<string, number>> {
+    const db = dbInstance || (await import('../index')).db;
+    if (!db) {
+      return {};
+    }
+    
+    const dbObj = db as any;
+    const client = dbObj.client;
+    
+    if (!client) {
+      console.error('❌ Database client not available');
+      return {};
+    }
+    
+    try {
+      const result = await client.execute({
+        sql: 'SELECT author_id, COUNT(*) as count FROM discussions WHERE is_published = 1 GROUP BY author_id',
+        args: []
+      });
+      
+      const counts: Record<string, number> = {};
+      if (result.rows) {
+        for (const row of result.rows) {
+          counts[row.author_id] = Number(row.count);
+        }
+      }
+      
+      console.log('📊 Discussion counts by author fetched efficiently');
+      return counts;
+    } catch (error) {
+      console.error('❌ Failed to get discussion counts by author:', error);
+      return {};
+    }
+  }
+
   static async incrementViews(id: string, dbInstance?: any) {
     const db = dbInstance || (await import('../index')).db;
     if (!db) {

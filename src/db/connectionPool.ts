@@ -42,11 +42,11 @@ export class TursoConnectionPool {
     this.authToken = authToken;
     this.config = {
       minConnections: 1,
-      maxConnections: 8,       // Reduced from 20 to 8 for better control
-      acquireTimeoutMs: 5000,  // Reduced to 5 seconds for faster failure
-      idleTimeoutMs: 60000,    // Reduced to 1 minute idle timeout  
-      maxLifetimeMs: 600000,   // Reduced to 10 minutes max lifetime
-      retryAttempts: 2,        // Reduced retry attempts for faster failure
+      maxConnections: 15,      // Increase to handle higher concurrency
+      acquireTimeoutMs: 2000,  // Reduce to 2 seconds for faster failure detection
+      idleTimeoutMs: 30000,    // Reduce to 30 seconds idle timeout  
+      maxLifetimeMs: 300000,   // Reduce to 5 minutes max lifetime
+      retryAttempts: 1,        // Reduce retry attempts for faster failure
       ...config
     };
 
@@ -196,10 +196,10 @@ export class TursoConnectionPool {
         const activeConnections = Array.from(this.connections.values()).filter(c => c.isInUse).length;
         console.warn(`⏱️ Connection acquisition timeout after ${waitTime}ms. Queue length: ${this.waitingQueue.length}, Active connections: ${activeConnections}/${this.connections.size}`);
         
-        // Emergency recovery: Force release connections that have been in use too long (>30 seconds)
+        // Emergency recovery: Force release connections that have been in use too long (>10 seconds)
         const now = Date.now();
         const stuckConnections = Array.from(this.connections.values()).filter(c => 
-          c.isInUse && (now - c.lastUsed) > 30000
+          c.isInUse && (now - c.lastUsed) > 10000
         );
         
         if (stuckConnections.length > 0) {
@@ -217,6 +217,15 @@ export class TursoConnectionPool {
             resolve(recoveredConnection);
             return;
           }
+        }
+        
+        // If queue is too long, emergency clear some requests to prevent cascade failure
+        if (this.waitingQueue.length > 50) {
+          console.error(`🚨 Emergency queue clear: Rejecting ${Math.floor(this.waitingQueue.length / 2)} oldest requests`);
+          const requestsToReject = this.waitingQueue.splice(0, Math.floor(this.waitingQueue.length / 2));
+          requestsToReject.forEach(req => {
+            req.reject(new Error('Request cleared due to queue overflow - please retry'));
+          });
         }
         
         reject(new Error('Connection acquisition timeout'));

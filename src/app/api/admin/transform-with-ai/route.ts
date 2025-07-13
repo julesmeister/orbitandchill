@@ -127,13 +127,23 @@ async function transformWithDeepSeek(parsedContent: any[], seedConfigs: any[], g
       const minReplies = Math.min(8, generationSettings.repliesPerDiscussion.min);
 
       // Create prompt for DeepSeek - MAIN POST ONLY
-      const systemPrompt = `Transform this Reddit astrology discussion into a comprehensive forum main post ONLY. DO NOT generate replies.
+      const systemPrompt = `Transform this Reddit astrology discussion into a natural forum post that sounds like a REAL PERSON wrote it, not AI.
 
 CRITICAL REQUIREMENTS:
 1. MAINTAIN THE SAME LENGTH AND DEPTH as the original content
 2. Preserve ALL the specific details, examples, and concepts from the original
 3. Keep the same structure and information density
-4. Maintain the same number of main sections/topics covered
+4. Write like a real human with natural imperfections
+
+HUMAN WRITING STYLE (IMPORTANT):
+- don't always capitalize the first word of sentences
+- use casual punctuation... sometimes too many periods or missing commas
+- occasional run-on sentences that feel natural
+- sometimes start sentences with "so" or "and" or "but"
+- use contractions like "dont" without apostrophes sometimes
+- mix of proper and improper grammar that feels authentic
+- casual tone even when discussing complex topics
+- stream of consciousness style is OK
 
 CONTENT PRESERVATION RULES:
 - If the original discusses specific astrological concepts (houses, signs, planets, aspects), include ALL of them
@@ -141,9 +151,8 @@ CONTENT PRESERVATION RULES:
 - If the original mentions current events or personal experiences, keep those contexts
 - If the original has lists, breakdowns, or structured information, maintain that organization
 - If the original asks questions or includes calls to action, preserve those elements
-- Match the original's tone (educational, personal, analytical, etc.)
 
-Transform the writing style to be more forum-friendly while keeping ALL the original content depth and specificity. Do not add concepts, houses, or examples that weren't in the original content.
+Write like someone who knows astrology but types casually online, not like a textbook or professional article.
 
 Return ONLY valid JSON:
 {
@@ -169,6 +178,11 @@ Return ONLY valid JSON:
       
       const userPrompt = `Original content to transform:\n\n${contentToTransform}`;
 
+      // Debug: Log the model being used
+      const modelToUse = aiConfig.model || 'deepseek/deepseek-r1-distill-llama-70b:free';
+      console.log('🤖 Using AI model for content transformation:', modelToUse);
+      console.log('🤖 Full aiConfig received:', aiConfig);
+
       // Call DeepSeek API (assuming OpenRouter-compatible endpoint)
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -179,7 +193,7 @@ Return ONLY valid JSON:
           'X-Title': 'Orbit and Chill Seeding System'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-r1-distill-llama-70b:free',
+          model: modelToUse,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
@@ -392,6 +406,7 @@ async function simulateAITransformation(parsedContent: any[], seedConfigs: any[]
       category,
       tags,
       assignedAuthorId: assignedUser.userId,
+      assignedAuthor: assignedUser.username || assignedUser.userId.replace('seed_user_', '').replace(/^\w/, (c: string) => c.toUpperCase()),
       assignedAuthorUsername: assignedUser.userId.replace('seed_user_', '').replace(/^\w/, (c: string) => c.toUpperCase()),
       writingStyle: assignedUser.writingStyle,
       estimatedReplies,
