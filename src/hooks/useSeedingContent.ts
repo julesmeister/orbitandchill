@@ -2,7 +2,7 @@
 "use client";
 
 import { useSeedingOperations } from './useSeedingOperations';
-import { useAIConfiguration } from './useAIConfiguration';
+import { useAIConfiguration } from '@/hooks/useAIConfiguration';
 
 interface GenerationSettings {
   discussionsToGenerate: number;
