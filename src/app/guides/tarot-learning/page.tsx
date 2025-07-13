@@ -29,7 +29,8 @@ export default function TarotLearningPage() {
     submitInterpretation,
     nextCard,
     endGame,
-    getUserLevelFromProgress
+    getUserLevelFromProgress,
+    getUserLevelFromAccuracy
   } = useTarotGame(user?.id);
 
   const startGame = async () => {
@@ -130,7 +131,7 @@ export default function TarotLearningPage() {
                 userProgress={userProgress}
                 user={user}
                 userHasPremium={userHasPremium}
-                getUserLevel={getUserLevelFromProgress}
+                getUserLevel={getUserLevelFromAccuracy}
               />
             </div>
             

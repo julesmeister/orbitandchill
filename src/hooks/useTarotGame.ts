@@ -257,6 +257,11 @@ export const useTarotGame = (userId?: string) => {
     return getUserLevel(userProgress.totalScore);
   };
 
+  // Function that matches TarotLeaderboard's expected signature
+  const getUserLevelFromAccuracy = (accuracy: number) => {
+    return getUserLevel(accuracy);
+  };
+
   return {
     // State
     gameState,
@@ -275,6 +280,7 @@ export const useTarotGame = (userId?: string) => {
     // Utilities
     getUserLevel,
     getUserLevelFromProgress,
+    getUserLevelFromAccuracy,
     aiConfig
   };
 };
