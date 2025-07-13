@@ -130,14 +130,6 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
 
   return (
     <div className="space-y-6">
-      {/* Debug info */}
-      <div className="bg-yellow-100 p-2 text-xs border border-yellow-300">
-        <strong>DEBUG:</strong> Loaded {Object.keys(cardProgress).length} cards with progress data
-        {Object.keys(cardProgress).length > 0 && (
-          <div>Sample: {JSON.stringify(cardProgress[Object.keys(cardProgress)[0]], null, 2)}</div>
-        )}
-      </div>
-      
       {/* Filter Tabs */}
       <div className="flex gap-0 border border-black overflow-x-auto">
         {[
@@ -204,15 +196,6 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
           const progress = cardProgress[card.id];
           const masteryColor = getMasteryColor(card);
           
-          // Debug logging for specific cards that should have progress
-          if (progress && progress.totalAttempts > 0) {
-            console.log(`CardMasteryGrid: Rendering card ${card.id} with progress:`, {
-              totalAttempts: progress.totalAttempts,
-              averageScore: progress.averageScore,
-              masteryPercentage: progress.masteryPercentage,
-              title: `${Math.round(progress.masteryPercentage)}% mastery`
-            });
-          }
           
           return (
             <button
