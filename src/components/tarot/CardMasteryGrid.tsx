@@ -4,7 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import { tarotCards, TarotCard } from '@/data/tarotCards';
 import { getCardImagePath } from '@/utils/tarotImageMapping';
+import { useImageCache } from '@/hooks/useImageCache';
 import Image from 'next/image';
+import VirtualizedCardGrid from '@/components/tarot/VirtualizedCardGrid';
 
 interface CardProgress {
   cardId: string;
@@ -22,17 +24,27 @@ interface CardProgress {
 
 interface CardMasteryGridProps {
   userId: string;
+  useVirtualization?: boolean;
 }
 
-export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
+export default function CardMasteryGrid({ userId, useVirtualization = false }: CardMasteryGridProps) {
   const [cardProgress, setCardProgress] = useState<Record<string, CardProgress>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
   const [filter, setFilter] = useState<'all' | 'major' | 'cups' | 'wands' | 'pentacles' | 'swords'>('all');
+  const [useVirtualizationState, setUseVirtualization] = useState(useVirtualization);
+  const { preloadImages, getCachedImageSrc } = useImageCache();
 
   useEffect(() => {
     loadCardProgress();
   }, [userId]);
+
+  // Preload visible card images
+  useEffect(() => {
+    const filteredCards = getFilteredCards();
+    const imagePaths = filteredCards.slice(0, 20).map(card => getCardImagePath(card.id));
+    preloadImages(imagePaths);
+  }, [filter, preloadImages]);
 
   const loadCardProgress = async () => {
     try {
@@ -190,9 +202,28 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
         </div>
       </div>
 
+      {/* Performance Toggle */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setUseVirtualization(!useVirtualizationState)}
+          className="text-xs px-3 py-1 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors"
+        >
+          {useVirtualizationState ? 'Regular Grid' : 'Performance Mode'}
+        </button>
+      </div>
+
       {/* Card Grid */}
-      <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-13 gap-3">
-        {getFilteredCards().map((card) => {
+      {useVirtualizationState ? (
+        <VirtualizedCardGrid
+          cards={getFilteredCards()}
+          cardProgress={cardProgress}
+          onCardSelect={setSelectedCard}
+          containerWidth={1200}
+          containerHeight={600}
+        />
+      ) : (
+        <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-13 gap-3">
+          {getFilteredCards().map((card) => {
           const progress = cardProgress[card.id];
           const masteryColor = getMasteryColor(card);
           
@@ -207,11 +238,16 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
               {/* Card Image */}
               <div className="w-full h-48 mb-2 relative">
                 <Image
-                  src={getCardImagePath(card.id)}
+                  src={getCachedImageSrc(getCardImagePath(card.id))}
                   alt={card.name}
                   fill
                   className="object-contain border border-black"
                   sizes="(max-width: 768px) 120px, 150px"
+                  loading="lazy"
+                  quality={75}
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                  priority={false}
                 />
               </div>
               
@@ -281,7 +317,8 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
             </button>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Card Detail Modal */}
       {selectedCard && (

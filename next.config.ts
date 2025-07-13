@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    // Optimize tarot card images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60 * 60 * 24 * 7, // Cache for 7 days
   },
   // Ensure proper production builds
   swcMinify: true,

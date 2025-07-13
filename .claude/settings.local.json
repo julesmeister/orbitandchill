@@ -8,7 +8,6 @@
       "Bash(npx tsc:*)",
       "Bash(npm run lint:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)",
       "Bash(curl:*)",
       "Bash(node:*)",
       "Bash(cat:*)",
@@ -42,7 +41,6 @@
       "Bash(dos2unix:*)",
       "Bash(timeout:*)",
       "Bash(npx ts-node:*)",
-      "Bash(git config:*)",
       "Bash(git commit:*)",
       "Bash(source:*)",
       "Bash(npx next lint:*)",
@@ -74,11 +72,11 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --quiet --format compact)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/store/adminStore.ts)",
       "Bash(touch:*)",
-      "Bash(touch:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next build --debug)",
       "Bash(true)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next lint --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=512\" npx eslint src/app/events/old.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=512\" npx eslint src/app/events/old.tsx --quiet)",
+      "Bash(git mv:*)"
     ],
     "deny": []
   }
