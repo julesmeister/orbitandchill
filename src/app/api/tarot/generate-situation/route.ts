@@ -39,19 +39,16 @@ export async function POST(request: NextRequest) {
       ? `\n\nAvoid these previously used scenarios: ${previousSituations.join('; ')}`
       : '';
 
-    const prompt = `You are an expert tarot reader creating realistic scenarios for learning card interpretation. 
+    const prompt = `You are a creative writer creating realistic life scenarios for tarot learning. 
 
-Create a detailed, engaging situation for the card "${cardName}" (${cardType}${cardSuit ? ` - ${cardSuit}` : ''}).
-
-Card traditional meanings:
-- Upright: ${uprightMeaning}
-- Keywords: ${keywords.join(', ')}
+IMPORTANT: Do NOT reference any specific tarot card or tarot meanings. Create a completely random, realistic life situation that could happen to anyone.
 
 Requirements:
 1. Create a realistic, relatable life situation (1-2 sentences)
-2. Include specific details that make it feel authentic
-3. End with a thoughtful question that can be answered using this card's energy
+2. Include specific details that make it feel authentic  
+3. End with a thoughtful question about the situation
 4. Keep the total scenario under 100 words
+5. DO NOT mention tarot, cards, or any mystical references
 
 Format your response as:
 SITUATION: [detailed scenario]
@@ -61,7 +58,7 @@ DIFFICULTY: [beginner/intermediate/advanced]${avoidList}
 
 Example:
 SITUATION: Maya, a 28-year-old teacher, discovered her best friend has been secretly dating her ex-boyfriend for months. She feels betrayed and confused about whether to confront them or distance herself from the friendship.
-QUESTION: What guidance does The Fool offer about approaching this situation with an open heart versus protecting herself from further hurt?
+QUESTION: Should she confront them directly about the betrayal, or step back and protect her emotional well-being?
 CONTEXT: relationships
 DIFFICULTY: intermediate`;
 
@@ -188,32 +185,50 @@ function generateFallbackSituation(cardName: string): GeneratedSituation {
   const fallbackSituations = [
     {
       situation: "A young professional is considering leaving their stable corporate job to pursue their passion for sustainable farming. They have savings for 6 months but worry about disappointing their family's expectations.",
-      question: `What guidance does ${cardName} offer about following one's true calling versus maintaining security?`,
+      question: "Should they take the leap into an uncertain but fulfilling path, or maintain financial security?",
       context: "career",
       difficulty: "intermediate" as const
     },
     {
       situation: "Someone is in a relationship that feels emotionally distant. Their partner works long hours and seems disconnected, but they still care deeply for each other.",
-      question: `How does ${cardName} illuminate the path to rekindling emotional intimacy and connection?`,
+      question: "How can they rebuild intimacy while respecting their partner's work demands?",
       context: "relationships",
       difficulty: "beginner" as const
     },
     {
       situation: "A person inherited a significant sum of money and is torn between investing in real estate, starting a business, or using it to travel the world while they're young.",
-      question: `What wisdom does ${cardName} provide about making choices that honor both practical needs and personal growth?`,
+      question: "Which choice would best balance their future security with present fulfillment?",
       context: "finances",
       difficulty: "advanced" as const
     },
     {
       situation: "Adult siblings are in conflict over their mother's care as she develops dementia. One wants professional care, the other insists on family-only care, creating tension and stress.",
-      question: `What insight does ${cardName} offer about balancing love, responsibility, and practical limitations?`,
+      question: "How can they find a solution that honors both their mother's needs and family unity?",
       context: "family",
       difficulty: "advanced" as const
     },
     {
       situation: "A creative person has been struggling with self-doubt and creative blocks. They question whether their art has value and if they should continue pursuing their creative dreams.",
-      question: `How does ${cardName} guide them toward reconnecting with their creative spirit and inner confidence?`,
+      question: "How can they overcome these doubts and reconnect with their creative passion?",
       context: "growth",
+      difficulty: "intermediate" as const
+    },
+    {
+      situation: "A college student is feeling overwhelmed by academic pressure and social expectations. They're considering changing majors but worry about disappointing their parents who have strong opinions about their future.",
+      question: "Should they prioritize their own interests or their family's expectations?",
+      context: "growth",
+      difficulty: "beginner" as const
+    },
+    {
+      situation: "A person's elderly neighbor has been showing signs of neglect and possible elder abuse from their caregiver. The person is unsure whether to intervene or mind their own business.",
+      question: "What's the right balance between helping and respecting boundaries?",
+      context: "family",
+      difficulty: "advanced" as const
+    },
+    {
+      situation: "Someone received a job offer in another city that would advance their career significantly, but it means leaving behind their close-knit friend group and familiar environment.",
+      question: "Is career advancement worth leaving their support system behind?",
+      context: "career",
       difficulty: "intermediate" as const
     }
   ];
