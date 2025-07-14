@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { TarotCard } from '@/data/tarotCards';
 import { getCardImagePath } from '@/utils/tarotImageMapping';
 import { useImageCache } from '@/hooks/useImageCache';
+import { useSeedingPersistence } from '@/hooks/useSeedingPersistence';
 import Image from 'next/image';
 import StatusToast from '@/components/reusable/StatusToast';
 
@@ -28,6 +29,7 @@ interface TarotMatchingExerciseProps {
   filteredCards: TarotCard[];
   userProgress: Record<string, CardProgress>;
   userId: string;
+  onComplete?: () => void; // Callback when exercise is completed
 }
 
 interface MatchingPair {
@@ -65,8 +67,31 @@ export default function TarotMatchingExercise({
   onClose,
   filteredCards,
   userProgress,
-  userId
+  userId,
+  onComplete
 }: TarotMatchingExerciseProps) {
+  // Get persisted AI configuration
+  const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
+  
+  // Memoize AI config to prevent infinite re-renders
+  const aiConfig = useMemo(() => {
+    const config = {
+      provider: aiProvider as 'openrouter' | 'openai' | 'claude' | 'gemini',
+      model: aiModel || 'deepseek/deepseek-r1-distill-llama-70b:free',
+      apiKey: aiApiKey || '',
+      temperature: temperature || 0.7
+    };
+    
+    console.log('TarotMatchingExercise: AI Configuration loaded:', {
+      provider: aiProvider,
+      model: aiModel,
+      hasApiKey: !!aiApiKey,
+      temperature
+    });
+    
+    return config;
+  }, [aiProvider, aiModel, aiApiKey, temperature]);
+  
   const [gameCards, setGameCards] = useState<TarotCard[]>([]);
   const [phraseChallenges, setPhraseChallenges] = useState<PhraseChallenge[]>([]);
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
@@ -120,7 +145,7 @@ export default function TarotMatchingExercise({
       .sort(() => Math.random() - 0.5) // Extra shuffle for more randomness
       .slice(0, Math.min(settings.cardCount, filteredCards.length));
     
-    // Create phrase challenges from card meanings
+    // Create phrase challenges from card meanings with balanced orientation distribution
     const challenges: PhraseChallenge[] = [];
     selectedCards.forEach(card => {
       // Create challenges for both orientations
@@ -131,7 +156,11 @@ export default function TarotMatchingExercise({
         
         // Split meaning into phrases and create challenges
         const phrases = meaning.split(/[.,;]/).filter(phrase => phrase.trim()).map(p => p.trim());
-        phrases.forEach(phrase => {
+        
+        // Limit to 3 phrases per orientation to balance scoring
+        const selectedPhrases = phrases.slice(0, 3);
+        
+        selectedPhrases.forEach(phrase => {
           if (phrase.length > 10) { // Only include substantial phrases
             challenges.push({
               phrase,
@@ -145,6 +174,16 @@ export default function TarotMatchingExercise({
     
     // Shuffle challenges
     const shuffledChallenges = challenges.sort(() => Math.random() - 0.5);
+    
+    console.log('Game initialized:', {
+      selectedCards: selectedCards.length,
+      challenges: shuffledChallenges.length,
+      difficulty,
+      cardCount: settings.cardCount,
+      averagePhrasesPerCard: shuffledChallenges.length / selectedCards.length,
+      upright: shuffledChallenges.filter(c => c.orientation === 'upright').length,
+      reversed: shuffledChallenges.filter(c => c.orientation === 'reversed').length
+    });
     
     setGameCards(selectedCards);
     setPhraseChallenges(shuffledChallenges);
@@ -163,11 +202,16 @@ export default function TarotMatchingExercise({
 
   // Update individual card progress based on attempts
   const updateCardProgress = async (attempts: CardAttempt[]) => {
-    if (!userId || attempts.length === 0) return;
+    console.log('updateCardProgress called with:', { userId, attemptsCount: attempts.length, attempts });
+    if (!userId || attempts.length === 0) {
+      console.log('Skipping card progress update:', { hasUserId: !!userId, attemptsLength: attempts.length });
+      return;
+    }
 
     // Group attempts by card and orientation
     const cardProgress: Record<string, { correct: number; total: number; orientation: 'upright' | 'reversed' }> = {};
     
+    console.log('Processing attempts...');
     attempts.forEach(attempt => {
       const key = `${attempt.cardId}-${attempt.orientation}`;
       if (!cardProgress[key]) {
@@ -178,33 +222,64 @@ export default function TarotMatchingExercise({
         cardProgress[key].correct++;
       }
     });
+    
+    console.log('Grouped card progress:', cardProgress);
+    console.log('Number of card/orientation combinations to update:', Object.keys(cardProgress).length);
 
     // Update progress for each card/orientation combination
+    console.log('Starting to create update promises...');
     const updatePromises = Object.entries(cardProgress).map(async ([key, data]) => {
-      const [cardId] = key.split('-');
+      console.log(`Processing key: ${key}, data:`, data);
+      // Split key and rejoin all parts except the last one (which is the orientation)
+      const parts = key.split('-');
+      const cardId = parts.slice(0, -1).join('-'); // Everything except the last part
       const card = gameCards.find(c => c.id === cardId);
-      if (!card) return;
+      if (!card) {
+        console.log(`Card not found for id: ${cardId}`);
+        return;
+      }
+      console.log(`Found card: ${card.name} for key: ${key}`);
 
-      const score = Math.round((data.correct / data.total) * 100);
+      // Individual card scoring: only 10% of matching exercise performance
+      const accuracy = data.correct / data.total;
+      const score = Math.round(accuracy * 10); // 0-10 points (10% of matching exercise)
+      
+      console.log(`Updating progress for ${card.name} (${data.orientation}):`, {
+        correct: data.correct,
+        total: data.total,
+        accuracy: (data.correct / data.total) * 100,
+        calculatedScore: score,
+        cardId,
+        orientation: data.orientation
+      });
       
       try {
-        await fetch('/api/tarot/evaluate', {
+        const response = await fetch('/api/tarot/evaluate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId,
             cardId,
             cardOrientation: data.orientation,
-            situation: `Matching exercise: ${data.total} attempts`,
-            interpretation: `Completed ${data.correct}/${data.total} correctly`,
+            situation: `Matching exercise: ${data.total} attempts (${data.correct} correct)`,
+            interpretation: `Card matching performance: ${data.correct}/${data.total} correctly identified`,
             cardMeaning: data.orientation === 'upright' ? card.uprightMeaning : card.reversedMeaning,
             cardKeywords: data.orientation === 'upright' ? card.keywords.upright : card.keywords.reversed,
-            aiConfig: { provider: 'internal', model: 'matching-exercise' }, // Special config for matching
+            aiConfig: aiConfig, // Use proper AI config
             overrideScore: score // Force specific score based on matching performance
           })
         });
+        
+        console.log(`API call completed for ${card.name} (${data.orientation}), status: ${response.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Failed to update progress for ${card.name} (${data.orientation}): HTTP ${response.status}`, errorText);
+        } else {
+          const result = await response.json();
+          console.log(`Progress updated successfully for ${card.name} (${data.orientation}):`, result);
+        }
       } catch (error) {
-        console.warn(`Failed to update progress for ${card.name} (${data.orientation}):`, error);
+        console.error(`Failed to update progress for ${card.name} (${data.orientation}):`, error);
       }
     });
 
@@ -213,7 +288,19 @@ export default function TarotMatchingExercise({
 
   // Handle card selection for current phrase
   const handleCardSelect = (cardId: string) => {
-    if (!gameActive || gameComplete || currentChallengeIndex >= phraseChallenges.length) return;
+    console.log('Card clicked:', {
+      cardId,
+      gameActive,
+      gameComplete,
+      currentChallengeIndex,
+      totalChallenges: phraseChallenges.length,
+      canClick: gameActive && !gameComplete && currentChallengeIndex < phraseChallenges.length
+    });
+    
+    if (!gameActive || gameComplete || currentChallengeIndex >= phraseChallenges.length) {
+      console.log('Click blocked - game state issue');
+      return;
+    }
     
     const currentChallenge = phraseChallenges[currentChallengeIndex];
     const isCorrect = cardId === currentChallenge.correctCardId;
@@ -260,7 +347,19 @@ export default function TarotMatchingExercise({
     if (gameActive && currentChallengeIndex >= phraseChallenges.length && phraseChallenges.length > 0) {
       const endTime = Date.now();
       const totalTime = gameStartTime ? (endTime - gameStartTime) / 1000 : 0;
-      const finalScore = gameStats.correctMatches - gameStats.incorrectMatches; // Correct answers minus incorrect attempts (can be negative)
+      
+      // Simple scoring: correct minus incorrect (as requested)
+      const accuracy = gameStats.correctMatches / (gameStats.correctMatches + gameStats.incorrectMatches);
+      const finalScore = Math.max(0, gameStats.correctMatches - gameStats.incorrectMatches);
+      
+      console.log('Matching exercise completed:', {
+        correctMatches: gameStats.correctMatches,
+        incorrectMatches: gameStats.incorrectMatches,
+        totalPhrases: phraseChallenges.length,
+        finalScore: `${gameStats.correctMatches} - ${gameStats.incorrectMatches} = ${finalScore}`,
+        totalTime: Math.round(totalTime) + 's',
+        difficulty
+      });
       
       setGameStats(prev => ({
         ...prev,
@@ -272,11 +371,15 @@ export default function TarotMatchingExercise({
       
       // Update individual card progress and award total points
       if (userId) {
+        console.log('Starting progress updates for userId:', userId);
+        console.log('Card attempts to process:', cardAttemptsRef.current.length);
+        console.log('All card attempts:', cardAttemptsRef.current);
+        
         // Update individual card mastery progress
-        updateCardProgress(cardAttemptsRef.current);
+        const progressPromise = updateCardProgress(cardAttemptsRef.current);
         
         // Award calculated points to user's tarot progress
-        fetch('/api/tarot/award-points', {
+        const pointsPromise = fetch('/api/tarot/award-points', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -289,11 +392,30 @@ export default function TarotMatchingExercise({
               score: finalScore,
               time: totalTime,
               correctMatches: gameStats.correctMatches,
-              incorrectMatches: gameStats.incorrectMatches
+              incorrectMatches: gameStats.incorrectMatches,
+              accuracy: accuracy * 100
             }
           })
+        }).then(response => {
+          console.log('Award points response:', response.status);
+          return response.json();
+        }).then(result => {
+          console.log('Points awarded successfully:', result);
         }).catch(error => {
-          console.warn('Failed to award points:', error);
+          console.error('Failed to award points:', error);
+        });
+
+        // Wait for both operations to complete, then trigger refresh and close modal
+        Promise.all([progressPromise, pointsPromise]).finally(() => {
+          console.log('All progress updates completed, triggering refresh and closing modal');
+          // Trigger UI refresh callback and close modal after a short delay
+          setTimeout(() => {
+            if (onComplete) {
+              onComplete();
+            }
+            // Close the modal automatically
+            onClose();
+          }, 500);
         });
       }
     }
@@ -304,13 +426,13 @@ export default function TarotMatchingExercise({
     if (isOpen && filteredCards.length > 0) {
       initializeGame();
     }
-  }, [isOpen, initializeGame, filteredCards.length]);
+  }, [isOpen, initializeGame]); // Now uses proper memoized initializeGame
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-transparent flex items-center justify-center p-4 z-50">
-      <div className="bg-white bg-opacity-95 backdrop-blur-sm border border-black max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white bg-opacity-95 backdrop-blur-sm border border-black max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-black">
           <div className="flex items-center justify-between">
@@ -329,20 +451,6 @@ export default function TarotMatchingExercise({
               ×
             </button>
           </div>
-          
-          {/* Game Stats */}
-          {gameActive && (
-            <div className="mt-4 flex gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-[#4ade80]">✓</span>
-                <span>Correct: {gameStats.correctMatches}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-red-500">✗</span>
-                <span>Incorrect: {gameStats.incorrectMatches}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Difficulty Selection */}
@@ -423,13 +531,13 @@ export default function TarotMatchingExercise({
         {/* Game Grid */}
         {gameActive && (
           <div className="p-6">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Side - Cards */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-center font-space-grotesk">
                   🃏 Tarot Cards
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-3 gap-3 md:gap-4">
                   {gameCards.map(card => {
                     const currentChallenge = phraseChallenges[currentChallengeIndex];
                     // ALL cards show the same orientation as the current challenge
@@ -485,6 +593,28 @@ export default function TarotMatchingExercise({
                       Click the card that matches this meaning phrase
                     </p>
                   )}
+                </div>
+                
+                {/* Game Stats - moved from header */}
+                <div className="mt-6 flex gap-3">
+                  <div className="flex-1 flex items-center gap-3 bg-[#4ade80] border-2 border-black px-6 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+                    <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center">
+                      <span className="text-black font-bold text-xl">✓</span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-black/80 font-inter uppercase tracking-wide">CORRECT</div>
+                      <div className="text-lg font-bold text-black font-space-grotesk">{gameStats.correctMatches}</div>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex items-center gap-3 bg-[#f2e356] border-2 border-black px-6 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+                    <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center">
+                      <span className="text-black font-bold text-xl">✗</span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-black/80 font-inter uppercase tracking-wide">INCORRECT</div>
+                      <div className="text-lg font-bold text-black font-space-grotesk">{gameStats.incorrectMatches}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

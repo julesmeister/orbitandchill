@@ -24,9 +24,10 @@ interface CardProgress {
 
 interface CardMasteryGridProps {
   userId: string;
+  onMatchingComplete?: () => void;
 }
 
-export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
+export default function CardMasteryGrid({ userId, onMatchingComplete }: CardMasteryGridProps) {
   const [cardProgress, setCardProgress] = useState<Record<string, CardProgress>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
@@ -481,6 +482,14 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
           filteredCards={getFilteredCards()}
           userProgress={cardProgress}
           userId={userId}
+          onComplete={async () => {
+            // Refresh card progress after matching exercise completion
+            await loadCardProgress();
+            // Also refresh parent leaderboard and user progress
+            if (onMatchingComplete) {
+              await onMatchingComplete();
+            }
+          }}
         />
       )}
     </div>

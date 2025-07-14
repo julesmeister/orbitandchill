@@ -44,7 +44,9 @@ export default function TarotLearningPage() {
     nextCard,
     endGame,
     getUserLevelFromProgress,
-    getUserLevelFromAccuracy
+    getUserLevelFromAccuracy,
+    loadUserProgress,
+    loadLeaderboard
   } = useTarotGame(user?.id, incrementUsage);
 
   const startGame = async () => {
@@ -70,6 +72,15 @@ export default function TarotLearningPage() {
       // Hide loading toast on error
       setInitialLoadingToast(false);
     }
+  };
+
+  // Refresh function for matching exercise completion
+  const refreshProgressAndLeaderboard = async () => {
+    // Refresh both user progress and leaderboard after matching exercise
+    await Promise.all([
+      loadUserProgress(),
+      loadLeaderboard()
+    ]);
   };
 
   // Hide loading toast when game state changes
@@ -212,7 +223,7 @@ export default function TarotLearningPage() {
                   </div>
                 </div>
                 
-                <CardMasteryGrid userId={user.id} />
+                <CardMasteryGrid userId={user.id} onMatchingComplete={refreshProgressAndLeaderboard} />
               </div>
             )}
           </div>

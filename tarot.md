@@ -31,7 +31,7 @@ Implementation of an interactive tarot learning game as a premium feature. Users
 │   │   │   ├── ✅ AI feedback display (clean formatting, no asterisks)
 │   │   │   ├── ✅ Beginner hints section with show/hide
 │   │   │   ├── ✅ Game stats (ranking, cards completed)
-│   │   │   ├── ⚠️ Level progress bar (DEBUGGING state updates)
+│   │   │   ├── ✅ Level progress bar (FIXED database updates)
 │   │   │   ├── ✅ Next card / End game buttons
 │   │   │   ├── ✅ Refresh situation button with StatusToast
 │   │   │   └── ✅ Auto-refresh progress after evaluation
@@ -47,7 +47,8 @@ Implementation of an interactive tarot learning game as a premium feature. Users
 │   │   │   ├── ✅ CardMasteryGrid.tsx - 78-card progress visualization
 │   │   │   ├── ✅ LevelBadge.tsx - Dynamic level calculation
 │   │   │   ├── ✅ StatusToast.tsx - Loading notifications for AI operations
-│   │   │   └── ⚠️ Real-time progress updates (DEBUGGING UI state refresh)
+│   │   │   ├── ✅ TarotMatchingExercise.tsx - Card meaning matching practice
+│   │   │   └── ✅ Real-time progress updates (FIXED database integration)
 │   │   │
 │   │   └── 🎲 Tarot Card Data (/data/tarotCards.ts)
 │   │       ├── ✅ Complete 78-card dataset
@@ -194,7 +195,7 @@ Implementation of an interactive tarot learning game as a premium feature. Users
 
 ## 📈 Implementation Status
 
-### ✅ Completed (98% of core features)
+### ✅ Completed (99% of core features)
 - **Frontend Base**: Game interface, welcome screen, leaderboard display
 - **Data Foundation**: Complete 78-card tarot dataset with meanings
 - **Visual Assets**: All 78 actual tarot card images integrated with proper aspect ratios
@@ -209,8 +210,7 @@ Implementation of an interactive tarot learning game as a premium feature. Users
 - **Progress Tracking**: Database persistence working, UI state refresh debugging
 - **StatusToast Integration**: Loading notifications for AI operations
 
-### 🔄 In Progress (2% remaining issues)
-- **Progress Bar State Refresh**: UI not updating immediately after evaluation (debugging React state)
+### 🔄 In Progress (1% remaining issues)
 - **Enhanced UX**: Mobile optimization, animations, improved feedback
 
 ### ⏳ Planned
@@ -452,30 +452,96 @@ Creativity Bonus = min(interpretation_length / 200, 0.3) × 20 points
 - ✅ **Database Schema**: Supports advanced scoring metrics
 - ✅ **Level Images**: All 5 level badges available in /public/levels/
 
-## 🐛 Current Issue: Progress Bar State Refresh (January 13, 2025)
+## 🐛 Recent Bug Fixes (July 14, 2025)
 
-### Issue: Level Progress Bar Not Updating After Evaluation
-**Problem**: Database correctly saves scores (e.g., 205 points), API returns correct data, but UI progress bar shows stale values (55 points).
+### Matching Exercise Major Fixes ✅ RESOLVED
 
-**Current Investigation**:
-- ✅ Database persistence: Working correctly (confirmed 205 total_score)
-- ✅ API responses: Returning correct data from database
-- ✅ useEffect triggers: Auto-refresh after feedback received
-- ⚠️ React state updates: `setUserProgress()` may not be updating UI immediately
+#### 1. UI Responsiveness Issue
+- **Problem**: Infinite re-render loop caused clicking to be unresponsive in matching exercise
+- **Root Cause**: `initializeGame` function was not properly memoized, causing useEffect to repeatedly trigger
+- **Solution**: Added `useCallback` to `initializeGame` with proper dependencies in `TarotMatchingExercise.tsx:125-201`
 
-**Debug Process**:
-```javascript
-// Added debug logging in TarotGameInterface.tsx:
-console.log('Setting userProgress state to:', data.progress);
-console.log('UserProgress state updated:', userProgress);
+#### 2. Card ID Parsing Bug  
+- **Problem**: Upright/reversed progress tracking was completely broken
+- **Root Cause**: Card ID parsing was only taking first part after splitting by "-" (e.g., "the-high-priestess-upright" → "the" instead of "the-high-priestess")
+- **Solution**: Fixed parsing logic to use `parts.slice(0, -1).join('-')` in `TarotMatchingExercise.tsx:234-235`
+
+#### 3. Scoring System Overhaul
+- **Problem**: Complex scoring system with 50-300 points was confusing users
+- **Solution**: Implemented simple "correct minus incorrect" scoring (typically 28-36 points)
+- **Implementation**: `const finalScore = Math.max(0, gameStats.correctMatches - gameStats.incorrectMatches)` in `TarotMatchingExercise.tsx:353`
+
+#### 4. Individual Card Scoring
+- **Problem**: Individual cards were receiving 60-80 points instead of 10% of exercise performance
+- **Solution**: Limited individual card scoring to 0-10 points based on accuracy in `TarotMatchingExercise.tsx:245`
+
+#### 5. Weighted Average Scoring System
+- **Problem**: Card scores could only increase, never decrease (unrealistic progress tracking)
+- **Solution**: Implemented weighted average (30% historical, 70% recent) in `/api/tarot/evaluate/route.ts:398-412`
+- **Impact**: Poor recent performance now reduces overall card scores appropriately
+
+#### 6. Auto-Close Modal
+- **Problem**: Matching exercise modal showed completion screen instead of closing automatically
+- **Solution**: Added automatic modal close after progress updates in `TarotMatchingExercise.tsx:409-419`
+
+**Files Modified:**
+- `src/components/tarot/TarotMatchingExercise.tsx`: Fixed infinite loop, card ID parsing, scoring, auto-close
+- `src/app/api/tarot/evaluate/route.ts`: Implemented weighted average scoring system
+- `src/components/tarot/CardMasteryGrid.tsx`: Added refresh callback for matching completion
+- `src/app/guides/tarot-learning/page.tsx`: Added refresh functions for UI updates
+
+**Key Code Changes:**
+```typescript
+// Fixed card ID parsing
+const parts = key.split('-');
+const cardId = parts.slice(0, -1).join('-'); // Everything except orientation
+
+// Simple scoring formula
+const finalScore = Math.max(0, gameStats.correctMatches - gameStats.incorrectMatches);
+
+// Individual card scoring (10% of exercise performance)
+const score = Math.round(accuracy * 10); // 0-10 points
+
+// Weighted average scoring (allows score reduction)
+if (newUprightAttempts === 1) {
+  newUprightAverage = evaluation.score;
+} else {
+  newUprightAverage = (newUprightAverage * 0.3) + (evaluation.score * 0.7);
+}
 ```
 
-**Files Being Debugged**:
-- `src/components/tarot/TarotGameInterface.tsx` - Progress state management
-- `src/app/api/tarot/progress/route.ts` - API response verification
-- Progress bar: `style={{ width: \`\${(userProgress.totalScore % 1000) / 10}%\` }}`
+**User Experience Improvements:**
+- Clicking cards now works reliably (no infinite re-render)
+- Upright/reversed progress tracking functions correctly
+- Scoring is transparent and intuitive (correct - incorrect)
+- Individual card progress updates appropriately (can increase or decrease)
+- Modal closes automatically when exercise completes
+- Matching exercise integrates seamlessly with overall progress system
 
-**Next Steps**: Check console logs for state update behavior when playing cards.
+## 🐛 Fixed Issue: Matching Exercise Progress Tracking (July 14, 2025)
+
+### Issue: Matching Exercise Not Updating Progress ✅ RESOLVED
+**Problem**: Tarot matching exercise completed games but didn't update user progress (total points) or individual card mastery.
+
+**Root Cause**: Database system incompatibility
+- Matching exercise called `/api/tarot/evaluate` (Turso HTTP client) ✅
+- Matching exercise called `/api/tarot/award-points` (Drizzle ORM) ❌
+
+**Solution**: Converted `/api/tarot/award-points` to use Turso HTTP client
+- Removed Drizzle ORM dependency
+- Added proper leaderboard updates using raw SQL
+- Added `overrideScore` parameter support in `/api/tarot/evaluate`
+- Ensured consistent database access patterns
+
+**Files Modified**:
+- `/src/app/api/tarot/award-points/route.ts` - Complete rewrite using Turso HTTP client
+- `/src/app/api/tarot/evaluate/route.ts` - Added overrideScore parameter support
+
+**Result**: Matching exercise now properly updates both individual card progress and total user scores.
+
+**Documentation**: 
+- `/TAROT_MATCHING_EXERCISE_FIX.md` - Complete fix documentation with before/after code examples
+- `/API_ENDPOINTS_DATABASE_COMPLIANCE.md` - Tracks which endpoints use correct database patterns
 
 ---
 
@@ -519,5 +585,33 @@ console.log('Actual columns:', schemaResult.rows.map(row => row.name));
 
 ---
 
-*Last Updated: January 13, 2025*
-*Status: Database Issues Fixed, Core Implementation Complete (95%), Level System Documented*
+## 📚 Related Documentation
+
+### Implementation Documentation
+- **`/TAROT_MATCHING_EXERCISE_FIX.md`** - Complete fix documentation for matching exercise progress tracking issue
+  - Root cause analysis (Drizzle ORM vs Turso HTTP client incompatibility)
+  - Before/after code examples
+  - API endpoint modifications
+  - Database operation details
+
+- **`/API_ENDPOINTS_DATABASE_COMPLIANCE.md`** - Database compliance tracking for all API endpoints
+  - Compliant endpoints using Turso HTTP client
+  - Non-compliant endpoints using Drizzle ORM
+  - Migration patterns and examples
+  - Testing guidelines
+
+### Core Documentation
+- **`/tarot.md`** - This file (main implementation progress)
+- **`/API_DATABASE_PROTOCOL.md`** - Database integration patterns and protocols
+- **`/synapsas.md`** - Design system guidelines and components
+
+### Component Files
+- **`/src/components/tarot/TarotMatchingExercise.tsx`** - Main matching exercise component
+- **`/src/components/tarot/CardMasteryGrid.tsx`** - 78-card progress visualization
+- **`/src/components/tarot/TarotGameInterface.tsx`** - Main game interface
+- **`/src/data/tarotCards.ts`** - Complete tarot card dataset
+
+---
+
+*Last Updated: July 14, 2025*
+*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed*

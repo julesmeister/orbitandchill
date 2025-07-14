@@ -16,6 +16,7 @@ interface EvaluateRequest {
     apiKey: string;
     temperature: number;
   };
+  overrideScore?: number; // Allow matching exercise to override score
 }
 
 interface EvaluationResult {
@@ -259,7 +260,7 @@ function evaluateInterpretation(
 export async function POST(request: NextRequest) {
   try {
     const body: EvaluateRequest = await request.json();
-    const { userId, cardId, cardOrientation, situation, interpretation, cardMeaning, cardKeywords, aiConfig } = body;
+    const { userId, cardId, cardOrientation, situation, interpretation, cardMeaning, cardKeywords, aiConfig, overrideScore } = body;
 
     if (!userId || !cardId || !interpretation) {
       return NextResponse.json(
@@ -268,14 +269,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use AI to evaluate the interpretation
-    const aiEvaluation = await generateAIEvaluation(interpretation, cardMeaning, cardKeywords, situation, aiConfig);
+    // Use override score if provided (for matching exercise), otherwise use AI evaluation
+    let finalScore: number;
+    let feedback: string;
     
-    // Create evaluation result with AI feedback
+    console.log('Evaluate route - processing request:', {
+      userId,
+      cardId,
+      cardOrientation,
+      hasOverrideScore: typeof overrideScore === 'number',
+      overrideScore,
+      situation: situation.substring(0, 100) + '...',
+      interpretation: interpretation.substring(0, 100) + '...',
+      aiConfig: {
+        provider: aiConfig?.provider,
+        model: aiConfig?.model,
+        hasApiKey: !!aiConfig?.apiKey
+      }
+    });
+    
+    if (typeof overrideScore === 'number') {
+      // Matching exercise provides its own score
+      finalScore = overrideScore;
+      feedback = `Matching exercise result: ${finalScore}% accuracy`;
+      console.log('Using override score:', finalScore);
+    } else {
+      // Use AI to evaluate the interpretation
+      console.log('Using AI evaluation with config:', aiConfig);
+      const aiEvaluation = await generateAIEvaluation(interpretation, cardMeaning, cardKeywords, situation, aiConfig);
+      finalScore = aiEvaluation.score;
+      feedback = `${aiEvaluation.feedback}\n\nEXPERT EXAMPLE:\n${aiEvaluation.sampleInterpretation}\n\nTRADITIONAL MEANING:\n${cardMeaning}`;
+      console.log('AI evaluation result:', { score: finalScore, feedback: feedback.substring(0, 100) + '...' });
+    }
+    
+    // Create evaluation result
     const evaluation: EvaluationResult = {
-      score: aiEvaluation.score,
-      feedback: `${aiEvaluation.feedback}\n\nEXPERT EXAMPLE:\n${aiEvaluation.sampleInterpretation}\n\nTRADITIONAL MEANING:\n${cardMeaning}`,
-      accuracyRating: aiEvaluation.score >= 85 ? 'excellent' : aiEvaluation.score >= 70 ? 'good' : aiEvaluation.score >= 55 ? 'fair' : 'needs_improvement',
+      score: finalScore,
+      feedback: feedback,
+      accuracyRating: finalScore >= 85 ? 'excellent' : finalScore >= 70 ? 'good' : finalScore >= 55 ? 'fair' : 'needs_improvement',
       keywordAccuracy: 0, // Not used with AI evaluation
       contextRelevance: 0, // Not used with AI evaluation
       traditionalAlignment: 0, // Not used with AI evaluation
@@ -356,22 +387,33 @@ export async function POST(request: NextRequest) {
           const newTotalScore = (progress.total_score || 0) + evaluation.score;
           const newAverageScore = newTotalScore / newTotalAttempts;
           
-          // Update orientation-specific stats
+          // Update orientation-specific stats with weighted average (recent performance weighted more heavily)
           let newUprightAttempts = progress.upright_attempts || 0;
-          let newUprightScore = progress.upright_score || 0;
+          let newUprightAverage = progress.upright_average || 0;
           let newReversedAttempts = progress.reversed_attempts || 0;
-          let newReversedScore = progress.reversed_score || 0;
+          let newReversedAverage = progress.reversed_average || 0;
           
           if (cardOrientation === 'upright') {
             newUprightAttempts += 1;
-            newUprightScore += evaluation.score;
+            // Weighted average: 30% historical, 70% recent performance (recent performance has more impact)
+            if (newUprightAttempts === 1) {
+              newUprightAverage = evaluation.score;
+            } else {
+              newUprightAverage = (newUprightAverage * 0.3) + (evaluation.score * 0.7);
+            }
           } else {
             newReversedAttempts += 1;
-            newReversedScore += evaluation.score;
+            // Weighted average: 30% historical, 70% recent performance (recent performance has more impact)
+            if (newReversedAttempts === 1) {
+              newReversedAverage = evaluation.score;
+            } else {
+              newReversedAverage = (newReversedAverage * 0.3) + (evaluation.score * 0.7);
+            }
           }
           
-          const newUprightAverage = newUprightAttempts > 0 ? newUprightScore / newUprightAttempts : 0;
-          const newReversedAverage = newReversedAttempts > 0 ? newReversedScore / newReversedAttempts : 0;
+          // Calculate total score from orientation averages (for backward compatibility)
+          const newUprightScore = newUprightAverage * newUprightAttempts;
+          const newReversedScore = newReversedAverage * newReversedAttempts;
           
           // Calculate mastery percentage based on recent performance
           const masteryPercentage = Math.min((newAverageScore / 100) * 100, 100);
@@ -383,10 +425,27 @@ export async function POST(request: NextRequest) {
           else if (newTotalScore >= 5000) familiarityLevel = 'adept';
           else if (newTotalScore >= 1000) familiarityLevel = 'apprentice';
 
-          console.log('Updating progress with orientation tracking:', {
+          console.log('Updating existing progress with orientation tracking:', {
+            cardId,
             cardOrientation,
-            newTotalAttempts, newTotalScore, newAverageScore, masteryPercentage, familiarityLevel,
-            newUprightAttempts, newUprightAverage, newReversedAttempts, newReversedAverage
+            userId,
+            oldTotalAttempts: progress.total_attempts,
+            newTotalAttempts,
+            oldTotalScore: progress.total_score,
+            newTotalScore,
+            oldAverageScore: progress.average_score,
+            newAverageScore,
+            masteryPercentage,
+            familiarityLevel,
+            oldUprightAttempts: progress.upright_attempts,
+            newUprightAttempts,
+            oldUprightAverage: progress.upright_average,
+            newUprightAverage,
+            oldReversedAttempts: progress.reversed_attempts,
+            newReversedAttempts,
+            oldReversedAverage: progress.reversed_average,
+            newReversedAverage,
+            evaluationScore: evaluation.score
           });
 
           const newBestScore = Math.max(progress.best_score || 0, evaluation.score);
@@ -416,11 +475,11 @@ export async function POST(request: NextRequest) {
           
           // Initialize orientation-specific stats
           const uprightAttempts = cardOrientation === 'upright' ? 1 : 0;
-          const uprightScore = cardOrientation === 'upright' ? evaluation.score : 0;
           const uprightAverage = cardOrientation === 'upright' ? evaluation.score : 0;
+          const uprightScore = uprightAverage * uprightAttempts; // For backward compatibility
           const reversedAttempts = cardOrientation === 'reversed' ? 1 : 0;
-          const reversedScore = cardOrientation === 'reversed' ? evaluation.score : 0;
           const reversedAverage = cardOrientation === 'reversed' ? evaluation.score : 0;
+          const reversedScore = reversedAverage * reversedAttempts; // For backward compatibility
           
           let familiarityLevel = 'novice';
           if (evaluation.score >= 25000) familiarityLevel = 'grandmaster';
@@ -428,13 +487,23 @@ export async function POST(request: NextRequest) {
           else if (evaluation.score >= 5000) familiarityLevel = 'adept';
           else if (evaluation.score >= 1000) familiarityLevel = 'apprentice';
 
-          // console.log('Creating new progress record with orientation tracking:', {
-          //   progressId, userId, cardId, cardOrientation, score: evaluation.score, masteryPercentage, familiarityLevel,
-          //   uprightAttempts, uprightAverage, reversedAttempts, reversedAverage
-          // });
+          console.log('Creating new progress record with orientation tracking:', {
+            progressId,
+            userId,
+            cardId,
+            cardOrientation,
+            score: evaluation.score,
+            masteryPercentage,
+            familiarityLevel,
+            uprightAttempts,
+            uprightAverage,
+            reversedAttempts,
+            reversedAverage
+          });
 
+          // Use INSERT OR REPLACE to handle constraint conflicts
           await client.execute({
-            sql: `INSERT INTO tarot_progress (
+            sql: `INSERT OR REPLACE INTO tarot_progress (
               id, user_id, card_id, total_attempts,
               total_score, average_score, best_score, mastery_percentage,
               upright_attempts, upright_score, upright_average,
@@ -450,7 +519,7 @@ export async function POST(request: NextRequest) {
               now.toISOString(), now.toISOString()
             ]
           });
-          // console.log('New progress record created successfully with orientation tracking');
+          console.log('New progress record created successfully with orientation tracking');
         }
 
         // Update leaderboard
@@ -461,7 +530,7 @@ export async function POST(request: NextRequest) {
         });
         // console.log('Leaderboard query result:', leaderboardResult.rows.length, 'rows found');
         if (leaderboardResult.rows.length > 0) {
-          // console.log('Existing leaderboard data:', leaderboardResult.rows[0]);
+          console.log('Existing leaderboard data:', leaderboardResult.rows[0]);
         }
         
         // Check leaderboard table structure
@@ -520,18 +589,18 @@ export async function POST(request: NextRequest) {
           // Calculate new average score
           const newAverageScore = newTotalScore / newGamesPlayed;
 
-          // console.log('Leaderboard update data:', {
-          //   userId,
-          //   oldTotalScore: leaderboard.total_score,
-          //   newTotalScore,
-          //   oldGamesPlayed: leaderboard.games_played,
-          //   newGamesPlayed,
-          //   oldCardsCompleted: leaderboard.cards_completed,
-          //   newCardsCompleted,
-          //   evaluation_score: evaluation.score,
-          //   newAverageScore,
-          //   newPerfectInterpretations
-          // });
+          console.log('Leaderboard update data:', {
+            userId,
+            oldTotalScore: leaderboard.total_score,
+            newTotalScore,
+            oldGamesPlayed: leaderboard.games_played,
+            newGamesPlayed,
+            oldCardsCompleted: leaderboard.cards_completed,
+            newCardsCompleted,
+            evaluation_score: evaluation.score,
+            newAverageScore,
+            newPerfectInterpretations
+          });
 
           await client.execute({
             sql: `UPDATE tarot_leaderboard SET 
@@ -545,10 +614,10 @@ export async function POST(request: NextRequest) {
               now.toISOString(), now.toISOString(), userId
             ]
           });
-          // console.log('Leaderboard updated successfully');
+          console.log('Leaderboard updated successfully');
         } else {
           // Create new leaderboard entry
-          // console.log('Creating new leaderboard entry for user:', userId, 'with score:', evaluation.score);
+          console.log('Creating new leaderboard entry for user:', userId, 'with score:', evaluation.score);
           const leaderboardId = `tarot_leaderboard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           
           await client.execute({
@@ -563,7 +632,7 @@ export async function POST(request: NextRequest) {
               now.toISOString(), now.toISOString(), now.toISOString()
             ]
           });
-          // console.log('New leaderboard entry created successfully');
+          console.log('New leaderboard entry created successfully');
         }
       }
     } catch (dbError) {
