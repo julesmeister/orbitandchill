@@ -15,27 +15,27 @@ const LEVEL_CONFIG = {
   'novice': {
     image: '/levels/Novice.png',
     name: 'Novice',
-    description: 'Starting your tarot journey (0-999 points)'
+    description: 'Starting your tarot journey (0-2,499 points)'
   },
   'apprentice': {
     image: '/levels/Apprentice.png',
     name: 'Apprentice',
-    description: 'Learning the basics (1,000-4,999 points)'
+    description: 'Learning the basics (2,500-9,999 points)'
   },
   'adept': {
     image: '/levels/Adept.png',
     name: 'Adept',
-    description: 'Strong foundation (5,000-9,999 points)'
+    description: 'Strong foundation (10,000-24,999 points)'
   },
   'master': {
     image: '/levels/Master.png',
     name: 'Master',
-    description: 'Advanced practitioner (10,000-24,999 points)'
+    description: 'Advanced practitioner (25,000-49,999 points)'
   },
   'grandmaster': {
     image: '/levels/Grandmaster.png',
     name: 'Grandmaster',
-    description: 'True tarot sage (25,000+ points)'
+    description: 'True tarot sage (50,000+ points)'
   },
   // Legacy support for old naming
   'intermediate': {
@@ -123,12 +123,12 @@ export function getLevelInfo(level: string) {
   return LEVEL_CONFIG[normalizedLevel as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG.novice;
 }
 
-// Points-based level calculation (matches tarot.md specification)
+// Points-based level calculation with more challenging progression
 export function calculateLevel(totalPoints: number): string {
-  if (totalPoints >= 25000) return 'grandmaster';
-  if (totalPoints >= 10000) return 'master';
-  if (totalPoints >= 5000) return 'adept';
-  if (totalPoints >= 1000) return 'apprentice';
+  if (totalPoints >= 50000) return 'grandmaster';
+  if (totalPoints >= 25000) return 'master';
+  if (totalPoints >= 10000) return 'adept';
+  if (totalPoints >= 2500) return 'apprentice';
   return 'novice';
 }
 
@@ -139,4 +139,36 @@ export function calculateLevelByAccuracy(accuracy: number): string {
   if (accuracy >= 70) return 'adept';
   if (accuracy >= 50) return 'apprentice';
   return 'novice';
+}
+
+// Calculate progress within current level (returns percentage 0-100)
+export function calculateLevelProgress(totalPoints: number): number {
+  const levelThresholds = [
+    { name: 'novice', min: 0, max: 2499 },
+    { name: 'apprentice', min: 2500, max: 9999 },
+    { name: 'adept', min: 10000, max: 24999 },
+    { name: 'master', min: 25000, max: 49999 },
+    { name: 'grandmaster', min: 50000, max: Infinity }
+  ];
+
+  const currentLevel = levelThresholds.find(level => 
+    totalPoints >= level.min && totalPoints <= level.max
+  );
+
+  if (!currentLevel || currentLevel.name === 'grandmaster') {
+    return totalPoints >= 50000 ? 100 : 0;
+  }
+
+  const pointsInLevel = totalPoints - currentLevel.min;
+  const levelRange = currentLevel.max - currentLevel.min + 1;
+  return Math.min(100, Math.floor((pointsInLevel / levelRange) * 100));
+}
+
+// Get points needed for next level
+export function getPointsToNextLevel(totalPoints: number): number {
+  if (totalPoints < 2500) return 2500 - totalPoints;
+  if (totalPoints < 10000) return 10000 - totalPoints;
+  if (totalPoints < 25000) return 25000 - totalPoints;
+  if (totalPoints < 50000) return 50000 - totalPoints;
+  return 0; // Already grandmaster
 }

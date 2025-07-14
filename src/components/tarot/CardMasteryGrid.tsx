@@ -48,22 +48,22 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
 
   const loadCardProgress = async () => {
     try {
-      console.log('CardMasteryGrid: Loading progress for userId:', userId);
+      // console.log('CardMasteryGrid: Loading progress for userId:', userId);
       const response = await fetch(`/api/tarot/card-progress?userId=${userId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('CardMasteryGrid: API response:', data);
-        console.log('CardMasteryGrid: Progress data keys:', Object.keys(data.progress || {}));
+        // console.log('CardMasteryGrid: API response:', data);
+        // console.log('CardMasteryGrid: Progress data keys:', Object.keys(data.progress || {}));
         
         // Log sample progress data
         const progressKeys = Object.keys(data.progress || {});
         if (progressKeys.length > 0) {
-          console.log('CardMasteryGrid: Sample progress entry:', data.progress[progressKeys[0]]);
+          // console.log('CardMasteryGrid: Sample progress entry:', data.progress[progressKeys[0]]);
         }
         
         setCardProgress(data.progress || {});
       } else {
-        console.log('CardMasteryGrid: API response not ok:', response.status);
+        // console.log('CardMasteryGrid: API response not ok:', response.status);
       }
     } catch (error) {
       console.warn('Failed to load card progress:', error);

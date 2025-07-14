@@ -2,6 +2,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 
 interface LeaderboardEntry {
   id: string;
@@ -40,8 +41,18 @@ export default function TarotLeaderboard({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold font-space-grotesk text-black">Leaderboard</h3>
-          <div className="text-xs text-black/50 font-inter">
-            {leaderboard.length} players
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-black/50 font-inter">
+              {leaderboard.length} players
+            </div>
+            {userHasPremium && leaderboard.length > 5 && (
+              <Link 
+                href="/guides/tarot-learning/leaderboard"
+                className="text-xs text-blue-600 hover:text-blue-800 font-semibold font-inter underline"
+              >
+                View More
+              </Link>
+            )}
           </div>
         </div>
 

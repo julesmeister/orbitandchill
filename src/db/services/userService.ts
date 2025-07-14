@@ -121,7 +121,7 @@ export class UserService {
 
   static async getUserById(id: string) {
     return resilient.item(db, 'getUserById', async () => {
-      console.log('🔍 Looking for user with ID:', id);
+      // console.log('🔍 Looking for user with ID:', id);
       
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
       const userData = await RawSqlPatterns.findById(db, 'users', id);

@@ -6,18 +6,29 @@ import Link from 'next/link';
 import { useUserStore } from '@/store/userStore';
 import { hasPremiumAccess } from '@/utils/premiumHelpers';
 import { useTarotGame } from '@/hooks/useTarotGame';
+import { useDailyUsage } from '@/hooks/useDailyUsage';
 import CardMasteryGrid from '@/components/tarot/CardMasteryGrid';
 import LevelBadge, { calculateLevel } from '@/components/tarot/LevelBadge';
-import TarotPremiumModal from '@/components/tarot/TarotPremiumModal';
+import TarotFreemiumModal from '@/components/tarot/TarotFreemiumModal';
 import TarotLeaderboard from '@/components/tarot/TarotLeaderboard';
 import TarotGameInterface from '@/components/tarot/TarotGameInterface';
 
 export default function TarotLearningPage() {
   const { user } = useUserStore();
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showFreemiumModal, setShowFreemiumModal] = useState(false);
 
   // Check if user has premium access
   const userHasPremium = hasPremiumAccess(user);
+
+  // Track daily usage for freemium system
+  const {
+    interpretationsToday,
+    canPlayToday,
+    remainingPlays,
+    dailyLimit,
+    incrementUsage,
+    resetIfNewDay
+  } = useDailyUsage(user?.id, userHasPremium);
 
   // Use the extracted tarot game hook
   const {
@@ -31,13 +42,22 @@ export default function TarotLearningPage() {
     endGame,
     getUserLevelFromProgress,
     getUserLevelFromAccuracy
-  } = useTarotGame(user?.id);
+  } = useTarotGame(user?.id, incrementUsage);
 
   const startGame = async () => {
-    if (!userHasPremium) {
-      setShowPremiumModal(true);
+    resetIfNewDay(); // Check if it's a new day and reset counters
+    
+    if (!canPlayToday) {
+      setShowFreemiumModal(true);
       return;
     }
+    
+    // Show freemium modal for first-time users or as introduction
+    if (!userHasPremium && interpretationsToday === 0) {
+      setShowFreemiumModal(true);
+      return;
+    }
+    
     await gameStartGame();
   };
 
@@ -60,14 +80,19 @@ export default function TarotLearningPage() {
               <p className="text-black/70 font-inter">
                 Master the meanings of all 78 tarot cards through interactive scenarios and AI-powered feedback
               </p>
+              {!userHasPremium && (
+                <div className="mt-4 bg-blue-50 border border-blue-200 p-3 inline-block">
+                  <p className="text-blue-800 text-sm font-inter">
+                    <strong>Free Daily Limit:</strong> {remainingPlays} interpretation{remainingPlays !== 1 ? 's' : ''} remaining today
+                  </p>
+                </div>
+              )}
             </div>
-            {userHasPremium && (
-              <LevelBadge 
-                level={calculateLevel(userProgress.totalScore)} 
-                size="large" 
-                showLabel={false}
-              />
-            )}
+            <LevelBadge 
+              level={calculateLevel(userProgress.totalScore)} 
+              size="large" 
+              showLabel={false}
+            />
           </div>
         </section>
 
@@ -121,22 +146,37 @@ export default function TarotLearningPage() {
                   onClick={startGame}
                   className="w-full mt-8 bg-black text-white px-8 py-4  font-semibold text-lg border-2 border-black hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 transition-all duration-300 font-space-grotesk"
                 >
-                  Start Learning Journey
+                  {userHasPremium ? 'Start Learning Journey' : 
+                   canPlayToday ? `Play Today (${remainingPlays} left)` : 
+                   'Daily Limit Reached'}
                 </button>
               </div>
 
               {/* Sidebar: Leaderboard & Progress */}
-              <TarotLeaderboard 
-                leaderboard={leaderboard}
-                userProgress={userProgress}
-                user={user}
-                userHasPremium={userHasPremium}
-                getUserLevel={getUserLevelFromAccuracy}
-              />
+              <div>
+                <TarotLeaderboard 
+                  leaderboard={leaderboard}
+                  userProgress={userProgress}
+                  user={user}
+                  userHasPremium={userHasPremium}
+                  getUserLevel={getUserLevelFromAccuracy}
+                />
+                
+                {!userHasPremium && (
+                  <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200">
+                    <h3 className="font-bold text-yellow-800 mb-2 font-space-grotesk">Upgrade to Premium</h3>
+                    <ul className="text-sm text-yellow-700 space-y-1 font-inter">
+                      <li>• Unlimited daily interpretations</li>
+                      <li>• Advanced progress tracking</li>
+                      <li>• Future: Multi-card spreads</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Card Mastery Grid */}
-            {user && userHasPremium && (
+            {user && (
               <div className="mt-16">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold font-space-grotesk">Card Mastery Progress</h2>
@@ -157,13 +197,22 @@ export default function TarotLearningPage() {
             submitInterpretation={submitInterpretation}
             nextCard={nextCard}
             userId={user?.id}
+            canPlayMore={canPlayToday}
+            remainingPlays={remainingPlays}
+            onShowUsageLimit={() => setShowFreemiumModal(true)}
           />
         )}
       </div>
 
-      <TarotPremiumModal 
-        showPremiumModal={showPremiumModal}
-        setShowPremiumModal={setShowPremiumModal}
+      <TarotFreemiumModal 
+        isOpen={showFreemiumModal}
+        onClose={() => setShowFreemiumModal(false)}
+        interpretationsToday={interpretationsToday}
+        remainingPlays={remainingPlays}
+        onUpgrade={() => {
+          // Could redirect to upgrade page or show upgrade options
+          console.log('User wants to upgrade to premium');
+        }}
       />
     </div>
   );

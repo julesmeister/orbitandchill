@@ -5,6 +5,7 @@ interface User {
   subscriptionTier?: 'free' | 'premium' | 'pro';
   email?: string;
   id?: string;
+  role?: 'user' | 'admin' | 'moderator';
 }
 
 // Check if user has premium access
@@ -16,7 +17,24 @@ export const hasPremiumAccess = (user: User | null): boolean => {
     return true;
   }
   
+  // Admin and moderator users get premium access
+  if (user.role === 'admin' || user.role === 'moderator') {
+    return true;
+  }
+  
   return user.subscriptionTier === 'premium' || user.subscriptionTier === 'pro';
+};
+
+// Check if user has admin or moderator role
+export const hasAdminAccess = (user: User | null): boolean => {
+  if (!user) return false;
+  
+  // Admin override - orbitandchill@gmail.com gets admin access
+  if (user.email === 'orbitandchill@gmail.com') {
+    return true;
+  }
+  
+  return user.role === 'admin' || user.role === 'moderator';
 };
 
 // Check if user has specific tier
@@ -27,7 +45,17 @@ export const hasSubscriptionTier = (user: User | null, tier: 'free' | 'premium' 
 
 // Get user's subscription tier display name
 export const getSubscriptionTierName = (user: User | null): string => {
-  if (!user || !user.subscriptionTier) return 'Free';
+  if (!user) return 'Free';
+  
+  // Show admin/moderator status if applicable
+  if (user.role === 'admin') return 'Admin';
+  if (user.role === 'moderator') return 'Moderator';
+  
+  // Admin email override
+  if (user.email === 'orbitandchill@gmail.com') return 'Admin';
+  
+  // Regular subscription tiers
+  if (!user.subscriptionTier) return 'Free';
   switch (user.subscriptionTier) {
     case 'premium':
       return 'Premium';

@@ -368,29 +368,29 @@ Creativity Bonus = min(interpretation_length / 200, 0.3) × 20 points
 
 ```
 📊 Level Progression System (Aligned with /public/levels/ images)
-├── 🌱 Novice (0-999 points) ✅ Novice.png
+├── 🌱 Novice (0-2,499 points) ✅ Novice.png
 │   ├── Entry level - learning basic card meanings
 │   ├── Single card interpretations only
 │   └── Focus: Memorization and recognition
 │
-├── 🎯 Apprentice (1,000-4,999 points) ✅ Apprentice.png
+├── 🎯 Apprentice (2,500-9,999 points) ✅ Apprentice.png
 │   ├── Comfortable with individual cards
 │   ├── Single card interpretations continue
 │   └── Focus: Context application and nuance
 │
-├── 🔮 Adept (5,000-9,999 points) ✅ Adept.png
+├── 🔮 Adept (10,000-24,999 points) ✅ Adept.png
 │   ├── Strong foundation in card meanings
 │   ├── Single card interpretations continue  
 │   └── Focus: Complex situation analysis and advanced techniques
 │
-├── 👑 Master (10,000-24,999 points) ✅ Master.png
+├── 👑 Master (25,000-49,999 points) ✅ Master.png
 │   ├── **GAME MODE CHANGES** → Three-Card Spreads
 │   ├── Past-Present-Future layouts
 │   ├── Mind-Body-Spirit configurations
 │   ├── Situation-Action-Outcome spreads
 │   └── Focus: Card relationships and synthesis
 │
-└── 🌟 Grandmaster (25,000+ points) ✅ Grandmaster.png
+└── 🌟 Grandmaster (50,000+ points) ✅ Grandmaster.png
     ├── **GAME MODE CHANGES** → Celtic Cross Spreads
     ├── Full 10-card Celtic Cross layouts
     ├── Complex multi-card relationships
@@ -438,11 +438,11 @@ Creativity Bonus = min(interpretation_length / 200, 0.3) × 20 points
 ### Experience Point Requirements
 - **Per Card**: 20-100 points (based on accuracy)
 - **Level Thresholds**: 
-  - Novice: 0-999 points
-  - Apprentice: 1,000-4,999 points (expanded range)
-  - Adept: 5,000-9,999 points (replaces Intermediate/Advanced/Expert)
-  - Master: 10,000-24,999 points (three-card spreads unlock)
-  - Grandmaster: 25,000+ points (Celtic Cross spreads unlock)
+  - Novice: 0-2,499 points (~25-125 cards at average performance)
+  - Apprentice: 2,500-9,999 points (~125-500 cards mastered)
+  - Adept: 10,000-24,999 points (~500-1,250 cards, multiple iterations)
+  - Master: 25,000-49,999 points (three-card spreads unlock)
+  - Grandmaster: 50,000+ points (Celtic Cross spreads unlock)
 
 ### Current Implementation Status
 - ✅ **Novice through Adept**: Single card interpretation system (levels 1-3)

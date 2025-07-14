@@ -38,7 +38,7 @@ export const useSeedingPersistence = () => {
               return item;
             });
             
-            console.log('🔄 Preview content loaded from localStorage:', migratedContent.length, 'discussions');
+            // console.log('🔄 Preview content loaded from localStorage:', migratedContent.length, 'discussions');
             return migratedContent;
           }
         }
@@ -49,7 +49,7 @@ export const useSeedingPersistence = () => {
           try {
             const parsedResults = JSON.parse(savedSeedingResults);
             if (parsedResults.success && parsedResults.data && Array.isArray(parsedResults.data) && parsedResults.data.length > 0) {
-              console.log('🔄 Restoring preview content from seedingResults:', parsedResults.data.length, 'discussions');
+              // console.log('🔄 Restoring preview content from seedingResults:', parsedResults.data.length, 'discussions');
               
               // Apply field migration to restored data
               const migratedContent = parsedResults.data.map((item: any) => {
@@ -113,7 +113,7 @@ export const useSeedingPersistence = () => {
       setAiProvider(savedProvider);
     }
     if (savedModel) {
-      console.log('🔍 DEBUG: Loading saved AI model from localStorage:', savedModel);
+      // console.log('🔍 DEBUG: Loading saved AI model from localStorage:', savedModel);
       // Check if it's the problematic old model
       if (savedModel === 'meta-llama/llama-3.1-70b-instruct:free') {
         console.log('🚨 Found old meta-llama model in localStorage, updating to working model');
@@ -124,7 +124,7 @@ export const useSeedingPersistence = () => {
         setAiModel(savedModel);
       }
     } else {
-      console.log('🔍 DEBUG: No saved AI model found, using default:', aiModel);
+      // console.log('🔍 DEBUG: No saved AI model found, using default:', aiModel);
     }
     if (savedTemperature) {
       setTemperature(parseFloat(savedTemperature));
@@ -137,12 +137,12 @@ export const useSeedingPersistence = () => {
     const savedSeedingResults = localStorage.getItem('seeding_results');
     
     // Debug log to see what's being loaded
-    console.log('Loading from localStorage:', {
-      pastedContent: savedPastedContent?.length || 0,
-      scrapedContent: savedScrapedContent?.length || 0,
-      previewContent: savedPreviewContent?.length || 0,
-      hasResults: !!savedSeedingResults
-    });
+    // console.log('Loading from localStorage:', {
+    //   pastedContent: savedPastedContent?.length || 0,
+    //   scrapedContent: savedScrapedContent?.length || 0,
+    //   previewContent: savedPreviewContent?.length || 0,
+    //   hasResults: !!savedSeedingResults
+    // });
     
     if (savedPastedContent) {
       setPastedContent(savedPastedContent);
@@ -156,7 +156,7 @@ export const useSeedingPersistence = () => {
     }
     // Note: previewContent is now loaded during useState initialization
     // This useEffect only handles other localStorage items that couldn't be loaded during init
-    console.log('🔄 useEffect: Preview content was loaded during useState initialization, skipping duplicate load');
+    // console.log('🔄 useEffect: Preview content was loaded during useState initialization, skipping duplicate load');
     if (savedSeedingResults) {
       try {
         setSeedingResults(JSON.parse(savedSeedingResults));
@@ -169,7 +169,7 @@ export const useSeedingPersistence = () => {
   // Handle restoration notification after component mounts (migration already done in initializer)
   useEffect(() => {
     if (previewContent.length > 0) {
-      console.log('🔄 Preview content detected after mount:', previewContent.length, 'discussions');
+      // console.log('🔄 Preview content detected after mount:', previewContent.length, 'discussions');
       
       // Show restoration notification
       setSeedingResults((prev: any) => ({
@@ -194,7 +194,7 @@ export const useSeedingPersistence = () => {
   useEffect(() => {
     localStorage.setItem('seeding_preview_content', JSON.stringify(previewContent));
     if (previewContent.length > 0) {
-      console.log('🔄 Preview content saved:', previewContent.length, 'discussions');
+      // console.log('🔄 Preview content saved:', previewContent.length, 'discussions');
     }
   }, [previewContent]);
 
@@ -256,7 +256,7 @@ export const useSeedingPersistence = () => {
   };
 
   const clearAllContent = () => {
-    console.log('🔄 Clearing all seeding content');
+    // console.log('🔄 Clearing all seeding content');
     // Clear state
     setPastedContent('');
     setScrapedContent([]);
@@ -271,7 +271,7 @@ export const useSeedingPersistence = () => {
   };
 
   const clearAIConfiguration = () => {
-    console.log('🔄 Clearing AI configuration');
+    // console.log('🔄 Clearing AI configuration');
     // Reset state to defaults
     setAiProvider('openrouter');
     setAiModel('deepseek/deepseek-r1-distill-llama-70b:free');
@@ -290,11 +290,11 @@ export const useSeedingPersistence = () => {
     if (typeof newContent === 'function') {
       setPreviewContent(prev => {
         const result = newContent(prev);
-        console.log('🔄 setPreviewContent updated:', prev.length, '→', result.length, 'discussions');
+        // console.log('🔄 setPreviewContent updated:', prev.length, '→', result.length, 'discussions');
         return result;
       });
     } else {
-      console.log('🔄 setPreviewContent set to:', newContent?.length || 0, 'discussions');
+      // console.log('🔄 setPreviewContent set to:', newContent?.length || 0, 'discussions');
       setPreviewContent(newContent);
     }
   };

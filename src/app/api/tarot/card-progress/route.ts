@@ -66,15 +66,15 @@ export async function GET(request: NextRequest) {
       // Convert to a lookup object for easy access
       const progressMap: Record<string, CardProgress> = {};
       
-      console.log('Card Progress API: Raw database rows:', progressResult.rows.length);
+      // console.log('Card Progress API: Raw database rows:', progressResult.rows.length);
       
       progressResult.rows.forEach((row: any) => {
-        console.log('Card Progress API: Processing row for card:', row.cardId, {
-          totalAttempts: row.totalAttempts,
-          averageScore: row.averageScore,
-          masteryPercentage: row.masteryPercentage,
-          familiarityLevel: row.familiarityLevel
-        });
+        // console.log('Card Progress API: Processing row for card:', row.cardId, {
+        //   totalAttempts: row.totalAttempts,
+        //   averageScore: row.averageScore,
+        //   masteryPercentage: row.masteryPercentage,
+        //   familiarityLevel: row.familiarityLevel
+        // });
         
         progressMap[row.cardId] = {
           cardId: row.cardId,
@@ -91,8 +91,8 @@ export async function GET(request: NextRequest) {
         };
       });
 
-      console.log('Card Progress API: Final progress map keys:', Object.keys(progressMap));
-      console.log('Card Progress API: Sample progress data:', progressMap[Object.keys(progressMap)[0]]);
+      // console.log('Card Progress API: Final progress map keys:', Object.keys(progressMap));
+      // console.log('Card Progress API: Sample progress data:', progressMap[Object.keys(progressMap)[0]]);
 
       return NextResponse.json({
         success: true,

@@ -11,13 +11,27 @@ interface LeaderboardEntry {
   lastPlayed: string;
   level: string;
   rank?: number;
+  // Extended fields for comprehensive leaderboard
+  gamesPlayed?: number;
+  averageScore?: number;
+  streak?: number;
+  joinedDate?: string;
+}
+
+interface LeaderboardStats {
+  totalPlayers: number;
+  averageScore: number;
+  topScore: number;
+  gamesPlayedToday: number;
 }
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
-    const timeframe = searchParams.get('timeframe') || 'all_time'; // 'all_time', 'weekly', 'monthly'
+    const timeFilter = searchParams.get('timeFilter') || 'all-time'; // 'all-time', 'monthly', 'weekly', 'daily'
+    const sortBy = searchParams.get('sortBy') || 'score'; // 'score', 'accuracy', 'cards', 'streak'
+    const extended = searchParams.get('extended') === 'true';
 
     // Get leaderboard from database
     try {
@@ -36,19 +50,36 @@ export async function GET(request: NextRequest) {
         authToken: authToken,
       });
 
+      // Determine sort order based on sortBy parameter
       let orderBy = 'total_score DESC, average_score DESC, games_played DESC';
-      let timeFilter = '';
+      switch (sortBy) {
+        case 'accuracy':
+          orderBy = 'overall_accuracy DESC, average_score DESC, total_score DESC';
+          break;
+        case 'cards':
+          orderBy = 'cards_completed DESC, total_score DESC, overall_accuracy DESC';
+          break;
+        case 'streak':
+          orderBy = 'current_streak DESC, total_score DESC, overall_accuracy DESC';
+          break;
+        default: // 'score'
+          orderBy = 'total_score DESC, average_score DESC, games_played DESC';
+      }
 
+      let whereFilter = '';
+      
       // Apply time-based filtering
-      if (timeframe === 'weekly') {
+      if (timeFilter === 'weekly') {
         orderBy = 'weekly_score DESC, sessions_this_week DESC, total_score DESC';
-        // Only show users who played this week
-        timeFilter = "AND (sessions_this_week > 0 OR weekly_score > 0)";
-      } else if (timeframe === 'monthly') {
-        // For monthly, we'll use last_played within 30 days
+        whereFilter = "AND (sessions_this_week > 0 OR weekly_score > 0)";
+      } else if (timeFilter === 'monthly') {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        timeFilter = `AND last_played >= '${thirtyDaysAgo.toISOString()}'`;
+        whereFilter = `AND last_played >= '${thirtyDaysAgo.toISOString()}'`;
+      } else if (timeFilter === 'daily') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        whereFilter = `AND last_played >= '${today.toISOString()}'`;
       }
 
       const leaderboardResult = await client.execute({
@@ -65,16 +96,17 @@ export async function GET(request: NextRequest) {
           weekly_score,
           sessions_this_week,
           perfect_interpretations,
-          current_streak
+          current_streak,
+          created_at
         FROM tarot_leaderboard 
-        WHERE games_played > 0 ${timeFilter}
+        WHERE games_played > 0 ${whereFilter}
         ORDER BY ${orderBy}
         LIMIT ?`,
         args: [limit]
       });
 
-      console.log('Leaderboard query returned:', leaderboardResult.rows.length, 'rows');
-      console.log('Sample leaderboard data:', leaderboardResult.rows.slice(0, 3));
+      // console.log('Leaderboard query returned:', leaderboardResult.rows.length, 'rows');
+      // console.log('Sample leaderboard data:', leaderboardResult.rows.slice(0, 3));
 
       const leaderboard: LeaderboardEntry[] = leaderboardResult.rows.map((row: any, index: number) => {
         // Calculate accuracy from average_score if overall_accuracy is 0
@@ -84,7 +116,7 @@ export async function GET(request: NextRequest) {
         }
 
         // For weekly leaderboard, use weekly score
-        const score = timeframe === 'weekly' ? (row.weekly_score || 0) : (row.score || 0);
+        const score = timeFilter === 'weekly' ? (row.weekly_score || 0) : (row.score || 0);
         
         // Determine cards completed (use a reasonable estimate if not tracked)
         let cardsCompleted = row.cardsCompleted || 0;
@@ -93,7 +125,7 @@ export async function GET(request: NextRequest) {
           cardsCompleted = Math.min(row.games_played, 78);
         }
 
-        return {
+        const baseEntry = {
           id: row.id,
           username: row.username,
           score,
@@ -103,26 +135,58 @@ export async function GET(request: NextRequest) {
           level: row.level ? row.level.charAt(0).toUpperCase() + row.level.slice(1) : 'Novice',
           rank: index + 1
         };
+
+        // Add extended fields if requested
+        if (extended) {
+          return {
+            ...baseEntry,
+            gamesPlayed: row.games_played || 0,
+            averageScore: Math.round(row.average_score || 0),
+            streak: row.current_streak || 0,
+            joinedDate: row.created_at || new Date().toISOString()
+          };
+        }
+
+        return baseEntry;
       });
 
       // Additional statistics
       const totalPlayers = leaderboardResult.rows.length;
       const avgScore = leaderboard.length > 0 
-        ? Math.round(leaderboard.reduce((sum, entry) => sum + entry.score, 0) / leaderboard.length)
+        ? Math.round(leaderboard.reduce((sum, entry) => sum + entry.accuracy, 0) / leaderboard.length)
         : 0;
-      const topAccuracy = leaderboard.length > 0 
-        ? Math.max(...leaderboard.map(entry => entry.accuracy))
+      const topScore = leaderboard.length > 0 
+        ? Math.max(...leaderboard.map(entry => entry.score))
         : 0;
+
+      // Calculate games played today if extended stats requested
+      let gamesPlayedToday = 0;
+      if (extended) {
+        try {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const todayGamesResult = await client.execute({
+            sql: `SELECT COUNT(*) as count FROM tarot_game_results WHERE created_at >= ?`,
+            args: [today.toISOString()]
+          });
+          gamesPlayedToday = Number(todayGamesResult.rows[0]?.count) || 0;
+        } catch (error) {
+          console.warn('Could not fetch games played today:', error);
+          gamesPlayedToday = 0;
+        }
+      }
+
+      const stats: LeaderboardStats = {
+        totalPlayers,
+        averageScore: avgScore,
+        topScore,
+        gamesPlayedToday
+      };
 
       return NextResponse.json({
         success: true,
         leaderboard,
-        stats: {
-          totalPlayers,
-          avgScore,
-          topAccuracy,
-          timeframe
-        }
+        stats
       });
 
     } catch (dbError) {
@@ -134,9 +198,9 @@ export async function GET(request: NextRequest) {
         leaderboard: [],
         stats: {
           totalPlayers: 0,
-          avgScore: 0,
-          topAccuracy: 0,
-          timeframe
+          averageScore: 0,
+          topScore: 0,
+          gamesPlayedToday: 0
         }
       });
     }

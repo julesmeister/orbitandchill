@@ -72,14 +72,14 @@ export async function GET(request: NextRequest) {
       });
 
       // Get overall leaderboard stats
-      console.log('Progress API: Querying leaderboard for userId:', userId);
+      // console.log('Progress API: Querying leaderboard for userId:', userId);
       const leaderboardResult = await client.execute({
         sql: 'SELECT * FROM tarot_leaderboard WHERE user_id = ?',
         args: [userId]
       });
-      console.log('Progress API: Leaderboard result:', leaderboardResult.rows.length, 'rows found');
+      // console.log('Progress API: Leaderboard result:', leaderboardResult.rows.length, 'rows found');
       if (leaderboardResult.rows.length > 0) {
-        console.log('Progress API: Leaderboard data:', leaderboardResult.rows[0]);
+        // console.log('Progress API: Leaderboard data:', leaderboardResult.rows[0]);
       }
 
       let totalScore = 0;
@@ -170,14 +170,14 @@ export async function GET(request: NextRequest) {
         weeklyStats
       };
 
-      console.log('Progress API: Returning progress data:', {
-        totalScore,
-        totalCards,
-        accuracy,
-        level: displayLevel,
-        cardProgressCount: cardProgress.length,
-        recentSessionsCount: recentSessions.length
-      });
+      // console.log('Progress API: Returning progress data:', {
+      //   totalScore,
+      //   totalCards,
+      //   accuracy,
+      //   level: displayLevel,
+      //   cardProgressCount: cardProgress.length,
+      //   recentSessionsCount: recentSessions.length
+      // });
 
       return NextResponse.json({
         success: true,

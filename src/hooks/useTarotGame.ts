@@ -34,7 +34,7 @@ interface LeaderboardEntry {
   lastPlayed: string;
 }
 
-export const useTarotGame = (userId?: string) => {
+export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => {
   // Get persisted AI configuration and situation generation hook
   const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
   const { generateSituation, generateFallbackSituation } = useSituationGeneration();
@@ -151,6 +151,9 @@ export const useTarotGame = (userId?: string) => {
     if (!gameState.currentCard || !gameState.userInterpretation.trim()) return;
 
     setGameState(prev => ({ ...prev, isLoading: true }));
+    
+    // Increment daily usage counter for freemium system
+    onUsageIncrement?.();
 
     try {
       const response = await fetch('/api/tarot/evaluate', {

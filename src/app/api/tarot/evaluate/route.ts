@@ -329,12 +329,12 @@ export async function POST(request: NextRequest) {
         });
 
         // Update or create progress record
-        console.log('Querying tarot_progress for user:', userId, 'card:', cardId);
+        // console.log('Querying tarot_progress for user:', userId, 'card:', cardId);
         const progressResult = await client.execute({
           sql: 'SELECT * FROM tarot_progress WHERE user_id = ? AND card_id = ?',
           args: [userId, cardId]
         });
-        console.log('Progress query result:', progressResult.rows.length, 'rows found');
+        // console.log('Progress query result:', progressResult.rows.length, 'rows found');
         
         // Check table structure to see what columns actually exist
         try {
@@ -342,9 +342,9 @@ export async function POST(request: NextRequest) {
             sql: 'PRAGMA table_info(tarot_progress)',
             args: []
           });
-          console.log('tarot_progress table columns:', schemaResult.rows.map((row: any) => row.name));
+          // console.log('tarot_progress table columns:', schemaResult.rows.map((row: any) => row.name));
         } catch (schemaError) {
-          console.log('Could not get table schema:', schemaError);
+          // console.log('Could not get table schema:', schemaError);
         }
 
         const isCorrect = evaluation.score >= 70; // Consider 70+ as "correct"
@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
               userId, cardId
             ]
           });
-          console.log('Progress updated successfully with orientation tracking');
+          // console.log('Progress updated successfully with orientation tracking');
         } else {
           // Create new progress record with orientation tracking
           const progressId = `tarot_progress_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -428,10 +428,10 @@ export async function POST(request: NextRequest) {
           else if (evaluation.score >= 5000) familiarityLevel = 'adept';
           else if (evaluation.score >= 1000) familiarityLevel = 'apprentice';
 
-          console.log('Creating new progress record with orientation tracking:', {
-            progressId, userId, cardId, cardOrientation, score: evaluation.score, masteryPercentage, familiarityLevel,
-            uprightAttempts, uprightAverage, reversedAttempts, reversedAverage
-          });
+          // console.log('Creating new progress record with orientation tracking:', {
+          //   progressId, userId, cardId, cardOrientation, score: evaluation.score, masteryPercentage, familiarityLevel,
+          //   uprightAttempts, uprightAverage, reversedAttempts, reversedAverage
+          // });
 
           await client.execute({
             sql: `INSERT INTO tarot_progress (
@@ -450,18 +450,18 @@ export async function POST(request: NextRequest) {
               now.toISOString(), now.toISOString()
             ]
           });
-          console.log('New progress record created successfully with orientation tracking');
+          // console.log('New progress record created successfully with orientation tracking');
         }
 
         // Update leaderboard
-        console.log('Checking leaderboard for userId:', userId);
+        // console.log('Checking leaderboard for userId:', userId);
         const leaderboardResult = await client.execute({
           sql: 'SELECT * FROM tarot_leaderboard WHERE user_id = ?',
           args: [userId]
         });
-        console.log('Leaderboard query result:', leaderboardResult.rows.length, 'rows found');
+        // console.log('Leaderboard query result:', leaderboardResult.rows.length, 'rows found');
         if (leaderboardResult.rows.length > 0) {
-          console.log('Existing leaderboard data:', leaderboardResult.rows[0]);
+          // console.log('Existing leaderboard data:', leaderboardResult.rows[0]);
         }
         
         // Check leaderboard table structure
@@ -470,7 +470,7 @@ export async function POST(request: NextRequest) {
             sql: 'PRAGMA table_info(tarot_leaderboard)',
             args: []
           });
-          console.log('tarot_leaderboard table columns:', leaderboardSchemaResult.rows.map((row: any) => row.name));
+          // console.log('tarot_leaderboard table columns:', leaderboardSchemaResult.rows.map((row: any) => row.name));
         } catch (schemaError) {
           console.log('Could not get leaderboard table schema:', schemaError);
         }
@@ -510,7 +510,7 @@ export async function POST(request: NextRequest) {
 
         if (leaderboardResult.rows.length > 0) {
           // Update existing leaderboard entry
-          console.log('Updating existing leaderboard entry for user:', userId);
+          // console.log('Updating existing leaderboard entry for user:', userId);
           const leaderboard = leaderboardResult.rows[0] as any;
           const newTotalScore = (leaderboard.total_score || 0) + evaluation.score;
           const newGamesPlayed = (leaderboard.games_played || 0) + 1;
@@ -520,18 +520,18 @@ export async function POST(request: NextRequest) {
           // Calculate new average score
           const newAverageScore = newTotalScore / newGamesPlayed;
 
-          console.log('Leaderboard update data:', {
-            userId,
-            oldTotalScore: leaderboard.total_score,
-            newTotalScore,
-            oldGamesPlayed: leaderboard.games_played,
-            newGamesPlayed,
-            oldCardsCompleted: leaderboard.cards_completed,
-            newCardsCompleted,
-            evaluation_score: evaluation.score,
-            newAverageScore,
-            newPerfectInterpretations
-          });
+          // console.log('Leaderboard update data:', {
+          //   userId,
+          //   oldTotalScore: leaderboard.total_score,
+          //   newTotalScore,
+          //   oldGamesPlayed: leaderboard.games_played,
+          //   newGamesPlayed,
+          //   oldCardsCompleted: leaderboard.cards_completed,
+          //   newCardsCompleted,
+          //   evaluation_score: evaluation.score,
+          //   newAverageScore,
+          //   newPerfectInterpretations
+          // });
 
           await client.execute({
             sql: `UPDATE tarot_leaderboard SET 
@@ -545,10 +545,10 @@ export async function POST(request: NextRequest) {
               now.toISOString(), now.toISOString(), userId
             ]
           });
-          console.log('Leaderboard updated successfully');
+          // console.log('Leaderboard updated successfully');
         } else {
           // Create new leaderboard entry
-          console.log('Creating new leaderboard entry for user:', userId, 'with score:', evaluation.score);
+          // console.log('Creating new leaderboard entry for user:', userId, 'with score:', evaluation.score);
           const leaderboardId = `tarot_leaderboard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           
           await client.execute({
@@ -563,7 +563,7 @@ export async function POST(request: NextRequest) {
               now.toISOString(), now.toISOString(), now.toISOString()
             ]
           });
-          console.log('New leaderboard entry created successfully');
+          // console.log('New leaderboard entry created successfully');
         }
       }
     } catch (dbError) {

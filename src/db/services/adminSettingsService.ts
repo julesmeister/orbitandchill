@@ -423,7 +423,7 @@ export class AdminSettingsService {
       return;
     }
 
-    console.log('🔧 Initializing default admin settings...');
+    // console.log('🔧 Initializing default admin settings...');
 
     try {
       // Get existing settings
@@ -472,9 +472,9 @@ export class AdminSettingsService {
             console.warn(`⚠️ Failed to initialize setting ${setting.key}:`, error);
           }
         }
-        console.log(`✅ Attempted to initialize ${missingSettings.length} default admin settings`);
+        // console.log(`✅ Attempted to initialize ${missingSettings.length} default admin settings`);
       } else {
-        console.log('✅ All default admin settings already exist');
+        // console.log('✅ All default admin settings already exist');
       }
     } catch (error) {
       console.error('❌ Failed to initialize default admin settings:', error);
@@ -557,25 +557,25 @@ export class AdminSettingsService {
 
     try {
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
-      console.log(`🔍 getSetting: Looking for setting with key: ${key}`);
+      // console.log(`🔍 getSetting: Looking for setting with key: ${key}`);
       
       const result = await executeRawSelectOne(db, {
         table: 'admin_settings',
         conditions: [{ column: 'key', value: key }]
       });
       
-      console.log(`🔍 getSetting: Raw result for ${key}:`, result);
+      // console.log(`🔍 getSetting: Raw result for ${key}:`, result);
 
       if (!result) {
-        console.log(`🔍 getSetting: No result found for key: ${key}`);
+        // console.log(`🔍 getSetting: No result found for key: ${key}`);
         return null;
       }
 
       const transformed = transformDatabaseRow(result);
-      console.log(`🔍 getSetting: Transformed result for ${key}:`, transformed);
+      // console.log(`🔍 getSetting: Transformed result for ${key}:`, transformed);
       
       const setting = this.transformSetting(transformed);
-      console.log(`🔍 getSetting: Final setting for ${key}:`, setting);
+      // console.log(`🔍 getSetting: Final setting for ${key}:`, setting);
       
       return setting;
       
@@ -713,11 +713,11 @@ export class AdminSettingsService {
       });
 
       // Fetch the created setting since .returning() might not work consistently
-      console.log(`🔍 Attempting to verify created setting: ${key}`);
+      // console.log(`🔍 Attempting to verify created setting: ${key}`);
       const createdSetting = await this.getSetting(key);
       if (!createdSetting) {
         console.error(`❌ Failed to retrieve setting after creation: ${key}`);
-        console.log(`🔧 Attempting direct database query for verification...`);
+        // console.log(`🔧 Attempting direct database query for verification...`);
         
         // Try a direct verification query
         try {
@@ -725,14 +725,14 @@ export class AdminSettingsService {
             sql: 'SELECT * FROM admin_settings WHERE key = ?',
             args: [key]
           });
-          console.log(`🔍 Direct query result:`, verifyResult.rows);
+          // console.log(`🔍 Direct query result:`, verifyResult.rows);
         } catch (verifyError) {
           console.error(`❌ Direct verification failed:`, verifyError);
         }
         
         throw new Error(`Failed to create setting: ${key}. Setting may not have been inserted or retrieval failed.`);
       } else {
-        console.log(`✅ Successfully created and verified setting: ${key}`);
+        // console.log(`✅ Successfully created and verified setting: ${key}`);
       }
       
       result = createdSetting;

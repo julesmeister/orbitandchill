@@ -5,6 +5,7 @@ import React from 'react';
 import { TarotCard } from '@/data/tarotCards';
 import { getCardImagePath } from '@/utils/tarotImageMapping';
 import { useTarotGameInterface } from '@/hooks/useTarotGameInterface';
+import { calculateLevelProgress, getPointsToNextLevel } from '@/components/tarot/LevelBadge';
 import Image from 'next/image';
 import StatusToast from '@/components/reusable/StatusToast';
 
@@ -27,6 +28,9 @@ interface TarotGameInterfaceProps {
   submitInterpretation: () => Promise<void>;
   nextCard: () => void;
   userId?: string;
+  canPlayMore?: boolean;
+  remainingPlays?: number;
+  onShowUsageLimit?: () => void;
 }
 
 export default function TarotGameInterface({
@@ -35,7 +39,10 @@ export default function TarotGameInterface({
   endGame,
   submitInterpretation,
   nextCard,
-  userId
+  userId,
+  canPlayMore = true,
+  remainingPlays,
+  onShowUsageLimit
 }: TarotGameInterfaceProps) {
   // Use the extracted hook for all component logic
   const {
@@ -324,12 +331,12 @@ export default function TarotGameInterface({
                   <div className="w-full bg-gray-200 h-2 border border-black">
                     <div
                       className="bg-black h-full transition-all duration-300"
-                      style={{ width: `${(userProgress.totalScore % 1000) / 10}%` }}
+                      style={{ width: `${calculateLevelProgress(userProgress.totalScore)}%` }}
                     ></div>
                   </div>
                   <div className="flex justify-between items-center text-xs text-black/70 font-inter">
-                    <span>{userProgress.totalScore % 1000} points</span>
-                    <span>{1000 - (userProgress.totalScore % 1000)} to next level</span>
+                    <span>{userProgress.totalScore.toLocaleString()} points</span>
+                    <span>{getPointsToNextLevel(userProgress.totalScore).toLocaleString()} to next level</span>
                   </div>
                 </div>
               </div>
