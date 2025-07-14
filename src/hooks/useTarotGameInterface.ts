@@ -42,6 +42,7 @@ export const useTarotGameInterface = (
     level: 'Novice'
   });
   const [situationLoadingToast, setSituationLoadingToast] = useState(false);
+  const [errorToast, setErrorToast] = useState({ visible: false, message: '' });
 
   // Get persisted AI configuration from SeedingTab
   const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
@@ -54,7 +55,7 @@ export const useTarotGameInterface = (
     temperature: temperature || 0.7
   };
 
-  const { generateSituation, generateFallbackSituation, isGenerating } = useSituationGeneration();
+  const { generateSituation, isGenerating } = useSituationGeneration();
 
   useEffect(() => {
     if (userId) {
@@ -178,27 +179,18 @@ export const useTarotGameInterface = (
     } catch (error) {
       console.error('Failed to generate new situation:', error);
 
-      // Emergency fallback
-      if (gameState.currentCard) {
-        const emergency = generateFallbackSituation(gameState.currentCard);
-        const fullSituation = `${emergency.situation}\n\n${emergency.question}`;
-        const newOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
+      // Show error toast
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate situation. Please try again.';
+      setErrorToast({ visible: true, message: errorMessage });
 
-        setGameState(prev => ({
-          ...prev,
-          situation: fullSituation,
-          cardOrientation: newOrientation,
-          userInterpretation: '',
-          feedback: null,
-          isLoading: false
-        }));
-      }
+      // Reset game state to loading false
+      setGameState(prev => ({
+        ...prev,
+        isLoading: false
+      }));
 
-      // Delay hiding the toast for fallback too
-      setTimeout(() => {
-        setSituationLoadingToast(false);
-        console.log('StatusToast set to visible: false (fallback)');
-      }, 1000);
+      // Hide loading toast
+      setSituationLoadingToast(false);
     }
   };
 
@@ -218,6 +210,7 @@ export const useTarotGameInterface = (
     isFirstTimeCard,
     userProgress,
     situationLoadingToast,
+    errorToast,
     isGenerating,
     
     // Actions
@@ -228,6 +221,7 @@ export const useTarotGameInterface = (
     toggleHints,
     updateUserInterpretation,
     setSituationLoadingToast,
+    setErrorToast,
     
     // AI Config
     aiConfig

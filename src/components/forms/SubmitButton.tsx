@@ -41,7 +41,11 @@ const SubmitButton = React.memo(({
     <span className="relative z-10 flex items-center justify-center gap-2">
       {(isGenerating || isChartGenerating) ? (
         <>
-          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex items-center space-x-1">
+            <div className="w-1 h-1 bg-white animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-1 h-1 bg-white animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-1 h-1 bg-white animate-bounce"></div>
+          </div>
           Generating your chart...
         </>
       ) : (cachedChart || hasExistingChart) ? (

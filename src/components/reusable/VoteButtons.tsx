@@ -102,7 +102,11 @@ const VoteButton = React.memo(({
       title={isUpvote ? "Upvote" : "Downvote"}
     >
       {isLoading ? (
-        <div className={`${sizeConfig.iconSize} animate-spin rounded-full border-2 border-current border-t-transparent`} />
+        <div className="flex items-center justify-center space-x-1">
+          <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-1 h-1 bg-current animate-bounce"></div>
+        </div>
       ) : (
         <svg
           className={`${sizeConfig.iconSize} transition-transform group-hover:scale-110`}

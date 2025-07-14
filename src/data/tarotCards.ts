@@ -1211,3 +1211,69 @@ export const shuffleCards = (cards: TarotCard[]): TarotCard[] => {
   }
   return shuffled;
 };
+
+// Card progress interface for unused card selection
+interface CardProgress {
+  cardId: string;
+  uprightAttempts: number;
+  reversedAttempts: number;
+}
+
+// Get a card prioritizing ones that haven't been attempted yet
+export const getCardPrioritizingUnused = async (userId?: string): Promise<TarotCard> => {
+  // If no userId, fall back to random selection
+  if (!userId) {
+    return getRandomCard();
+  }
+
+  try {
+    // Fetch user's card progress
+    const response = await fetch(`/api/tarot/card-progress?userId=${userId}`);
+    if (!response.ok) {
+      console.warn('Failed to fetch card progress, using random selection');
+      return getRandomCard();
+    }
+
+    const data = await response.json();
+    const progressMap: Record<string, CardProgress> = data.progress || {};
+
+    // Find cards that have never been attempted (no upright or reversed attempts)
+    const unusedCards = tarotCards.filter(card => {
+      const progress = progressMap[card.id];
+      // Card is unused if it doesn't exist in progress or has 0 attempts for both orientations
+      return !progress || (progress.uprightAttempts === 0 && progress.reversedAttempts === 0);
+    });
+
+    // If there are unused cards, randomly select from them
+    if (unusedCards.length > 0) {
+      const randomIndex = Math.floor(Math.random() * unusedCards.length);
+      console.log(`Selected unused card: ${unusedCards[randomIndex].name} (${unusedCards.length} unused cards remaining)`);
+      return unusedCards[randomIndex];
+    }
+
+    // If all cards have been attempted, find cards with least attempts
+    const cardAttemptCounts = tarotCards.map(card => {
+      const progress = progressMap[card.id];
+      const totalAttempts = progress ? (progress.uprightAttempts + progress.reversedAttempts) : 0;
+      return { card, attempts: totalAttempts };
+    });
+
+    // Sort by least attempts and get the minimum attempt count
+    cardAttemptCounts.sort((a, b) => a.attempts - b.attempts);
+    const minAttempts = cardAttemptCounts[0].attempts;
+    
+    // Get all cards with the minimum attempt count
+    const leastAttemptedCards = cardAttemptCounts
+      .filter(item => item.attempts === minAttempts)
+      .map(item => item.card);
+
+    // Randomly select from least attempted cards
+    const randomIndex = Math.floor(Math.random() * leastAttemptedCards.length);
+    console.log(`Selected least attempted card: ${leastAttemptedCards[randomIndex].name} (${minAttempts} attempts)`);
+    return leastAttemptedCards[randomIndex];
+
+  } catch (error) {
+    console.warn('Error selecting prioritized card, falling back to random:', error);
+    return getRandomCard();
+  }
+};

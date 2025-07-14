@@ -37,12 +37,6 @@ export default function TarotLeaderboard({
   getUserLevel,
   isLoading = false
 }: TarotLeaderboardProps) {
-  console.log('TarotLeaderboard render:', { 
-    isLoading, 
-    leaderboardLength: leaderboard.length,
-    leaderboard: leaderboard.slice(0, 2) // First 2 entries for debugging
-  });
-  
   return (
     <div className="space-y-8">
       {/* Leaderboard */}

@@ -133,7 +133,11 @@ Can confirm - lost my job, ended a toxic relationship, and moved cities all duri
               >
                 {processingComments ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-1 h-1 bg-white animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-1 h-1 bg-white animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-1 h-1 bg-white animate-bounce"></div>
+                    </div>
                     Processing...
                   </>
                 ) : (

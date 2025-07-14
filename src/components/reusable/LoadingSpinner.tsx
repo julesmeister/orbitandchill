@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-type LoadingVariant = 'dots' | 'spinner' | 'pulse';
+type LoadingVariant = 'dots' | 'pulse';
 type LoadingSize = 'sm' | 'md' | 'lg';
 
 interface LoadingSpinnerProps {
@@ -25,21 +25,21 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     sm: {
       container: 'py-8',
       dots: 'w-2 h-2',
-      spinner: 'h-6 w-6',
+      pulse: 'h-6 w-6',
       title: 'text-lg',
       subtitle: 'text-sm',
     },
     md: {
       container: 'py-16',
       dots: 'w-3 h-3',
-      spinner: 'h-12 w-12',
+      pulse: 'h-12 w-12',
       title: 'text-2xl',
       subtitle: 'text-base',
     },
     lg: {
       container: 'py-24',
       dots: 'w-4 h-4',
-      spinner: 'h-16 w-16',
+      pulse: 'h-16 w-16',
       title: 'text-3xl',
       subtitle: 'text-lg',
     },
@@ -59,26 +59,16 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     </div>
   );
 
-  const renderSpinner = () => (
-    <div className="mb-4">
-      <div 
-        className={`${sizeClasses[size].spinner} animate-spin rounded-full border-b-2 border-gray-900 mx-auto`}
-      ></div>
-    </div>
-  );
-
   const renderPulse = () => (
     <div className="mb-4">
       <div 
-        className={`${sizeClasses[size].spinner} bg-gray-300 animate-pulse rounded-full mx-auto`}
+        className={`${sizeClasses[size].pulse} bg-gray-300 animate-pulse rounded-full mx-auto`}
       ></div>
     </div>
   );
 
   const renderAnimation = () => {
     switch (variant) {
-      case 'spinner':
-        return renderSpinner();
       case 'pulse':
         return renderPulse();
       case 'dots':

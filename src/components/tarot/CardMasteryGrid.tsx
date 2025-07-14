@@ -6,6 +6,7 @@ import { tarotCards, TarotCard } from '@/data/tarotCards';
 import { getCardImagePath } from '@/utils/tarotImageMapping';
 import { useImageCache } from '@/hooks/useImageCache';
 import Image from 'next/image';
+import TarotMatchingExercise from './TarotMatchingExercise';
 
 interface CardProgress {
   cardId: string;
@@ -29,6 +30,7 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
   const [cardProgress, setCardProgress] = useState<Record<string, CardProgress>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
+  const [showMatchingExercise, setShowMatchingExercise] = useState(false);
   const [suitFilter, setSuitFilter] = useState<'all' | 'major' | 'cups' | 'wands' | 'pentacles' | 'swords'>('all');
   const [masteryFilter, setMasteryFilter] = useState<'all' | 'not-started' | 'beginner' | 'learning' | 'good' | 'advanced' | 'master'>('all');
   const { preloadImages, getCachedImageSrc } = useImageCache();
@@ -247,17 +249,25 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
         <p className="text-sm text-black/70 font-inter">
           Showing <span className="font-semibold text-black">{getFilteredCards().length}</span> of {tarotCards.length} cards
         </p>
-        {(suitFilter !== 'all' || masteryFilter !== 'all') && (
+        <div className="flex gap-2">
           <button
-            onClick={() => {
-              setSuitFilter('all');
-              setMasteryFilter('all');
-            }}
-            className="text-xs px-3 py-1 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors font-space-grotesk"
+            onClick={() => setShowMatchingExercise(true)}
+            className="text-sm px-4 py-2 bg-black text-white border border-black hover:bg-white hover:text-black transition-colors font-space-grotesk"
           >
-            Clear Filters
+            🎯 Practice Matching
           </button>
-        )}
+          {(suitFilter !== 'all' || masteryFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSuitFilter('all');
+                setMasteryFilter('all');
+              }}
+              className="text-xs px-3 py-1 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors font-space-grotesk"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Card Grid */}
@@ -461,6 +471,17 @@ export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Matching Exercise Modal */}
+      {showMatchingExercise && (
+        <TarotMatchingExercise
+          isOpen={showMatchingExercise}
+          onClose={() => setShowMatchingExercise(false)}
+          filteredCards={getFilteredCards()}
+          userProgress={cardProgress}
+          userId={userId}
+        />
       )}
     </div>
   );

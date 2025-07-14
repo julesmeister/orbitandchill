@@ -321,7 +321,11 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   if (isLoading && people.length === 0) {
     return (
       <div className={`flex items-center justify-center p-4 bg-gray-100 rounded-lg ${className}`}>
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+        <div className="flex items-center space-x-1">
+          <div className="w-2 h-2 bg-blue-600 animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-2 h-2 bg-blue-600 animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-2 h-2 bg-blue-600 animate-bounce"></div>
+        </div>
         <span className="ml-2 text-sm text-gray-600">Loading people...</span>
       </div>
     );

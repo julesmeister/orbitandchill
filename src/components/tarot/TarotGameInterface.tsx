@@ -52,11 +52,13 @@ export default function TarotGameInterface({
     isFirstTimeCard,
     userProgress,
     situationLoadingToast,
+    errorToast,
     isGenerating,
     generateNewSituation,
     toggleHints,
     updateUserInterpretation,
-    setSituationLoadingToast
+    setSituationLoadingToast,
+    setErrorToast
   } = useTarotGameInterface(gameState, setGameState, userId);
 
   return (
@@ -266,9 +268,21 @@ export default function TarotGameInterface({
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-black mb-2 font-space-grotesk">Key Themes</h4>
+                      <h4 className="font-semibold text-black mb-2 font-space-grotesk">Card Meaning ({gameState.cardOrientation})</h4>
+                      <p className="text-sm text-black/70 font-inter mb-3">
+                        {gameState.cardOrientation === 'upright' 
+                          ? gameState.currentCard.uprightMeaning 
+                          : gameState.currentCard.reversedMeaning}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-black mb-2 font-space-grotesk">Key Themes ({gameState.cardOrientation})</h4>
                       <div className="flex flex-wrap gap-1">
-                        {gameState.currentCard.keywords.upright.slice(0, 4).map((keyword, index) => (
+                        {(gameState.cardOrientation === 'upright' 
+                          ? gameState.currentCard.keywords.upright 
+                          : gameState.currentCard.keywords.reversed
+                        ).slice(0, 4).map((keyword, index) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-black text-white text-xs font-inter"
@@ -282,10 +296,21 @@ export default function TarotGameInterface({
                     <div>
                       <h4 className="font-semibold text-black mb-2 font-space-grotesk">Interpretation Tips</h4>
                       <ul className="text-sm text-black/70 space-y-1 font-inter">
-                        <li>• Consider how the card's energy applies to the situation</li>
-                        <li>• Think about what advice this card would give</li>
-                        <li>• Connect the symbolism to the person's circumstances</li>
-                        <li>• Consider both positive and challenging aspects</li>
+                        {gameState.cardOrientation === 'upright' ? (
+                          <>
+                            <li>• Focus on the card's positive, flowing energy</li>
+                            <li>• Consider the natural expression of the card's themes</li>
+                            <li>• Think about growth, action, or manifestation</li>
+                            <li>• Look for opportunities and forward movement</li>
+                          </>
+                        ) : (
+                          <>
+                            <li>• Consider blocked, delayed, or internal energy</li>
+                            <li>• Think about lessons learned or past experiences</li>
+                            <li>• Look for what needs to be released or healed</li>
+                            <li>• Consider alternative perspectives or hidden aspects</li>
+                          </>
+                        )}
                       </ul>
                     </div>
 
@@ -360,6 +385,16 @@ export default function TarotGameInterface({
         status="loading"
         isVisible={situationLoadingToast}
         onHide={() => setSituationLoadingToast(false)}
+      />
+
+      {/* Status Toast for errors */}
+      <StatusToast
+        title="Generation Failed"
+        message={errorToast.message}
+        status="error"
+        isVisible={errorToast.visible}
+        onHide={() => setErrorToast({ visible: false, message: '' })}
+        duration={5000}
       />
     </div>
   );

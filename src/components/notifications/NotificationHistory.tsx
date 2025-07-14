@@ -321,7 +321,11 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
 
         {isLoading && notifications.length === 0 ? (
           <div className="text-center py-8">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-2 h-2 bg-blue-600 animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-blue-600 animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-blue-600 animate-bounce"></div>
+            </div>
             <p className="text-gray-600">Loading archived notifications...</p>
           </div>
         ) : notifications.length === 0 ? (

@@ -42,7 +42,11 @@ export default function ActionButton({
       {icon && <span className="text-base">{icon}</span>}
       {isLoading ? (
         <>
-          <div className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+          <div className="flex items-center space-x-1 mr-2">
+            <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-1 h-1 bg-current animate-bounce"></div>
+          </div>
           Loading...
         </>
       ) : (

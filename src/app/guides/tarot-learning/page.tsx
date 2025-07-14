@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useUserStore } from '@/store/userStore';
 import { hasPremiumAccess } from '@/utils/premiumHelpers';
@@ -12,10 +12,12 @@ import LevelBadge, { calculateLevel } from '@/components/tarot/LevelBadge';
 import TarotFreemiumModal from '@/components/tarot/TarotFreemiumModal';
 import TarotLeaderboard from '@/components/tarot/TarotLeaderboard';
 import TarotGameInterface from '@/components/tarot/TarotGameInterface';
+import StatusToast from '@/components/reusable/StatusToast';
 
 export default function TarotLearningPage() {
   const { user } = useUserStore();
   const [showFreemiumModal, setShowFreemiumModal] = useState(false);
+  const [initialLoadingToast, setInitialLoadingToast] = useState(false);
 
   // Check if user has premium access
   const userHasPremium = hasPremiumAccess(user);
@@ -59,8 +61,27 @@ export default function TarotLearningPage() {
       return;
     }
     
-    await gameStartGame();
+    // Show loading toast
+    setInitialLoadingToast(true);
+    
+    try {
+      await gameStartGame();
+    } catch (error) {
+      // Hide loading toast on error
+      setInitialLoadingToast(false);
+    }
   };
+
+  // Hide loading toast when game state changes
+  useEffect(() => {
+    if (gameState.isPlaying && !gameState.isLoading && gameState.situation) {
+      // Game has loaded successfully
+      setInitialLoadingToast(false);
+    } else if (!gameState.isPlaying && gameState.situation.includes('Failed to generate')) {
+      // Game failed to load
+      setInitialLoadingToast(false);
+    }
+  }, [gameState.isPlaying, gameState.isLoading, gameState.situation]);
 
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
@@ -219,6 +240,15 @@ export default function TarotLearningPage() {
           // Could redirect to upgrade page or show upgrade options
           console.log('User wants to upgrade to premium');
         }}
+      />
+
+      {/* Loading toast for initial game startup */}
+      <StatusToast
+        title="Starting Game"
+        message="Selecting your card and generating situation..."
+        status="loading"
+        isVisible={initialLoadingToast}
+        onHide={() => setInitialLoadingToast(false)}
       />
     </div>
   );

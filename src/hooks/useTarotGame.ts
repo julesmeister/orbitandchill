@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { getRandomCard, TarotCard } from '@/data/tarotCards';
+import { getRandomCard, getCardPrioritizingUnused, TarotCard } from '@/data/tarotCards';
 import { useSituationGeneration } from '@/hooks/useSituationGeneration';
 import { useSeedingPersistence } from '@/hooks/useSeedingPersistence';
 
@@ -37,7 +37,7 @@ interface LeaderboardEntry {
 export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => {
   // Get persisted AI configuration and situation generation hook
   const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
-  const { generateSituation, generateFallbackSituation } = useSituationGeneration();
+  const { generateSituation } = useSituationGeneration();
   
   // AI config with fallback
   const aiConfig = {
@@ -46,6 +46,15 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     apiKey: aiApiKey || '',
     temperature: temperature || 0.7
   };
+  
+  // Debug AI configuration
+  console.log('useTarotGame: AI Configuration loaded:', {
+    provider: aiProvider,
+    model: aiModel,
+    hasApiKey: !!aiApiKey,
+    apiKeyLength: aiApiKey?.length || 0,
+    temperature
+  });
   
   const [gameState, setGameState] = useState<GameState>({
     isPlaying: false,
@@ -95,22 +104,18 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
       const response = await fetch('/api/tarot/leaderboard');
       if (response.ok) {
         const data = await response.json();
-        console.log('Leaderboard API response:', data);
+        // console.log('Leaderboard API response:', data);
         const leaderboardData = data.leaderboard || [];
-        console.log('Setting leaderboard data:', leaderboardData.length, 'entries');
         setLeaderboard(leaderboardData);
-        console.log('Setting loading to false - success');
         setIsLeaderboardLoading(false);
       } else {
         console.warn('Failed to load leaderboard: HTTP', response.status);
         setLeaderboard([]);
-        console.log('Setting loading to false - http error');
         setIsLeaderboardLoading(false);
       }
     } catch (error) {
       console.warn('Failed to load leaderboard:', error);
       setLeaderboard([]);
-      console.log('Setting loading to false - catch error');
       setIsLeaderboardLoading(false);
     }
   }, []);
@@ -124,13 +129,13 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
   }, [userId, loadUserProgress, loadLeaderboard]);
 
   const startGame = async () => {
-    const randomCard = getRandomCard();
+    const prioritizedCard = await getCardPrioritizingUnused(userId);
     const initialOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
     
     setGameState({
       ...gameState,
       isPlaying: true,
-      currentCard: randomCard,
+      currentCard: prioritizedCard,
       cardOrientation: initialOrientation,
       situation: '',
       userInterpretation: '',
@@ -141,7 +146,7 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     // Generate AI situation for the starting card
     try {
       const generated = await generateSituation({
-        card: randomCard,
+        card: prioritizedCard,
         aiConfig,
         previousSituations: []
       });
@@ -156,14 +161,12 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     } catch (error) {
       console.error('Failed to generate starting situation:', error);
       
-      // Emergency fallback
-      const emergency = generateFallbackSituation(randomCard);
-      const fullSituation = `${emergency.situation}\n\n${emergency.question}`;
-      
+      // Set error state and stop the game
       setGameState(prev => ({
         ...prev,
-        situation: fullSituation,
-        isLoading: false
+        situation: 'Failed to generate situation. Please check your AI configuration and try again.',
+        isLoading: false,
+        isPlaying: false
       }));
     }
   };
@@ -213,12 +216,12 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
   };
 
   const nextCard = async () => {
-    const randomCard = getRandomCard();
+    const prioritizedCard = await getCardPrioritizingUnused(userId);
     const nextOrientation: 'upright' | 'reversed' = Math.random() < 0.5 ? 'upright' : 'reversed';
     
     setGameState(prev => ({
       ...prev,
-      currentCard: randomCard,
+      currentCard: prioritizedCard,
       cardOrientation: nextOrientation,
       userInterpretation: '',
       feedback: null,
@@ -228,7 +231,7 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     // Generate AI situation for the new card
     try {
       const generated = await generateSituation({
-        card: randomCard,
+        card: prioritizedCard,
         aiConfig,
         previousSituations: [] // Could track previous situations here too
       });
@@ -243,13 +246,10 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     } catch (error) {
       console.error('Failed to generate situation for next card:', error);
       
-      // Emergency fallback
-      const emergency = generateFallbackSituation(randomCard);
-      const fullSituation = `${emergency.situation}\n\n${emergency.question}`;
-      
+      // Set error state
       setGameState(prev => ({
         ...prev,
-        situation: fullSituation,
+        situation: 'Failed to generate new situation. Please check your AI configuration and try again.',
         isLoading: false
       }));
     }

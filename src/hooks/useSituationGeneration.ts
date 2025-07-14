@@ -24,69 +24,33 @@ interface GeneratedSituation {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
-// Fallback situations with questions
-const fallbackSituations = [
-  {
-    situation: "A young professional is considering leaving their stable corporate job to pursue their passion for sustainable farming. They have savings for 6 months but worry about disappointing their family's expectations.",
-    question: "What guidance does this card offer about following one's true calling versus maintaining security?",
-    context: "career_transition",
-    difficulty: "intermediate" as const
-  },
-  {
-    situation: "Someone is in a relationship that feels emotionally distant. Their partner works long hours and seems disconnected, but they still care deeply for each other.",
-    question: "How does this card illuminate the path to rekindling emotional intimacy and connection?",
-    context: "relationships",
-    difficulty: "beginner" as const
-  },
-  {
-    situation: "A person inherited a significant sum of money and is torn between investing in real estate, starting a business, or using it to travel the world while they're young.",
-    question: "What wisdom does this card provide about making choices that honor both practical needs and personal growth?",
-    context: "major_decisions",
-    difficulty: "advanced" as const
-  },
-  {
-    situation: "Adult siblings are in conflict over their mother's care as she develops dementia. One wants professional care, the other insists on family-only care, creating tension and stress.",
-    question: "What insight does this card offer about balancing love, responsibility, and practical limitations?",
-    context: "family_challenges",
-    difficulty: "advanced" as const
-  },
-  {
-    situation: "A creative person has been struggling with self-doubt and creative blocks. They question whether their art has value and if they should continue pursuing their creative dreams.",
-    question: "How does this card guide them toward reconnecting with their creative spirit and inner confidence?",
-    context: "self_expression",
-    difficulty: "intermediate" as const
-  }
-];
 
-const createAIPrompt = (card: TarotCard, previousSituations: string[] = []) => {
+const createAIPrompt = (previousSituations: string[] = []) => {
   const avoidList = previousSituations.length > 0 
     ? `\n\nAvoid these previously used scenarios: ${previousSituations.join('; ')}`
     : '';
 
-  return `You are an expert tarot reader creating realistic scenarios for learning card interpretation. 
+  return `You are creating realistic life scenarios for tarot learning. Your job is to create generic, challenging life situations that require critical thinking to interpret using tarot cards.
 
-Create a detailed, engaging situation for the card "${card.name}" (${card.type}${card.suit ? ` - ${card.suit}` : ''}).
-
-Card traditional meanings:
-- Upright: ${card.uprightMeaning}
-- Keywords: ${card.keywords.upright.join(', ')}
+DO NOT reference any specific card, tarot meanings, or tarot concepts in your response.
 
 Requirements:
 1. Create a realistic, relatable life situation (2-3 sentences)
-2. Include specific details that make it feel authentic
-3. End with a thoughtful question that can be answered using this card's energy
-4. The scenario should allow for interpretation of the card's themes
+2. Include specific details that make it feel authentic  
+3. End with an open-ended question about the situation that could be answered from multiple perspectives
+4. DO NOT mention tarot, cards, or any specific guidance - keep it completely generic
 5. Make it emotionally engaging but not overly dramatic
+6. The situation should be complex enough to allow various interpretations
 
 Format your response as:
-SITUATION: [detailed scenario]
-QUESTION: [specific question about the situation]
+SITUATION: [detailed scenario with NO tarot references]
+QUESTION: [open-ended question about the situation with NO mention of cards or guidance]
 CONTEXT: [one word: career/relationships/family/health/growth/finances]
 DIFFICULTY: [beginner/intermediate/advanced]${avoidList}
 
 Example:
 SITUATION: Maya, a 28-year-old teacher, discovered her best friend has been secretly dating her ex-boyfriend for months. She feels betrayed and confused about whether to confront them or distance herself from the friendship.
-QUESTION: What guidance does The Fool offer about approaching this situation with an open heart versus protecting herself from further hurt?
+QUESTION: How should Maya approach this situation - should she confront them directly or take time to process her feelings first?
 CONTEXT: relationships
 DIFFICULTY: intermediate`;
 };
@@ -124,28 +88,42 @@ const parseAIResponse = (response: string): GeneratedSituation | null => {
   }
 };
 
-const callAIProvider = async (card: TarotCard, config: SituationGenerationConfig, previousSituations: string[] = []): Promise<GeneratedSituation | null> => {
+const callAIProvider = async (config: SituationGenerationConfig, previousSituations: string[] = []): Promise<GeneratedSituation | null> => {
+  const requestBody = {
+    previousSituations,
+    aiConfig: {
+      provider: config.provider,
+      model: config.model,
+      apiKey: config.apiKey,
+      temperature: config.temperature || 0.7
+    }
+  };
+  
+  console.log('Frontend: Sending request to situation API:', {
+    provider: config.provider,
+    model: config.model,
+    hasApiKey: !!config.apiKey,
+    apiKeyLength: config.apiKey?.length || 0,
+    temperature: config.temperature
+  });
+  
   const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/tarot/generate-situation`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      cardName: card.name,
-      cardType: card.type,
-      cardSuit: card.suit,
-      uprightMeaning: card.uprightMeaning,
-      keywords: card.keywords.upright,
-      previousSituations,
-      aiConfig: {
-        provider: config.provider,
-        model: config.model,
-        apiKey: config.apiKey,
-        temperature: config.temperature || 0.7
-      }
-    })
+    body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {
-    throw new Error('AI provider request failed');
+    let errorMessage = `AI provider request failed (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      }
+    } catch {
+      // If we can't parse the error response, use the default message
+    }
+    throw new Error(errorMessage);
   }
 
   const result = await response.json();
@@ -174,74 +152,31 @@ export const useSituationGeneration = () => {
     setError(null);
 
     try {
-      // Try AI generation first
-      if (aiConfig.apiKey && aiConfig.provider) {
-        try {
-          const aiResult = await callAIProvider(card, aiConfig, previousSituations);
-          
-          if (aiResult) {
-            setIsGenerating(false);
-            return aiResult;
-          }
-        } catch (aiError) {
-          console.warn('AI generation failed, falling back to templates:', aiError);
-        }
+      // Try AI generation - no fallbacks
+      if (!aiConfig.apiKey || !aiConfig.provider) {
+        throw new Error('AI configuration is missing. Please set up your AI provider in the admin panel.');
       }
 
-      // Fallback to template-based generation
-      const availableSituations = fallbackSituations.filter(
-        situation => !previousSituations.some(prev => 
-          prev.includes(situation.situation.substring(0, 50))
-        )
-      );
-
-      const selectedSituation = availableSituations.length > 0 
-        ? availableSituations[Math.floor(Math.random() * availableSituations.length)]
-        : fallbackSituations[Math.floor(Math.random() * fallbackSituations.length)];
-
-      // Replace card reference in question
-      const adaptedQuestion = selectedSituation.question.replace(
-        /this card|The \w+/g, 
-        card.name
-      );
+      const aiResult = await callAIProvider(aiConfig, previousSituations);
+      
+      if (!aiResult) {
+        throw new Error('AI failed to generate a situation. Please try again.');
+      }
 
       setIsGenerating(false);
-      return {
-        situation: selectedSituation.situation,
-        question: adaptedQuestion,
-        context: selectedSituation.context,
-        difficulty: selectedSituation.difficulty
-      };
+      return aiResult;
 
     } catch (error) {
       console.error('Situation generation failed:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error occurred');
-      
-      // Emergency fallback
-      const emergency = fallbackSituations[0];
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate situation. Please try again.';
+      setError(errorMessage);
       setIsGenerating(false);
-      return {
-        situation: emergency.situation,
-        question: emergency.question.replace(/this card|The \w+/g, card.name),
-        context: emergency.context,
-        difficulty: emergency.difficulty
-      };
+      throw new Error(errorMessage);
     }
-  }, []);
-
-  const generateFallbackSituation = useCallback((card: TarotCard): GeneratedSituation => {
-    const situation = fallbackSituations[Math.floor(Math.random() * fallbackSituations.length)];
-    return {
-      situation: situation.situation,
-      question: situation.question.replace(/this card|The \w+/g, card.name),
-      context: situation.context,
-      difficulty: situation.difficulty
-    };
   }, []);
 
   return {
     generateSituation,
-    generateFallbackSituation,
     isGenerating,
     error
   };

@@ -254,10 +254,52 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
             {/* Main Reply */}
             <article className="bg-white border border-black p-4" itemScope itemType="https://schema.org/Comment">
               <div className="flex space-x-4">
-                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100">
-                  <span className="text-black font-bold text-lg font-space-grotesk">
-                    {reply.avatar}
-                  </span>
+                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100 overflow-hidden">
+                  {(() => {
+                    // Function to get a consistent avatar for a user
+                    const getAvatarForUser = (author: string, avatar: string) => {
+                      // If avatar looks like a path (starts with /) but might not exist, try to map it
+                      if (avatar && avatar.startsWith('/avatars/')) {
+                        // Generate a consistent avatar number based on username
+                        const hash = author.split('').reduce((a, b) => {
+                          a = ((a << 5) - a) + b.charCodeAt(0);
+                          return a & a;
+                        }, 0);
+                        const avatarNumber = Math.abs(hash % 36) + 1; // 1-36 to match available avatars
+                        return `/avatars/Avatar-${avatarNumber}.png`;
+                      }
+                      return avatar;
+                    };
+
+                    const avatarSrc = getAvatarForUser(reply.author, reply.avatar);
+                    
+                    if (avatarSrc && avatarSrc.startsWith('/')) {
+                      return (
+                        <Image
+                          src={avatarSrc}
+                          alt={`${reply.author}'s avatar`}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to initials if image fails to load
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `<span class="text-black font-bold text-lg font-space-grotesk">${reply.author.split(' ').map((n: string) => n[0]).join('').toUpperCase()}</span>`;
+                            }
+                          }}
+                        />
+                      );
+                    } else {
+                      return (
+                        <span className="text-black font-bold text-lg font-space-grotesk">
+                          {reply.avatar || reply.author.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                        </span>
+                      );
+                    }
+                  })()}
                 </div>
                 <div className="flex-1">
                   <header className="flex items-center space-x-3 mb-3">
@@ -308,10 +350,29 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
                     />
                     <article className="bg-white border border-black p-3 ml-4">
                       <div className="flex space-x-3">
-                        <div className="w-10 h-10 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100">
-                          <span className="text-black font-bold text-sm font-space-grotesk">
-                            {childReply.avatar}
-                          </span>
+                        <div className="w-10 h-10 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100 overflow-hidden">
+                          {childReply.avatar && childReply.avatar.startsWith('/') ? (
+                            <Image
+                              src={childReply.avatar}
+                              alt={`${childReply.author}'s avatar`}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Fallback to initials if image fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `<span class="text-black font-bold text-sm font-space-grotesk">${childReply.author.split(' ').map((n: string) => n[0]).join('').toUpperCase()}</span>`;
+                                }
+                              }}
+                            />
+                          ) : (
+                            <span className="text-black font-bold text-sm font-space-grotesk">
+                              {childReply.avatar || childReply.author.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                            </span>
+                          )}
                         </div>
                         <div className="flex-1">
                           <header className="flex items-center space-x-2 mb-2">

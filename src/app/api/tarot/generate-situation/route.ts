@@ -2,11 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface GenerateSituationRequest {
-  cardName: string;
-  cardType: string;
-  cardSuit?: string;
-  uprightMeaning: string;
-  keywords: string[];
   previousSituations?: string[];
   aiConfig: {
     provider: string;
@@ -26,12 +21,33 @@ interface GeneratedSituation {
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateSituationRequest = await request.json();
-    const { cardName, cardType, cardSuit, uprightMeaning, keywords, previousSituations = [], aiConfig } = body;
+    const { previousSituations = [], aiConfig } = body;
 
-    if (!cardName || !aiConfig) {
+    console.log('Generate situation API called with:', {
+      provider: aiConfig?.provider,
+      model: aiConfig?.model,
+      hasApiKey: !!aiConfig?.apiKey,
+      previousSituationsCount: previousSituations.length
+    });
+
+    if (!aiConfig) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields'
+        error: 'Missing AI configuration'
+      }, { status: 400 });
+    }
+
+    if (!aiConfig.apiKey) {
+      return NextResponse.json({
+        success: false,
+        error: 'AI API key is missing. Please configure your AI provider in the admin panel.'
+      }, { status: 400 });
+    }
+
+    if (!aiConfig.provider) {
+      return NextResponse.json({
+        success: false,
+        error: 'AI provider is missing. Please configure your AI provider in the admin panel.'
       }, { status: 400 });
     }
 
@@ -39,27 +55,32 @@ export async function POST(request: NextRequest) {
       ? `\n\nAvoid these previously used scenarios: ${previousSituations.join('; ')}`
       : '';
 
-    const prompt = `You are a creative writer creating realistic life scenarios for tarot learning. 
+    const prompt = `You are a creative writer creating diverse, realistic life scenarios for learning purposes.
 
-IMPORTANT: Do NOT reference any specific tarot card or tarot meanings. Create a completely random, realistic life situation that could happen to anyone.
+CRITICAL REQUIREMENTS:
+1. Create a COMPLETELY UNIQUE scenario each time - never repeat names, professions, or situations
+2. Use diverse character names from different cultures and backgrounds
+3. Vary the contexts: career, relationships, family, health, personal growth, finances
+4. DO NOT use common names like "Liam", "Sarah", "John" - be creative and diverse
+5. Each scenario must be distinctly different from any previous ones
+6. NO tarot, mystical, or fortune-telling references
 
-Requirements:
-1. Create a realistic, relatable life situation (1-2 sentences)
-2. Include specific details that make it feel authentic  
-3. End with a thoughtful question about the situation
-4. Keep the total scenario under 100 words
-5. DO NOT mention tarot, cards, or any mystical references
+Variety Guidelines:
+- Mix ages: teens, young adults, middle-aged, seniors
+- Diverse professions: artist, nurse, student, entrepreneur, retiree, etc.
+- Various life stages: single, married, divorced, new parent, empty nester
+- Different cultures and backgrounds represented in names and contexts
 
 Format your response as:
-SITUATION: [detailed scenario]
+SITUATION: [completely unique scenario with diverse character]
 QUESTION: [specific question about the situation]
 CONTEXT: [one word: career/relationships/family/health/growth/finances]
 DIFFICULTY: [beginner/intermediate/advanced]${avoidList}
 
 Example:
-SITUATION: Maya, a 28-year-old teacher, discovered her best friend has been secretly dating her ex-boyfriend for months. She feels betrayed and confused about whether to confront them or distance herself from the friendship.
-QUESTION: Should she confront them directly about the betrayal, or step back and protect her emotional well-being?
-CONTEXT: relationships
+SITUATION: Keiko, a 34-year-old graphic designer, just received news that her freelance contract won't be renewed. She has two months to find new income while supporting her elderly mother who recently moved in with her.
+QUESTION: Should she take a stable but lower-paying corporate job or risk pursuing bigger freelance clients?
+CONTEXT: career
 DIFFICULTY: intermediate`;
 
     let aiResponse = '';
@@ -67,6 +88,8 @@ DIFFICULTY: intermediate`;
     try {
       // Use different AI providers based on config
       if (aiConfig.provider === 'openrouter' && aiConfig.apiKey) {
+        console.log('Making OpenRouter API call with model:', aiConfig.model);
+        
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -83,16 +106,25 @@ DIFFICULTY: intermediate`;
                 content: prompt
               }
             ],
-            temperature: aiConfig.temperature || 0.7,
-            max_tokens: 120
+            temperature: Math.max(aiConfig.temperature || 0.7, 0.8),
+            max_tokens: 150
           })
         });
+
+        console.log('OpenRouter response status:', response.status);
 
         if (response.ok) {
           const data = await response.json();
           aiResponse = data.choices[0]?.message?.content || '';
+          console.log('OpenRouter response received, content length:', aiResponse.length);
+        } else {
+          const errorData = await response.text();
+          console.error('OpenRouter error:', response.status, errorData);
+          throw new Error(`OpenRouter API error (${response.status}): ${errorData}`);
         }
       } else if (aiConfig.provider === 'openai' && aiConfig.apiKey) {
+        console.log('Making OpenAI API call with model:', aiConfig.model || 'gpt-4o-mini');
+        
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -107,18 +139,29 @@ DIFFICULTY: intermediate`;
                 content: prompt
               }
             ],
-            temperature: aiConfig.temperature || 0.7,
-            max_tokens: 120
+            temperature: Math.max(aiConfig.temperature || 0.7, 0.8),
+            max_tokens: 150
           })
         });
+
+        console.log('OpenAI response status:', response.status);
 
         if (response.ok) {
           const data = await response.json();
           aiResponse = data.choices[0]?.message?.content || '';
+          console.log('OpenAI response received, content length:', aiResponse.length);
+        } else {
+          const errorData = await response.text();
+          console.error('OpenAI error:', response.status, errorData);
+          throw new Error(`OpenAI API error (${response.status}): ${errorData}`);
         }
+      } else {
+        throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
       }
     } catch (error) {
       console.error('AI API call failed:', error);
+      // Re-throw the error so it gets handled by the main catch block
+      throw error;
     }
 
     if (aiResponse) {
@@ -132,18 +175,18 @@ DIFFICULTY: intermediate`;
       }
     }
 
-    // Fallback if AI fails
-    const fallback = generateFallbackSituation(cardName);
+    // No fallback - return error if AI fails
     return NextResponse.json({
-      success: true,
-      ...fallback
-    });
+      success: false,
+      error: 'Failed to generate situation. Please try again.'
+    }, { status: 500 });
 
   } catch (error) {
     console.error('Situation generation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json({
       success: false,
-      error: 'Internal server error'
+      error: errorMessage
     }, { status: 500 });
   }
 }
@@ -181,58 +224,3 @@ function parseAIResponse(response: string): GeneratedSituation | null {
   }
 }
 
-function generateFallbackSituation(cardName: string): GeneratedSituation {
-  const fallbackSituations = [
-    {
-      situation: "A young professional is considering leaving their stable corporate job to pursue their passion for sustainable farming. They have savings for 6 months but worry about disappointing their family's expectations.",
-      question: "Should they take the leap into an uncertain but fulfilling path, or maintain financial security?",
-      context: "career",
-      difficulty: "intermediate" as const
-    },
-    {
-      situation: "Someone is in a relationship that feels emotionally distant. Their partner works long hours and seems disconnected, but they still care deeply for each other.",
-      question: "How can they rebuild intimacy while respecting their partner's work demands?",
-      context: "relationships",
-      difficulty: "beginner" as const
-    },
-    {
-      situation: "A person inherited a significant sum of money and is torn between investing in real estate, starting a business, or using it to travel the world while they're young.",
-      question: "Which choice would best balance their future security with present fulfillment?",
-      context: "finances",
-      difficulty: "advanced" as const
-    },
-    {
-      situation: "Adult siblings are in conflict over their mother's care as she develops dementia. One wants professional care, the other insists on family-only care, creating tension and stress.",
-      question: "How can they find a solution that honors both their mother's needs and family unity?",
-      context: "family",
-      difficulty: "advanced" as const
-    },
-    {
-      situation: "A creative person has been struggling with self-doubt and creative blocks. They question whether their art has value and if they should continue pursuing their creative dreams.",
-      question: "How can they overcome these doubts and reconnect with their creative passion?",
-      context: "growth",
-      difficulty: "intermediate" as const
-    },
-    {
-      situation: "A college student is feeling overwhelmed by academic pressure and social expectations. They're considering changing majors but worry about disappointing their parents who have strong opinions about their future.",
-      question: "Should they prioritize their own interests or their family's expectations?",
-      context: "growth",
-      difficulty: "beginner" as const
-    },
-    {
-      situation: "A person's elderly neighbor has been showing signs of neglect and possible elder abuse from their caregiver. The person is unsure whether to intervene or mind their own business.",
-      question: "What's the right balance between helping and respecting boundaries?",
-      context: "family",
-      difficulty: "advanced" as const
-    },
-    {
-      situation: "Someone received a job offer in another city that would advance their career significantly, but it means leaving behind their close-knit friend group and familiar environment.",
-      question: "Is career advancement worth leaving their support system behind?",
-      context: "career",
-      difficulty: "intermediate" as const
-    }
-  ];
-
-  const selected = fallbackSituations[Math.floor(Math.random() * fallbackSituations.length)];
-  return selected;
-}

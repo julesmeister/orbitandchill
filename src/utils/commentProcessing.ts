@@ -140,7 +140,7 @@ export function parseAICommentsResponse(aiOutput: string): {
         console.log('⚠️ JSON appears truncated, attempting comprehensive repair...');
         
         // Find all complete comment objects and reconstruct array
-        const objectMatches = arrayString.match(/\{\s*"originalComment"\s*:\s*"[^"]*"\s*,\s*"rephrasedComment"\s*:\s*"[^"]*"\s*\}/gs);
+        const objectMatches = arrayString.match(/\{\s*"originalComment"\s*:\s*"[^"]*"\s*,\s*"rephrasedComment"\s*:\s*"[^"]*"\s*\}/g);
         
         if (objectMatches && objectMatches.length > 0) {
           console.log(`🔧 Found ${objectMatches.length} complete objects, reconstructing array`);
@@ -167,7 +167,7 @@ export function parseAICommentsResponse(aiOutput: string): {
         const manualResults = [];
         
         // Find all complete comment pairs, being more flexible with content
-        const commentObjects = arrayString.match(/\{\s*"originalComment"\s*:\s*"[^"]*"\s*,\s*"rephrasedComment"\s*:\s*"[^"]*"\s*\}/gs);
+        const commentObjects = arrayString.match(/\{\s*"originalComment"\s*:\s*"[^"]*"\s*,\s*"rephrasedComment"\s*:\s*"[^"]*"\s*\}/g);
         
         if (commentObjects && commentObjects.length > 0) {
           console.log(`Found ${commentObjects.length} complete comment objects`);
@@ -306,8 +306,8 @@ COMMENT TO REPHRASE: "${item.originalComment}"`
     const originalData = commentsWithPersonas[i];
     
     // Use rephrased comment if available, otherwise fall back to original
-    const rephrasedComment = aiResult.rephrasedComment || aiResult.rephrased || originalData.originalComment;
-    const isRephrased = !!(aiResult.rephrasedComment || aiResult.rephrased);
+    const rephrasedComment = aiResult.rephrasedComment || originalData.originalComment;
+    const isRephrased = !!aiResult.rephrasedComment;
     
     console.log(`📝 Comment ${i + 1}: Original="${originalData.originalComment.substring(0, 50)}..." → Rephrased="${rephrasedComment.substring(0, 50)}..." (rephrased: ${isRephrased})`);
     

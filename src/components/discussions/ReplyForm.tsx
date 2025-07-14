@@ -104,7 +104,11 @@ export default function ReplyForm({
                 >
                   {isSubmitting ? (
                     <div className="flex items-center space-x-2">
-                      <div className="animate-spin border-2 border-gray-400 border-t-transparent w-4 h-4 rounded-full"></div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-1 h-1 bg-gray-400 animate-bounce [animation-delay:-0.3s]"></div>
+                        <div className="w-1 h-1 bg-gray-400 animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-1 h-1 bg-gray-400 animate-bounce"></div>
+                      </div>
                       <span>Posting...</span>
                     </div>
                   ) : (

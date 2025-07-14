@@ -26,7 +26,11 @@ export default function TrafficSourcesChart({ data, isLoading }: TrafficSourcesC
     return (
       <div className="h-64 flex items-center justify-center bg-gray-50 border border-black">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-black border-t-transparent animate-spin mx-auto mb-2"></div>
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-2 h-2 bg-black animate-bounce"></div>
+          </div>
           <p className="font-open-sans text-black/60 text-sm">Loading traffic data...</p>
         </div>
       </div>

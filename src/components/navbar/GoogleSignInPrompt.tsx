@@ -106,7 +106,11 @@ const GoogleSignInPrompt = React.memo(({
           >
             {isAuthLoading ? (
               <>
-                <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex items-center space-x-1">
+                  <div className="w-1 h-1 bg-white animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-1 h-1 bg-white animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-1 h-1 bg-white animate-bounce"></div>
+                </div>
                 <span>Signing in...</span>
               </>
             ) : (

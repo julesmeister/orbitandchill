@@ -248,6 +248,52 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
     }
   };
 
+  // Handle fixing avatar paths
+  const handleFixAvatarPaths = async () => {
+    showLoadingToast('Fixing Avatar Paths', 'Updating avatar paths for users with incorrect file names...');
+    
+    try {
+      const response = await fetch('/api/admin/fix-avatar-paths', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showSuccessToast(
+          'Avatar Paths Fixed', 
+          `Successfully updated avatar paths for ${result.fixedCount} users out of ${result.totalUsers} total users.`
+        );
+        setSeedingResults((prev: any) => ({
+          ...prev,
+          success: true,
+          message: `Fixed avatar paths for ${result.fixedCount} users`,
+          fixedAvatars: true,
+          fixedCount: result.fixedCount,
+          totalUsers: result.totalUsers,
+          fixedUsers: result.fixedUsers
+        }));
+      } else {
+        showErrorToast('Fix Avatar Paths Failed', result.error || 'Unknown error occurred while fixing avatar paths');
+        setSeedingResults((prev: any) => ({
+          ...prev,
+          success: false,
+          error: result.error
+        }));
+      }
+    } catch (error) {
+      showErrorToast('Fix Avatar Paths Error', 'Failed to fix avatar paths: ' + (error as Error).message);
+      setSeedingResults((prev: any) => ({
+        ...prev,
+        success: false,
+        error: 'Failed to fix avatar paths: ' + (error as Error).message
+      }));
+    }
+  };
+
   // Handle comments processing
   const handleProcessComments = async (commentsText: string) => {
     if (!aiApiKey.trim()) {
@@ -421,7 +467,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
       return updated;
     });
     
-    setSeedingResults(prev => ({
+    setSeedingResults((prev: any) => ({
       ...prev,
       message: 'Replies cleared from preview'
     }));
@@ -438,7 +484,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
       return updated;
     });
     
-    setSeedingResults(prev => ({
+    setSeedingResults((prev: any) => ({
       ...prev,
       message: 'Reply content updated'
     }));
@@ -536,6 +582,28 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           </div>
         )}
 
+        {/* Fix Avatar Paths */}
+        {seedUsersInitialized && (
+          <div className="bg-orange-50 border border-orange-200 mb-8 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-space-grotesk font-semibold text-orange-800 mb-2">
+                  Fix Avatar Paths
+                </h3>
+                <p className="text-orange-700 font-open-sans">
+                  Update any existing users with incorrect avatar file names to use the correct Avatar-X.png format from /public/avatars/.
+                </p>
+              </div>
+              <button
+                onClick={handleFixAvatarPaths}
+                className="px-6 py-3 bg-orange-600 text-white font-space-grotesk font-semibold hover:bg-orange-700 transition-colors"
+              >
+                Fix Avatar Paths
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Control Panel */}
         <div className="bg-white border border-black mb-8">
           <div className="p-6">
@@ -606,6 +674,31 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
                       <ul className="text-sm text-green-700 font-open-sans space-y-1">
                         <li>• {seedingResults.processedDiscussions} discussions processed by AI</li>
                         <li>• {seedingResults.totalReplies || seedingResults.estimatedReplies || 0} replies generated</li>
+                      </ul>
+                    )}
+                    {seedingResults.fixedAvatars && (
+                      <ul className="text-sm text-green-700 font-open-sans space-y-1">
+                        <li>• {seedingResults.fixedCount} users had their avatar paths updated</li>
+                        <li>• {seedingResults.totalUsers} total users checked</li>
+                        {seedingResults.fixedUsers && seedingResults.fixedUsers.length > 0 && (
+                          <li className="mt-2">
+                            <details className="cursor-pointer">
+                              <summary className="text-green-600 hover:text-green-800">View updated users</summary>
+                              <div className="mt-2 ml-4 space-y-1">
+                                {seedingResults.fixedUsers.slice(0, 10).map((user: any) => (
+                                  <div key={user.id} className="text-xs">
+                                    <strong>{user.username}</strong>: {user.oldAvatar} → {user.newAvatar}
+                                  </div>
+                                ))}
+                                {seedingResults.fixedUsers.length > 10 && (
+                                  <div className="text-xs text-green-600">
+                                    ...and {seedingResults.fixedUsers.length - 10} more
+                                  </div>
+                                )}
+                              </div>
+                            </details>
+                          </li>
+                        )}
                       </ul>
                     )}
                   </div>
@@ -739,9 +832,11 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
                 {/* Status icon */}
                 <div className="flex-shrink-0" style={{ color: mainToastProps.toastStatus === 'error' ? '#ffffff' : '#000000' }}>
                   {mainToastProps.toastStatus === 'loading' ? (
-                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-1 h-1 bg-current animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-1 h-1 bg-current animate-bounce"></div>
+                    </div>
                   ) : mainToastProps.toastStatus === 'error' ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
