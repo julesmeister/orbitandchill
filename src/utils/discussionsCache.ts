@@ -13,7 +13,7 @@ interface CacheState {
 }
 
 export class DiscussionsCache {
-  private static CACHE_KEY = 'discussions_cache_v2';
+  private static CACHE_KEY = 'discussions_cache_v3';
   
   // Get cached discussions data
   static getCached(): { data: any[] | null; isFromCache: boolean; userId?: string; timestamp?: number } {

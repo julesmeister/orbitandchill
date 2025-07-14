@@ -26,6 +26,7 @@ interface TarotLeaderboardProps {
   user: any;
   userHasPremium: boolean;
   getUserLevel: (accuracy: number) => string;
+  isLoading?: boolean;
 }
 
 export default function TarotLeaderboard({ 
@@ -33,8 +34,15 @@ export default function TarotLeaderboard({
   userProgress, 
   user, 
   userHasPremium, 
-  getUserLevel 
+  getUserLevel,
+  isLoading = false
 }: TarotLeaderboardProps) {
+  console.log('TarotLeaderboard render:', { 
+    isLoading, 
+    leaderboardLength: leaderboard.length,
+    leaderboard: leaderboard.slice(0, 2) // First 2 entries for debugging
+  });
+  
   return (
     <div className="space-y-8">
       {/* Leaderboard */}
@@ -43,7 +51,7 @@ export default function TarotLeaderboard({
           <h3 className="text-lg font-bold font-space-grotesk text-black">Leaderboard</h3>
           <div className="flex items-center gap-2">
             <div className="text-xs text-black/50 font-inter">
-              {leaderboard.length} players
+              {isLoading ? 'Loading...' : `${leaderboard.length} players`}
             </div>
             {userHasPremium && leaderboard.length > 5 && (
               <Link 
@@ -57,7 +65,14 @@ export default function TarotLeaderboard({
         </div>
 
         <div className="bg-white border border-black overflow-hidden">
-          {leaderboard.length > 0 ? (
+          {isLoading ? (
+            <div className="p-6 text-center text-gray-500">
+              <div className="w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                <div className="animate-spin text-xl">⏳</div>
+              </div>
+              <p className="text-sm text-black/70 font-inter">Loading leaderboard...</p>
+            </div>
+          ) : (!isLoading && leaderboard.length > 0) ? (
             <div className="divide-y divide-black">
               {leaderboard.slice(0, 5).map((entry, index) => (
                 <div key={entry.id} className="p-3 flex items-center gap-3">

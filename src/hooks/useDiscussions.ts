@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { stripHtmlTags } from '@/utils/textUtils';
-import { generateSEOSlug } from '@/utils/slugify';
+import { generateSlug } from '@/utils/slugify';
 import { useUserStore } from '@/store/userStore';
 import { DiscussionsCache } from '@/utils/discussionsCache';
 
@@ -102,7 +102,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
           
           return {
             ...d,
-            slug: d.slug || generateSEOSlug(d.title),
+            slug: d.slug || generateSlug(d.title),
             createdAt: convertTimestamp(d.createdAt),
             updatedAt: convertTimestamp(d.updatedAt),
             lastActivity: convertTimestamp(d.lastActivity),
@@ -170,7 +170,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
             
             const transformed = {
               ...d,
-              slug: d.slug || generateSEOSlug(d.title),
+              slug: d.slug || generateSlug(d.title),
               createdAt: convertTimestamp(d.createdAt),
               updatedAt: convertTimestamp(d.updatedAt),
               lastActivity: convertTimestamp(d.lastActivity),

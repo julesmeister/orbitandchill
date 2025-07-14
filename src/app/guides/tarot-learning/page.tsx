@@ -36,6 +36,7 @@ export default function TarotLearningPage() {
     setGameState,
     userProgress,
     leaderboard,
+    isLeaderboardLoading,
     startGame: gameStartGame,
     submitInterpretation,
     nextCard,
@@ -164,6 +165,7 @@ export default function TarotLearningPage() {
                   user={user}
                   userHasPremium={userHasPremium}
                   getUserLevel={getUserLevelFromAccuracy}
+                  isLoading={isLeaderboardLoading}
                 />
                 
                 {!userHasPremium && (

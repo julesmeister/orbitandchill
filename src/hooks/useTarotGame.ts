@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getRandomCard, TarotCard } from '@/data/tarotCards';
 import { useSituationGeneration } from '@/hooks/useSituationGeneration';
 import { useSeedingPersistence } from '@/hooks/useSeedingPersistence';
@@ -67,16 +67,14 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
   });
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-
-  // Load user progress and leaderboard
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(true);
+  
+  // Debug logging for loading state changes
   useEffect(() => {
-    if (userId) {
-      loadUserProgress();
-    }
-    loadLeaderboard();
-  }, [userId]);
+    console.log('isLeaderboardLoading changed:', isLeaderboardLoading);
+  }, [isLeaderboardLoading]);
 
-  const loadUserProgress = async () => {
+  const loadUserProgress = useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -88,19 +86,42 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     } catch (error) {
       console.warn('Failed to load user progress:', error);
     }
-  };
+  }, [userId]);
 
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = useCallback(async () => {
+    console.log('Loading leaderboard - setting loading to true');
+    setIsLeaderboardLoading(true);
     try {
       const response = await fetch('/api/tarot/leaderboard');
       if (response.ok) {
         const data = await response.json();
-        setLeaderboard(data.leaderboard);
+        console.log('Leaderboard API response:', data);
+        const leaderboardData = data.leaderboard || [];
+        console.log('Setting leaderboard data:', leaderboardData.length, 'entries');
+        setLeaderboard(leaderboardData);
+        console.log('Setting loading to false - success');
+        setIsLeaderboardLoading(false);
+      } else {
+        console.warn('Failed to load leaderboard: HTTP', response.status);
+        setLeaderboard([]);
+        console.log('Setting loading to false - http error');
+        setIsLeaderboardLoading(false);
       }
     } catch (error) {
       console.warn('Failed to load leaderboard:', error);
+      setLeaderboard([]);
+      console.log('Setting loading to false - catch error');
+      setIsLeaderboardLoading(false);
     }
-  };
+  }, []);
+
+  // Load user progress and leaderboard
+  useEffect(() => {
+    if (userId) {
+      loadUserProgress();
+    }
+    loadLeaderboard();
+  }, [userId, loadUserProgress, loadLeaderboard]);
 
   const startGame = async () => {
     const randomCard = getRandomCard();
@@ -271,6 +292,7 @@ export const useTarotGame = (userId?: string, onUsageIncrement?: () => void) => 
     setGameState,
     userProgress,
     leaderboard,
+    isLeaderboardLoading,
     
     // Actions
     startGame,

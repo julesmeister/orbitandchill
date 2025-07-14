@@ -261,17 +261,9 @@ export class DiscussionService {
         args: [slug]
       });
       
-      console.log('🔍 Searching for slug:', slug);
-      console.log('🔍 Raw SQL result rows:', rawResult.rows?.length || 0);
-      
       if (rawResult.rows && rawResult.rows.length > 0) {
         // Found discussion with matching slug
         const row = rawResult.rows[0];
-        console.log('🔍 Found matching discussion:', { 
-          id: row.id, 
-          title: row.title,
-          slug: row.slug
-        });
             
             return {
               id: row.id,

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { getDbAsync } from '@/db/index-turso-http';
 import { SEED_PERSONA_TEMPLATES } from '@/data/seedPersonas';
+import { generateSlug } from '@/utils/slugify';
 
 // Ensure seeding tables exist
 export const ensureSeedingTablesExist = async (): Promise<boolean> => {
@@ -510,16 +511,20 @@ export const createDiscussion = async (discussionData: any): Promise<string | nu
     if (!db) return null;
 
     const discussionId = `disc_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    
+    // Generate slug from title
+    const slug = generateSlug(discussionData.title);
 
     await db.client.execute({
       sql: `INSERT INTO discussions (
-        id, title, excerpt, content, author_name, author_id, category,
+        id, title, slug, excerpt, content, author_name, author_id, category,
         replies, views, last_activity, created_at, updated_at,
         is_locked, is_pinned, tags, upvotes, downvotes, is_blog_post, is_published
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         discussionId,
         discussionData.title,
+        slug,
         discussionData.excerpt || discussionData.content.substring(0, 200) + '...',
         discussionData.content,
         discussionData.authorName,
