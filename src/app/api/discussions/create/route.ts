@@ -16,6 +16,14 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json();
     const { title, slug, content, excerpt, category, tags, embeddedChart, embeddedVideo, isBlogPost, isPublished, isDraft, authorId } = body;
+    
+    // Generate slug from title if not provided
+    const finalSlug = slug || title.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-')         // Replace spaces with hyphens
+      .replace(/-+/g, '-')          // Replace multiple hyphens with single
+      .replace(/^-|-$/g, '')        // Remove leading/trailing hyphens
+      .substring(0, 50);            // Limit length
 
     try {
       const { db } = await initializeDatabase();
@@ -29,7 +37,7 @@ export async function POST(request: NextRequest) {
         const fallbackDiscussion = {
           id: nanoid(12),
           title,
-          slug,
+          slug: finalSlug,
           content,
           excerpt: excerpt || content.substring(0, 150) + '...',
           authorId: authorId || `anon_${Date.now()}`,
@@ -92,7 +100,7 @@ export async function POST(request: NextRequest) {
       // Create the discussion with tags directly stored in the discussions table
       const discussion = await DiscussionService.createDiscussion({
         title,
-        slug,
+        slug: finalSlug,
         content,
         excerpt: excerpt || content.substring(0, 150) + '...',
         authorId: user.id,

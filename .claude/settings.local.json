@@ -76,7 +76,8 @@
       "Bash(true)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next lint --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=512\" npx eslint src/app/events/old.tsx --quiet)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next build --no-lint)"
     ],
     "deny": []
   }

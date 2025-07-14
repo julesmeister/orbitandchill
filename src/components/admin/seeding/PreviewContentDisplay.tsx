@@ -16,6 +16,8 @@ interface PreviewContentDisplayProps {
   onDeleteReply: (discussionIndex: number, replyId: string) => void;
   onMoodSelect: (discussionIndex: number, mood: string) => void;
   onToggleExpandReplies: (discussionIndex: number) => void;
+  onClearReplies?: (discussionIndex: number) => void;
+  onUpdateReply?: (discussionIndex: number, replyId: string, newContent: string) => void;
 }
 
 const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
@@ -28,7 +30,31 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
   onDeleteReply,
   onMoodSelect,
   onToggleExpandReplies,
+  onClearReplies,
+  onUpdateReply,
 }) => {
+  const [editingReply, setEditingReply] = React.useState<{discussionIndex: number, replyIndex: number} | null>(null);
+  const [editContent, setEditContent] = React.useState('');
+  
+  // Functions for inline editing
+  const startEditing = (discussionIndex: number, replyIndex: number, currentContent: string) => {
+    setEditingReply({ discussionIndex, replyIndex });
+    setEditContent(currentContent);
+  };
+  
+  const saveEdit = (discussionIndex: number, replyId: string) => {
+    if (onUpdateReply && editContent.trim()) {
+      onUpdateReply(discussionIndex, replyId, editContent.trim());
+    }
+    setEditingReply(null);
+    setEditContent('');
+  };
+  
+  const cancelEdit = () => {
+    setEditingReply(null);
+    setEditContent('');
+  };
+  
   // Debug: Log when content is available
   if (previewContent && previewContent.length > 0) {
     console.log('🔄 PreviewContentDisplay rendering', previewContent.length, 'discussions');
@@ -45,9 +71,25 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
           <h2 className="font-space-grotesk font-semibold text-black">
             AI-Processed Content Preview
           </h2>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-            <span className="text-black font-medium">PREVIEW MODE</span>
+          <div className="flex items-center gap-4">
+            {onClearReplies && previewContent.some(item => item.replies && item.replies.length > 0) && (
+              <button
+                onClick={() => {
+                  // Clear replies for all discussions
+                  previewContent.forEach((_, index) => {
+                    if (onClearReplies) onClearReplies(index);
+                  });
+                }}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium border border-black transition-colors"
+                title="Clear all accumulated replies"
+              >
+                Clear Replies
+              </button>
+            )}
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+              <span className="text-black font-medium">PREVIEW MODE</span>
+            </div>
           </div>
         </div>
         <div className="p-3 bg-yellow-50 border border-yellow-300 rounded">
@@ -209,7 +251,64 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
                             </div>
                             <div className="flex-1">
                               <div className="font-semibold text-blue-800 mb-1 text-sm">{reply.authorName}</div>
-                              <div className="text-gray-700 text-sm leading-relaxed">{reply.content}</div>
+                              {editingReply?.discussionIndex === index && editingReply?.replyIndex === replyIdx ? (
+                                // Editing mode - seamless inline editor that looks like normal text
+                                <div>
+                                  <div
+                                    contentEditable
+                                    suppressContentEditableWarning={true}
+                                    className="text-gray-700 text-sm leading-relaxed outline-none focus:outline-none bg-transparent min-h-[1.25rem] whitespace-pre-wrap"
+                                    style={{ 
+                                      lineHeight: '1.5',
+                                      fontFamily: 'inherit'
+                                    }}
+                                    onInput={(e) => setEditContent(e.currentTarget.textContent || '')}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && e.ctrlKey) {
+                                        e.preventDefault();
+                                        saveEdit(index, reply.id);
+                                      }
+                                      if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        cancelEdit();
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      // Auto-save on blur
+                                      if (editContent.trim() && editContent !== reply.content) {
+                                        saveEdit(index, reply.id);
+                                      } else {
+                                        cancelEdit();
+                                      }
+                                    }}
+                                    ref={(el) => {
+                                      if (el && editingReply?.discussionIndex === index && editingReply?.replyIndex === replyIdx) {
+                                        el.textContent = editContent;
+                                        el.focus();
+                                        // Place cursor at end
+                                        const range = document.createRange();
+                                        const sel = window.getSelection();
+                                        range.selectNodeContents(el);
+                                        range.collapse(false);
+                                        sel?.removeAllRanges();
+                                        sel?.addRange(range);
+                                      }
+                                    }}
+                                  />
+                                  <div className="text-xs text-gray-400 mt-1 opacity-75">
+                                    Ctrl+Enter to save, Esc to cancel, or click outside to auto-save
+                                  </div>
+                                </div>
+                              ) : (
+                                // Display mode - click to edit
+                                <div 
+                                  className="text-gray-700 text-sm leading-relaxed cursor-pointer hover:bg-gray-50 rounded px-1 py-0.5 transition-colors"
+                                  onClick={() => startEditing(index, replyIdx, reply.content)}
+                                  title="Click to edit this reply"
+                                >
+                                  {reply.content}
+                                </div>
+                              )}
                               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                                 <span>↑ {reply.upvotes || 0}</span>
                                 <span>↓ {reply.downvotes || 0}</span>

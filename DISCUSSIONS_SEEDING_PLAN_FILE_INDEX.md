@@ -32,6 +32,10 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **src/app/api/admin/transform-with-ai/route.ts** - Main AI transformation endpoint
 - **src/app/api/admin/generate-reply/route.ts** - AI reply generation endpoint
 - **src/app/api/admin/process-pasted-content/route.ts** - Content parsing and preprocessing
+- **src/app/api/admin/process-comments/route.ts** - **NEW: AI comment processing and rephrasing**
+
+### AI Utility Functions
+- **src/utils/commentProcessing.ts** - **NEW: Comment extraction, AI rephrasing, and robust JSON parsing**
 
 ### Custom Hooks for AI Operations
 - **src/hooks/useAiConfiguration.ts** - AI provider and model configuration
@@ -40,6 +44,8 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **src/hooks/useGenerationSettings.ts** - Reply and voting generation settings
 - **src/hooks/useSeedingPersistence.ts** - **STATE PERSISTENCE & RECOVERY** with localStorage
 - **src/hooks/useSeedingOperations.ts** - Core seeding operations and AI processing
+- **src/hooks/useReplyManagement.ts** - **NEW: Reply generation with toast notifications**
+- **src/hooks/useToastNotifications.ts** - **NEW: Centralized toast notification system**
 
 ## 🔄 Seeding Execution & Progress
 
@@ -69,6 +75,16 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **src/components/admin/AdminDashboard.tsx** - Main admin dashboard
 - **src/components/admin/AdminHeader.tsx** - Admin navigation header
 - **src/components/admin/SeedingTab.tsx** - **PRIMARY SEEDING INTERFACE** with all UI components
+
+### Seeding UI Components
+- **src/components/admin/seeding/AIConfigurationForm.tsx** - AI model and API configuration
+- **src/components/admin/seeding/ContentInputForm.tsx** - Content input with comment processing
+- **src/components/admin/seeding/PreviewContentDisplay.tsx** - **ENHANCED: Inline editing, clear replies, seamless UX**
+- **src/components/admin/seeding/GenerationSettings.tsx** - Reply generation controls
+- **src/components/admin/seeding/UserPersonaManager.tsx** - Persona selection interface
+- **src/components/admin/seeding/ProcessSteps.tsx** - Visual process workflow
+- **src/components/admin/seeding/SeedingActionButtons.tsx** - Main action controls
+- **src/components/admin/seeding/PersonaSelector.tsx** - Active persona management
 
 ### Supporting Admin Components
 - **src/components/admin/AuditLogsTab.tsx** - Audit logging interface
@@ -132,7 +148,7 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 
 ## 🎯 Implementation Status
 
-### ✅ Completed (Phase 1-4)
+### ✅ Completed (Phase 1-6)
 - Core infrastructure (database tables, APIs)
 - AI integration pipeline with DeepSeek R1 Distill Llama 70B
 - Database operations and user management
@@ -141,6 +157,11 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **Advanced State Persistence**: Auto-recovery from localStorage and seedingResults
 - **Data Recovery System**: Automatic restoration of AI-transformed content on refresh
 - **Field Migration**: Backward compatibility for evolving data structures
+- **Comment Processing System**: AI-powered comment extraction and rephrasing (Phase 6)
+- **Enhanced JSON Parsing**: Robust parsing with multiple fallback strategies (Phase 6)
+- **Seamless Inline Editing**: Click-to-edit functionality without textarea appearance (Phase 6)
+- **Advanced Toast System**: Comprehensive user feedback for all operations (Phase 6)
+- **Auto-scroll UX**: Automatic navigation to relevant content sections (Phase 6)
 
 ### 🔄 Current Focus
 - Quality assurance and error handling
@@ -149,11 +170,12 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 
 ## 🗂️ File Organization Summary
 
-**Total Files: ~47**
-- **API Routes:** 15+ seeding-related endpoints
-- **React Hooks:** 10 custom hooks for seeding operations (including persistence layer)
+**Total Files: ~52**
+- **API Routes:** 16+ seeding-related endpoints (including comment processing)
+- **React Hooks:** 12 custom hooks for seeding operations (including toast and reply management)
+- **Utility Functions:** 1 comment processing utility with AI integration
 - **Database Services:** 3 core database service files
-- **UI Components:** 1 primary seeding interface + admin components
+- **UI Components:** 8 seeding-specific components + admin components
 - **Types/Interfaces:** 6 TypeScript definition files
 - **Data/Configuration:** 1 persona template file with 20 complete user profiles
 

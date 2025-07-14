@@ -145,13 +145,6 @@ Can confirm - lost my job, ended a toxic relationship, and moved cities all duri
               </div>
             </div>
             
-            {processingComments && (
-              <div className="bg-yellow-50 p-3 border border-yellow-200">
-                <p className="text-sm text-yellow-800 font-open-sans">
-                  <strong>Processing comments...</strong> This may take a few minutes as each comment is being rephrased with AI. Please wait.
-                </p>
-              </div>
-            )}
           </div>
         )}
       </div>

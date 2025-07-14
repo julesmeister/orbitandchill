@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     
     try {
       // Call the actual AI API based on provider
-      const transformedContent = aiConfig.provider === 'deepseek' 
-        ? await transformWithDeepSeek(parsedContent, seedConfigs, generationSettings, aiConfig)
+      const transformedContent = (aiConfig.provider === 'deepseek' || aiConfig.provider === 'openrouter') 
+        ? await transformWithAI(parsedContent, seedConfigs, generationSettings, aiConfig)
         : await simulateAITransformation(parsedContent, seedConfigs, generationSettings);
       
       // Update batch status to completed
@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DeepSeek AI transformation function
-async function transformWithDeepSeek(parsedContent: any[], seedConfigs: any[], generationSettings: any, aiConfig: any) {
+// AI transformation function (works with OpenRouter-compatible APIs)
+async function transformWithAI(parsedContent: any[], seedConfigs: any[], generationSettings: any, aiConfig: any) {
   const categories = [
     'Natal Chart Analysis',
     'Transits & Predictions', 
@@ -183,7 +183,23 @@ Return ONLY valid JSON:
       console.log('🤖 Using AI model for content transformation:', modelToUse);
       console.log('🤖 Full aiConfig received:', aiConfig);
 
-      // Call DeepSeek API (assuming OpenRouter-compatible endpoint)
+      // Determine if model supports system prompts
+      const supportsSystemPrompts = !modelToUse.includes('gemma') && !modelToUse.includes('google/');
+      
+      // Prepare messages based on model capabilities
+      const messages = supportsSystemPrompts 
+        ? [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ]
+        : [
+            { role: 'user', content: `${systemPrompt}\n\n${userPrompt}` }
+          ];
+
+      console.log('🤖 Model supports system prompts:', supportsSystemPrompts);
+      console.log('🤖 Using message format:', messages.length === 1 ? 'Combined user prompt' : 'System + user prompts');
+
+      // Call OpenRouter API
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -194,10 +210,7 @@ Return ONLY valid JSON:
         },
         body: JSON.stringify({
           model: modelToUse,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
+          messages: messages,
           temperature: aiConfig.temperature || 0.7,
           max_tokens: 6000  // Large limit for detailed, natural responses
         })
@@ -205,18 +218,18 @@ Return ONLY valid JSON:
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('DeepSeek API error response:', errorText);
-        throw new Error(`DeepSeek API error: ${response.status} ${response.statusText} - ${errorText}`);
+        console.error('OpenRouter API error response:', errorText);
+        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('DeepSeek API result:', JSON.stringify(result, null, 2));
+      console.log('OpenRouter API result:', JSON.stringify(result, null, 2));
       
       const aiOutput = result.choices?.[0]?.message?.content;
 
       if (!aiOutput) {
-        console.error('No content in DeepSeek response:', result);
-        throw new Error('No response content from DeepSeek API');
+        console.error('No content in OpenRouter response:', result);
+        throw new Error('No response content from OpenRouter API');
       }
 
       // Parse the JSON response
@@ -224,16 +237,92 @@ Return ONLY valid JSON:
       try {
         console.log('Raw AI output:', aiOutput);
         
-        // Try to parse the entire response first (in case it's already valid JSON)
+        // Remove markdown code blocks if present
+        let cleanedOutput = aiOutput.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+        
+        // Try to parse the cleaned response
         try {
-          transformedData = JSON.parse(aiOutput);
-        } catch {
-          // If that fails, try to extract JSON object from the response
-          const jsonMatch = aiOutput.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            transformedData = JSON.parse(jsonMatch[0]);
-          } else {
-            throw new Error('No valid JSON found in AI response');
+          transformedData = JSON.parse(cleanedOutput);
+          console.log('Successfully parsed AI JSON response');
+        } catch (parseError) {
+          console.warn('Direct JSON parse failed, attempting content field fix:', parseError);
+          
+          // The issue is likely unescaped characters in the content field
+          // Let's fix the content field specifically
+          try {
+            let fixedOutput = cleanedOutput;
+            
+            // Find the content field and properly escape it - handle multiline content
+            const contentRegex = /"content":\s*"([\s\S]*?)",\s*"category"/;
+            const contentMatch = fixedOutput.match(contentRegex);
+            if (contentMatch) {
+              const originalContent = contentMatch[1];
+              const escapedContent = originalContent
+                .replace(/\\/g, '\\\\')    // Escape backslashes first
+                .replace(/"/g, '\\"')      // Escape quotes
+                .replace(/\n/g, '\\n')     // Escape newlines
+                .replace(/\r/g, '\\r')     // Escape carriage returns
+                .replace(/\t/g, '\\t')     // Escape tabs
+                .replace(/\*/g, '\\*');    // Escape asterisks
+              
+              fixedOutput = fixedOutput.replace(
+                /"content":\s*"[\s\S]*?",\s*"category"/,
+                `"content": "${escapedContent}",\n    "category"`
+              );
+              
+              console.log('Fixed content field with proper escaping');
+            }
+            
+            transformedData = JSON.parse(fixedOutput);
+            console.log('Successfully parsed AI JSON after content fix');
+          } catch (fixError) {
+            console.warn('Content field fix failed, using manual field extraction:', fixError);
+            
+            // Manual extraction of fields since JSON parsing failed
+            const titleMatch = cleanedOutput.match(/"title":\s*"([^"]+)"/);
+            const categoryMatch = cleanedOutput.match(/"category":\s*"([^"]+)"/);
+            const summaryMatch = cleanedOutput.match(/"summary":\s*"([^"]+)"/);
+            const tagsMatch = cleanedOutput.match(/"tags":\s*\[(.*?)\]/);
+            
+            // Extract content between "content": " and ",
+            const contentMatch = cleanedOutput.match(/"content":\s*"([\s\S]*?)",\s*"category"/);
+            let extractedContent = 'AI-transformed content (parsing failed)';
+            
+            if (contentMatch) {
+              // Clean up the extracted content by removing extra escaping
+              extractedContent = contentMatch[1]
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"')
+                .replace(/\\\*/g, '*')
+                .replace(/\\\\/g, '\\');
+              console.log('Successfully extracted content manually');
+            }
+            
+            // Extract tags
+            let extractedTags = ['astrology', 'discussion'];
+            if (tagsMatch) {
+              try {
+                const tagsString = '[' + tagsMatch[1] + ']';
+                extractedTags = JSON.parse(tagsString);
+              } catch {
+                console.warn('Could not parse tags, using defaults');
+              }
+            }
+            
+            if (titleMatch) {
+              transformedData = {
+                mainPost: {
+                  title: titleMatch[1],
+                  content: extractedContent,
+                  category: categoryMatch ? categoryMatch[1] : 'General Discussion',
+                  tags: extractedTags,
+                  summary: summaryMatch ? summaryMatch[1] : 'AI-transformed discussion content'
+                }
+              };
+              console.log('Created transformed data from manually extracted fields');
+            } else {
+              throw new Error('Could not extract title from AI response');
+            }
           }
         }
       } catch (parseError) {
@@ -309,7 +398,7 @@ Return ONLY valid JSON:
         assignedAuthorId: assignedUser.userId,
         replies: [], // No replies generated yet
         actualReplyCount: 0,
-        aiProvider: 'deepseek',
+        aiProvider: aiConfig.provider,
         aiModel: aiConfig.model,
         summary: mainPost.summary,
         contentLength: mainPost.content.length,
@@ -317,7 +406,7 @@ Return ONLY valid JSON:
       });
 
     } catch (error) {
-      console.error('Error transforming content with DeepSeek:', error);
+      console.error('Error transforming content with AI:', error);
       
       // Fallback to basic transformation if AI fails
       const fallbackContent = originalPost.originalContent || originalPost.fullContent || 'Astrological discussion content';
@@ -332,7 +421,7 @@ Return ONLY valid JSON:
         assignedAuthorId: assignedUser.userId,
         replies: [],
         actualReplyCount: 0,
-        aiProvider: 'deepseek-fallback',
+        aiProvider: aiConfig.provider + '-fallback',
         aiModel: aiConfig.model,
         summary: fallbackContent.substring(0, 200) + '...',
         error: (error as Error).message
