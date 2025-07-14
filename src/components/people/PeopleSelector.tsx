@@ -348,7 +348,7 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
     <div 
       className={`relative ${className}`}
       style={{ 
-        zIndex: 2999,
+        zIndex: 1,
         isolation: 'isolate',
         transform: 'translateZ(0)'
       }}
