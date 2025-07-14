@@ -6,7 +6,6 @@ import { tarotCards, TarotCard } from '@/data/tarotCards';
 import { getCardImagePath } from '@/utils/tarotImageMapping';
 import { useImageCache } from '@/hooks/useImageCache';
 import Image from 'next/image';
-import VirtualizedCardGrid from '@/components/tarot/VirtualizedCardGrid';
 
 interface CardProgress {
   cardId: string;
@@ -24,15 +23,14 @@ interface CardProgress {
 
 interface CardMasteryGridProps {
   userId: string;
-  useVirtualization?: boolean;
 }
 
-export default function CardMasteryGrid({ userId, useVirtualization = false }: CardMasteryGridProps) {
+export default function CardMasteryGrid({ userId }: CardMasteryGridProps) {
   const [cardProgress, setCardProgress] = useState<Record<string, CardProgress>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState<TarotCard | null>(null);
-  const [filter, setFilter] = useState<'all' | 'major' | 'cups' | 'wands' | 'pentacles' | 'swords'>('all');
-  const [useVirtualizationState, setUseVirtualization] = useState(useVirtualization);
+  const [suitFilter, setSuitFilter] = useState<'all' | 'major' | 'cups' | 'wands' | 'pentacles' | 'swords'>('all');
+  const [masteryFilter, setMasteryFilter] = useState<'all' | 'not-started' | 'beginner' | 'learning' | 'good' | 'advanced' | 'master'>('all');
   const { preloadImages, getCachedImageSrc } = useImageCache();
 
   useEffect(() => {
@@ -44,7 +42,7 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
     const filteredCards = getFilteredCards();
     const imagePaths = filteredCards.slice(0, 20).map(card => getCardImagePath(card.id));
     preloadImages(imagePaths);
-  }, [filter, preloadImages]);
+  }, [suitFilter, masteryFilter, preloadImages]);
 
   const loadCardProgress = async () => {
     try {
@@ -73,20 +71,56 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
   };
 
   const getFilteredCards = (): TarotCard[] => {
-    switch (filter) {
+    let cards = tarotCards;
+
+    // Apply suit filter
+    switch (suitFilter) {
       case 'major':
-        return tarotCards.filter(card => card.type === 'Major Arcana');
+        cards = cards.filter(card => card.type === 'Major Arcana');
+        break;
       case 'cups':
-        return tarotCards.filter(card => card.suit === 'Cups');
+        cards = cards.filter(card => card.suit === 'Cups');
+        break;
       case 'wands':
-        return tarotCards.filter(card => card.suit === 'Wands');
+        cards = cards.filter(card => card.suit === 'Wands');
+        break;
       case 'pentacles':
-        return tarotCards.filter(card => card.suit === 'Pentacles');
+        cards = cards.filter(card => card.suit === 'Pentacles');
+        break;
       case 'swords':
-        return tarotCards.filter(card => card.suit === 'Swords');
+        cards = cards.filter(card => card.suit === 'Swords');
+        break;
       default:
-        return tarotCards;
+        break; // Keep all cards
     }
+
+    // Apply mastery filter
+    if (masteryFilter !== 'all') {
+      cards = cards.filter(card => {
+        const progress = cardProgress[card.id];
+        const averageScore = progress?.averageScore || 0;
+        const hasAttempts = progress?.totalAttempts > 0;
+
+        switch (masteryFilter) {
+          case 'not-started':
+            return !hasAttempts;
+          case 'beginner':
+            return hasAttempts && averageScore < 50;
+          case 'learning':
+            return hasAttempts && averageScore >= 50 && averageScore < 70;
+          case 'good':
+            return hasAttempts && averageScore >= 70 && averageScore < 80;
+          case 'advanced':
+            return hasAttempts && averageScore >= 80 && averageScore < 90;
+          case 'master':
+            return hasAttempts && averageScore >= 90;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return cards;
   };
 
   const getMasteryColor = (card: TarotCard): string => {
@@ -142,87 +176,92 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
 
   return (
     <div className="space-y-6">
-      {/* Filter Tabs */}
-      <div className="flex gap-0 border border-black overflow-x-auto">
-        {[
-          { key: 'all', label: 'All Cards', count: tarotCards.length },
-          { key: 'major', label: 'Major Arcana', count: 22 },
-          { key: 'cups', label: 'Cups', count: 14 },
-          { key: 'wands', label: 'Wands', count: 14 },
-          { key: 'pentacles', label: 'Pentacles', count: 14 },
-          { key: 'swords', label: 'Swords', count: 14 },
-        ].map((tab, index) => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key as any)}
-            className={`relative group px-4 py-3 font-space-grotesk font-medium text-sm transition-all duration-300 whitespace-nowrap overflow-hidden ${
-              filter === tab.key
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-black hover:text-white'
-            } ${index < 5 ? 'border-r border-black' : ''}`}
-          >
-            {filter !== tab.key && (
-              <div className="absolute inset-0 bg-black translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
-            )}
-            <span className="relative z-10">
-              {tab.label} ({tab.count})
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="bg-gray-50 border border-gray-200 p-4">
-        <h3 className="font-semibold text-sm mb-3">Mastery Levels</h3>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-gray-100 border border-gray-200 "></div>
-            <span>Not Started</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-300 border border-red-400 "></div>
-            <span>Beginner (0-50%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-orange-400 border border-orange-500 "></div>
-            <span>Learning (50-70%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-400 border border-yellow-500 "></div>
-            <span>Good (70-80%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-400 border border-green-500 "></div>
-            <span>Advanced (80-90%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 border border-green-600 "></div>
-            <span>Master (90%+)</span>
-          </div>
+      {/* Suit Filter Tabs */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold mb-2 font-space-grotesk text-black">Filter by Suit</h3>
+        <div className="flex gap-0 border border-black overflow-x-auto">
+          {[
+            { key: 'all', label: 'All Cards', count: tarotCards.length },
+            { key: 'major', label: 'Major Arcana', count: 22 },
+            { key: 'cups', label: 'Cups', count: 14 },
+            { key: 'wands', label: 'Wands', count: 14 },
+            { key: 'pentacles', label: 'Pentacles', count: 14 },
+            { key: 'swords', label: 'Swords', count: 14 },
+          ].map((tab, index) => (
+            <button
+              key={tab.key}
+              onClick={() => setSuitFilter(tab.key as any)}
+              className={`relative group px-4 py-3 font-space-grotesk font-medium text-sm transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                suitFilter === tab.key
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black hover:bg-black hover:text-white'
+              } ${index < 5 ? 'border-r border-black' : ''}`}
+            >
+              {suitFilter !== tab.key && (
+                <div className="absolute inset-0 bg-black translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+              )}
+              <span className="relative z-10">
+                {tab.label} ({tab.count})
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Performance Toggle */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setUseVirtualization(!useVirtualizationState)}
-          className="text-xs px-3 py-1 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors"
-        >
-          {useVirtualizationState ? 'Regular Grid' : 'Performance Mode'}
-        </button>
+      {/* Mastery Filter Tabs */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold mb-2 font-space-grotesk text-black">Filter by Mastery Level</h3>
+        <div className="flex gap-0 border border-black overflow-x-auto">
+          {[
+            { key: 'all', label: 'All Levels', icon: '🃏' },
+            { key: 'not-started', label: 'Not Started', icon: '⚪' },
+            { key: 'beginner', label: 'Beginner (0-50%)', icon: '🔴' },
+            { key: 'learning', label: 'Learning (50-70%)', icon: '🟠' },
+            { key: 'good', label: 'Good (70-80%)', icon: '🟡' },
+            { key: 'advanced', label: 'Advanced (80-90%)', icon: '🟢' },
+            { key: 'master', label: 'Master (90%+)', icon: '🏆' },
+          ].map((tab, index) => (
+            <button
+              key={tab.key}
+              onClick={() => setMasteryFilter(tab.key as any)}
+              className={`relative group px-3 py-2 font-space-grotesk font-medium text-xs transition-all duration-300 whitespace-nowrap overflow-hidden ${
+                masteryFilter === tab.key
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black hover:bg-black hover:text-white'
+              } ${index < 6 ? 'border-r border-black' : ''}`}
+            >
+              {masteryFilter !== tab.key && (
+                <div className="absolute inset-0 bg-black translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+              )}
+              <span className="relative z-10">
+                {tab.icon} {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-black/70 font-inter">
+          Showing <span className="font-semibold text-black">{getFilteredCards().length}</span> of {tarotCards.length} cards
+        </p>
+        {(suitFilter !== 'all' || masteryFilter !== 'all') && (
+          <button
+            onClick={() => {
+              setSuitFilter('all');
+              setMasteryFilter('all');
+            }}
+            className="text-xs px-3 py-1 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors font-space-grotesk"
+          >
+            Clear Filters
+          </button>
+        )}
       </div>
 
       {/* Card Grid */}
-      {useVirtualizationState ? (
-        <VirtualizedCardGrid
-          cards={getFilteredCards()}
-          cardProgress={cardProgress}
-          onCardSelect={setSelectedCard}
-          containerWidth={1200}
-          containerHeight={600}
-        />
-      ) : (
-        <div className="grid grid-cols-6 md:grid-cols-10 lg:grid-cols-13 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
           {getFilteredCards().map((card) => {
           const progress = cardProgress[card.id];
           const masteryColor = getMasteryColor(card);
@@ -232,17 +271,18 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
             <button
               key={card.id}
               onClick={() => setSelectedCard(card)}
-              className={`relative p-2 -lg border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${masteryColor}`}
+              className={`relative flex flex-col p-2 border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${masteryColor}`}
               title={`${card.name} - ${progress ? `${Math.round(progress.masteryPercentage || 0)}% mastery (${progress.averageScore}% avg)` : 'Not started'}`}
+              style={{ aspectRatio: '2/3' }}
             >
               {/* Card Image */}
-              <div className="w-full h-48 mb-2 relative">
+              <div className="w-full flex-1 relative mb-1">
                 <Image
                   src={getCachedImageSrc(getCardImagePath(card.id))}
                   alt={card.name}
                   fill
-                  className="object-contain border border-black"
-                  sizes="(max-width: 768px) 120px, 150px"
+                  className="object-contain"
+                  sizes="(max-width: 640px) 120px, (max-width: 768px) 140px, (max-width: 1024px) 160px, (max-width: 1280px) 140px, 120px"
                   loading="lazy"
                   quality={75}
                   placeholder="blur"
@@ -252,7 +292,7 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
               </div>
               
               {/* Card Name (abbreviated) */}
-              <div className="text-xs font-medium leading-tight">
+              <div className="text-xs font-medium leading-tight text-center px-1">
                 {card.name.replace('The ', '').replace(' of ', ' ')}
               </div>
               
@@ -317,8 +357,7 @@ export default function CardMasteryGrid({ userId, useVirtualization = false }: C
             </button>
           );
         })}
-        </div>
-      )}
+      </div>
 
       {/* Card Detail Modal */}
       {selectedCard && (
