@@ -63,6 +63,49 @@ interface PostFormData {
 export default function PostsTab({ isLoading }: PostsTabProps) {
   const { threads, loadThreads, createThread, updateThread, deleteThread } = useAdminStore();
   const { user } = useUserStore();
+
+  // Date formatting utility function
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    const diffInMonths = Math.floor(diffInDays / 30);
+    const diffInYears = Math.floor(diffInDays / 365);
+
+    if (diffInMinutes < 1) {
+      return 'Just now';
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+    } else if (diffInWeeks < 4) {
+      return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+    } else if (diffInMonths < 12) {
+      return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+    } else {
+      return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
+    }
+  };
+
+  const formatDetailedDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    });
+  };
   
   // Database-backed categories management
   const {
@@ -86,6 +129,14 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   const [postToDelete, setPostToDelete] = useState<Thread | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
+  // Multi-select state
+  const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  
+  // Real-time updates for relative time display
+  const [timeUpdateTrigger, setTimeUpdateTrigger] = useState(0);
+  
   // Category management state
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [newCategory, setNewCategory] = useState('');
@@ -108,6 +159,15 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       loadThreads();
     }
   }, []); // Empty dependency array - only run once on mount
+
+  // Update relative times every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeUpdateTrigger(prev => prev + 1);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Database-backed category management functions
   const handleAddCategory = async () => {
@@ -433,6 +493,160 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     setEditingPost(null);
   };
 
+  // Multi-select handlers
+  const handleSelectPost = (postId: string) => {
+    const newSelected = new Set(selectedPosts);
+    if (newSelected.has(postId)) {
+      newSelected.delete(postId);
+    } else {
+      newSelected.add(postId);
+    }
+    setSelectedPosts(newSelected);
+    setShowBulkActions(newSelected.size > 0);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPosts.size === currentPosts.length) {
+      setSelectedPosts(new Set());
+      setShowBulkActions(false);
+    } else {
+      const allPostIds = new Set(currentPosts.map(post => post.id));
+      setSelectedPosts(allPostIds);
+      setShowBulkActions(true);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedPosts(new Set());
+    setShowBulkActions(false);
+  };
+
+  const handleBulkDelete = () => {
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      const selectedArray = Array.from(selectedPosts);
+      
+      // Show loading toast
+      setToast({
+        show: true,
+        title: 'Deleting Posts',
+        message: `Deleting ${selectedArray.length} posts...`,
+        status: 'loading'
+      });
+
+      for (const postId of selectedArray) {
+        await deleteThread(postId);
+      }
+      
+      setSelectedPosts(new Set());
+      setShowBulkActions(false);
+      setShowBulkDeleteConfirm(false);
+      
+      // Show success toast
+      setToast({
+        show: true,
+        title: 'Posts Deleted',
+        message: `Successfully deleted ${selectedArray.length} posts.`,
+        status: 'success'
+      });
+    } catch (error) {
+      console.error('Error bulk deleting posts:', error);
+      setToast({
+        show: true,
+        title: 'Delete Failed',
+        message: 'Failed to delete some posts. Please try again.',
+        status: 'error'
+      });
+    }
+  };
+
+  const cancelBulkDelete = () => {
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const handleBulkPublish = async () => {
+    try {
+      const selectedArray = Array.from(selectedPosts);
+      
+      // Show loading toast
+      setToast({
+        show: true,
+        title: 'Publishing Posts',
+        message: `Publishing ${selectedArray.length} posts...`,
+        status: 'loading'
+      });
+
+      for (const postId of selectedArray) {
+        const post = threads.find(t => t.id === postId);
+        if (post) {
+          await updateThread(postId, { ...post, isPublished: true });
+        }
+      }
+      
+      setSelectedPosts(new Set());
+      setShowBulkActions(false);
+      
+      // Show success toast
+      setToast({
+        show: true,
+        title: 'Posts Published',
+        message: `Successfully published ${selectedArray.length} posts.`,
+        status: 'success'
+      });
+    } catch (error) {
+      console.error('Error bulk publishing posts:', error);
+      setToast({
+        show: true,
+        title: 'Publish Failed',
+        message: 'Failed to publish some posts. Please try again.',
+        status: 'error'
+      });
+    }
+  };
+
+  const handleBulkUnpublish = async () => {
+    try {
+      const selectedArray = Array.from(selectedPosts);
+      
+      // Show loading toast
+      setToast({
+        show: true,
+        title: 'Unpublishing Posts',
+        message: `Moving ${selectedArray.length} posts to drafts...`,
+        status: 'loading'
+      });
+
+      for (const postId of selectedArray) {
+        const post = threads.find(t => t.id === postId);
+        if (post) {
+          await updateThread(postId, { ...post, isPublished: false });
+        }
+      }
+      
+      setSelectedPosts(new Set());
+      setShowBulkActions(false);
+      
+      // Show success toast
+      setToast({
+        show: true,
+        title: 'Posts Unpublished',
+        message: `Successfully moved ${selectedArray.length} posts to drafts.`,
+        status: 'success'
+      });
+    } catch (error) {
+      console.error('Error bulk unpublishing posts:', error);
+      setToast({
+        show: true,
+        title: 'Unpublish Failed',
+        message: 'Failed to unpublish some posts. Please try again.',
+        status: 'error'
+      });
+    }
+  };
+
   // Function to handle button-triggered submissions
   const handleButtonSubmit = async (shouldPublish: boolean) => {
     console.log('🔍 Button clicked: shouldPublish =', shouldPublish);
@@ -516,9 +730,11 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredThreads.slice(indexOfFirstPost, indexOfLastPost);
 
-  // Reset to first page when filter changes
+  // Reset to first page and clear selections when filter changes
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedPosts(new Set());
+    setShowBulkActions(false);
   }, [filter]);
 
   const blogPosts = threads.filter((t: Thread) => t.isBlogPost);
@@ -547,6 +763,17 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                 <div className="w-2 h-2 bg-[#ff91e9] mr-2"></div>
                 {publishedCount} Published
               </span>
+              {threads.length > 0 && (
+                <span className="flex items-center text-xs text-gray-600">
+                  <div className="w-2 h-2 bg-gray-400 mr-2"></div>
+                  Last activity: {(() => {
+                    const mostRecentThread = threads.reduce((latest, current) => 
+                      new Date(current.updatedAt || current.createdAt) > new Date(latest.updatedAt || latest.createdAt) ? current : latest
+                    );
+                    return formatRelativeTime(mostRecentThread.updatedAt || mostRecentThread.createdAt);
+                  })()}
+                </span>
+              )}
             </div>
           </div>
 
@@ -734,6 +961,46 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         </div>
       )}
 
+      {/* Bulk Actions Bar */}
+      {showBulkActions && (
+        <div className="bg-[#6bdbff] border border-black p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="font-medium text-black font-space-grotesk">
+                {selectedPosts.size} post{selectedPosts.size !== 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={handleClearSelection}
+                className="text-sm text-black hover:underline font-open-sans"
+              >
+                Clear selection
+              </button>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleBulkPublish}
+                className="bg-[#51bd94] text-black px-4 py-2 text-sm font-medium hover:bg-[#4aa384] transition-colors duration-200 font-open-sans border border-black"
+              >
+                Publish Selected
+              </button>
+              <button
+                onClick={handleBulkUnpublish}
+                className="bg-[#f2e356] text-black px-4 py-2 text-sm font-medium hover:bg-[#e8d650] transition-colors duration-200 font-open-sans border border-black"
+              >
+                Move to Drafts
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="bg-red-500 text-white px-4 py-2 text-sm font-medium hover:bg-red-600 transition-colors duration-200 font-open-sans border border-black"
+              >
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white border border-black p-4">
         <div className="flex flex-wrap gap-2">
@@ -902,11 +1169,36 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       <div className="bg-white border border-black">
         <div className="p-6 border-b border-black">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-black font-space-grotesk">
-              {filter === 'all' ? 'All Posts' : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Posts`}
-            </h3>
+            <div className="flex items-center space-x-4">
+              {currentPosts.length > 0 && (
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedPosts.size === currentPosts.length && currentPosts.length > 0}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-black bg-white border-2 border-black rounded focus:ring-black focus:ring-2"
+                  />
+                  <span className="text-sm text-gray-700 font-open-sans">
+                    Select all on page
+                  </span>
+                </label>
+              )}
+              <h3 className="text-lg font-semibold text-black font-space-grotesk">
+                {filter === 'all' ? 'All Posts' : `${filter.charAt(0).toUpperCase() + filter.slice(1)} Posts`}
+              </h3>
+            </div>
             <div className="text-sm text-gray-700 font-open-sans">
-              Showing {indexOfFirstPost + 1}-{Math.min(indexOfLastPost, filteredThreads.length)} of {filteredThreads.length} posts
+              <div>Showing {indexOfFirstPost + 1}-{Math.min(indexOfLastPost, filteredThreads.length)} of {filteredThreads.length} posts</div>
+              {threads.length > 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Most recent: {(() => {
+                    const mostRecentThread = threads.reduce((latest, current) => 
+                      new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
+                    );
+                    return formatRelativeTime(mostRecentThread.createdAt);
+                  })()}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -964,7 +1256,18 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             currentPosts.map((thread: any) => (
               <div key={thread.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
+                  <div className="flex items-start space-x-4 flex-1">
+                    {/* Checkbox for individual post selection */}
+                    <label className="flex items-center mt-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedPosts.has(thread.id)}
+                        onChange={() => handleSelectPost(thread.id)}
+                        className="w-4 h-4 text-black bg-white border-2 border-black rounded focus:ring-black focus:ring-2"
+                      />
+                    </label>
+                    
+                    <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h4 className="text-lg font-medium text-black font-space-grotesk">{thread.title}</h4>
                       <div className="flex items-center space-x-2">
@@ -998,7 +1301,23 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       <span>•</span>
                       <span>{thread.category}</span>
                       <span>•</span>
-                      <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+                      <span 
+                        title={formatDetailedDateTime(thread.createdAt)}
+                        className="cursor-help hover:text-gray-800 transition-colors"
+                      >
+                        {formatRelativeTime(thread.createdAt)}
+                      </span>
+                      {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
+                        <>
+                          <span>•</span>
+                          <span 
+                            title={`Updated: ${formatDetailedDateTime(thread.updatedAt)}`}
+                            className="cursor-help hover:text-gray-800 transition-colors text-orange-600"
+                          >
+                            edited {formatRelativeTime(thread.updatedAt)}
+                          </span>
+                        </>
+                      )}
                       <span>•</span>
                       <span>{thread.views} views</span>
                       <span>•</span>
@@ -1006,14 +1325,16 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       {thread.tags.length > 0 && (
                         <>
                           <span>•</span>
-                          <div className="flex gap-1">
+                          <div className="flex items-center gap-1">
                             {thread.tags.slice(0, 3).map((tag: string, idx: number) => (
                               <span key={idx} className="bg-gray-100 text-gray-700 px-2 py-0.5 text-xs border border-gray-300">
                                 {tag}
                               </span>
                             ))}
                             {thread.tags.length > 3 && (
-                              <span className="text-gray-500">+{thread.tags.length - 3}</span>
+                              <span className="bg-gray-100 text-gray-700 px-2 py-0.5 text-xs border border-gray-300">
+                                +{thread.tags.length - 3}
+                              </span>
                             )}
                           </div>
                         </>
@@ -1076,11 +1397,24 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
                       </svg>
                     </button>
                   </div>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
+
+        {/* Time Update Info - Always show when posts exist */}
+        {filteredThreads.length > 0 && totalPages <= 1 && (
+          <div className="px-6 py-3 border-t border-black bg-gray-50">
+            <div className="text-xs text-gray-500 text-center font-open-sans">
+              Times updated {new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit'
+              })} • Showing all {filteredThreads.length} posts
+            </div>
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -1088,7 +1422,13 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             <div className="flex items-center justify-between">
               {/* Page Info */}
               <div className="text-sm text-black font-open-sans">
-                Page {currentPage} of {totalPages}
+                <div>Page {currentPage} of {totalPages}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Times updated {new Date().toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                  })}
+                </div>
               </div>
 
               {/* Pagination Controls */}
@@ -1203,6 +1543,21 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
+        autoClose={15}
+      />
+
+      {/* Bulk Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showBulkDeleteConfirm}
+        title="Delete Multiple Posts"
+        message={
+          `Are you sure you want to delete ${selectedPosts.size} selected post${selectedPosts.size !== 1 ? 's' : ''}? This action cannot be undone and will permanently remove all selected posts.`
+        }
+        confirmText={`Delete ${selectedPosts.size} Post${selectedPosts.size !== 1 ? 's' : ''}`}
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+        onConfirm={confirmBulkDelete}
+        onCancel={cancelBulkDelete}
         autoClose={15}
       />
 
