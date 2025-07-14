@@ -468,9 +468,9 @@ Creativity Bonus = min(interpretation_length / 200, 0.3) × 20 points
 
 #### 3. Scoring System Overhaul
 - **Problem**: Complex scoring system with 50-300 points was confusing users
-- **Solution**: Implemented simple scoring: only award points if more correct than incorrect
-- **Implementation**: Award (correct - incorrect) points only if correct > incorrect, otherwise 0 points
-- **Logic**: Users must perform better than 50% accuracy to earn any points
+- **Solution**: Implemented simple scoring: correct minus incorrect (can be negative)
+- **Implementation**: Award (correct - incorrect) points, allowing negative scores for poor performance
+- **Logic**: Poor performance actually reduces total points, encouraging careful play
 
 #### 4. Individual Card Scoring
 - **Problem**: Individual cards were receiving 60-80 points instead of 10% of exercise performance
@@ -497,10 +497,8 @@ Creativity Bonus = min(interpretation_length / 200, 0.3) × 20 points
 const parts = key.split('-');
 const cardId = parts.slice(0, -1).join('-'); // Everything except orientation
 
-// Simple scoring formula: only award points if more correct than incorrect
-const finalScore = gameStats.correctMatches > gameStats.incorrectMatches 
-  ? gameStats.correctMatches - gameStats.incorrectMatches 
-  : 0;
+// Simple scoring formula: correct minus incorrect (can be negative)
+const finalScore = gameStats.correctMatches - gameStats.incorrectMatches;
 
 // Individual card scoring (10% of exercise performance)
 const score = Math.round(accuracy * 10); // 0-10 points

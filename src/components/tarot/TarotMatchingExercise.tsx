@@ -348,11 +348,9 @@ export default function TarotMatchingExercise({
       const endTime = Date.now();
       const totalTime = gameStartTime ? (endTime - gameStartTime) / 1000 : 0;
       
-      // Simple scoring: correct minus incorrect, but only if more correct than incorrect
+      // Simple scoring: correct minus incorrect (can be negative to reduce points)
       const accuracy = gameStats.correctMatches / (gameStats.correctMatches + gameStats.incorrectMatches);
-      const finalScore = gameStats.correctMatches > gameStats.incorrectMatches 
-        ? gameStats.correctMatches - gameStats.incorrectMatches 
-        : 0;
+      const finalScore = gameStats.correctMatches - gameStats.incorrectMatches;
       
       console.log('Matching exercise completed:', {
         correctMatches: gameStats.correctMatches,
