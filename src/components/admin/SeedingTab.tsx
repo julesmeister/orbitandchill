@@ -8,6 +8,7 @@ import { useAIConfiguration } from '@/hooks/useAIConfiguration';
 import { usePersonaManagement } from '@/hooks/usePersonaManagement';
 import { useSeedingContent } from '@/hooks/useSeedingContent';
 import { useReplyManagement } from '@/hooks/useReplyManagement';
+import { useToastNotifications } from '@/hooks/useToastNotifications';
 import AIConfigurationForm from '@/components/admin/seeding/AIConfigurationForm';
 import ContentInputForm from '@/components/admin/seeding/ContentInputForm';
 import UserPersonaManager from '@/components/admin/seeding/UserPersonaManager';
@@ -96,6 +97,13 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
     executeSeedingWrapper,
     initializeSeedUsersWrapper,
     checkSeedUsersStatus,
+    
+    // Main seeding operation toast properties
+    toastVisible: seedingToastVisible,
+    toastTitle: seedingToastTitle,
+    toastMessage: seedingToastMessage,
+    toastStatus: seedingToastStatus,
+    hideToast: hideSeedingToast,
   } = useSeedingContent();
 
   const {
@@ -108,6 +116,14 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
     hideToast,
   } = useReplyManagement();
 
+  // Additional toast notifications for main seeding operations
+  const {
+    showLoadingToast,
+    showSuccessToast,
+    showErrorToast,
+    ...mainToastProps
+  } = useToastNotifications();
+
   // Generation Settings State
   const [discussionsToGenerate, setDiscussionsToGenerate] = useState(10);
   const [repliesPerDiscussion, setRepliesPerDiscussion] = useState({ min: 5, max: 25 });
@@ -118,6 +134,25 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>(SEED_PERSONA_TEMPLATES.map(u => u.id));
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [personasExpanded, setPersonasExpanded] = useState(false);
+  const [showPersonasCompleteMessage, setShowPersonasCompleteMessage] = useState(true);
+
+  // Show message when personas are first completed
+  useEffect(() => {
+    if (seedUsersInitialized && allPersonasComplete) {
+      setShowPersonasCompleteMessage(true);
+    }
+  }, [seedUsersInitialized, allPersonasComplete]);
+
+  // Auto-hide personas complete message after 5 seconds
+  useEffect(() => {
+    if (seedUsersInitialized && allPersonasComplete && showPersonasCompleteMessage) {
+      const timer = setTimeout(() => {
+        setShowPersonasCompleteMessage(false);
+      }, 5000); // Hide after 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [seedUsersInitialized, allPersonasComplete, showPersonasCompleteMessage]);
 
   // Wrapper functions for hook operations
   const handleProcessContentWrapper = async () => {
@@ -135,7 +170,10 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
       contentVariation
     };
     
-    await processWithAIWrapper(
+    // Show loading toast
+    showLoadingToast('Transforming Content', 'AI is processing and rephrasing your content...');
+    
+    const result = await processWithAIWrapper(
       scrapedContent,
       aiProvider,
       aiModel,
@@ -146,6 +184,29 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
       setPreviewContent,
       setExpandedReplies
     );
+    
+    // Show error toast if AI transformation failed
+    if (result && !result.success && result.error) {
+      console.error('🔄 AI transformation failed, showing error toast:', result.error);
+      
+      // Extract clean error message for user display
+      let userFriendlyError = result.error;
+      if (result.error.includes('Developer instruction is not enabled')) {
+        userFriendlyError = 'The selected AI model does not support system prompts. Please try a different model like Claude or GPT.';
+      } else if (result.error.includes('OpenRouter API error')) {
+        // Extract the actual API error message
+        const match = result.error.match(/OpenRouter API error: \d+ .+ - (.+)/);
+        if (match) {
+          userFriendlyError = match[1];
+        }
+      }
+      
+      // Show error toast using the toast notification system
+      showErrorToast('AI Transformation Failed', userFriendlyError);
+    } else if (result && result.success) {
+      // Show success toast when AI transformation succeeds
+      showSuccessToast('AI Transformation Complete', 'Content has been successfully transformed and is ready for preview!');
+    }
   };
 
   const handleExecuteSeedingWrapper = async () => {
@@ -190,12 +251,16 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
   // Handle comments processing
   const handleProcessComments = async (commentsText: string) => {
     if (!aiApiKey.trim()) {
+      showErrorToast('API Key Required', 'AI API key is required for comment processing.');
       setSeedingResults({
         success: false,
         error: 'AI API key is required for comment processing.'
       });
       return;
     }
+
+    // Show loading toast
+    showLoadingToast('Processing Comments', 'AI is rephrasing and organizing comments...');
 
     try {
       const response = await fetch('/api/admin/process-comments', {
@@ -221,77 +286,54 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
       const result = await response.json();
 
       if (result.success) {
-        // For comments processing, create the discussion directly instead of using seeding workflow
-        try {
-          // Calculate discussion start time (1-7 days ago to match reply timestamps)
-          const now = new Date();
-          const discussionStartTime = new Date(now.getTime() - (Math.random() * 7 * 24 * 60 * 60 * 1000));
-          
-          const discussionResponse = await fetch('/api/discussions/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title: 'Community Discussion from Reddit Comments',
-              content: 'A collection of community comments that have been rephrased and organized by our AI personas.',
-              excerpt: 'Rephrased Reddit comments with assigned personas',
-              category: 'Community',
-              tags: ['reddit', 'community', 'discussion'],
-              authorId: 'admin_comments_import',
-              isBlogPost: false,
-              isPublished: true,
-              createdAt: discussionStartTime.toISOString() // Set past creation time
-            }),
-          });
-
-          const discussionResult = await discussionResponse.json();
-
-          if (discussionResult.success) {
-            // Create replies for the discussion
-            const repliesResponse = await fetch(`/api/discussions/${discussionResult.discussion.id}/replies`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                replies: result.data.map((reply: any) => ({
-                  content: reply.content,
-                  authorId: reply.authorId,
-                  authorName: reply.authorName
-                }))
-              }),
-            });
-
-            const repliesResult = await repliesResponse.json();
-
-            if (repliesResult.success) {
-              setSeedingResults({
-                success: true,
-                message: `Successfully created discussion with ${result.data.length} rephrased comments!`,
-                summary: result.summary,
-                discussionId: discussionResult.discussion.id,
-                processedComments: true,
-                directlyCreated: true
-              });
-
-              // Clear preview content since discussion is now created
-              setPreviewContent([]);
-            } else {
-              throw new Error(repliesResult.error || 'Failed to create replies');
+        // Show warning toast if we have partial results
+        if (result.warning) {
+          showErrorToast('Partial Results', result.warning.message);
+        }
+        
+        // Add comments as replies to existing preview content instead of creating separate discussion
+        if (previewContent.length > 0) {
+          // Add comments as replies to the first existing discussion
+          setPreviewContent(prev => {
+            const updated = [...prev];
+            if (updated[0]) {
+              updated[0] = {
+                ...updated[0],
+                replies: [...(updated[0].replies || []), ...result.data],
+                actualReplyCount: (updated[0].actualReplyCount || 0) + result.data.length
+              };
             }
-          } else {
-            throw new Error(discussionResult.error || 'Failed to create discussion');
-          }
-        } catch (directCreateError) {
-          console.error('Failed to create discussion directly:', directCreateError);
+            return updated;
+          });
           
-          // Fallback to preview mode
+          const successMsg = result.warning 
+            ? `Added ${result.data.length} comments (${result.summary.rephrasedCount} rephrased, ${result.summary.fallbackCount} original)`
+            : `Added ${result.data.length} rephrased comments as replies to existing discussion!`;
+          
+          showSuccessToast('Comments Processed', successMsg);
+          setSeedingResults({
+            success: true,
+            message: successMsg,
+            summary: result.summary,
+            processedComments: true,
+            addedToExisting: true,
+            hasPartialResults: !!result.warning
+          });
+          
+          // Auto-scroll to preview section after comments are processed
+          setTimeout(() => {
+            const previewSection = document.getElementById('ai-processed-content');
+            if (previewSection) {
+              previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+        } else {
+          // No existing content - create new discussion for comments only
           const mockDiscussion = {
             id: `discussion_${Date.now()}`,
-            transformedTitle: 'Community Discussion',
-            transformedContent: 'A discussion with rephrased community comments',
-            originalTitle: 'Community Discussion',
+            transformedTitle: 'Community Discussion from Comments',
+            transformedContent: 'A discussion created from rephrased community comments',
+            originalTitle: 'Community Discussion from Comments',
             originalContent: commentsText.substring(0, 200) + '...',
             assignedAuthor: 'Community',
             category: 'General Discussion',
@@ -303,21 +345,38 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           };
 
           setPreviewContent([mockDiscussion]);
+          
+          const successMsg = result.warning 
+            ? `Created discussion with ${result.data.length} comments (${result.summary.rephrasedCount} rephrased, ${result.summary.fallbackCount} original)`
+            : `Created new discussion with ${result.data.length} rephrased comments!`;
+          
+          showSuccessToast('Comments Processed', successMsg);
           setSeedingResults({
             success: true,
-            message: result.message + ' (Preview mode - use Generate Forum to save)',
+            message: successMsg,
             summary: result.summary,
-            batchId: result.batchId,
-            processedComments: true
+            processedComments: true,
+            createdNew: true,
+            hasPartialResults: !!result.warning
           });
+          
+          // Auto-scroll to preview section after comments are processed
+          setTimeout(() => {
+            const previewSection = document.getElementById('ai-processed-content');
+            if (previewSection) {
+              previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
         }
       } else {
+        showErrorToast('Comment Processing Failed', result.error || 'Unknown error occurred while processing comments');
         setSeedingResults({
           success: false,
           error: result.error
         });
       }
     } catch (error) {
+      showErrorToast('Comment Processing Error', 'Failed to process comments: ' + (error as Error).message);
       setSeedingResults({
         success: false,
         error: 'Failed to process comments: ' + (error as Error).message
@@ -347,6 +406,42 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
 
   const handleDeleteReply = (discussionIndex: number, replyId: string) => {
     deleteReplyWithToast(discussionIndex, replyId, setPreviewContent, setSeedingResults);
+  };
+
+  const handleClearReplies = (discussionIndex: number) => {
+    setPreviewContent(prev => {
+      const updated = [...prev];
+      if (updated[discussionIndex]) {
+        updated[discussionIndex] = {
+          ...updated[discussionIndex],
+          replies: [],
+          actualReplyCount: 0
+        };
+      }
+      return updated;
+    });
+    
+    setSeedingResults(prev => ({
+      ...prev,
+      message: 'Replies cleared from preview'
+    }));
+  };
+
+  const handleUpdateReply = (discussionIndex: number, replyId: string, newContent: string) => {
+    setPreviewContent(prev => {
+      const updated = [...prev];
+      if (updated[discussionIndex] && updated[discussionIndex].replies) {
+        updated[discussionIndex].replies = updated[discussionIndex].replies.map((reply: any) =>
+          reply.id === replyId ? { ...reply, content: newContent } : reply
+        );
+      }
+      return updated;
+    });
+    
+    setSeedingResults(prev => ({
+      ...prev,
+      message: 'Reply content updated'
+    }));
   };
 
 
@@ -423,7 +518,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         )}
 
         {/* All Personas Complete Status */}
-        {seedUsersInitialized && allPersonasComplete && (
+        {seedUsersInitialized && allPersonasComplete && showPersonasCompleteMessage && (
           <div className="bg-green-50 border border-green-200 mb-8 p-6">
             <div className="flex items-center gap-3">
               <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -576,6 +671,8 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           aiApiKey={aiApiKey}
           onAddReply={handleAddReplyWrapper}
           onDeleteReply={handleDeleteReply}
+          onClearReplies={handleClearReplies}
+          onUpdateReply={handleUpdateReply}
           onMoodSelect={(index, mood) => {
             console.log('🎭 Mood selection triggered:', { index, mood });
             setSelectedMoodForIndex(prev => {
@@ -603,7 +700,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           </p>
         </div>
 
-        {/* Status Toast */}
+        {/* Status Toast for Reply Management */}
         <StatusToast
           title={toastTitle}
           message={toastMessage}
@@ -612,6 +709,81 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           onHide={hideToast}
           duration={toastStatus === 'success' ? 3000 : 0}
         />
+
+        {/* Status Toast for Main Seeding Operations (Generate Forum, etc.) */}
+        <StatusToast
+          title={seedingToastTitle}
+          message={seedingToastMessage}
+          status={seedingToastStatus}
+          isVisible={seedingToastVisible}
+          onHide={hideSeedingToast}
+          duration={seedingToastStatus === 'success' ? 5000 : 0}
+        />
+
+        {/* Status Toast for Main Seeding Operations */}
+        {mainToastProps.toastVisible && (
+          <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
+            <div 
+              className={`
+                px-6 py-4 border-2 border-black shadow-lg max-w-sm pointer-events-auto
+                transform transition-all duration-300 ease-out
+                ${mainToastProps.toastVisible 
+                  ? 'translate-y-0 opacity-100 scale-100' 
+                  : 'translate-y-4 opacity-0 scale-95'
+                }
+              `}
+              style={{ backgroundColor: mainToastProps.toastStatus === 'error' ? '#000000' : '#ffffff' }}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-2">
+                {/* Status icon */}
+                <div className="flex-shrink-0" style={{ color: mainToastProps.toastStatus === 'error' ? '#ffffff' : '#000000' }}>
+                  {mainToastProps.toastStatus === 'loading' ? (
+                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  ) : mainToastProps.toastStatus === 'error' ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                
+                {/* Title */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold font-space-grotesk" style={{ color: mainToastProps.toastStatus === 'error' ? '#ffffff' : '#000000' }}>
+                    {mainToastProps.toastTitle}
+                  </h4>
+                </div>
+
+                {/* Close button (only for non-loading states) */}
+                {mainToastProps.toastStatus !== 'loading' && (
+                  <button
+                    onClick={mainToastProps.hideToast}
+                    className="flex-shrink-0 hover:opacity-70 transition-opacity"
+                    style={{ color: mainToastProps.toastStatus === 'error' ? '#ffffff' : '#000000' }}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Message */}
+              <div className="mb-3">
+                <p className="text-sm font-open-sans" style={{ color: mainToastProps.toastStatus === 'error' ? '#ffffff' : '#000000' }}>
+                  {mainToastProps.toastMessage}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
 
         {/* Sticky Scroll Buttons */}
         <StickyScrollButtons />

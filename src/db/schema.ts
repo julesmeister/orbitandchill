@@ -156,6 +156,7 @@ export const discussionReplies = sqliteTable('discussion_replies', {
   id: text('id').primaryKey(),
   discussionId: text('discussion_id').references(() => discussions.id, { onDelete: 'cascade' }).notNull(),
   authorId: text('author_id').references(() => users.id, { onDelete: 'set null' }),
+  authorName: text('author_name').notNull(), // Add author_name field for seeding system
   content: text('content').notNull(),
   parentReplyId: text('parent_reply_id'),
   upvotes: integer('upvotes').default(0),

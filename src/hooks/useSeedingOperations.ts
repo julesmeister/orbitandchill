@@ -215,6 +215,7 @@ export const useSeedingOperations = () => {
       };
     } finally {
       setSeedingInProgress(false);
+      setSeedingProgress(0);
     }
   };
 
@@ -230,12 +231,8 @@ export const useSeedingOperations = () => {
       };
     }
 
-    if (!batchId) {
-      return {
-        success: false,
-        error: 'No batch ID available. Please process content with AI first.'
-      };
-    }
+    // Generate a fallback batch ID if none provided
+    const finalBatchId = batchId || `manual_batch_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     setSeedingInProgress(true);
     setSeedingProgress(0);
@@ -247,7 +244,7 @@ export const useSeedingOperations = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          batchId,
+          batchId: finalBatchId,
           transformedContent: previewContent,
           generationSettings
         }),

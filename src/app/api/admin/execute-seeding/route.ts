@@ -28,11 +28,40 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Verify the seeding batch exists
-    const batch = await getSeedingBatch(batchId);
+    // Verify the seeding batch exists (or create one for manual/comment-processed content)
+    let batch = await getSeedingBatch(batchId);
+    
+    // If no batch exists and this is a manual batch (from comment processing, etc.)
+    if (!batch && batchId.startsWith('manual_batch_')) {
+      console.log('🔄 Creating manual batch for content processing...');
+      
+      // Create a minimal batch record for manual content
+      const { saveSeedingBatch } = await import('@/db/services/seedUserService');
+      const newBatch = {
+        id: batchId,
+        sourceType: 'manual_content',
+        sourceContent: 'Manually processed content or comments',
+        processedContent: JSON.stringify(transformedContent),
+        status: 'completed' as const, // Mark as completed since content is already processed
+        discussionsCreated: 0,
+        repliesCreated: 0,
+        votesCreated: 0,
+        errors: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      const saved = await saveSeedingBatch(newBatch);
+      if (saved) {
+        batch = newBatch;
+      }
+      
+      console.log('✅ Manual batch created:', batch?.id);
+    }
+    
     if (!batch) {
       return NextResponse.json(
-        { success: false, error: 'Seeding batch not found' },
+        { success: false, error: 'Seeding batch not found and could not be created' },
         { status: 404 }
       );
     }
