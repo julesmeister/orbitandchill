@@ -66,8 +66,8 @@ export default function TarotLearningPage() {
       <div className="min-h-screen bg-white">
         {/* Header */}
         <section className="px-6 md:px-12 lg:px-20 py-8 border-b border-black">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex-1">
               <Link href="/guides" className="inline-flex items-center gap-2 text-black hover:text-black/70 font-semibold mb-4">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -88,11 +88,15 @@ export default function TarotLearningPage() {
                 </div>
               )}
             </div>
-            <LevelBadge 
-              level={calculateLevel(userProgress.totalScore)} 
-              size="large" 
-              showLabel={false}
-            />
+            <div className="flex-shrink-0">
+              <LevelBadge 
+                level={calculateLevel(userProgress.totalScore)} 
+                size="large" 
+                showLabel={false}
+                showProgressDetails={true}
+                totalPoints={userProgress.totalScore}
+              />
+            </div>
           </div>
         </section>
 

@@ -8,6 +8,8 @@ interface LevelBadgeProps {
   level: string;
   size?: 'small' | 'medium' | 'large';
   showLabel?: boolean;
+  showProgressDetails?: boolean;
+  totalPoints?: number;
   className?: string;
 }
 
@@ -77,6 +79,8 @@ export default function LevelBadge({
   level, 
   size = 'medium', 
   showLabel = true, 
+  showProgressDetails = false,
+  totalPoints = 0,
   className = '' 
 }: LevelBadgeProps) {
   const normalizedLevel = level.toLowerCase();
@@ -92,10 +96,47 @@ export default function LevelBadge({
     );
   }
 
+  // Calculate progress details if requested
+  const progressPercentage = showProgressDetails ? calculateLevelProgress(totalPoints) : 0;
+  const pointsToNext = showProgressDetails ? getPointsToNextLevel(totalPoints) : 0;
+  const isMaxLevel = level.toLowerCase() === 'grandmaster';
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`}>
+      {/* Progress Details (Left Side) */}
+      {showProgressDetails && (
+        <div className="text-right">
+          <div className="text-sm font-semibold text-black font-space-grotesk">
+            {levelConfig.name}
+          </div>
+          <div className="text-xs text-black/70 font-inter">
+            {totalPoints.toLocaleString()} points
+          </div>
+          {!isMaxLevel && (
+            <div className="text-xs text-black/50 font-inter">
+              {pointsToNext.toLocaleString()} to next level
+            </div>
+          )}
+          {/* Progress Bar */}
+          {!isMaxLevel && (
+            <div className="w-20 bg-gray-200 h-1.5 border border-black mt-1 ml-auto">
+              <div 
+                className="bg-black h-full transition-all duration-300"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+          )}
+          {isMaxLevel && (
+            <div className="text-xs text-black/50 font-inter">
+              Max Level Achieved! 🏆
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Level Badge */}
       <div 
-        className={`${sizeConfig.container} relative border-2 border-black bg-white shadow-md`}
+        className={`${sizeConfig.container} relative border-2 border-black bg-white shadow-md flex-shrink-0`}
         title={`${levelConfig.name} - ${levelConfig.description}`}
         style={{ aspectRatio: '2/3' }} // Tarot card proportions
       >
@@ -108,7 +149,9 @@ export default function LevelBadge({
           sizes={sizeConfig.image}
         />
       </div>
-      {showLabel && (
+
+      {/* Label (Right Side) */}
+      {showLabel && !showProgressDetails && (
         <span className={`${sizeConfig.text} font-semibold text-black ml-1`}>
           {levelConfig.name}
         </span>
