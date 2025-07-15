@@ -53,12 +53,14 @@ export default function TarotGameInterface({
     userProgress,
     situationLoadingToast,
     errorToast,
+    evaluationLoadingToast,
     isGenerating,
     generateNewSituation,
     toggleHints,
     updateUserInterpretation,
     setSituationLoadingToast,
-    setErrorToast
+    setErrorToast,
+    setEvaluationLoadingToast
   } = useTarotGameInterface(gameState, setGameState, userId);
 
   return (
@@ -158,7 +160,12 @@ export default function TarotGameInterface({
                   />
                   {gameState.userInterpretation.trim() && (
                     <button
-                      onClick={submitInterpretation}
+                      onClick={() => {
+                        setEvaluationLoadingToast(true);
+                        submitInterpretation().finally(() => {
+                          setEvaluationLoadingToast(false);
+                        });
+                      }}
                       disabled={gameState.isLoading}
                       className="w-full mt-4 bg-white text-black px-6 py-3 font-semibold border-2 border-black hover:bg-black hover:text-white disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 font-inter"
                     >
@@ -218,7 +225,10 @@ export default function TarotGameInterface({
 
                   <div className="flex gap-3">
                     <button
-                      onClick={nextCard}
+                      onClick={() => {
+                        setSituationLoadingToast(true);
+                        nextCard();
+                      }}
                       className="flex-1 bg-white text-black px-6 py-3 font-semibold border-2 border-black hover:bg-black hover:text-white transition-all duration-300 font-inter"
                     >
                       Next Card
@@ -395,6 +405,15 @@ export default function TarotGameInterface({
         isVisible={errorToast.visible}
         onHide={() => setErrorToast({ visible: false, message: '' })}
         duration={5000}
+      />
+
+      {/* Status Toast for evaluation */}
+      <StatusToast
+        title="Evaluating Interpretation"
+        message="Your interpretation is being analyzed by our expert AI tarot reader..."
+        status="loading"
+        isVisible={evaluationLoadingToast}
+        onHide={() => setEvaluationLoadingToast(false)}
       />
     </div>
   );

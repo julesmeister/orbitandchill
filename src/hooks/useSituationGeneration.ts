@@ -123,11 +123,20 @@ const callAIProvider = async (config: SituationGenerationConfig, previousSituati
     } catch {
       // If we can't parse the error response, use the default message
     }
+    console.error('AI provider request failed:', {
+      status: response.status,
+      message: errorMessage,
+      url: response.url
+    });
     throw new Error(errorMessage);
   }
 
   const result = await response.json();
   if (!result.success) {
+    console.error('AI processing failed:', {
+      error: result.error,
+      result
+    });
     throw new Error(result.error || 'AI processing failed');
   }
 

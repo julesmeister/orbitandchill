@@ -90,6 +90,9 @@ DIFFICULTY: intermediate`;
       if (aiConfig.provider === 'openrouter' && aiConfig.apiKey) {
         console.log('Making OpenRouter API call with model:', aiConfig.model);
         
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -107,9 +110,12 @@ DIFFICULTY: intermediate`;
               }
             ],
             temperature: Math.max(aiConfig.temperature || 0.7, 0.8),
-            max_tokens: 150
-          })
+            max_tokens: 400
+          }),
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         console.log('OpenRouter response status:', response.status);
 
@@ -125,6 +131,9 @@ DIFFICULTY: intermediate`;
       } else if (aiConfig.provider === 'openai' && aiConfig.apiKey) {
         console.log('Making OpenAI API call with model:', aiConfig.model || 'gpt-4o-mini');
         
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -140,9 +149,12 @@ DIFFICULTY: intermediate`;
               }
             ],
             temperature: Math.max(aiConfig.temperature || 0.7, 0.8),
-            max_tokens: 150
-          })
+            max_tokens: 400
+          }),
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         console.log('OpenAI response status:', response.status);
 
@@ -158,27 +170,46 @@ DIFFICULTY: intermediate`;
       } else {
         throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI API call failed:', error);
+      
+      // Handle specific error types
+      if (error.name === 'AbortError') {
+        throw new Error('AI request timed out. Please check your internet connection and try again.');
+      } else if (error.cause?.code === 'UND_ERR_CONNECT_TIMEOUT') {
+        throw new Error('Could not connect to AI service. Please check your internet connection and try again.');
+      } else if (error.message?.includes('fetch failed')) {
+        throw new Error('Network error: Unable to reach AI service. Please try again later.');
+      }
+      
       // Re-throw the error so it gets handled by the main catch block
       throw error;
     }
 
     if (aiResponse) {
+      console.log('AI Response received:', aiResponse.substring(0, 200) + '...');
       // Parse AI response
       const parsed = parseAIResponse(aiResponse);
       if (parsed) {
+        console.log('Successfully parsed AI response:', parsed);
         return NextResponse.json({
           success: true,
           ...parsed
         });
+      } else {
+        console.error('Failed to parse AI response:', aiResponse);
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to parse AI response. The AI may have returned an invalid format.'
+        }, { status: 500 });
       }
     }
 
     // No fallback - return error if AI fails
+    console.error('No AI response received');
     return NextResponse.json({
       success: false,
-      error: 'Failed to generate situation. Please try again.'
+      error: 'No response received from AI provider. Please check your API key and try again.'
     }, { status: 500 });
 
   } catch (error) {
@@ -199,24 +230,34 @@ function parseAIResponse(response: string): GeneratedSituation | null {
     let context = '';
     let difficulty: 'beginner' | 'intermediate' | 'advanced' = 'beginner';
 
+    console.log('Parsing AI response lines:', lines);
+
     for (const line of lines) {
-      if (line.startsWith('SITUATION:')) {
-        situation = line.replace('SITUATION:', '').trim();
-      } else if (line.startsWith('QUESTION:')) {
-        question = line.replace('QUESTION:', '').trim();
-      } else if (line.startsWith('CONTEXT:')) {
-        context = line.replace('CONTEXT:', '').trim();
-      } else if (line.startsWith('DIFFICULTY:')) {
-        const diff = line.replace('DIFFICULTY:', '').trim().toLowerCase();
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('SITUATION:')) {
+        situation = trimmedLine.replace('SITUATION:', '').trim();
+      } else if (trimmedLine.startsWith('QUESTION:')) {
+        question = trimmedLine.replace('QUESTION:', '').trim();
+      } else if (trimmedLine.startsWith('CONTEXT:')) {
+        context = trimmedLine.replace('CONTEXT:', '').trim();
+      } else if (trimmedLine.startsWith('DIFFICULTY:')) {
+        const diff = trimmedLine.replace('DIFFICULTY:', '').trim().toLowerCase();
         if (diff === 'intermediate' || diff === 'advanced') {
           difficulty = diff as 'intermediate' | 'advanced';
         }
       }
     }
 
+    console.log('Parsed values:', { situation, question, context, difficulty });
+
     if (situation && question) {
       return { situation, question, context, difficulty };
     }
+    
+    console.error('Missing required fields:', { 
+      hasSituation: !!situation, 
+      hasQuestion: !!question 
+    });
     return null;
   } catch (error) {
     console.error('Error parsing AI response:', error);

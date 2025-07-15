@@ -43,6 +43,7 @@ export const useTarotGameInterface = (
   });
   const [situationLoadingToast, setSituationLoadingToast] = useState(false);
   const [errorToast, setErrorToast] = useState({ visible: false, message: '' });
+  const [evaluationLoadingToast, setEvaluationLoadingToast] = useState(false);
 
   // Get persisted AI configuration from SeedingTab
   const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
@@ -73,6 +74,17 @@ export const useTarotGameInterface = (
       loadUserRanking();
     }
   }, [userId, gameState.feedback]);
+
+  // Hide situation loading toast when loading completes
+  useEffect(() => {
+    if (!gameState.isLoading && situationLoadingToast) {
+      // Add a small delay to ensure the toast is visible for at least a moment
+      const timer = setTimeout(() => {
+        setSituationLoadingToast(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.isLoading, situationLoadingToast]);
 
   // Debug: Log when userProgress state changes
   useEffect(() => {
@@ -211,6 +223,7 @@ export const useTarotGameInterface = (
     userProgress,
     situationLoadingToast,
     errorToast,
+    evaluationLoadingToast,
     isGenerating,
     
     // Actions
@@ -222,6 +235,7 @@ export const useTarotGameInterface = (
     updateUserInterpretation,
     setSituationLoadingToast,
     setErrorToast,
+    setEvaluationLoadingToast,
     
     // AI Config
     aiConfig
