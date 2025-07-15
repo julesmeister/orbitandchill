@@ -372,7 +372,7 @@ export default function CardMasteryGrid({ userId, onMatchingComplete }: CardMast
 
       {/* Card Detail Modal */}
       {selectedCard && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-transparent flex items-center justify-center p-4 z-50">
           <div className="bg-white  p-6 max-w-md w-full border border-black max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -397,49 +397,93 @@ export default function CardMasteryGrid({ userId, onMatchingComplete }: CardMast
 
             {/* Progress Stats */}
             {cardProgress[selectedCard.id] ? (
-              <div className="bg-gray-50  p-4 mb-4">
-                <h4 className="font-semibold mb-3">Your Progress</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Mastery Level:</span>
-                    <span className="font-bold">{Math.round(cardProgress[selectedCard.id].masteryPercentage)}%</span>
+              <div className="border border-black mb-4">
+                <div className="p-4 border-b border-black">
+                  <h4 className="font-space-grotesk text-base font-bold text-black">Your Progress</h4>
+                </div>
+                
+                <div className="grid grid-cols-2">
+                  {/* Mastery Level */}
+                  <div className="group relative">
+                    <div className="flex flex-col items-center justify-center px-3 py-4 border-r border-b border-black transition-all duration-200 hover:pl-5">
+                      <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-green-500" />
+                      <span className="text-xs px-2 py-1 border border-black text-black font-bold mb-2">
+                        {Math.round(cardProgress[selectedCard.id].masteryPercentage)}%
+                      </span>
+                      <span className="font-medium text-xs text-black text-center">
+                        Mastery Level
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Average Score:</span>
-                    <span className="font-bold">{Math.round(cardProgress[selectedCard.id].averageScore)}%</span>
+                  
+                  {/* Average Score */}
+                  <div className="group relative">
+                    <div className="flex flex-col items-center justify-center px-3 py-4 border-b border-black transition-all duration-200 hover:pl-5">
+                      <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-blue-500" />
+                      <span className="text-xs px-2 py-1 border border-black text-black font-bold mb-2">
+                        {Math.round(cardProgress[selectedCard.id].averageScore)}%
+                      </span>
+                      <span className="font-medium text-xs text-black text-center">
+                        Average Score
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Total Attempts:</span>
-                    <span className="font-bold">{cardProgress[selectedCard.id].totalAttempts}</span>
+                  
+                  {/* Total Attempts */}
+                  <div className="group relative">
+                    <div className="flex flex-col items-center justify-center px-3 py-4 border-r border-b border-black transition-all duration-200 hover:pl-5">
+                      <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-purple-500" />
+                      <span className="text-xs px-2 py-1 border border-black text-black font-bold mb-2">
+                        {cardProgress[selectedCard.id].totalAttempts}
+                      </span>
+                      <span className="font-medium text-xs text-black text-center">
+                        Total Attempts
+                      </span>
+                    </div>
                   </div>
-                  {/* Only show upright/reversed if the game actually tracks these orientations */}
-                  {(cardProgress[selectedCard.id].uprightAttempts > 0 || cardProgress[selectedCard.id].reversedAttempts > 0) && (
-                    <>
-                      <div className="border-t pt-2 mt-2">
-                        <h5 className="font-semibold mb-2 text-xs text-gray-600">Orientation Breakdown:</h5>
-                        {cardProgress[selectedCard.id].uprightAttempts > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span>Upright Score:</span>
-                            <span className="font-bold">{Math.round(cardProgress[selectedCard.id].uprightAverage)}%</span>
-                          </div>
-                        )}
-                        {cardProgress[selectedCard.id].reversedAttempts > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span>Reversed Score:</span>
-                            <span className="font-bold">{Math.round(cardProgress[selectedCard.id].reversedAverage)}%</span>
-                          </div>
-                        )}
+                  
+                  {/* Familiarity Level */}
+                  <div className="group relative">
+                    <div className="flex flex-col items-center justify-center px-3 py-4 border-b border-black transition-all duration-200 hover:pl-5">
+                      <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-orange-500" />
+                      <span className="text-xs px-2 py-1 border border-black text-black font-bold mb-2 capitalize">
+                        {cardProgress[selectedCard.id].familiarityLevel}
+                      </span>
+                      <span className="font-medium text-xs text-black text-center">
+                        Familiarity
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Upright Score (if available) */}
+                  {cardProgress[selectedCard.id].uprightAttempts > 0 && (
+                    <div className="group relative">
+                      <div className="flex flex-col items-center justify-center px-3 py-4 border-r border-black transition-all duration-200 hover:pl-5">
+                        <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-emerald-500" />
+                        <span className="text-xs px-2 py-1 border border-black text-black font-bold mb-2">
+                          {Math.round(cardProgress[selectedCard.id].uprightAverage)}%
+                        </span>
+                        <span className="font-medium text-xs text-black text-center">
+                          Upright Score
+                        </span>
                       </div>
-                    </>
+                    </div>
                   )}
-                  <div className="flex justify-between">
-                    <span>Learning Streak:</span>
-                    <span className="font-bold">{cardProgress[selectedCard.id].learningStreak} days</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Mastery Level:</span>
-                    <span className="font-bold capitalize">{cardProgress[selectedCard.id].familiarityLevel}</span>
-                  </div>
+                  
+                  {/* Reversed Score (if available) */}
+                  {cardProgress[selectedCard.id].reversedAttempts > 0 && (
+                    <div className="group relative">
+                      <div className={`flex flex-col items-center justify-center px-3 py-4 transition-all duration-200 hover:pl-5 ${cardProgress[selectedCard.id].uprightAttempts > 0 ? '' : 'border-r border-black'}`}>
+                        <div className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300 bg-red-500" />
+                        <span className="text-xs px-2 py-1 border border-black text-black font-bold mb-2">
+                          {Math.round(cardProgress[selectedCard.id].reversedAverage)}%
+                        </span>
+                        <span className="font-medium text-xs text-black text-center">
+                          Reversed Score
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
