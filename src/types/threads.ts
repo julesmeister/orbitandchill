@@ -66,6 +66,8 @@ export interface ThreadTemp {
   author: string;
   authorId?: string;
   avatar: string;
+  preferredAvatar?: string; // User's selected avatar
+  profilePictureUrl?: string; // Google profile picture
   category: string;
   replies: number;
   views: number;
@@ -88,6 +90,8 @@ export interface Reply {
   id: string;
   author: string;
   avatar: string;
+  preferredAvatar?: string;
+  profilePictureUrl?: string;
   content: string;
   timestamp: string;
   upvotes: number;

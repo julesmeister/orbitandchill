@@ -9,6 +9,7 @@ import { usePersonaManagement } from '@/hooks/usePersonaManagement';
 import { useSeedingContent } from '@/hooks/useSeedingContent';
 import { useReplyManagement } from '@/hooks/useReplyManagement';
 import { useToastNotifications } from '@/hooks/useToastNotifications';
+import { useAvatarPathsStatus } from '@/hooks/useAvatarPathsStatus';
 import AIConfigurationForm from '@/components/admin/seeding/AIConfigurationForm';
 import ContentInputForm from '@/components/admin/seeding/ContentInputForm';
 import UserPersonaManager from '@/components/admin/seeding/UserPersonaManager';
@@ -17,6 +18,8 @@ import PreviewContentDisplay from '@/components/admin/seeding/PreviewContentDisp
 import ProcessSteps from '@/components/admin/seeding/ProcessSteps';
 import SeedingActionButtons from '@/components/admin/seeding/SeedingActionButtons';
 import PersonaSelector from '@/components/admin/seeding/PersonaSelector';
+import DiscussionCommentReplacer from '@/components/admin/seeding/DiscussionCommentReplacer';
+import DiscussionBrowser from '@/components/admin/seeding/DiscussionBrowser';
 import LoadingSpinner from '@/components/reusable/LoadingSpinner';
 import StatusToast from '@/components/reusable/StatusToast';
 import StickyScrollButtons from '@/components/reusable/StickyScrollButtons';
@@ -124,11 +127,25 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
     ...mainToastProps
   } = useToastNotifications();
 
+  // Avatar paths status
+  const { 
+    totalUsers, 
+    usersNeedingFix, 
+    isLoading: avatarStatusLoading, 
+    refetch: refetchAvatarStatus 
+  } = useAvatarPathsStatus();
+
   // Generation Settings State
   const [discussionsToGenerate, setDiscussionsToGenerate] = useState(10);
   const [repliesPerDiscussion, setRepliesPerDiscussion] = useState({ min: 5, max: 25 });
   const [maxNestingDepth, setMaxNestingDepth] = useState(4);
   const [contentVariation, setContentVariation] = useState(70);
+
+  // Tab Management State
+  const [activeTab, setActiveTab] = useState<'generation' | 'management'>('generation');
+  
+  // Collapsible sections state
+  const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
 
   // User Management State
   const [selectedUsers, setSelectedUsers] = useState<string[]>(SEED_PERSONA_TEMPLATES.map(u => u.id));
@@ -250,9 +267,11 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
 
   // Handle fixing avatar paths
   const handleFixAvatarPaths = async () => {
+    console.log('🔧 Fix Avatar Paths: Starting avatar path fixing process...');
     showLoadingToast('Fixing Avatar Paths', 'Updating avatar paths for users with incorrect file names...');
     
     try {
+      console.log('🔧 Fix Avatar Paths: Sending POST request to /api/admin/fix-avatar-paths');
       const response = await fetch('/api/admin/fix-avatar-paths', {
         method: 'POST',
         headers: {
@@ -260,9 +279,14 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         },
       });
 
+      console.log('🔧 Fix Avatar Paths: Response received, status:', response.status);
       const result = await response.json();
+      console.log('🔧 Fix Avatar Paths: Response data:', result);
 
       if (result.success) {
+        console.log(`🔧 Fix Avatar Paths: SUCCESS - Fixed ${result.fixedCount}/${result.totalUsers} users`);
+        console.log('🔧 Fix Avatar Paths: Fixed users:', result.fixedUsers);
+        
         showSuccessToast(
           'Avatar Paths Fixed', 
           `Successfully updated avatar paths for ${result.fixedCount} users out of ${result.totalUsers} total users.`
@@ -276,7 +300,11 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           totalUsers: result.totalUsers,
           fixedUsers: result.fixedUsers
         }));
+        
+        // Refetch avatar status to update the button text
+        refetchAvatarStatus();
       } else {
+        console.error('🔧 Fix Avatar Paths: FAILED -', result.error);
         showErrorToast('Fix Avatar Paths Failed', result.error || 'Unknown error occurred while fixing avatar paths');
         setSeedingResults((prev: any) => ({
           ...prev,
@@ -285,6 +313,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         }));
       }
     } catch (error) {
+      console.error('🔧 Fix Avatar Paths: EXCEPTION -', error);
       showErrorToast('Fix Avatar Paths Error', 'Failed to fix avatar paths: ' + (error as Error).message);
       setSeedingResults((prev: any) => ({
         ...prev,
@@ -515,8 +544,61 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           </p>
         </div>
 
-        {/* Process Steps */}
-        <ProcessSteps steps={processSteps} className="mb-8" />
+        {/* Tab Navigation */}
+        <div className="bg-white border border-black mb-8">
+          <div className="flex border-b border-black">
+            <button
+              onClick={() => setActiveTab('generation')}
+              className={`flex-1 px-6 py-4 font-space-grotesk font-semibold text-center transition-colors ${
+                activeTab === 'generation'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Content Generation
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('management')}
+              className={`flex-1 px-6 py-4 font-space-grotesk font-semibold text-center transition-colors border-l border-black ${
+                activeTab === 'management'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Discussion Management
+              </div>
+            </button>
+          </div>
+
+          {/* Tab Descriptions */}
+          <div className="p-4 bg-gray-50">
+            {activeTab === 'generation' && (
+              <p className="text-sm text-gray-700 font-open-sans">
+                Create new discussions by pasting content, processing it with AI, and generating forum discussions with replies.
+              </p>
+            )}
+            {activeTab === 'management' && (
+              <p className="text-sm text-gray-700 font-open-sans">
+                Browse existing discussions and add AI-generated comments to enhance engagement and activity.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Content Generation Tab */}
+        {activeTab === 'generation' && (
+          <React.Fragment>
+            {/* Process Steps */}
+            <ProcessSteps steps={processSteps} className="mb-8" />
 
         {/* Seed Users Status */}
         {!seedUsersInitialized && (
@@ -592,13 +674,27 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
                 </h3>
                 <p className="text-orange-700 font-open-sans">
                   Update any existing users with incorrect avatar file names to use the correct Avatar-X.png format from /public/avatars/.
+                  {!avatarStatusLoading && (
+                    <span className="block mt-1 text-sm">
+                      {usersNeedingFix > 0 
+                        ? `${usersNeedingFix} out of ${totalUsers} users need fixing.`
+                        : `All ${totalUsers} users have correct avatar paths.`
+                      }
+                    </span>
+                  )}
                 </p>
               </div>
               <button
                 onClick={handleFixAvatarPaths}
-                className="px-6 py-3 bg-orange-600 text-white font-space-grotesk font-semibold hover:bg-orange-700 transition-colors"
+                disabled={avatarStatusLoading}
+                className="px-6 py-3 bg-orange-600 text-white font-space-grotesk font-semibold hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                Fix Avatar Paths
+                {avatarStatusLoading 
+                  ? 'Checking...' 
+                  : usersNeedingFix > 0 
+                    ? `Fix ${usersNeedingFix} Avatar Path${usersNeedingFix === 1 ? '' : 's'}`
+                    : 'Check Avatar Paths'
+                }
               </button>
             </div>
           </div>
@@ -607,42 +703,64 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         {/* Main Control Panel */}
         <div className="bg-white border border-black mb-8">
           <div className="p-6">
-            <SeedingActionButtons
-              seedingInProgress={seedingInProgress}
-              seedingProgress={seedingProgress}
-              pastedContent={pastedContent}
-              scrapedContent={scrapedContent}
-              previewContent={previewContent}
-              aiApiKey={aiApiKey}
-              seedUsersInitialized={seedUsersInitialized}
-              onProcessContent={handleProcessContentWrapper}
-              onProcessWithAI={handleProcessWithAIWrapper}
-              onExecuteSeeding={handleExecuteSeedingWrapper}
-              onClearAll={clearAllContent}
-              className="mb-6"
-            />
-
-            {/* Progress Bar */}
-            {seedingInProgress && (
-              <div className="mb-6">
-                <div className="w-full bg-gray-200 border border-black h-4">
-                  <div 
-                    className="h-full bg-black transition-all duration-300"
-                    style={{ width: `${seedingProgress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-600 mt-2 font-open-sans">
-                  Progress: {Math.round(seedingProgress)}%
-                </p>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex-1">
+                <SeedingActionButtons
+                  seedingInProgress={seedingInProgress}
+                  seedingProgress={seedingProgress}
+                  pastedContent={pastedContent}
+                  scrapedContent={scrapedContent}
+                  previewContent={previewContent}
+                  aiApiKey={aiApiKey}
+                  seedUsersInitialized={seedUsersInitialized}
+                  onProcessContent={handleProcessContentWrapper}
+                  onProcessWithAI={handleProcessWithAIWrapper}
+                  onExecuteSeeding={handleExecuteSeedingWrapper}
+                  onClearAll={clearAllContent}
+                  className=""
+                />
               </div>
-            )}
+              <button
+                onClick={() => setIsControlPanelCollapsed(!isControlPanelCollapsed)}
+                className="ml-4 p-2 hover:bg-gray-100 transition-colors rounded"
+                title={isControlPanelCollapsed ? 'Show progress and results' : 'Hide progress and results'}
+              >
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${
+                    isControlPanelCollapsed ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
 
-            {/* Results */}
-            {seedingResults && (
-              <div className={`p-4 border border-black mb-6 ${
-                seedingResults.success ? 'bg-green-50' : 'bg-red-50'
-              }`}>
-                {seedingResults.restoredFromCache && (
+            {!isControlPanelCollapsed && (
+              <div>
+                {/* Progress Bar */}
+                {seedingInProgress && (
+                  <div className="mb-6">
+                    <div className="w-full bg-gray-200 border border-black h-4">
+                      <div 
+                        className="h-full bg-black transition-all duration-300"
+                        style={{ width: `${seedingProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2 font-open-sans">
+                      Progress: {Math.round(seedingProgress)}%
+                    </p>
+                  </div>
+                )}
+
+                {/* Results */}
+                {seedingResults && (
+                  <div className={`p-4 border border-black mb-6 ${
+                    seedingResults.success ? 'bg-green-50' : 'bg-red-50'
+                  }`}>
+                    {seedingResults.restoredFromCache && (
                   <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded">
                     <p className="text-sm text-blue-800 font-open-sans flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -708,6 +826,8 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
                       ❌ Process Failed
                     </h3>
                     <p className="text-sm text-red-700 font-open-sans">{seedingResults.error}</p>
+                  </div>
+                )}
                   </div>
                 )}
               </div>
@@ -784,6 +904,24 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           onSetAllActive={setAllPersonasActive}
           className="mb-8"
         />
+          </React.Fragment>
+        )}
+
+        {/* Discussion Management Tab */}
+        {activeTab === 'management' && (
+          <React.Fragment>
+            {/* Discussion Browser and Comment Manager */}
+            <DiscussionBrowser
+              showLoadingToast={showLoadingToast}
+              showSuccessToast={showSuccessToast}
+              showErrorToast={showErrorToast}
+              aiProvider={aiProvider}
+              aiModel={aiModel}
+              aiApiKey={aiApiKey}
+              temperature={temperature}
+            />
+          </React.Fragment>
+        )}
 
         {/* Documentation Link */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200">

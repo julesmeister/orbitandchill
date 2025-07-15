@@ -255,9 +255,17 @@ export class DiscussionService {
     }
     
     try {
-      // Get discussion by slug directly from database
+      // Get discussion by slug with user avatar info from database
       const rawResult = await client.execute({
-        sql: 'SELECT * FROM discussions WHERE slug = ? AND is_published = 1',
+        sql: `
+          SELECT 
+            d.*,
+            u.preferred_avatar,
+            u.profile_picture_url
+          FROM discussions d
+          LEFT JOIN users u ON d.author_id = u.id
+          WHERE d.slug = ? AND d.is_published = 1
+        `,
         args: [slug]
       });
       
@@ -289,6 +297,8 @@ export class DiscussionService {
               updatedAt: row.updated_at,
               lastActivity: row.last_activity,
               featuredImage: row.featured_image,
+              preferredAvatar: row.preferred_avatar,
+              profilePictureUrl: row.profile_picture_url,
             };
         }
       

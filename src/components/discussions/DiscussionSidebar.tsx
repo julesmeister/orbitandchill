@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { DiscussionTemp } from '../../types/threads';
 import VoteButtons from '../reusable/VoteButtons';
 import { FirstImageData } from './DiscussionContent';
+import { useUserAvatar } from '../../hooks/useUserAvatar';
 
 interface DiscussionSidebarProps {
   discussion: DiscussionTemp;
@@ -14,6 +16,13 @@ interface DiscussionSidebarProps {
 export default function DiscussionSidebar({ discussion, relatedDiscussions, firstImage }: DiscussionSidebarProps) {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  
+  const { avatarSrc, initials } = useUserAvatar({
+    author: discussion.author,
+    avatar: discussion.avatar,
+    preferredAvatar: discussion.preferredAvatar,
+    profilePictureUrl: discussion.profilePictureUrl,
+  });
 
   // Format date for display
   const formatDate = (dateValue: string | Date | number) => {
@@ -71,10 +80,29 @@ export default function DiscussionSidebar({ discussion, relatedDiscussions, firs
       {/* Author Info Card */}
       <div className="bg-white border-b border-black p-4">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-16 h-16 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100">
-            <span className="text-black font-bold text-lg font-space-grotesk">
-              {discussion.avatar}
-            </span>
+          <div className="w-16 h-16 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100 overflow-hidden">
+            {avatarSrc ? (
+              <Image
+                src={avatarSrc}
+                alt={`${discussion.author}'s avatar`}
+                width={64}
+                height={64}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `<span class="text-black font-bold text-lg font-space-grotesk">${initials}</span>`;
+                  }
+                }}
+              />
+            ) : (
+              <span className="text-black font-bold text-lg font-space-grotesk">
+                {initials}
+              </span>
+            )}
           </div>
           <div>
             <h4 className="font-space-grotesk font-bold text-black text-lg">{discussion.author}</h4>

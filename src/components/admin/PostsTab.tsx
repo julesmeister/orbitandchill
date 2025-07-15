@@ -7,6 +7,7 @@ import { useUserStore } from '@/store/userStore';
 import DiscussionForm from '../forms/DiscussionForm';
 import ConfirmationModal from '../reusable/ConfirmationModal';
 import StatusToast from '../reusable/StatusToast';
+import UncategorizedPostsManager from './UncategorizedPostsManager';
 import { stripHtmlTags } from '@/utils/textUtils';
 import { extractFirstImageFromContent, createImageChartObject } from '@/utils/extractImageFromContent';
 import { useCategories } from '@/hooks/useCategories';
@@ -139,6 +140,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   
   // Category management state
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showUncategorizedManager, setShowUncategorizedManager] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [editingCategory, setEditingCategory] = useState<{id: string, value: string} | null>(null);
   const [toast, setToast] = useState<{
@@ -744,9 +746,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white border border-black p-6">
+      <div className="bg-white border border-black p-4">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold text-black mb-2 font-space-grotesk">Posts & Threads</h2>
@@ -792,6 +794,19 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             </button>
             
             <button
+              onClick={() => setShowUncategorizedManager(!showUncategorizedManager)}
+              className="bg-[#51bd94] text-black px-4 py-3 font-medium hover:bg-[#4aa384] transition-colors duration-200 font-open-sans border border-black"
+              title="Manage Uncategorized Posts"
+            >
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <span>Organize Posts</span>
+              </div>
+            </button>
+            
+            <button
               onClick={() => {
                 setEditingPost(null);
                 setShowCreateForm(true);
@@ -811,7 +826,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
       {/* Category Manager */}
       {showCategoryManager && (
-        <div className="bg-white border border-black p-6">
+        <div className="bg-white border border-black p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-black font-space-grotesk">Manage Categories</h3>
             <button
@@ -945,20 +960,16 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
               </div>
             </div>
             
-            <div className="bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800 font-open-sans">
-              <strong>Database Integration:</strong> Categories are stored in the database and synchronized across the entire application.
-              {categoriesFallback ? (
-                <span className="block mt-1 text-yellow-700">
-                  <strong>Fallback Mode:</strong> Using local categories due to database connectivity issues. Changes will sync when connection is restored.
-                </span>
-              ) : (
-                <span className="block mt-1">
-                  Changes take effect immediately across all components and are persisted to the database.
-                </span>
-              )}
-            </div>
           </div>
         </div>
+      )}
+
+      {/* Uncategorized Posts Manager */}
+      {showUncategorizedManager && (
+        <UncategorizedPostsManager
+          isVisible={showUncategorizedManager}
+          onClose={() => setShowUncategorizedManager(false)}
+        />
       )}
 
       {/* Bulk Actions Bar */}
@@ -1035,7 +1046,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         >
           <div className="max-w-none mx-auto">
             {/* Header */}
-            <div className="bg-white border border-black p-6 mb-6">
+            <div className="bg-white border border-black p-4 mb-4">
               <div className="flex justify-between items-center">
                 <h2 className="font-space-grotesk text-3xl font-bold text-black">
                   {editingPost ? 'Edit Post' : 'Create New Post'}
@@ -1167,7 +1178,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
       {/* Posts List */}
       <div className="bg-white border border-black">
-        <div className="p-6 border-b border-black">
+        <div className="p-4 border-b border-black">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               {currentPosts.length > 0 && (
@@ -1207,7 +1218,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
           {isLoading ? (
             <div className="space-y-0">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="p-6 animate-pulse border-b border-black last:border-b-0">
+                <div key={i} className="p-4 animate-pulse border-b border-black last:border-b-0">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
@@ -1254,7 +1265,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
             </div>
           ) : (
             currentPosts.map((thread: any) => (
-              <div key={thread.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={thread.id} className="p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="flex items-start space-x-4 flex-1">
                     {/* Checkbox for individual post selection */}
@@ -1406,7 +1417,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
         {/* Time Update Info - Always show when posts exist */}
         {filteredThreads.length > 0 && totalPages <= 1 && (
-          <div className="px-6 py-3 border-t border-black bg-gray-50">
+          <div className="px-4 py-2 border-t border-black bg-gray-50">
             <div className="text-xs text-gray-500 text-center font-open-sans">
               Times updated {new Date().toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
@@ -1418,7 +1429,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-black bg-white">
+          <div className="px-4 py-3 border-t border-black bg-white">
             <div className="flex items-center justify-between">
               {/* Page Info */}
               <div className="text-sm text-black font-open-sans">

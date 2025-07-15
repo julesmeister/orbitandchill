@@ -144,6 +144,10 @@ async function executeDatabaseSeeding(
   
   for (const item of transformedContent) {
     try {
+      // Look up avatar data for the assigned author
+      const authorConfig = seedConfigs.find(config => config.userId === item.assignedAuthorId);
+      const authorAvatar = authorConfig?.preferredAvatar || authorConfig?.profilePictureUrl || '';
+      
       // Create the main discussion in the database
       const discussionData = {
         title: item.transformedTitle,
@@ -151,6 +155,7 @@ async function executeDatabaseSeeding(
         excerpt: item.summary || item.transformedContent.substring(0, 200) + '...',
         authorName: item.assignedAuthor,
         authorId: item.assignedAuthorId,
+        authorAvatar: authorAvatar,
         category: item.category,
         tags: item.tags,
         upvotes: Math.floor(Math.random() * 50) + 10,
@@ -180,11 +185,16 @@ async function executeDatabaseSeeding(
             // Use the scheduled timestamp from the preview
             const scheduledTime = reply.createdAt ? new Date(reply.createdAt) : new Date();
             
+            // Look up avatar data for the reply author
+            const replyAuthorConfig = seedConfigs.find(config => config.userId === reply.authorId);
+            const replyAuthorAvatar = replyAuthorConfig?.preferredAvatar || replyAuthorConfig?.profilePictureUrl || '';
+            
             const replyData = {
               discussionId,
               content: reply.content,
               authorName: reply.authorName,
               authorId: reply.authorId,
+              authorAvatar: replyAuthorAvatar,
               upvotes: reply.upvotes || Math.floor(Math.random() * 20) + 1,
               downvotes: reply.downvotes || Math.floor(Math.random() * 3),
               parentReplyId: null, // AI replies are all top-level for now
@@ -270,6 +280,7 @@ async function generateRepliesForDiscussion(
       content: generateReplyContent(replyTemplates, replyUser.writingStyle),
       authorName: replyUser.username || 'Anonymous',
       authorId: replyUser.userId,
+      authorAvatar: replyUser.preferredAvatar || replyUser.profilePictureUrl || '',
       parentReplyId: null,
       upvotes: Math.floor(Math.random() * 20) + 1,
       downvotes: Math.floor(Math.random() * 3)
@@ -343,6 +354,7 @@ async function generateNestedReplies(
       content: generateReplyContent(nestedReplyTemplates, replyUser.writingStyle),
       authorName: replyUser.username || 'Anonymous',
       authorId: replyUser.userId,
+      authorAvatar: replyUser.preferredAvatar || replyUser.profilePictureUrl || '',
       parentReplyId,
       upvotes: Math.floor(Math.random() * 10) + 1,
       downvotes: Math.floor(Math.random() * 2)

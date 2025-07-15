@@ -58,6 +58,8 @@ export async function GET(
         ...discussion,
         author: authorName,
         avatar: authorName.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        preferredAvatar: discussion.preferredAvatar,
+        profilePictureUrl: discussion.profilePictureUrl,
       };
 
       return NextResponse.json({

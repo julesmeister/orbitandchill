@@ -235,6 +235,14 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
                       // Ensure absolutely unique key by combining multiple identifiers
                       const uniqueKey = `${index}-${replyIdx}-${reply.id || Date.now()}-${reply.authorName || 'unknown'}`;
                       
+                      // Debug: Log reply data to see what's available
+                      console.log('🖼️ Reply data for avatar:', {
+                        authorName: reply.authorName,
+                        avatar: reply.avatar,
+                        authorAvatar: reply.authorAvatar,
+                        allKeys: Object.keys(reply)
+                      });
+                      
                       return (
                         <div key={uniqueKey} className="bg-white p-4 rounded border border-blue-200 relative group hover:border-blue-300 transition-colors duration-200">
                           {/* Delete Button - Modern Design */}
@@ -250,7 +258,19 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
                           </button>
                           
                           <div className="flex items-start gap-3 pr-8">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                            {(reply.avatar || reply.authorAvatar) ? (
+                              <img 
+                                src={reply.avatar || reply.authorAvatar} 
+                                alt={`${reply.authorName}'s avatar`}
+                                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                                onError={(e) => {
+                                  // Fallback to initial if image fails to load
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm ${(reply.avatar || reply.authorAvatar) ? 'hidden' : ''}`}>
                               {reply.authorName ? reply.authorName.charAt(0) : 'A'}
                             </div>
                             <div className="flex-1">

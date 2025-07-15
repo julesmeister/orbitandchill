@@ -125,18 +125,19 @@ export const createInitialSeedUsers = async (): Promise<{ success: boolean; crea
           // Create user profile
           await db.client.execute({
             sql: `INSERT INTO users (
-              id, username, email, profile_picture_url, auth_provider, 
+              id, username, email, profile_picture_url, preferred_avatar, auth_provider, 
               sun_sign, stellium_signs, stellium_houses, has_natal_chart,
               show_zodiac_publicly, show_stelliums_publicly, show_birth_info_publicly,
               allow_direct_messages, show_online_status,
               date_of_birth, time_of_birth, location_of_birth, latitude, longitude,
               created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
               userData.id,
               userData.username,
               userData.email,
               userData.avatar,
+              userData.preferredAvatar,
               userData.authProvider,
               userData.sunSign,
               JSON.stringify(userData.stelliumSigns),
@@ -221,13 +222,14 @@ export const getAllSeedUserConfigs = async (): Promise<any[]> => {
     // Ensure tables exist first
     await ensureSeedingTablesExist();
 
-    // Join seed configs with user data to get usernames
+    // Join seed configs with user data to get usernames and avatar data
     const result = await db.client.execute({
       sql: `SELECT 
         sc.*,
         u.username,
         u.email,
-        u.profile_picture_url
+        u.profile_picture_url,
+        u.preferred_avatar
       FROM seed_user_configs sc
       LEFT JOIN users u ON sc.user_id = u.id
       WHERE sc.is_active = 1
@@ -240,6 +242,7 @@ export const getAllSeedUserConfigs = async (): Promise<any[]> => {
       username: row.username,
       email: row.email,
       profilePictureUrl: row.profile_picture_url,
+      preferredAvatar: row.preferred_avatar,
       writingStyle: row.writing_style,
       expertiseAreas: JSON.parse(row.expertise_areas || '[]'),
       responsePattern: row.response_pattern,
