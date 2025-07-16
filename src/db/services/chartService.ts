@@ -104,7 +104,7 @@ export class ChartService {
         hasMetadata: !!data.metadata
       });
       
-      const insertResult = await db.insert(natalCharts).values(newChart);
+      const insertResult = await db.insert(natalCharts).values(newChart).returning();
       console.log('🔧 ChartService.createChart: Insert result:', insertResult);
       
       // Verify the chart was actually saved
