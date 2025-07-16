@@ -155,9 +155,21 @@ export default function ChartQuickActions({
       const data = await response.json();
       
       if (data.shareUrl) {
-        // Copy to clipboard
-        await navigator.clipboard.writeText(data.shareUrl);
-        showSuccess('Link Copied!', 'Share link has been copied to your clipboard');
+        // Copy to clipboard with proper error handling
+        try {
+          await navigator.clipboard.writeText(data.shareUrl);
+          showSuccess('Link Copied!', 'Share link has been copied to your clipboard');
+        } catch (clipboardError) {
+          // Fallback: try to focus the document and retry
+          try {
+            window.focus();
+            await navigator.clipboard.writeText(data.shareUrl);
+            showSuccess('Link Copied!', 'Share link has been copied to your clipboard');
+          } catch (retryError) {
+            // Final fallback: show the URL to user
+            showSuccess('Share Link Ready', `Copy this link: ${data.shareUrl}`);
+          }
+        }
       } else {
         throw new Error('No share URL returned from server');
       }

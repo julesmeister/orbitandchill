@@ -42,11 +42,11 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
                 <p className="font-open-sans text-xs font-medium text-black/60 uppercase tracking-wide">Birth Date</p>
               </div>
               <p className="font-open-sans text-sm font-semibold text-black">
-                {new Date(birthData.dateOfBirth).toLocaleDateString('en-US', {
+                {birthData?.dateOfBirth ? new Date(birthData.dateOfBirth).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
-                })}
+                }) : 'Unknown'}
               </p>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
                 </svg>
                 <p className="font-open-sans text-xs font-medium text-black/60 uppercase tracking-wide">Birth Time</p>
               </div>
-              <p className="font-open-sans text-sm font-semibold text-black">{birthData.timeOfBirth}</p>
+              <p className="font-open-sans text-sm font-semibold text-black">{birthData?.timeOfBirth || 'Unknown'}</p>
             </div>
           </div>
           
@@ -81,7 +81,7 @@ export default function BirthDataSummary({ birthData, personName }: BirthDataSum
                 </svg>
                 <p className="font-open-sans text-xs font-medium text-black/60 uppercase tracking-wide">Birth Location</p>
               </div>
-              <p className="font-open-sans text-sm font-semibold text-black break-words">{birthData.locationOfBirth}</p>
+              <p className="font-open-sans text-sm font-semibold text-black break-words">{birthData?.locationOfBirth || 'Unknown'}</p>
             </div>
           </div>
         </div>

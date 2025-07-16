@@ -341,9 +341,7 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
     try {
       // First, try to get the most recent chart ID from the database
       // This ensures we're always sharing the latest chart, not a cached one
-      console.log('Getting user charts for sharing...');
       const userCharts = await getUserCharts();
-      console.log('User has', userCharts.length, 'charts:', userCharts.map(c => ({ id: c.id, dateOfBirth: c.dateOfBirth, timeOfBirth: c.timeOfBirth })));
       
       const latestChart = userCharts.find(chart => 
         activePersonData &&
