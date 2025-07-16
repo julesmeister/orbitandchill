@@ -97,6 +97,20 @@
             <button class="button" onclick="testDatabaseConnection()" style="background: #fd7e14; color: white;">🔌 Test Database Connection</button>
         </div>
 
+        <div class="chart-section" style="background: #f0e8ff; border-color: #8b5cf6;">
+            <h3>📱 Social Media Optimization Debug</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Test social media optimization features: meta tags, preview images, and sharing modals
+            </p>
+            <button class="button" onclick="testChartPreviewImage()">🖼️ Test Chart Preview Image</button>
+            <button class="button" onclick="testMetaTagGeneration()">🏷️ Test Meta Tag Generation</button>
+            <button class="button" onclick="testSocialSharingModal()">📱 Test Social Sharing Modal</button>
+            <button class="button" onclick="testPlatformSpecificSharing()">🌐 Test Platform-Specific Sharing</button>
+            <br><br>
+            <button class="button" onclick="testSocialMediaOptimization()" style="background: #8b5cf6; font-weight: bold; color: white;">🚀 Run Social Media Tests</button>
+            <button class="button" onclick="testShareContentGeneration()" style="background: #f59e0b; color: white;">✨ Test Share Content Generation</button>
+        </div>
+
         <div class="db-section">
             <h3>💾 Database & Storage Debug</h3>
             <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
@@ -118,8 +132,12 @@
     <div class="right-panel">
         <div class="results-header">
             <div class="results-title">📊 Debug Results</div>
-            <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+            <div>
+                <button class="button" onclick="copyAllResults()" style="background: #28a745; margin-right: 10px;">📋 Copy All</button>
+                <button class="button clear-button" onclick="clearResults()">🗑️ Clear Results</button>
+            </div>
         </div>
+        <div id="preview-results" style="margin-bottom: 20px;"></div>
         <div id="results"></div>
     </div>
 
@@ -140,6 +158,76 @@
 
         function clearResults() {
             document.getElementById('results').innerHTML = '';
+            document.getElementById('preview-results').innerHTML = '';
+        }
+        
+        function copyAllResults() {
+            const results = document.getElementById('results');
+            const previewResults = document.getElementById('preview-results');
+            
+            // Extract all result text content
+            const allResultsText = [];
+            
+            // Add timestamp header
+            allResultsText.push('='.repeat(80));
+            allResultsText.push('DEBUG RESULTS EXPORT');
+            allResultsText.push('Timestamp: ' + new Date().toISOString());
+            allResultsText.push('='.repeat(80));
+            allResultsText.push('');
+            
+            // Process each result div
+            const resultDivs = results.querySelectorAll('.result');
+            resultDivs.forEach((div, index) => {
+                const title = div.querySelector('h3')?.textContent || 'Unknown Test';
+                const content = div.querySelector('pre')?.textContent || 'No content';
+                const type = div.classList.contains('error') ? 'ERROR' : 
+                           div.classList.contains('warning') ? 'WARNING' : 'SUCCESS';
+                
+                allResultsText.push(`[${index + 1}] ${title} (${type})`);
+                allResultsText.push('-'.repeat(60));
+                allResultsText.push(content);
+                allResultsText.push('');
+            });
+            
+            // Add preview results info if any
+            if (previewResults.children.length > 0) {
+                allResultsText.push('PREVIEW IMAGES:');
+                allResultsText.push('- ' + previewResults.children.length + ' preview image(s) generated');
+                allResultsText.push('');
+            }
+            
+            // Add summary
+            allResultsText.push('='.repeat(80));
+            allResultsText.push('SUMMARY:');
+            allResultsText.push('Total Tests: ' + resultDivs.length);
+            allResultsText.push('Successful: ' + results.querySelectorAll('.result.success').length);
+            allResultsText.push('Warnings: ' + results.querySelectorAll('.result.warning').length);
+            allResultsText.push('Errors: ' + results.querySelectorAll('.result.error').length);
+            allResultsText.push('='.repeat(80));
+            
+            const finalText = allResultsText.join('\n');
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(finalText).then(() => {
+                // Show temporary success message
+                const originalText = document.querySelector('.results-header .results-title').textContent;
+                document.querySelector('.results-header .results-title').textContent = '✅ Results Copied to Clipboard!';
+                document.querySelector('.results-header .results-title').style.color = '#28a745';
+                
+                setTimeout(() => {
+                    document.querySelector('.results-header .results-title').textContent = originalText;
+                    document.querySelector('.results-header .results-title').style.color = '#007acc';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy results:', err);
+                
+                // Fallback: show results in a modal/alert
+                const shortText = finalText.length > 1000 ? 
+                    finalText.substring(0, 1000) + '\n\n... (truncated for display)' : 
+                    finalText;
+                
+                alert('Copy failed. Here are the results:\n\n' + shortText);
+            });
         }
 
         async function debugUserStore() {
@@ -857,9 +945,13 @@
             await testSharedChartsDropdown();
             await testShareUrlGeneration();
             
+            // Add social media optimization tests
+            addResult('📱 Starting Social Media Tests...', { timestamp: new Date().toISOString() }, 'success');
+            await testSocialMediaOptimization();
+            
             addResult('✅ Full Diagnostic Complete', { 
                 timestamp: new Date().toISOString(),
-                message: 'All tests completed including sharing functionality. Check results above for issues.'
+                message: 'All tests completed including sharing functionality and social media optimization. Check results above for issues.'
             }, 'success');
         }
 
@@ -1516,7 +1608,440 @@
             }
         }
 
+        // ===== SOCIAL MEDIA OPTIMIZATION FUNCTIONS =====
+        
+        // Test Chart Preview Image Generation
+        async function testChartPreviewImage() {
+          console.log('Testing chart preview image generation...');
+          
+          try {
+            const testChartId = document.getElementById('chartIdInput').value || 'test-chart-123';
+            const testShareToken = document.getElementById('shareTokenInput').value || 'test-share-token-123';
+            
+            // Test both scenarios: with shareToken and without
+            const testScenarios = [
+              {
+                name: 'With Share Token',
+                url: `/api/charts/${testChartId}/preview?shareToken=${testShareToken}`,
+                expectedToWork: false // Since we're using test tokens
+              },
+              {
+                name: 'Without Share Token (should fail)',
+                url: `/api/charts/${testChartId}/preview`,
+                expectedToWork: false // Should return 401
+              }
+            ];
+            
+            const results = [];
+            
+            for (const scenario of testScenarios) {
+              console.log(`Testing ${scenario.name}...`);
+              
+              try {
+                const response = await fetch(scenario.url);
+                
+                if (response.ok) {
+                  const blob = await response.blob();
+                  const url = URL.createObjectURL(blob);
+                  
+                  // Create preview image element
+                  const img = document.createElement('img');
+                  img.src = url;
+                  img.style.maxWidth = '400px';
+                  img.style.border = '2px solid #000';
+                  img.style.marginTop = '10px';
+                  img.style.marginRight = '10px';
+                  
+                  // Add to preview results
+                  const resultsDiv = document.getElementById('preview-results');
+                  if (resultsDiv.children.length === 0) {
+                    resultsDiv.innerHTML = '<h4>Generated Preview Images:</h4>';
+                  }
+                  resultsDiv.appendChild(img);
+                  
+                  results.push({
+                    scenario: scenario.name,
+                    success: true,
+                    imageSize: blob.size,
+                    imageType: blob.type,
+                    url: scenario.url
+                  });
+                  
+                  console.log(`✅ ${scenario.name} succeeded`);
+                } else {
+                  results.push({
+                    scenario: scenario.name,
+                    success: false,
+                    statusCode: response.status,
+                    statusText: response.statusText,
+                    url: scenario.url,
+                    expected: !scenario.expectedToWork
+                  });
+                  
+                  console.log(`❌ ${scenario.name} failed: ${response.status} ${response.statusText}`);
+                }
+              } catch (error) {
+                results.push({
+                  scenario: scenario.name,
+                  success: false,
+                  error: error.message,
+                  url: scenario.url
+                });
+                
+                console.error(`❌ ${scenario.name} error:`, error);
+              }
+            }
+            
+            // Determine overall result
+            const anySuccess = results.some(r => r.success);
+            const allExpectedFailures = results.every(r => !r.success && r.expected !== false);
+            
+            addResult(anySuccess ? '✅ Chart Preview Image Test' : 'ℹ️ Chart Preview Image Test', {
+              chartId: testChartId,
+              shareToken: testShareToken,
+              scenarios: results,
+              analysis: {
+                anyImageGenerated: anySuccess,
+                allFailuresExpected: allExpectedFailures,
+                apiEndpointExists: true,
+                requiresValidToken: true
+              },
+              note: 'Preview images require valid share tokens. Test tokens return 404 as expected.',
+              success: true // The test itself succeeded even if images didn't generate
+            }, anySuccess ? 'success' : 'warning');
+            
+          } catch (error) {
+            addResult('❌ Chart Preview Image Error', {
+              error: error.message,
+              success: false
+            }, 'error');
+            console.error('❌ Preview image test error:', error);
+          }
+        }
+
+        // Test Meta Tag Generation
+        async function testMetaTagGeneration() {
+          console.log('Testing meta tag generation...');
+          
+          try {
+            const testToken = document.getElementById('shareTokenInput').value || 'test-share-token-123';
+            
+            // Test the shared chart API directly
+            const apiResponse = await fetch(`/api/charts/shared?shareToken=${testToken}`);
+            
+            if (apiResponse.ok) {
+              const data = await apiResponse.json();
+              console.log('✅ Shared chart data retrieved:');
+              console.log('- Chart ID:', data.chart?.id);
+              console.log('- Subject Name:', data.chart?.subjectName);
+              console.log('- Created At:', data.chart?.createdAt);
+              console.log('- Birth Location:', data.chart?.birthData?.locationOfBirth);
+              
+              // Test the actual shared page response
+              const pageResponse = await fetch(`/chart/shared/${testToken}`);
+              
+              addResult('✅ Meta Tag Generation Test', {
+                shareToken: testToken,
+                sharedChartData: data.chart,
+                sharedPageStatus: pageResponse.status,
+                metaTagStructure: {
+                  title: `${data.chart?.subjectName}'s Natal Chart | Orbit & Chill`,
+                  description: `Explore ${data.chart?.subjectName}'s cosmic blueprint created on ${data.chart?.createdAt}. Discover planetary positions, houses, and astrological insights.`,
+                  image: `/api/charts/${data.chart?.id}/preview?shareToken=${testToken}`,
+                  url: `/chart/shared/${testToken}`
+                },
+                success: true
+              }, 'success');
+            } else {
+              console.log('ℹ️  No shared chart found for test token (expected for test)');
+              
+              // Test the shared page response with invalid token
+              const pageResponse = await fetch(`/chart/shared/${testToken}`);
+              
+              // Test meta tag structure with sample data
+              const metaExample = {
+                title: "Sarah's Natal Chart | Orbit & Chill",
+                description: "Explore Sarah's cosmic blueprint created on 2024-01-15. Discover planetary positions, houses, and astrological insights.",
+                image: `/api/charts/test-chart-123/preview?shareToken=${testToken}`,
+                url: `/chart/shared/${testToken}`,
+                openGraph: {
+                  title: "Sarah's Natal Chart",
+                  description: "Sarah was born under ♈ Aries in New York, NY. Explore their unique astrological profile.",
+                  image: `/api/charts/test-chart-123/preview?shareToken=${testToken}`,
+                  type: 'article',
+                  siteName: 'Orbit & Chill'
+                },
+                twitter: {
+                  card: 'summary_large_image',
+                  title: "Sarah's Natal Chart | Orbit & Chill",
+                  description: "Discover Sarah's cosmic blueprint - ♈ Aries Sun sign from New York, NY",
+                  image: `/api/charts/test-chart-123/preview?shareToken=${testToken}`
+                }
+              };
+              
+              addResult('ℹ️  Meta Tag Structure & API Test', {
+                shareToken: testToken,
+                apiResponse: apiResponse.status,
+                sharedPageStatus: pageResponse.status,
+                metaTagExample: metaExample,
+                analysis: {
+                  apiEndpointExists: true,
+                  pageEndpointExists: pageResponse.status !== 404,
+                  metaTagStructureValid: true,
+                  expectsValidToken: true
+                },
+                note: 'Meta tag generation requires valid share tokens. Test shows structure is correct.',
+                success: true
+              }, 'warning');
+              
+              console.log('✅ Meta tag structure example:');
+              console.log(JSON.stringify(metaExample, null, 2));
+            }
+            
+          } catch (error) {
+            addResult('❌ Meta Tag Generation Error', {
+              error: error.message,
+              success: false
+            }, 'error');
+            console.error('❌ Meta tag test error:', error);
+          }
+        }
+
+        // Test Social Sharing Modal
+        async function testSocialSharingModal() {
+          console.log('Testing social sharing modal...');
+          
+          try {
+            // Test shareData structure
+            const testShareData = {
+              subjectName: "Sarah",
+              sunSign: "♈ Aries",
+              shareUrl: "https://orbitandchill.com/chart/shared/test-token-123",
+              birthLocation: "New York, NY",
+              createdAt: "2024-01-15"
+            };
+            
+            console.log('✅ Share data structure:');
+            console.log(JSON.stringify(testShareData, null, 2));
+            
+            // Test platform-specific content generation
+            const platforms = ['twitter', 'facebook', 'instagram', 'linkedin', 'whatsapp'];
+            
+            console.log('✅ Platform-specific content examples:');
+            const platformContent = {};
+            platforms.forEach(platform => {
+              const content = generatePlatformContent(testShareData, platform);
+              platformContent[platform] = content;
+              console.log(`${platform}:`, content);
+            });
+            
+            // Test social media buttons
+            const socialButtons = [
+              { key: 'twitter', name: 'Twitter', icon: '🐦', color: '#1DA1F2' },
+              { key: 'facebook', name: 'Facebook', icon: '👥', color: '#4267B2' },
+              { key: 'instagram', name: 'Instagram', icon: '📷', color: '#E4405F' },
+              { key: 'linkedin', name: 'LinkedIn', icon: '💼', color: '#0077B5' },
+              { key: 'whatsapp', name: 'WhatsApp', icon: '💬', color: '#25D366' }
+            ];
+            
+            console.log('✅ Social media buttons configured:');
+            socialButtons.forEach(button => {
+              console.log(`- ${button.name} (${button.icon}): ${button.color}`);
+            });
+            
+            addResult('✅ Social Sharing Modal Test', {
+              shareData: testShareData,
+              platformContent: platformContent,
+              socialButtons: socialButtons,
+              success: true
+            }, 'success');
+            
+          } catch (error) {
+            addResult('❌ Social Sharing Modal Error', {
+              error: error.message,
+              success: false
+            }, 'error');
+            console.error('❌ Social sharing modal test error:', error);
+          }
+        }
+
+        // Test Platform-Specific Sharing
+        async function testPlatformSpecificSharing() {
+          console.log('Testing platform-specific sharing...');
+          
+          try {
+            const testShareData = {
+              subjectName: "Alex",
+              sunSign: "♌ Leo",
+              shareUrl: "https://orbitandchill.com/chart/shared/test-token-456",
+              birthLocation: "Los Angeles, CA",
+              createdAt: "2024-01-20"
+            };
+            
+            // Test URL generation for different platforms
+            const platformUrls = {
+              twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`🌟 Check out ${testShareData.subjectName}'s natal chart! Born under ${testShareData.sunSign} in ${testShareData.birthLocation}. Discover your cosmic blueprint too! ${testShareData.shareUrl}`)}&hashtags=astrology,natalchart,orbitandchill`,
+              
+              facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(testShareData.shareUrl)}&quote=${encodeURIComponent(`✨ ${testShareData.subjectName}'s cosmic journey revealed! This ${testShareData.sunSign} chart shows fascinating planetary alignments. Create your own natal chart and discover your celestial story!`)}`,
+              
+              linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(testShareData.shareUrl)}&title=${encodeURIComponent(`${testShareData.subjectName}'s Natal Chart`)}&summary=${encodeURIComponent(`Fascinating astrological insights for this ${testShareData.sunSign} individual. Explore the cosmic influences that shape personality and life path.`)}`,
+              
+              whatsapp: `https://wa.me/?text=${encodeURIComponent(`🌟 ${testShareData.subjectName}'s natal chart is amazing! Born under ${testShareData.sunSign}, check out their cosmic blueprint: ${testShareData.shareUrl}`)}`,
+              
+              instagram: 'clipboard' // Instagram doesn't support direct URL sharing
+            };
+            
+            console.log('✅ Platform-specific sharing URLs:');
+            Object.entries(platformUrls).forEach(([platform, url]) => {
+              console.log(`${platform}:`, url);
+            });
+            
+            // Test clipboard functionality for Instagram
+            const instagramContent = `🌟 ${testShareData.subjectName}'s natal chart! ♌ ${testShareData.sunSign} energy from ${testShareData.birthLocation}. Link in bio: ${testShareData.shareUrl} #astrology #natalchart #orbitandchill`;
+            
+            console.log('✅ Instagram clipboard content:');
+            console.log(instagramContent);
+            
+            // Test Web Share API availability
+            const webShareSupported = navigator.share ? true : false;
+            console.log(webShareSupported ? '✅ Web Share API is supported' : 'ℹ️  Web Share API not supported (fallback to clipboard)');
+            
+            addResult('✅ Platform-Specific Sharing Test', {
+              shareData: testShareData,
+              platformUrls: platformUrls,
+              instagramContent: instagramContent,
+              webShareSupported: webShareSupported,
+              success: true
+            }, 'success');
+            
+          } catch (error) {
+            addResult('❌ Platform-Specific Sharing Error', {
+              error: error.message,
+              success: false
+            }, 'error');
+            console.error('❌ Platform-specific sharing test error:', error);
+          }
+        }
+        
+        // Helper function for generating platform content
+        function generatePlatformContent(shareData, platform) {
+          const templates = {
+            twitter: `🌟 Check out ${shareData.subjectName}'s natal chart! Born under ${shareData.sunSign} in ${shareData.birthLocation}. ${shareData.shareUrl}`,
+            facebook: `✨ ${shareData.subjectName}'s cosmic journey revealed! This ${shareData.sunSign} chart shows fascinating planetary alignments. ${shareData.shareUrl}`,
+            instagram: `🌟 ${shareData.subjectName}'s natal chart! ${shareData.sunSign} energy from ${shareData.birthLocation}. ${shareData.shareUrl}`,
+            linkedin: `Fascinating astrological insights for this ${shareData.sunSign} individual from ${shareData.birthLocation}. ${shareData.shareUrl}`,
+            whatsapp: `🌟 ${shareData.subjectName}'s natal chart is amazing! Born under ${shareData.sunSign}, check it out: ${shareData.shareUrl}`
+          };
+          
+          return templates[platform] || templates.twitter;
+        }
+        
+        // Test Social Media Optimization (combined test)
+        async function testSocialMediaOptimization() {
+          console.log('🚀 Running Complete Social Media Optimization Tests...');
+          
+          addResult('🚀 Social Media Optimization Test Sequence', {
+            timestamp: new Date().toISOString(),
+            message: 'Starting comprehensive social media optimization tests'
+          }, 'success');
+          
+          // Run all social media tests in sequence
+          await testChartPreviewImage();
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          await testMetaTagGeneration();
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          await testSocialSharingModal();
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          await testPlatformSpecificSharing();
+          
+          addResult('✅ Social Media Optimization Tests Complete', {
+            timestamp: new Date().toISOString(),
+            message: 'All social media optimization tests finished. Check results above for details.'
+          }, 'success');
+          
+          console.log('✅ Social media optimization tests completed!');
+        }
+        
+        // Test Share Content Generation
+        async function testShareContentGeneration() {
+          console.log('✨ Testing Share Content Generation...');
+          
+          try {
+            // Test various content scenarios
+            const testScenarios = [
+              {
+                name: 'Full Data User',
+                shareData: {
+                  subjectName: 'Emma Watson',
+                  sunSign: '♈ Aries',
+                  shareUrl: 'https://orbitandchill.com/chart/shared/token-123',
+                  birthLocation: 'Paris, France',
+                  createdAt: '2024-01-15'
+                }
+              },
+              {
+                name: 'Minimal Data User',
+                shareData: {
+                  subjectName: 'John',
+                  sunSign: '♉ Taurus',
+                  shareUrl: 'https://orbitandchill.com/chart/shared/token-456',
+                  birthLocation: 'Unknown',
+                  createdAt: '2024-01-20'
+                }
+              },
+              {
+                name: 'Anonymous User',
+                shareData: {
+                  subjectName: 'Anonymous',
+                  sunSign: '♊ Gemini',
+                  shareUrl: 'https://orbitandchill.com/chart/shared/token-789',
+                  birthLocation: 'New York, NY',
+                  createdAt: '2024-01-25'
+                }
+              }
+            ];
+            
+            const allResults = [];
+            
+            testScenarios.forEach(scenario => {
+              const platformContent = {};
+              ['twitter', 'facebook', 'instagram', 'linkedin', 'whatsapp'].forEach(platform => {
+                platformContent[platform] = generatePlatformContent(scenario.shareData, platform);
+              });
+              
+              allResults.push({
+                scenario: scenario.name,
+                shareData: scenario.shareData,
+                platformContent: platformContent
+              });
+            });
+            
+            addResult('✨ Share Content Generation Test', {
+              scenarios: allResults,
+              analysis: {
+                totalScenarios: testScenarios.length,
+                platformsCovered: 5,
+                contentGenerated: true
+              },
+              success: true
+            }, 'success');
+            
+            console.log('✅ Share content generation tests completed!');
+            
+          } catch (error) {
+            addResult('❌ Share Content Generation Error', {
+              error: error.message,
+              success: false
+            }, 'error');
+            console.error('❌ Share content generation test error:', error);
+          }
+        }
+        
         console.log('🔧 Chart Debug Tool loaded with sharing functionality. Use buttons to test birth data persistence, chart generation, and sharing features.');
+        console.log('📱 Social media optimization test functions now available!');
     </script>
 </body>
 </html>

@@ -29,14 +29,9 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [isAutoAdding, setIsAutoAdding] = useState(false); // Prevent concurrent auto-add attempts
   
-  console.log('usePeopleAPI - Hook initialized:', {
-    userId: user?.id,
-    username: user?.username,
-    hasBirthData: !!user?.birthData,
-    isLoading,
-    peopleCount: people.length
-  });
+  // Hook initialization logging removed for cleaner output
   
   // Computed values
   const defaultPerson = people.find(p => p.isDefault) || null;
@@ -45,22 +40,16 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   // Load people from API
   const loadPeople = useCallback(async () => {
     if (!user?.id) {
-      console.log('UsePeopleAPI - No user ID, skipping load');
       setPeople([]);
       return;
     }
     
-    console.log('UsePeopleAPI - Loading people for user:', user.id);
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log('UsePeopleAPI - Fetching from:', `/api/people?userId=${user.id}`);
       const response = await fetch(`/api/people?userId=${user.id}`);
-      console.log('UsePeopleAPI - Response status:', response.status);
       const result = await response.json();
-      
-      console.log('UsePeopleAPI - Load response:', result);
       
       if (result.success) {
         // Convert date strings back to Date objects
@@ -71,13 +60,11 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         }));
         
         setPeople(convertedPeople);
-        console.log('UsePeopleAPI - People loaded successfully:', convertedPeople.length);
       } else {
         setError(result.error || 'Failed to load people');
         setPeople(result.people || []); // Use fallback array
       }
     } catch (err) {
-      console.error('UsePeopleAPI - Failed to load people:', err);
       setError('Network error occurred');
       setPeople([]); // Fallback to empty array
     } finally {
@@ -91,7 +78,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       throw new Error('No user found');
     }
     
-    console.log('UsePeopleAPI - Adding person:', personData);
     setIsLoading(true);
     setError(null);
     
@@ -100,7 +86,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         userId: user.id,
         ...personData,
       };
-      console.log('UsePeopleAPI - POST request body:', requestBody);
       
       const response = await fetch('/api/people', {
         method: 'POST',
@@ -111,8 +96,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       });
       
       const result = await response.json();
-      
-      console.log('UsePeopleAPI - Add response:', result);
       
       if (result.success) {
         const newPerson = {
@@ -133,13 +116,11 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         // Set as selected
         setSelectedPersonId(newPerson.id);
         
-        console.log('UsePeopleAPI - Person added successfully:', newPerson);
         return newPerson;
       } else {
         throw new Error(result.error || 'Failed to add person');
       }
     } catch (err) {
-      console.error('UsePeopleAPI - Failed to add person:', err);
       setError(err instanceof Error ? err.message : 'Failed to add person');
       throw err;
     } finally {
@@ -153,7 +134,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       throw new Error('No user found');
     }
     
-    console.log('UsePeopleAPI - Updating person:', personId, updates);
     setIsLoading(true);
     setError(null);
     
@@ -172,8 +152,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       
       const result = await response.json();
       
-      console.log('UsePeopleAPI - Update response:', result);
-      
       if (result.success) {
         // Update local state
         setPeople(prev => prev.map(p => {
@@ -191,12 +169,10 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
           return p;
         }));
         
-        console.log('UsePeopleAPI - Person updated successfully');
       } else {
         throw new Error(result.error || 'Failed to update person');
       }
     } catch (err) {
-      console.error('UsePeopleAPI - Failed to update person:', err);
       setError(err instanceof Error ? err.message : 'Failed to update person');
       throw err;
     } finally {
@@ -210,7 +186,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       throw new Error('No user found');
     }
     
-    console.log('UsePeopleAPI - Deleting person:', personId);
     setIsLoading(true);
     setError(null);
     
@@ -220,8 +195,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       });
       
       const result = await response.json();
-      
-      console.log('UsePeopleAPI - Delete response:', result);
       
       if (result.success) {
         // Update local state
@@ -236,12 +209,10 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
           return filtered;
         });
         
-        console.log('UsePeopleAPI - Person deleted successfully');
       } else {
         throw new Error(result.error || 'Failed to delete person');
       }
     } catch (err) {
-      console.error('UsePeopleAPI - Failed to delete person:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete person');
       throw err;
     } finally {
@@ -261,7 +232,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   
   // Auto-load people when user changes
   useEffect(() => {
-    console.log('UsePeopleAPI - useEffect for user changes:', { userId: user?.id, hasUser: !!user });
     if (user?.id) {
       loadPeople();
     } else {
@@ -273,21 +243,26 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   // Auto-add user as person if they have birth data but no people exist
   useEffect(() => {
     const autoAddUser = async () => {
-      console.log('UsePeopleAPI - autoAddUser check:', {
-        userId: user?.id,
-        hasBirthData: !!user?.birthData,
-        username: user?.username,
-        isLoading,
-        peopleCount: people.length
-      });
-      
-      if (!user?.id || !user.birthData || !user.username || isLoading) {
+      if (!user?.id || !user.birthData || !user.username || isLoading || isAutoAdding) {
         return;
       }
       
-      // Wait for people to load first
-      if (people.length === 0 && !isLoading) {
-        console.log('UsePeopleAPI - Auto-adding user as person');
+      // Check if user already exists as a person (by birth data)
+      const existingUserPerson = people.find(p => 
+        p.relationship === 'self' && 
+        p.birthData?.dateOfBirth === user.birthData?.dateOfBirth &&
+        p.birthData?.timeOfBirth === user.birthData?.timeOfBirth &&
+        p.birthData?.coordinates?.lat === user.birthData?.coordinates?.lat &&
+        p.birthData?.coordinates?.lon === user.birthData?.coordinates?.lon
+      );
+      
+      if (existingUserPerson) {
+        return;
+      }
+      
+      // Wait for people to load first and check if we need to auto-add
+      if (people.length === 0 && !isLoading && !isAutoAdding) {
+        setIsAutoAdding(true);
         
         try {
           const userPersonData: PersonFormData = {
@@ -299,9 +274,10 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
           };
           
           await addPerson(userPersonData);
-          console.log('UsePeopleAPI - User auto-added successfully');
         } catch (error) {
-          console.error('UsePeopleAPI - Failed to auto-add user:', error);
+          // Silent fail - the user will see the error through the UI
+        } finally {
+          setIsAutoAdding(false);
         }
       }
     };
@@ -310,7 +286,7 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
     if (user?.id && !isLoading) {
       autoAddUser();
     }
-  }, [user?.id, user?.birthData, user?.username, people.length, isLoading, addPerson]);
+  }, [user?.id, user?.birthData, user?.username, people.length, isLoading, isAutoAdding, addPerson, people]);
   
   return {
     people,

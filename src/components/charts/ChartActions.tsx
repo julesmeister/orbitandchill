@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
+import SocialShareModal from './SocialShareModal';
+import { ShareData } from '@/utils/socialSharing';
 
 interface ChartActionsProps {
   onDownloadSVG: () => void;
   onDownloadPNG: () => void;
   onDownloadPDF?: () => void;
   onShare?: () => void;
+  onCopyLink?: () => void;
   isPDFGenerating?: boolean;
+  shareData?: ShareData;
 }
 
 const ChartActions: React.FC<ChartActionsProps> = ({
@@ -13,8 +17,26 @@ const ChartActions: React.FC<ChartActionsProps> = ({
   onDownloadPNG,
   onDownloadPDF,
   onShare,
-  isPDFGenerating = false
+  onCopyLink,
+  isPDFGenerating = false,
+  shareData
 }) => {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  const handleShareClick = () => {
+    if (shareData) {
+      setIsShareModalOpen(true);
+    } else if (onShare) {
+      onShare();
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (onCopyLink) {
+      onCopyLink();
+    }
+    setIsShareModalOpen(false);
+  };
   return (
     <div className="bg-white border border-black p-6">
       <div className="flex items-center mb-6">
@@ -99,9 +121,9 @@ const ChartActions: React.FC<ChartActionsProps> = ({
         )}
 
         {/* Share Button */}
-        {onShare && (
+        {(onShare || shareData) && (
           <button
-            onClick={onShare}
+            onClick={handleShareClick}
             className="group relative p-6 hover:bg-black transition-all duration-300 border-black"
             style={{ backgroundColor: '#ff91e9' }}
           >
@@ -120,7 +142,15 @@ const ChartActions: React.FC<ChartActionsProps> = ({
         )}
       </div>
 
-      
+      {/* Social Share Modal */}
+      {shareData && (
+        <SocialShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          shareData={shareData}
+          onCopyLink={handleCopyLink}
+        />
+      )}
     </div>
   );
 };

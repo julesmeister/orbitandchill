@@ -41,11 +41,7 @@ export async function GET(request: NextRequest) {
       args: [userId]
     });
     
-    console.log('API - People query result:', {
-      userId,
-      rowCount: result.rows.length,
-      rows: result.rows
-    });
+    // Query completed successfully
     
     // Convert snake_case to camelCase for frontend
     const people = result.rows.map((row: any) => ({
@@ -90,13 +86,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, name, relationship, birthData, notes, isDefault } = body;
     
-    console.log('API - Creating person:', {
-      userId,
-      name,
-      relationship,
-      isDefault,
-      hasBirthData: !!birthData
-    });
+    // Creating new person
     
     if (!userId || !name || !relationship || !birthData) {
       return NextResponse.json(
@@ -106,6 +96,53 @@ export async function POST(request: NextRequest) {
     }
     
     const client = await createDirectConnection();
+    
+    // Check for existing person with same birth data to prevent duplicates
+    const existingCheck = await client.execute({
+      sql: `
+        SELECT id FROM people 
+        WHERE user_id = ? AND relationship = ? AND 
+              date_of_birth = ? AND time_of_birth = ? AND 
+              coordinates = ?
+      `,
+      args: [
+        userId,
+        relationship,
+        birthData.dateOfBirth,
+        birthData.timeOfBirth,
+        JSON.stringify(birthData.coordinates)
+      ]
+    });
+    
+    if (existingCheck.rows.length > 0) {
+      // Return existing person data
+      const existingPerson = await client.execute({
+        sql: `SELECT * FROM people WHERE id = ?`,
+        args: [existingCheck.rows[0].id]
+      });
+      
+      const row = existingPerson.rows[0];
+      return NextResponse.json({
+        success: true,
+        person: {
+          id: row.id,
+          userId: row.user_id,
+          name: row.name,
+          relationship: row.relationship,
+          birthData: {
+            dateOfBirth: row.date_of_birth,
+            timeOfBirth: row.time_of_birth,
+            locationOfBirth: row.location_of_birth,
+            coordinates: JSON.parse(row.coordinates as string),
+          },
+          notes: row.notes,
+          isDefault: row.is_default === 1,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at
+        }
+      });
+    }
+    
     const now = new Date().toISOString();
     const personId = `person_${Math.random().toString(36).substring(2, 11)}${Date.now().toString(36)}`;
     
@@ -143,10 +180,7 @@ export async function POST(request: NextRequest) {
       ]
     });
     
-    console.log('API - Person created:', {
-      personId,
-      insertedRowCount: result.changes,
-    });
+    // Person created successfully
     
     // Return the created person
     const createdPerson = {

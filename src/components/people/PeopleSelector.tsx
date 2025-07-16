@@ -52,18 +52,7 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   // userAddedRef removed - auto-add logic now handled by usePeopleAPI hook
   
-  console.log('PeopleSelector - Component state:', {
-    isLoading,
-    error,
-    peopleCount: people.length,
-    peopleList: people.map(p => ({ id: p.id, name: p.name, isDefault: p.isDefault })),
-    selectedPersonId,
-    storeSelectedPersonId,
-    defaultPerson: defaultPerson ? { id: defaultPerson.id, name: defaultPerson.name } : null,
-    userId: user?.id,
-    userName: user?.username,
-    userHasBirthData: !!user?.birthData
-  });
+  // Component state logging removed for cleaner output
 
 
   // People are auto-loaded by usePeopleAPI hook
