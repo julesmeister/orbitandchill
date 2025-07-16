@@ -24,15 +24,33 @@ const formatTimestamp = (date: Date | string | number) => {
   }
   
   const now = new Date();
-  const diffInHours = (now.getTime() - d.getTime()) / (1000 * 60 * 60);
+  const diffInMs = now.getTime() - d.getTime();
+  const diffInMinutes = diffInMs / (1000 * 60);
+  const diffInHours = diffInMinutes / 60;
+  const diffInDays = diffInHours / 24;
   
-  if (diffInHours < 1) {
-    const diffInMinutes = Math.floor(diffInHours * 60);
-    return `${diffInMinutes}m ago`;
+  if (diffInMinutes < 1) {
+    return 'just now';
+  } else if (diffInMinutes < 60) {
+    return `${Math.floor(diffInMinutes)}m ago`;
   } else if (diffInHours < 24) {
     return `${Math.floor(diffInHours)}h ago`;
-  } else if (diffInHours < 24 * 7) {
-    return `${Math.floor(diffInHours / 24)}d ago`;
+  } else if (diffInDays < 2) {
+    // For replies from yesterday, show the actual time
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
+    }
+    return `${Math.floor(diffInHours)}h ago`;
+  } else if (diffInDays < 7) {
+    // For recent days, show day and time
+    return d.toLocaleDateString('en-US', {
+      weekday: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   } else {
     return d.toLocaleDateString('en-US', {
       month: 'short',
@@ -99,6 +117,16 @@ export async function GET(
     // PERFORMANCE: Optimized fetch with connection reuse and caching
     const rawReplies = await DiscussionService.getRepliesWithAuthors(discussionId, limit, offset);
     
+    // Debug logging to understand avatar data
+    console.log(`🔍 Fetched ${rawReplies.length} replies for discussion ${discussionId}`);
+    if (rawReplies.length > 0) {
+      console.log('🖼️ Sample reply avatar data:', {
+        authorName: rawReplies[0].authorName,
+        authorAvatar: rawReplies[0].authorAvatar,
+        authorId: rawReplies[0].authorId
+      });
+    }
+    
     // PERFORMANCE: Early return if no replies to avoid unnecessary processing
     if (!rawReplies || rawReplies.length === 0) {
       return NextResponse.json({
@@ -121,14 +149,19 @@ export async function GET(
     // Transform replies to expected format (no more N+1 queries!)
     const enhancedReplies = rawReplies.map((reply: any) => {
       const authorName = reply.authorName || 'Anonymous User';
-      const avatar = reply.authorAvatar ? 
-        reply.authorAvatar : 
-        generateAvatarFromName(authorName);
+      
+      // For the avatar, if we have a valid path, use it; otherwise generate initials
+      const hasValidAvatar = reply.authorAvatar && reply.authorAvatar.startsWith('/');
+      const avatarInitials = generateAvatarFromName(authorName);
       
       return {
         id: reply.id,
         author: authorName,
-        avatar: avatar,
+        // The avatar field should contain either the path or the initials
+        avatar: hasValidAvatar ? reply.authorAvatar : avatarInitials,
+        // Also provide it as profilePictureUrl for the useUserAvatar hook
+        profilePictureUrl: hasValidAvatar ? reply.authorAvatar : null,
+        preferredAvatar: hasValidAvatar ? reply.authorAvatar : null,
         content: reply.content,
         timestamp: formatTimestamp(reply.createdAt),
         upvotes: reply.upvotes || 0,

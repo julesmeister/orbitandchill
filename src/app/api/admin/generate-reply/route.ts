@@ -6,7 +6,7 @@ import { getAllSeedUserConfigs } from '@/db/services/seedUserService';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { discussionData, aiConfig, replyIndex = 0, selectedMood = 'supportive', activePersonas = [] } = body;
+    const { discussionData, aiConfig, replyIndex = 0, selectedMood = 'supportive', activePersonas = [], timingConfig = null } = body;
     
     // Debug: Log the mood being used
     console.log('🎭 Mood selected for reply generation:', selectedMood);
@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Debug: Log the user data to see what avatar paths are being used
+    console.log('🖼️ Generate Reply - User configs with avatar data:');
+    allSeedConfigs.forEach(config => {
+      console.log(`  ${config.username}: profilePictureUrl="${config.profilePictureUrl}", preferredAvatar="${config.preferredAvatar}"`);
+    });
+    
     // Filter seed configs based on activePersonas selection
     let seedConfigs = allSeedConfigs;
     if (activePersonas && activePersonas.length > 0) {
@@ -58,8 +64,8 @@ export async function POST(request: NextRequest) {
     try {
       // Generate reply based on provider (support both openrouter and deepseek)
       const reply = (aiConfig.provider === 'deepseek' || aiConfig.provider === 'openrouter')
-        ? await generateReplyWithDeepSeek(discussionData, seedConfigs, aiConfig, replyIndex, selectedMood)
-        : await generateMockReply(discussionData, seedConfigs, replyIndex, selectedMood);
+        ? await generateReplyWithDeepSeek(discussionData, seedConfigs, aiConfig, replyIndex, selectedMood, timingConfig)
+        : await generateMockReply(discussionData, seedConfigs, replyIndex, selectedMood, timingConfig);
       
       return NextResponse.json({
         success: true,
@@ -76,6 +82,48 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Calculate scheduled timestamp based on timing configuration
+function calculateScheduledTimestamp(timingConfig: any, discussionCreatedAt: string): { timestamp: string; scheduledDelay: number } {
+  const discussionDate = new Date(discussionCreatedAt);
+  const now = new Date();
+  
+  if (!timingConfig || timingConfig.type === 'immediate') {
+    // Post immediately
+    return {
+      timestamp: now.toISOString(),
+      scheduledDelay: 0
+    };
+  }
+  
+  if (timingConfig.type === 'scheduled') {
+    // Schedule for specific hours after discussion creation
+    const scheduledDate = new Date(discussionDate.getTime() + (timingConfig.scheduledHours * 60 * 60 * 1000));
+    return {
+      timestamp: scheduledDate.toISOString(),
+      scheduledDelay: timingConfig.scheduledHours * 60 // in minutes
+    };
+  }
+  
+  if (timingConfig.type === 'random') {
+    // Random delay between 1 hour and maxRandomHours
+    const minHours = 1;
+    const maxHours = timingConfig.maxRandomHours || 24;
+    const randomHours = Math.random() * (maxHours - minHours) + minHours;
+    const scheduledDate = new Date(discussionDate.getTime() + (randomHours * 60 * 60 * 1000));
+    
+    return {
+      timestamp: scheduledDate.toISOString(),
+      scheduledDelay: Math.round(randomHours * 60) // in minutes
+    };
+  }
+  
+  // Default to immediate if unknown type
+  return {
+    timestamp: now.toISOString(),
+    scheduledDelay: 0
+  };
 }
 
 // Get mood-specific instructions
@@ -154,7 +202,7 @@ function getPersonalityDetails(user: any) {
 }
 
 // Generate reply using DeepSeek AI
-async function generateReplyWithDeepSeek(discussionData: any, seedConfigs: any[], aiConfig: any, replyIndex: number, selectedMood: string = 'supportive') {
+async function generateReplyWithDeepSeek(discussionData: any, seedConfigs: any[], aiConfig: any, replyIndex: number, selectedMood: string = 'supportive', timingConfig: any = null) {
   // Select a different seed user for each reply to ensure variety
   const availableUsers = seedConfigs.filter(user => user.username && user.writingStyle);
   if (availableUsers.length === 0) {
@@ -397,6 +445,9 @@ Write your ${selectedMood} reply as ${selectedUser.username}:`;
   // Final content validation
   const finalContent = replyContent || "This is really interesting!";
   
+  // Calculate scheduled timestamp
+  const schedulingInfo = calculateScheduledTimestamp(timingConfig, discussionData.createdAt || new Date().toISOString());
+  
   // Generate truly unique ID using high-resolution timestamp and crypto random
   const uniqueId = `reply_${Date.now()}_${performance.now().toString().replace('.', '')}_${Math.random().toString(36).substring(2, 15)}`;
   
@@ -406,7 +457,9 @@ Write your ${selectedMood} reply as ${selectedUser.username}:`;
     authorName: selectedUser.username,
     authorId: selectedUser.userId,
     avatar: selectedUser.profilePictureUrl || '/avatars/default.png',
-    timestamp: new Date().toISOString(),
+    timestamp: schedulingInfo.timestamp,
+    createdAt: schedulingInfo.timestamp,
+    scheduledDelay: schedulingInfo.scheduledDelay,
     upvotes: Math.floor(Math.random() * 15) + 1,
     downvotes: Math.floor(Math.random() * 3),
     reactionType: selectedMood || 'supportive',
@@ -419,7 +472,7 @@ Write your ${selectedMood} reply as ${selectedUser.username}:`;
 }
 
 // Generate mock reply (fallback)
-async function generateMockReply(discussionData: any, seedConfigs: any[], replyIndex: number, selectedMood: string = 'supportive') {
+async function generateMockReply(discussionData: any, seedConfigs: any[], replyIndex: number, selectedMood: string = 'supportive', timingConfig: any = null) {
   // Select a different user for variety
   const availableUsers = seedConfigs.filter(user => user.username && user.writingStyle);
   const userIndex = (replyIndex + Math.floor(Math.random() * availableUsers.length)) % availableUsers.length;
@@ -495,6 +548,9 @@ async function generateMockReply(discussionData: any, seedConfigs: any[], replyI
     content = `${baseTemplate} ${["Definitely worth exploring further!", "Looking forward to more insights!", "Thanks for bringing this up!", "This opens up so many possibilities!"][replyIndex % 4]}`;
   }
   
+  // Calculate scheduled timestamp
+  const schedulingInfo = calculateScheduledTimestamp(timingConfig, discussionData.createdAt || new Date().toISOString());
+  
   // Generate truly unique ID for mock replies too
   const uniqueId = `reply_${Date.now()}_${performance.now().toString().replace('.', '')}_${Math.random().toString(36).substring(2, 15)}`;
   
@@ -504,7 +560,9 @@ async function generateMockReply(discussionData: any, seedConfigs: any[], replyI
     authorName: selectedUser.username,
     authorId: selectedUser.userId,
     avatar: selectedUser.profilePictureUrl || '/avatars/default.png',
-    timestamp: new Date().toISOString(),
+    timestamp: schedulingInfo.timestamp,
+    createdAt: schedulingInfo.timestamp,
+    scheduledDelay: schedulingInfo.scheduledDelay,
     upvotes: Math.floor(Math.random() * 15) + 1,
     downvotes: Math.floor(Math.random() * 3),
     reactionType: selectedMood,

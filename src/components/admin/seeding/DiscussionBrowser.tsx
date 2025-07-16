@@ -41,8 +41,16 @@ export default function DiscussionBrowser({
   const [commentsToGenerate, setCommentsToGenerate] = useState(5);
   const [commentText, setCommentText] = useState('');
   const [showCommentForm, setShowCommentForm] = useState(false);
+  const [replyTiming, setReplyTiming] = useState<'immediate' | 'scheduled' | 'random'>('random');
+  const [scheduledHours, setScheduledHours] = useState(2);
+  const [maxRandomHours, setMaxRandomHours] = useState(24);
   const [currentPage, setCurrentPage] = useState(1);
   const [discussionsPerPage] = useState(10);
+  const [existingReplies, setExistingReplies] = useState<any[]>([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState(false);
+  const [fixingAvatars, setFixingAvatars] = useState(false);
+  const [randomizingTimes, setRandomizingTimes] = useState(false);
 
   // Load threads when component mounts
   useEffect(() => {
@@ -115,6 +123,12 @@ export default function DiscussionBrowser({
           discussionContext: {
             title: selectedDiscussion.title,
             topic: selectedDiscussion.category || 'astrology'
+          },
+          timingConfig: {
+            type: replyTiming,
+            scheduledHours: scheduledHours,
+            maxRandomHours: maxRandomHours,
+            discussionCreatedAt: selectedDiscussion.createdAt || new Date().toISOString()
           }
         }),
       });
@@ -138,6 +152,11 @@ export default function DiscussionBrowser({
         
         // Reload threads to reflect changes
         loadThreads();
+        
+        // Refresh existing replies display
+        if (selectedDiscussion) {
+          fetchExistingReplies(selectedDiscussion.id);
+        }
       } else {
         showErrorToast('Generation Failed', result.error || 'Failed to generate comments.');
       }
@@ -175,10 +194,126 @@ export default function DiscussionBrowser({
       
       // Reload threads to reflect changes
       loadThreads();
+      
+      // Refresh existing replies display
+      if (selectedDiscussion) {
+        fetchExistingReplies(selectedDiscussion.id);
+      }
     } catch (error) {
       showErrorToast('Add Comment Error', 'Failed to add comment: ' + (error as Error).message);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Fetch existing replies for a discussion
+  const fetchExistingReplies = async (discussionId: string) => {
+    setLoadingReplies(true);
+    try {
+      const response = await fetch(`/api/discussions/${discussionId}/replies`, {
+        method: 'GET',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Flatten threaded replies for admin display
+        const flattenReplies = (replies: any[]): any[] => {
+          const flat: any[] = [];
+          replies.forEach(reply => {
+            flat.push({
+              id: reply.id,
+              content: reply.content,
+              authorName: reply.author,
+              authorId: reply.authorId,
+              avatar: reply.avatar,
+              upvotes: reply.upvotes || 0,
+              downvotes: reply.downvotes || 0,
+              createdAt: reply.timestamp,
+              parentId: reply.parentId
+            });
+            if (reply.children && reply.children.length > 0) {
+              flat.push(...flattenReplies(reply.children));
+            }
+          });
+          return flat;
+        };
+        
+        setExistingReplies(flattenReplies(data.replies || []));
+      } else {
+        console.error('Failed to fetch existing replies');
+        setExistingReplies([]);
+      }
+    } catch (error) {
+      console.error('Error fetching existing replies:', error);
+      setExistingReplies([]);
+    } finally {
+      setLoadingReplies(false);
+    }
+  };
+
+  // Fix avatar paths for discussion replies
+  const fixDiscussionAvatars = async (discussionId: string) => {
+    setFixingAvatars(true);
+    showLoadingToast('Fixing Avatars', 'Updating avatar paths for discussion replies...');
+
+    try {
+      const response = await fetch('/api/admin/fix-discussion-avatar-paths', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ discussionId }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        showSuccessToast('Avatars Fixed', `Updated avatar paths for ${result.fixedCount} replies.`);
+        // Refresh existing replies display
+        fetchExistingReplies(discussionId);
+      } else {
+        showErrorToast('Fix Failed', result.error || 'Failed to fix avatar paths.');
+      }
+    } catch (error) {
+      showErrorToast('Fix Error', 'Failed to fix avatar paths: ' + (error as Error).message);
+    } finally {
+      setFixingAvatars(false);
+    }
+  };
+
+  // Load existing replies when a discussion is selected
+  const handleDiscussionSelect = (discussion: any) => {
+    setSelectedDiscussion(discussion);
+    fetchExistingReplies(discussion.id);
+  };
+
+  // Randomize reply timestamps for a discussion
+  const randomizeReplyTimes = async (discussionId: string) => {
+    setRandomizingTimes(true);
+    showLoadingToast('Randomizing Times', 'Updating reply timestamps to look more natural...');
+
+    try {
+      const response = await fetch('/api/admin/randomize-reply-times', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ discussionId }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        showSuccessToast('Times Randomized', `Updated timestamps for ${result.updatedCount} replies.`);
+        // Refresh existing replies display
+        fetchExistingReplies(discussionId);
+      } else {
+        showErrorToast('Randomization Failed', result.error || 'Failed to randomize reply times.');
+      }
+    } catch (error) {
+      showErrorToast('Randomization Error', 'Failed to randomize times: ' + (error as Error).message);
+    } finally {
+      setRandomizingTimes(false);
     }
   };
 
@@ -243,7 +378,7 @@ export default function DiscussionBrowser({
               className={`p-6 cursor-pointer hover:bg-gray-50 transition-colors ${
                 selectedDiscussion?.id === discussion.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
               }`}
-              onClick={() => setSelectedDiscussion(discussion)}
+              onClick={() => handleDiscussionSelect(discussion)}
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -310,13 +445,55 @@ export default function DiscussionBrowser({
       {/* Selected Discussion Actions */}
       {selectedDiscussion && (
         <div className="bg-white border border-black p-6">
-          <h3 className="font-space-grotesk font-semibold text-black mb-4">
-            Actions for: {selectedDiscussion.title}
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-space-grotesk font-semibold text-black">
+              Actions for: {selectedDiscussion.title}
+            </h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => randomizeReplyTimes(selectedDiscussion.id)}
+                disabled={randomizingTimes}
+                className="px-4 py-2 bg-orange-600 text-white font-medium hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {randomizingTimes ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Randomizing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Randomize Reply Times
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => fixDiscussionAvatars(selectedDiscussion.id)}
+                disabled={fixingAvatars}
+                className="px-4 py-2 bg-purple-600 text-white font-medium hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {fixingAvatars ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Fixing Avatars...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Fix Avatar Paths
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* AI Comment Generation */}
-            <div className="border border-gray-200 p-4 rounded">
+            <div className="border border-gray-200 p-4">
               <h4 className="font-space-grotesk font-medium text-black mb-3">Generate AI Comments</h4>
               <div className="space-y-3">
                 <div>
@@ -327,13 +504,57 @@ export default function DiscussionBrowser({
                     max="20"
                     value={commentsToGenerate}
                     onChange={(e) => setCommentsToGenerate(parseInt(e.target.value) || 5)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reply timing:</label>
+                  <select
+                    value={replyTiming}
+                    onChange={(e) => setReplyTiming(e.target.value as 'immediate' | 'scheduled' | 'random')}
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="immediate">Post immediately</option>
+                    <option value="scheduled">Schedule for specific time</option>
+                    <option value="random">Random delays (realistic)</option>
+                  </select>
+                </div>
+                
+                {replyTiming === 'scheduled' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hours after discussion creation:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={scheduledHours}
+                      onChange={(e) => setScheduledHours(parseInt(e.target.value) || 2)}
+                      className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">0 = immediately, 168 = 7 days</p>
+                  </div>
+                )}
+                
+                {replyTiming === 'random' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Max random delay (hours):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="168"
+                      value={maxRandomHours}
+                      onChange={(e) => setMaxRandomHours(parseInt(e.target.value) || 24)}
+                      className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Replies will be spread randomly from 1h to {maxRandomHours}h</p>
+                  </div>
+                )}
+                
                 <button
                   onClick={() => generateAIComments(selectedDiscussion.id)}
                   disabled={isGenerating || !aiApiKey.trim()}
-                  className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {isGenerating ? 'Generating...' : `Generate ${commentsToGenerate} Comments`}
                 </button>
@@ -341,12 +562,12 @@ export default function DiscussionBrowser({
             </div>
 
             {/* Custom Comment */}
-            <div className="border border-gray-200 p-4 rounded">
+            <div className="border border-gray-200 p-4">
               <h4 className="font-space-grotesk font-medium text-black mb-3">Add Custom Comment</h4>
               {!showCommentForm ? (
                 <button
                   onClick={() => setShowCommentForm(true)}
-                  className="w-full px-4 py-2 bg-green-600 text-white font-medium rounded hover:bg-green-700"
+                  className="w-full px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700"
                 >
                   Add Manual Comment
                 </button>
@@ -356,14 +577,14 @@ export default function DiscussionBrowser({
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Enter your comment..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
                     rows={3}
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => addCustomComment(selectedDiscussion.id, commentText)}
                       disabled={isGenerating || !commentText.trim()}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="flex-1 px-4 py-2 bg-green-600 text-white font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {isGenerating ? 'Adding...' : 'Add Comment'}
                     </button>
@@ -372,7 +593,7 @@ export default function DiscussionBrowser({
                         setShowCommentForm(false);
                         setCommentText('');
                       }}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded hover:bg-gray-400"
+                      className="px-4 py-2 bg-gray-300 text-gray-700 font-medium hover:bg-gray-400"
                     >
                       Cancel
                     </button>
@@ -381,6 +602,115 @@ export default function DiscussionBrowser({
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Existing Replies Display */}
+      {selectedDiscussion && (
+        <div className="bg-white border border-black p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-space-grotesk font-semibold text-black">
+              Existing Replies ({existingReplies.length})
+            </h3>
+            {existingReplies.length > 3 && (
+              <button
+                onClick={() => setExpandedReplies(!expandedReplies)}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                {expandedReplies ? 'Show Less' : 'Show All'}
+              </button>
+            )}
+          </div>
+          
+          {loadingReplies ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="ml-3 text-gray-600">Loading replies...</span>
+            </div>
+          ) : existingReplies.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <p>No replies yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {(expandedReplies ? existingReplies : existingReplies.slice(0, 3)).map((reply, index) => {
+                const formatDate = (dateString: string) => {
+                  // For admin view, always show full date and time for clarity
+                  try {
+                    // If it's already a formatted string from the API, return it
+                    if (dateString.includes('at') || dateString.includes('ago') || dateString.includes('Yesterday')) {
+                      return dateString;
+                    }
+                    
+                    // Otherwise, format it as full date and time
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) {
+                      return dateString;
+                    }
+                    
+                    // Show full date and time for admin clarity
+                    return date.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                  } catch {
+                    return dateString;
+                  }
+                };
+                
+                return (
+                  <div key={reply.id} className="bg-gray-50 p-4 border border-gray-200">
+                    <div className="flex items-start gap-3">
+                      {reply.avatar && (reply.avatar.startsWith('/avatars/') || reply.avatar.startsWith('http')) ? (
+                        <img
+                          src={reply.avatar}
+                          alt={`${reply.authorName}'s avatar`}
+                          className="w-8 h-8 object-cover border border-gray-200"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-8 h-8 bg-gray-300 flex items-center justify-center text-gray-600 font-semibold text-sm ${reply.avatar && (reply.avatar.startsWith('/avatars/') || reply.avatar.startsWith('http')) ? 'hidden' : ''}`}>
+                        {reply.avatar && !reply.avatar.startsWith('/avatars/') && !reply.avatar.startsWith('http') ? reply.avatar : (reply.authorName ? reply.authorName.charAt(0) : 'A')}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-gray-800">{reply.authorName}</span>
+                          <span className="text-xs text-gray-500">•</span>
+                          <span className="text-xs text-gray-500">{formatDate(reply.createdAt)}</span>
+                          {reply.parentId && (
+                            <>
+                              <span className="text-xs text-gray-500">•</span>
+                              <span className="text-xs text-blue-600">reply</span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">{reply.content}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          <span>↑ {reply.upvotes || 0}</span>
+                          <span>↓ {reply.downvotes || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {!expandedReplies && existingReplies.length > 3 && (
+                <div className="text-center py-2 text-sm text-gray-500">
+                  ... and {existingReplies.length - 3} more replies
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

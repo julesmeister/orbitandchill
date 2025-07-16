@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         
         // Check if profile_picture_url needs updating
         if (currentProfilePictureUrl !== personaTemplate.avatar) {
-          console.log(`  ✅ profile_picture_url needs update: "${currentProfilePictureUrl}" → "${personaTemplate.avatar}"`);
+          console.log(`  🔄 profile_picture_url needs update: "${currentProfilePictureUrl}" → "${personaTemplate.avatar}"`);
           updates.profile_picture_url = personaTemplate.avatar;
           needsUpdate = true;
         } else {
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         
         // Check if preferred_avatar needs updating
         if (currentPreferredAvatar !== personaTemplate.preferredAvatar) {
-          console.log(`  ✅ preferred_avatar needs update: "${currentPreferredAvatar}" → "${personaTemplate.preferredAvatar}"`);
+          console.log(`  🔄 preferred_avatar needs update: "${currentPreferredAvatar}" → "${personaTemplate.preferredAvatar}"`);
           updates.preferred_avatar = personaTemplate.preferredAvatar;
           needsUpdate = true;
         } else {
