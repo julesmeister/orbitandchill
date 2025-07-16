@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '../store/userStore';
 import { usePeopleStore } from '../store/peopleStore';
 import { useChartTab } from '../store/chartStore';
@@ -12,12 +12,14 @@ import { BRAND } from '../config/brand';
 
 export const useChartPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isProfileComplete, isLoading: isUserLoading, loadProfile } = useUserStore();
   const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
   const { activeTab, setActiveTab } = useChartTab();
   
   // Local state
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [sharedChartLoaded, setSharedChartLoaded] = useState(false);
   
   // Use global selected person if available, otherwise fall back to local state
   const activeSelectedPerson = globalSelectedPerson || selectedPerson;
@@ -94,6 +96,62 @@ export const useChartPage = () => {
     loadOrGenerateChart();
   }, [cachedChart, isGenerating, user?.id, user?.birthData?.dateOfBirth, user?.birthData?.timeOfBirth, user?.birthData?.coordinates?.lat]);
   
+  // Handle share token from URL
+  useEffect(() => {
+    const shareToken = searchParams.get('shareToken');
+    if (shareToken && !sharedChartLoaded) {
+      const loadSharedChart = async () => {
+        try {
+          const response = await fetch(`/api/charts/shared?shareToken=${shareToken}`);
+          const result = await response.json();
+          
+          if (result.success && result.chart) {
+            const sharedChart = result.chart;
+            // Convert shared chart to person format
+            const sharedPerson: Person = {
+              id: `shared_${shareToken}`,
+              userId: 'shared',
+              name: sharedChart.subjectName || 'Shared Chart',
+              relationship: 'other',
+              birthData: {
+                dateOfBirth: sharedChart.dateOfBirth,
+                timeOfBirth: sharedChart.timeOfBirth,
+                locationOfBirth: sharedChart.locationOfBirth,
+                coordinates: {
+                  lat: sharedChart.latitude?.toString() || '',
+                  lon: sharedChart.longitude?.toString() || '',
+                },
+              },
+              createdAt: new Date(sharedChart.createdAt),
+              updatedAt: new Date(sharedChart.createdAt),
+              notes: `Shared chart from ${new Date(sharedChart.createdAt).toLocaleDateString()}`,
+            };
+            
+            // Set as selected person
+            setSelectedPerson(sharedPerson);
+            setGlobalSelectedPerson(sharedPerson.id);
+            setSharedChartLoaded(true);
+            
+            // Show success message
+            showSuccess('Shared Chart Loaded', `Now viewing ${sharedPerson.name}'s chart`, 4000);
+            
+            // Clean up URL by removing the share token
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('shareToken');
+            router.replace(newUrl.pathname + newUrl.search);
+          } else {
+            showError('Share Link Invalid', 'This chart link is invalid or no longer available.', 5000);
+          }
+        } catch (error) {
+          console.error('Error loading shared chart:', error);
+          showError('Share Link Failed', 'Failed to load shared chart. Please try again.', 5000);
+        }
+      };
+      
+      loadSharedChart();
+    }
+  }, [searchParams, sharedChartLoaded, router, showSuccess, showError, setGlobalSelectedPerson]);
+
   // Track page view analytics
   useEffect(() => {
     trackPageView('/chart');
@@ -182,12 +240,38 @@ export const useChartPage = () => {
               url: shareUrl,
             });
           } catch {
-            await navigator.clipboard.writeText(shareUrl);
-            showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
+            // User cancelled sharing or sharing failed, copy to clipboard
+            try {
+              await navigator.clipboard.writeText(shareUrl);
+              showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
+            } catch (clipboardError) {
+              // Fallback: try to focus the document and retry
+              try {
+                window.focus();
+                await navigator.clipboard.writeText(shareUrl);
+                showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
+              } catch (retryError) {
+                // Final fallback: show the URL to user
+                showSuccess('Share Link Ready', `Copy this link: ${shareUrl}`, 5000);
+              }
+            }
           }
         } else {
-          await navigator.clipboard.writeText(shareUrl);
-          showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
+          // Fallback to clipboard
+          try {
+            await navigator.clipboard.writeText(shareUrl);
+            showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
+          } catch (clipboardError) {
+            // Fallback: try to focus the document and retry
+            try {
+              window.focus();
+              await navigator.clipboard.writeText(shareUrl);
+              showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
+            } catch (retryError) {
+              // Final fallback: show the URL to user
+              showSuccess('Share Link Ready', `Copy this link: ${shareUrl}`, 5000);
+            }
+          }
         }
       }
     }

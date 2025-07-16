@@ -30,9 +30,9 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
     return match ? match[0].trim() : text.substring(0, 80) + '...';
   };
 
-  const sunPlanet = chartData.planets.find(p => p.name === 'sun');
-  const moonPlanet = chartData.planets.find(p => p.name === 'moon');
-  const ascendantSign = chartData.houses[0]?.sign;
+  const sunPlanet = chartData?.planets?.find(p => p.name === 'sun');
+  const moonPlanet = chartData?.planets?.find(p => p.name === 'moon');
+  const ascendantSign = chartData?.houses?.[0]?.sign;
 
   return (
     <div className="pb-6">

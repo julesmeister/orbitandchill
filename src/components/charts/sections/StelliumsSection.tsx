@@ -20,6 +20,10 @@ type Stellium = {
 const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
   // Stellium detection
   const stelliums = useMemo(() => {
+    if (!chartData?.planets) {
+      return { signStelliums: [], houseStelliums: [] };
+    }
+
     const signGroups: Record<string, typeof chartData.planets> = {};
     const houseGroups: Record<string, typeof chartData.planets> = {};
 
@@ -70,7 +74,8 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
     }
   };
 
-  if (stelliums.signStelliums.length === 0 && stelliums.houseStelliums.length === 0) {
+  if (!stelliums || !stelliums.signStelliums || !stelliums.houseStelliums || 
+      (stelliums.signStelliums.length === 0 && stelliums.houseStelliums.length === 0)) {
     return null;
   }
 
@@ -130,7 +135,7 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
 
       <div className="space-y-4">
         {/* Sign Stelliums */}
-        {stelliums.signStelliums.map((stellium) => (
+        {stelliums?.signStelliums?.map((stellium) => (
           <div key={`sign-${stellium.sign}`} className="bg-white border border-black p-5" 
                style={{ backgroundColor: stelliumColors[stellium.sign] || '#f8f9fa' }}>
             <div className="flex items-center mb-4">
@@ -169,7 +174,7 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
         ))}
 
         {/* House Stelliums */}
-        {stelliums.houseStelliums.map((stellium) => (
+        {stelliums?.houseStelliums?.map((stellium) => (
           <div key={`house-${stellium.house}`} className="bg-white border border-black p-5" 
                style={{ backgroundColor: getHouseColor(stellium.house) }}>
             <div className="flex items-center mb-4">

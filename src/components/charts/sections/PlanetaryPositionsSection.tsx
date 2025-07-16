@@ -7,6 +7,10 @@ interface PlanetaryPositionsSectionProps {
 }
 
 const PlanetaryPositionsSection: React.FC<PlanetaryPositionsSectionProps> = ({ chartData }) => {
+  if (!chartData?.planets) {
+    return null;
+  }
+
   return (
     <div className="bg-white border border-black border-b-0">
       <div className="flex items-center p-6 border-b border-black">

@@ -180,6 +180,15 @@ export class ChartService {
   static async getChartByShareToken(shareToken: string): Promise<ChartData | null> {
     // Bypass resilience wrapper - direct database access
     try {
+      // Ensure database is initialized
+      if (!db) {
+        await initializeDatabase();
+      }
+      
+      if (!db) {
+        throw new Error('Database connection is not available');
+      }
+      
       // Use the same database approach as createChart for consistency
       const [chart] = await db
         .select()

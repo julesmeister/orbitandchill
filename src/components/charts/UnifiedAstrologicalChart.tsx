@@ -94,7 +94,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
   }, [chartData]);
 
   // Return loading state if not on client or chart data not ready
-  if (!isClient || !chartData) {
+  if (!isClient || !chartData || !chartData.houses || !chartData.planets) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">

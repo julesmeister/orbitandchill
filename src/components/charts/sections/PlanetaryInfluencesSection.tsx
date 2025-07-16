@@ -48,6 +48,10 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
     pluto: 'from-indigo-400 to-purple-500'
   };
 
+  if (!chartData?.planets) {
+    return null;
+  }
+
   return (
     <div className="pb-6">
       <div className="relative mb-6">

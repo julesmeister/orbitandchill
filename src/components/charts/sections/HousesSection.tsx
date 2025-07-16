@@ -7,6 +7,10 @@ interface HousesSectionProps {
 }
 
 const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
+  if (!chartData?.houses) {
+    return null;
+  }
+
   const houseNames: Record<number, string> = {
     1: 'Self & Identity',
     2: 'Values & Possessions',

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import NatalChartDisplay from "../../components/charts/NatalChartDisplay";
 import ChartQuickActions from "../../components/charts/ChartQuickActions";
@@ -11,7 +11,7 @@ import StatusToast from "../../components/reusable/StatusToast";
 import { useChartPage } from "../../hooks/useChartPage";
 import { BRAND } from "../../config/brand";
 
-export default function ChartPage() {
+function ChartContent() {
   const {
     router,
     user,
@@ -251,5 +251,29 @@ export default function ChartPage() {
         duration={statusToast.duration}
       />
     </>
+  );
+}
+
+export default function ChartPage() {
+  return (
+    <Suspense fallback={
+      <div className="border border-black bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-8">
+            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-3 h-3 bg-black animate-bounce"></div>
+          </div>
+          <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
+            Loading Chart
+          </h1>
+          <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
+            Preparing your cosmic experience...
+          </p>
+        </div>
+      </div>
+    }>
+      <ChartContent />
+    </Suspense>
   );
 }

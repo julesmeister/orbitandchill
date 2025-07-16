@@ -12,6 +12,10 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
   chartData, 
   openModal 
 }) => {
+  if (!chartData?.planets) {
+    return null;
+  }
+
   const dignityBadges: Record<string, { label: string; color: string; backgroundColor: string; icon: string }> = {
     rulership: { label: 'Ruler', color: 'text-black border-black', backgroundColor: '#4ade80', icon: '👑' },
     exaltation: { label: 'Exalted', color: 'text-black border-black', backgroundColor: '#f0e3ff', icon: '⚡' },

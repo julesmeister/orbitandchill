@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     const subjectName = chart.subjectName || 'Someone';
-    const birthDate = (chart as any).birthData?.dateOfBirth ? new Date((chart as any).birthData.dateOfBirth).toLocaleDateString() : '';
-    const birthLocation = (chart as any).birthData?.locationOfBirth || '';
+    const birthDate = chart.dateOfBirth ? new Date(chart.dateOfBirth).toLocaleDateString() : '';
+    const birthLocation = chart.locationOfBirth || '';
     
     const title = `${subjectName}'s Natal Chart | ${BRAND.name}`;
     const description = `Explore ${subjectName}'s cosmic blueprint${birthDate ? ` born on ${birthDate}` : ''}${birthLocation ? ` in ${birthLocation}` : ''}. Created with ${BRAND.name}'s free natal chart generator.`;

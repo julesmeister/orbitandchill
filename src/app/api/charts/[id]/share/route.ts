@@ -27,9 +27,9 @@ export async function POST(
       );
     }
 
-    // Construct the share URL
+    // Construct the share URL - redirect to main chart page with share token
     const baseUrl = request.nextUrl.origin;
-    const shareUrl = `${baseUrl}/chart/shared/${shareToken}`;
+    const shareUrl = `${baseUrl}/chart?shareToken=${shareToken}`;
 
     return NextResponse.json({
       success: true,

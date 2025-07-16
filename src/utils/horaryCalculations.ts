@@ -145,6 +145,9 @@ export const convertToNatalFormat = async (
 
 // Process houses with angle information
 export const processHousesWithAngles = (houses: HousePosition[]): HouseWithAngle[] => {
+  if (!houses || !Array.isArray(houses)) {
+    return [];
+  }
   return houses.map(house => ({
     ...house,
     angle: house.cusp

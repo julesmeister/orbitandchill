@@ -33,6 +33,10 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
 
   const aspectFilteringEnabled = shouldShowFeature('aspect-filtering', userIsPremium);
 
+  if (!chartData?.aspects) {
+    return null;
+  }
+
   const getAspectCategory = (aspect: ChartAspect): AspectCategory[] => {
     const categories: AspectCategory[] = [];
     const planets = [aspect.planet1.toLowerCase(), aspect.planet2.toLowerCase()];
@@ -71,8 +75,11 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
   };
 
   const majorAspects = useMemo(() => {
+    if (!chartData?.aspects) {
+      return [];
+    }
     return chartData.aspects.filter(a => ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.aspect)) || [];
-  }, [chartData.aspects]);
+  }, [chartData?.aspects]);
 
   const filteredAspects = useMemo(() => {
     return majorAspects.filter(aspect => {
