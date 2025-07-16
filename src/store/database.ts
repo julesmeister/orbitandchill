@@ -236,29 +236,12 @@ export class LuckstrologyDatabase extends Dexie {
       }
     };
     
-    console.log("🔍 [userProfileToUser] Final user object:", user);
-    console.log("🔍 [userProfileToUser] User date field types after conversion:", {
-      createdAtType: typeof user.createdAt,
-      createdAtIsDate: user.createdAt instanceof Date,
-      updatedAtType: typeof user.updatedAt,
-      updatedAtIsDate: user.updatedAt instanceof Date
-    });
     
     return user;
   }
 
   // Utility method to convert User type to UserProfile for storage
   userToUserProfile(user: import("../types/user").User): UserProfile {
-    console.log("🔍 [userToUserProfile] Converting user to profile:", user);
-    console.log("🔍 [userToUserProfile] Date field types:", {
-      createdAt: user.createdAt,
-      createdAtType: typeof user.createdAt,
-      createdAtIsDate: user.createdAt instanceof Date,
-      updatedAt: user.updatedAt,
-      updatedAtType: typeof user.updatedAt,
-      updatedAtIsDate: user.updatedAt instanceof Date
-    });
-    
     const profile = {
       id: user.id,
       username: user.username,
@@ -290,7 +273,6 @@ export class LuckstrologyDatabase extends Dexie {
       showOnlineStatus: user.privacy.showOnlineStatus,
     };
     
-    console.log("🔍 [userToUserProfile] Final profile object:", profile);
     return profile;
   }
 

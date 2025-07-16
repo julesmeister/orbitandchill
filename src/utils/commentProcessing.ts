@@ -118,59 +118,45 @@ export function parseAICommentsResponse(aiOutput: string): {
   let parsedResults = [];
   let hasPartialResults = false;
   
-  console.log('🔍 Attempting to parse AI response (first 200 chars):', jsonText.substring(0, 200) + '...');
-  console.log('🔍 Response ends with:', jsonText.substring(jsonText.length - 100));
-  
   try {
     // Try direct parsing first
     parsedResults = JSON.parse(jsonText);
-    console.log('✅ Direct JSON parse successful, found', parsedResults.length, 'comments');
   } catch (directParseError) {
-    console.warn('❌ Direct JSON parse failed:', (directParseError as Error).message);
     hasPartialResults = true; // We're likely dealing with truncated data
     
     // Try to find and extract JSON array
     const arrayMatch = jsonText.match(/\[[\s\S]*?\]/);
     if (arrayMatch) {
       let arrayString = arrayMatch[0];
-      console.log('🔍 Found JSON array, attempting to parse...');
       
       // Better handling of truncated JSON
       if (!arrayString.endsWith(']')) {
-        console.log('⚠️ JSON appears truncated, attempting comprehensive repair...');
         
         // Find all complete comment objects and reconstruct array
         const objectMatches = arrayString.match(/\{\s*"originalComment"\s*:\s*"[^"]*"\s*,\s*"rephrasedComment"\s*:\s*"[^"]*"\s*\}/g);
         
         if (objectMatches && objectMatches.length > 0) {
-          console.log(`🔧 Found ${objectMatches.length} complete objects, reconstructing array`);
           arrayString = '[\n  ' + objectMatches.join(',\n  ') + '\n]';
-          console.log('🔧 Repaired truncated JSON by reconstructing from complete objects');
         } else {
           // Fallback: just close what we have
           const lastCompleteEnd = arrayString.lastIndexOf('}');
           if (lastCompleteEnd > -1) {
             arrayString = arrayString.substring(0, lastCompleteEnd + 1) + ']';
-            console.log('🔧 Repaired truncated JSON with basic closure');
           }
         }
       }
       
       try {
         parsedResults = JSON.parse(arrayString);
-        console.log('✅ Parsed repaired JSON successfully, found', parsedResults.length, 'comments');
       } catch (repairError) {
-        console.warn('❌ Repaired JSON still failed:', (repairError as Error).message);
         
         // Enhanced manual extraction with better regex
-        console.log('🔄 Attempting enhanced manual regex extraction...');
         const manualResults = [];
         
         // Find all complete comment pairs, being more flexible with content
         const commentObjects = arrayString.match(/\{\s*"originalComment"\s*:\s*"[^"]*"\s*,\s*"rephrasedComment"\s*:\s*"[^"]*"\s*\}/g);
         
         if (commentObjects && commentObjects.length > 0) {
-          console.log(`Found ${commentObjects.length} complete comment objects`);
           
           for (const obj of commentObjects) {
             try {
@@ -196,13 +182,10 @@ export function parseAICommentsResponse(aiOutput: string): {
         
         parsedResults = manualResults;
         if (parsedResults.length > 0) {
-          console.log(`✅ Successfully extracted ${parsedResults.length} comments via enhanced manual parsing`);
         } else {
-          console.log('⚠️ No complete comment pairs could be extracted');
         }
       }
     } else {
-      console.log('⚠️ No JSON array found in AI response');
     }
   }
   
@@ -298,7 +281,6 @@ COMMENT TO REPHRASE: "${item.originalComment}"`
 
   // Match results with personas
   const finalResults: RephrasedCommentResult[] = [];
-  console.log(`🔄 Matching ${parsedResults.length} AI results with ${commentsWithPersonas.length} personas`);
   
   // Process whatever we successfully extracted
   for (let i = 0; i < Math.min(parsedResults.length, commentsWithPersonas.length); i++) {
@@ -309,7 +291,6 @@ COMMENT TO REPHRASE: "${item.originalComment}"`
     const rephrasedComment = aiResult.rephrasedComment || originalData.originalComment;
     const isRephrased = !!aiResult.rephrasedComment;
     
-    console.log(`📝 Comment ${i + 1}: Original="${originalData.originalComment.substring(0, 50)}..." → Rephrased="${rephrasedComment.substring(0, 50)}..." (rephrased: ${isRephrased})`);
     
     finalResults.push({
       originalComment: originalData.originalComment,
@@ -320,7 +301,6 @@ COMMENT TO REPHRASE: "${item.originalComment}"`
   
   // Handle any remaining comments that weren't rephrased due to truncation
   if (parsedResults.length < commentsWithPersonas.length) {
-    console.log(`⚠️ AI response was truncated. Processing ${commentsWithPersonas.length - parsedResults.length} remaining comments without rephrasing`);
     
     for (let i = parsedResults.length; i < commentsWithPersonas.length; i++) {
       const originalData = commentsWithPersonas[i];
@@ -333,7 +313,6 @@ COMMENT TO REPHRASE: "${item.originalComment}"`
   }
   
   const rephrasedCount = finalResults.filter(r => r.rephrasedComment !== r.originalComment).length;
-  console.log(`✅ Final results: ${finalResults.length} total, ${rephrasedCount} successfully rephrased`);
   
   return {
     comments: finalResults,

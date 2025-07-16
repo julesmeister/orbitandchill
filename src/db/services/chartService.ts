@@ -83,39 +83,19 @@ export class ChartService {
       updatedAt: new Date(),
     };
 
-    // Check database availability before attempting operation
-    console.log('🔧 ChartService.createChart: NEW CODE VERSION - Checking database availability...');
-    console.log('🔧 ChartService.createChart: Database object:', !!db);
-    console.log('🔧 ChartService.createChart: Database client:', !!db?.client);
-    console.log('🔧 ChartService.createChart: TURSO_DATABASE_URL:', !!process.env.TURSO_DATABASE_URL);
     
     // Bypass resilience wrapper and go directly to database
     // The resilience wrapper is incorrectly detecting database as unavailable
     try {
-      console.log('🔧 ChartService.createChart: NEW CODE - Attempting direct database insert...');
-      console.log('🔧 ChartService.createChart: Chart data to insert:', {
-        id: chartId,
-        userId: data.userId,
-        subjectName: data.subjectName,
-        dateOfBirth: data.dateOfBirth,
-        timeOfBirth: data.timeOfBirth,
-        locationOfBirth: data.locationOfBirth,
-        chartDataLength: data.chartData.length,
-        hasMetadata: !!data.metadata
-      });
       
       const insertResult = await db.insert(natalCharts).values(newChart).returning();
-      console.log('🔧 ChartService.createChart: Insert result:', insertResult);
       
       // Verify the chart was actually saved
-      console.log('🔧 ChartService.createChart: Verifying chart was saved...');
       const [savedChart] = await db
         .select()
         .from(natalCharts)
         .where(eq(natalCharts.id, chartId))
         .limit(1);
-      
-      console.log('🔧 ChartService.createChart: Verification query result:', savedChart);
       
       if (!savedChart) {
         console.error('ChartService.createChart: Chart was not saved to database!');
@@ -125,12 +105,10 @@ export class ChartService {
           .select()
           .from(natalCharts)
           .where(eq(natalCharts.userId, data.userId));
-        console.log('🔧 ChartService.createChart: All charts for user:', allUserCharts.length);
         
         throw new Error('Chart was not saved to database');
       }
       
-      console.log('ChartService.createChart: Chart successfully saved with ID:', savedChart.id);
       
       return {
         ...newChart,
@@ -246,17 +224,11 @@ export class ChartService {
   static async getUserCharts(userId: string): Promise<ChartData[]> {
     // Bypass resilience wrapper - direct database access
     try {
-      console.log('ChartService.getUserCharts: Looking for charts for user:', userId);
       const charts = await db
         .select()
         .from(natalCharts)
         .where(eq(natalCharts.userId, userId))
         .orderBy(desc(natalCharts.createdAt));
-
-      console.log('ChartService.getUserCharts: Found', charts.length, 'charts for user', userId);
-      if (charts.length > 0) {
-        console.log('ChartService.getUserCharts: Chart IDs:', charts.map(c => c.id));
-      }
 
       return charts.map((chart: any) => ({
         ...chart,
@@ -376,13 +348,9 @@ export class ChartService {
     // Bypass resilience wrapper - direct database access
     try {
       // First get the existing chart to check if it already has a token
-      console.log('Looking for chart with ID:', id, 'for user:', userId);
       const chart = await this.getChartById(id, userId);
       
       if (!chart) {
-        console.log('Chart not found - let\'s check all charts for this user');
-        const userCharts = await this.getUserCharts(userId);
-        console.log('User has', userCharts.length, 'charts:', userCharts.map(c => ({ id: c.id, title: c.title })));
         throw new Error('Chart not found');
       }
 
@@ -396,24 +364,14 @@ export class ChartService {
       
       // Use the same database approach as createChart for consistency
       // Use a simpler approach for the UPDATE query to avoid WHERE clause parsing issues
-      console.log('🔧 ChartService.generateShareToken: Updating chart with shareToken');
-      console.log('🔧 ChartService.generateShareToken: Chart ID:', id, 'User ID:', userId);
-      
-      try {
-        await db
-          .update(natalCharts)
-          .set({
-            shareToken: shareToken,
-            isPublic: true,
-            updatedAt: new Date()
-          })
-          .where(eq(natalCharts.id, id));
-          
-        console.log('🔧 ChartService.generateShareToken: Update successful');
-      } catch (updateError) {
-        console.error('🔧 ChartService.generateShareToken: Update failed:', updateError);
-        throw updateError;
-      }
+      await db
+        .update(natalCharts)
+        .set({
+          shareToken: shareToken,
+          isPublic: true,
+          updatedAt: new Date()
+        })
+        .where(eq(natalCharts.id, id));
 
       return shareToken;
     } catch (error) {

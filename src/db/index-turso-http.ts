@@ -281,22 +281,9 @@ const createMockDb = () => ({
         const query = `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders}) RETURNING *`;
         
         try {
-          // Add special debugging for natal_charts table
-          if (tableName === 'natal_charts') {
-            console.log('🔧 DATABASE: Inserting into natal_charts table');
-            console.log('🔧 DATABASE: Field names:', fieldNames);
-            console.log('🔧 DATABASE: Query:', query);
-            console.log('🔧 DATABASE: Values:', processedValues);
-          }
           
           const result = await executeQuery(query, processedValues);
           
-          // Special success logging for natal_charts
-          if (tableName === 'natal_charts') {
-            console.log('🔧 DATABASE: natal_charts insert successful');
-            console.log('🔧 DATABASE: Result:', result);
-            console.log('🔧 DATABASE: Result rows:', result.rows);
-          }
           
           // Insert successful
           return result.rows || [data];
@@ -729,14 +716,6 @@ const createMockDb = () => ({
               const sql = `UPDATE ${tableName} SET ${updates.join(', ')} WHERE ${whereClause}`;
               const allParams = [...values, ...whereParams];
               
-              // Debug UPDATE query for natal_charts
-              if (tableName === 'natal_charts') {
-                console.log('🔧 DATABASE UPDATE: Generated SQL:', sql);
-                console.log('🔧 DATABASE UPDATE: Parameters:', allParams);
-                console.log('🔧 DATABASE UPDATE: Updates:', updates);
-                console.log('🔧 DATABASE UPDATE: WHERE clause:', whereClause);
-                console.log('🔧 DATABASE UPDATE: WHERE params:', whereParams);
-              }
               
               try {
                 const result = await executeQuery(sql, allParams);
@@ -1377,7 +1356,6 @@ async function createTablesIfNeeded() {
       
       // Force create astrological_events table if it doesn't exist
       if (eventsResult.rows.length === 0) {
-        console.log('🔧 Creating missing astrological_events table...');
         await client.execute(`
           CREATE TABLE IF NOT EXISTS astrological_events (
             id TEXT PRIMARY KEY,
@@ -1407,7 +1385,6 @@ async function createTablesIfNeeded() {
       
       // Force create horary_questions table if it doesn't exist
       if (horaryResult.rows.length === 0) {
-        console.log('🔧 Creating missing horary_questions table...');
         await client.execute(`
           CREATE TABLE IF NOT EXISTS horary_questions (
             id TEXT PRIMARY KEY,
@@ -1449,7 +1426,6 @@ async function createTablesIfNeeded() {
       // Check and create seeding tables if missing
       const seedConfigsCheck = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="seed_user_configs"');
       if (seedConfigsCheck.rows.length === 0) {
-        console.log('🔧 Creating missing seed_user_configs table...');
         await client.execute(`
           CREATE TABLE IF NOT EXISTS seed_user_configs (
             id TEXT PRIMARY KEY,
@@ -1473,7 +1449,6 @@ async function createTablesIfNeeded() {
       
       const seedBatchesCheck = await client.execute('SELECT name FROM sqlite_master WHERE type="table" AND name="seeding_batches"');
       if (seedBatchesCheck.rows.length === 0) {
-        console.log('🔧 Creating missing seeding_batches table...');
         await client.execute(`
           CREATE TABLE IF NOT EXISTS seeding_batches (
             id TEXT PRIMARY KEY,

@@ -268,11 +268,9 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
 
   // Handle fixing avatar paths
   const handleFixAvatarPaths = async () => {
-    console.log('🔧 Fix Avatar Paths: Starting avatar path fixing process...');
     showLoadingToast('Fixing Avatar Paths', 'Updating avatar paths for users with incorrect file names...');
     
     try {
-      console.log('🔧 Fix Avatar Paths: Sending POST request to /api/admin/fix-avatar-paths');
       const response = await fetch('/api/admin/fix-avatar-paths', {
         method: 'POST',
         headers: {
@@ -280,13 +278,9 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         },
       });
 
-      console.log('🔧 Fix Avatar Paths: Response received, status:', response.status);
       const result = await response.json();
-      console.log('🔧 Fix Avatar Paths: Response data:', result);
 
       if (result.success) {
-        console.log(`🔧 Fix Avatar Paths: SUCCESS - Fixed ${result.fixedCount}/${result.totalUsers} users`);
-        console.log('🔧 Fix Avatar Paths: Fixed users:', result.fixedUsers);
         
         showSuccessToast(
           'Avatar Paths Fixed', 
@@ -464,7 +458,6 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
   const handleAddReplyWrapper = async (discussionIndex: number) => {
     // Get the current mood for this discussion
     const currentMood = selectedMoodForIndex[discussionIndex] || 'supportive';
-    console.log('🎭 SeedingTab handleAddReplyWrapper - mood for discussion', discussionIndex, ':', currentMood);
     
     await addReplyWithToast(
       discussionIndex,
@@ -902,10 +895,8 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           onClearReplies={handleClearReplies}
           onUpdateReply={handleUpdateReply}
           onMoodSelect={(index, mood) => {
-            console.log('🎭 Mood selection triggered:', { index, mood });
             setSelectedMoodForIndex(prev => {
               const newState = { ...prev, [index]: mood };
-              console.log('🎭 Updated selectedMoodForIndex:', newState);
               return newState;
             });
           }}

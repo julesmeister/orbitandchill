@@ -1,269 +1,37 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useUserStore } from "../../store/userStore";
-import { usePeopleStore } from "../../store/peopleStore";
-import { useChartTab } from "../../store/chartStore";
-import { useNatalChart } from "../../hooks/useNatalChart";
-import { Person } from "../../types/people";
-import { trackChartGenerated, trackPageView } from "../../utils/analytics";
 import NatalChartDisplay from "../../components/charts/NatalChartDisplay";
 import ChartQuickActions from "../../components/charts/ChartQuickActions";
 import BirthDataSummary from "../../components/charts/BirthDataSummary";
 import InterpretationSidebar from "../../components/charts/InterpretationSidebar";
-import TransitAspectsTab from "../../components/charts/TransitAspectsTab";
-import { useStatusToast } from "../../hooks/useStatusToast";
 import StatusToast from "../../components/reusable/StatusToast";
+import { useChartPage } from "../../hooks/useChartPage";
 import { BRAND } from "../../config/brand";
 
 export default function ChartPage() {
-  const router = useRouter();
-  const { user, isProfileComplete, isLoading: isUserLoading, loadProfile } =
-    useUserStore();
-  const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
-  const { activeTab, setActiveTab } = useChartTab();
-
-  // Debug: Log current active tab (removed to prevent loop)
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-
-  // Use global selected person if available, otherwise fall back to local state
-  const activeSelectedPerson = globalSelectedPerson || selectedPerson;
-
   const {
-    generateChart,
-    isGenerating,
+    router,
+    user,
+    activeTab,
     cachedChart,
-    shareChart,
-    getUserCharts,
-    hasExistingChart,
-    isLoadingCache,
-  } = useNatalChart(activeSelectedPerson);
-
-  // Use status toast hook
-  const { toast: statusToast, showSuccess, showError, hideStatus } = useStatusToast();
-
-  // Create refs for stable function references
-  const generateChartRef = useRef(generateChart);
-  const getUserChartsRef = useRef(getUserCharts);
-
-  // Update refs when functions change
-  useEffect(() => {
-    generateChartRef.current = generateChart;
-    getUserChartsRef.current = getUserCharts;
-  }, [generateChart, getUserCharts]);
-
-  // Load user profile when component mounts
-  useEffect(() => {
-    console.log('ChartPage - Profile load effect:', {
-      hasUser: !!user,
-      isUserLoading,
-      userId: user?.id,
-      userHasBirthData: !!user?.birthData,
-      userBirthDataDetails: user?.birthData ? {
-        hasDateOfBirth: !!user.birthData.dateOfBirth,
-        hasTimeOfBirth: !!user.birthData.timeOfBirth,
-        hasLocation: !!user.birthData.locationOfBirth,
-        hasCoordinates: !!user.birthData.coordinates,
-        hasLat: !!user.birthData.coordinates?.lat,
-      } : null,
-    });
-    
-    // Only load profile if we don't have a user yet
-    if (!user && !isUserLoading) {
-      console.log('ChartPage - Loading profile');
-      loadProfile();
-    }
-  }, [user, isUserLoading, loadProfile]);
-
-  // Check for existing charts and auto-generate if needed
-  useEffect(() => {
-    console.log('ChartPage - Chart generation effect triggered:', {
-      isLoadingCache,
-      hasCachedChart: !!cachedChart,
-      isGenerating,
-      hasUser: !!user,
-      userId: user?.id,
-      hasActiveSelectedPerson: !!activeSelectedPerson,
-      activeSelectedPersonId: activeSelectedPerson?.id,
-      activeSelectedPersonName: activeSelectedPerson?.name,
-    });
-    
-    // Early return if cache is still loading - wait for it to complete
-    if (isLoadingCache) {
-      console.log('ChartPage - Cache still loading, waiting...');
-      return;
-    }
-
-    // Early return if we already have a cached chart - no need to do anything
-    if (cachedChart) {
-      console.log('ChartPage - Already have cached chart, skipping generation');
-      return;
-    }
-
-    // Early return if already generating
-    if (isGenerating) {
-      console.log('ChartPage - Already generating, skipping');
-      return;
-    }
-
-    // Early return if no user
-    if (!user) {
-      console.log('ChartPage - No user, skipping chart generation');
-      return;
-    }
-
-    const loadOrGenerateChart = async () => {
-      console.log('🔧 CHART PAGE: loadOrGenerateChart called');
-      console.log('🔧 CHART PAGE: isGenerating:', isGenerating);
-      console.log('🔧 CHART PAGE: user:', !!user);
-      console.log('🔧 CHART PAGE: user.birthData:', !!user?.birthData);
-      if (user?.birthData) {
-        console.log('🔧 CHART PAGE: birth data details:', {
-          dateOfBirth: !!user.birthData.dateOfBirth,
-          timeOfBirth: !!user.birthData.timeOfBirth,
-          locationOfBirth: !!user.birthData.locationOfBirth,
-          coordinates: !!user.birthData.coordinates,
-          lat: !!user.birthData.coordinates?.lat,
-          lon: !!user.birthData.coordinates?.lon
-        });
-      }
-      
-      // Guard against running when already generating
-      if (isGenerating) {
-        console.log('🔧 CHART PAGE: Already generating, returning');
-        return;
-      }
-
-      // First, try to load existing charts
-      try {
-        console.log('🔧 CHART PAGE: Loading existing charts...');
-        const existingCharts = await getUserChartsRef.current();
-        console.log('🔧 CHART PAGE: Found', existingCharts.length, 'existing charts');
-
-        if (existingCharts.length > 0) {
-          // Use the most recent chart
-          const latestChart = existingCharts[0];
-          console.log('🔧 CHART PAGE: Using latest chart:', latestChart.id);
-          // The chart should be loaded by the useNatalChart hook automatically
-          return;
-        }
-      } catch (error) {
-        console.log('🔧 CHART PAGE: Error loading existing charts:', error);
-      }
-
-      // If no existing charts but we have birth data, try to generate
-      // Check specific birth data fields instead of using isProfileComplete
-      if (user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat) {
-        console.log('🔧 CHART PAGE: No existing charts, generating new chart...');
-        try {
-          await generateChartRef.current({
-            name: user.username || '',
-            dateOfBirth: user.birthData.dateOfBirth,
-            timeOfBirth: user.birthData.timeOfBirth,
-            locationOfBirth: user.birthData.locationOfBirth || 'Unknown',
-            coordinates: user.birthData.coordinates
-          });
-
-          // Track analytics - chart generated
-          trackChartGenerated('natal', {
-            isAutoGenerated: true,
-            hasCompleteProfile: !!(user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat)
-          });
-          
-          console.log('🔧 CHART PAGE: Chart generation completed');
-        } catch (error) {
-          console.log('🔧 CHART PAGE: Error during auto-generation:', error);
-        }
-      } else {
-        console.log('🔧 CHART PAGE: Missing birth data, cannot generate chart');
-      }
-    };
-
-    loadOrGenerateChart();
-  }, [cachedChart, isGenerating, user?.id, user?.birthData?.dateOfBirth, user?.birthData?.timeOfBirth, user?.birthData?.coordinates?.lat]); // Optimized dependencies - removed isLoadingCache and isProfileComplete
-
-  // Track page view analytics
-  useEffect(() => {
-    trackPageView('/chart');
-  }, []);
-
-  const handleClearAllCaches = async () => {
-    if (!user) return;
-
-    try {
-      await handleRegenerateChart();
-      showSuccess('Chart Regenerated', 'Your natal chart has been successfully regenerated with fresh calculations.', 4000);
-    } catch (error) {
-      showError('Regeneration Failed', 'Failed to regenerate your chart. Please try again.', 5000);
-    }
-  };
-
-  const handleRegenerateChart = async () => {
-    // Use selected person's data if available, otherwise fall back to user's data
-    const personToUse = selectedPerson || (user?.birthData ? {
-      name: user.username || "",
-      birthData: user.birthData
-    } : null);
-
-    if (!personToUse?.birthData) {
-      alert("No birth data available. Please select a person or add your birth data.");
-      return;
-    }
-
-    try {
-      const chartData = await generateChart(
-        {
-          name: personToUse.name || "",
-          dateOfBirth: personToUse.birthData.dateOfBirth,
-          timeOfBirth: personToUse.birthData.timeOfBirth,
-          locationOfBirth: personToUse.birthData.locationOfBirth,
-          coordinates: personToUse.birthData.coordinates,
-        },
-        true // forceRegenerate
-      );
-
-      // Track analytics - chart regenerated
-      trackChartGenerated('natal', {
-        isRegeneration: true,
-        personName: personToUse.name
-      });
-
-      if (chartData) {
-        // Chart regenerated successfully
-      }
-    } catch (error) {
-      alert("Failed to regenerate chart. Please try again.");
-    }
-  };
-
-  const handlePersonChange = async (person: Person | null) => {
-    setSelectedPerson(person);
-    // Also update the global store
-    setGlobalSelectedPerson(person?.id || null);
-
-    // Only generate chart for selected person if we don't already have a cached chart
-    // This prevents disrupting existing chart views when person selector auto-selects
-    if (person?.birthData && user && !cachedChart) {
-      try {
-        await generateChart({
-          name: person.name || "",
-          dateOfBirth: person.birthData.dateOfBirth,
-          timeOfBirth: person.birthData.timeOfBirth,
-          locationOfBirth: person.birthData.locationOfBirth,
-          coordinates: person.birthData.coordinates,
-        });
-      } catch (error) {
-        // Error generating chart for selected person
-      }
-    }
-  };
-
-  const handleAddPersonClick = () => {
-    // This is now handled by ChartQuickActions component
-  };
+    personToShow,
+    birthDataToShow,
+    statusToast,
+    isLoading,
+    isGenerating,
+    loadingTitle,
+    loadingDescription,
+    handleClearAllCaches,
+    handleRegenerateChart,
+    handlePersonChange,
+    handleAddPersonClick,
+    handleShare,
+    hideStatus,
+    setActiveTab,
+  } = useChartPage();
 
   // Show chart display
   return (
@@ -273,12 +41,7 @@ export default function ChartPage() {
         <section className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
           <div className="px-6 py-8">
             {(() => {
-              // Show loading state first if any of these conditions are true:
-              // 1. User data is loading
-              // 2. Chart cache is loading and we know there's an existing chart
-              // 3. Chart is being generated
-              // 4. No user data loaded yet (initial mount)
-              if (isUserLoading || (isLoadingCache && hasExistingChart) || isGenerating || !user) {
+              if (isLoading) {
                 return (
                   <div className="border border-black bg-white min-h-screen flex items-center justify-center">
                     <div className="text-center">
@@ -291,16 +54,12 @@ export default function ChartPage() {
 
                       {/* Heading */}
                       <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
-                        {isUserLoading ? 'Loading Your Profile' :
-                          isGenerating ? 'Generating Your Chart' :
-                            'Loading Your Chart'}
+                        {loadingTitle}
                       </h1>
 
                       {/* Description */}
                       <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
-                        {isUserLoading ? 'Retrieving your birth data and preferences...' :
-                          isGenerating ? 'Creating your cosmic blueprint from the stars...' :
-                            'We\'re retrieving your cosmic blueprint. This should only take a moment...'}
+                        {loadingDescription}
                       </p>
                     </div>
                   </div>
@@ -312,63 +71,27 @@ export default function ChartPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-6 gap-0 border border-black bg-white">
                     {/* Main Chart */}
                     <div className="lg:col-span-4 border-black lg:border-r">
-                      {(() => {
-                        const personToShow = selectedPerson || (user?.birthData ? {
-                          name: user.username || "",
-                          birthData: user.birthData
-                        } : null);
-
-                        return (
-                          <NatalChartDisplay
-                            svgContent={cachedChart.svg}
-                            chartName={
-                              cachedChart.metadata?.name ||
-                              personToShow?.name ||
-                              "Natal Chart"
-                            }
-                            birthData={
-                              cachedChart.metadata?.birthData ||
-                              personToShow?.birthData ||
-                              user?.birthData ||
-                              {
-                                dateOfBirth: "",
-                                timeOfBirth: "",
-                                locationOfBirth: "",
-                                coordinates: { lat: "", lon: "" }
-                              }
-                            }
-                            chartData={cachedChart.metadata?.chartData}
-                            personName={cachedChart.metadata?.name || personToShow?.name}
-                            personAvatar={selectedPerson ? undefined : user?.profilePictureUrl}
-                            onShare={async () => {
-                              if (cachedChart?.id) {
-                                console.log('Attempting to share chart with ID:', cachedChart.id);
-                                const shareUrl = await shareChart(cachedChart.id);
-                                if (shareUrl) {
-                                  // Try native sharing first, fallback to clipboard
-                                  if (navigator.share) {
-                                    try {
-                                      await navigator.share({
-                                        title: `${cachedChart.metadata?.name || 'My'} Natal Chart`,
-                                        text: `Check out ${cachedChart.metadata?.name || 'my'} natal chart from ${BRAND.name}!`,
-                                        url: shareUrl,
-                                      });
-                                    } catch {
-                                      // User cancelled sharing or sharing failed, copy to clipboard
-                                      await navigator.clipboard.writeText(shareUrl);
-                                      showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
-                                    }
-                                  } else {
-                                    // Fallback to clipboard
-                                    await navigator.clipboard.writeText(shareUrl);
-                                    showSuccess('Link Copied', 'Chart share link copied to clipboard.', 3000);
-                                  }
-                                }
-                              }
-                            }}
-                          />
-                        );
-                      })()}
+                      <NatalChartDisplay
+                        svgContent={cachedChart.svg}
+                        chartName={
+                          cachedChart.metadata?.name ||
+                          personToShow?.name ||
+                          "Natal Chart"
+                        }
+                        birthData={
+                          birthDataToShow ||
+                          {
+                            dateOfBirth: "",
+                            timeOfBirth: "",
+                            locationOfBirth: "",
+                            coordinates: { lat: "", lon: "" }
+                          }
+                        }
+                        chartData={cachedChart.metadata?.chartData}
+                        personName={cachedChart.metadata?.name || personToShow?.name}
+                        personAvatar={user?.profilePictureUrl}
+                        onShare={handleShare}
+                      />
                     </div>
 
                     {/* Sidebar with Actions */}
@@ -384,21 +107,12 @@ export default function ChartPage() {
                       />
 
                       {/* Birth Data Summary */}
-                      {(() => {
-                        const personToShow = selectedPerson || (user?.birthData ? {
-                          name: user.username || "",
-                          birthData: user.birthData
-                        } : null);
-
-                        const birthDataToShow = cachedChart?.metadata?.birthData || personToShow?.birthData;
-
-                        return birthDataToShow && (
-                          <BirthDataSummary
-                            birthData={birthDataToShow}
-                            personName={cachedChart?.metadata?.name || personToShow?.name}
-                          />
-                        );
-                      })()}
+                      {birthDataToShow && (
+                        <BirthDataSummary
+                          birthData={birthDataToShow}
+                          personName={cachedChart?.metadata?.name || personToShow?.name}
+                        />
+                      )}
 
                       {/* Interpretation Sidebar - Show when interpretation tab is active */}
                       {activeTab === 'interpretation' && (
