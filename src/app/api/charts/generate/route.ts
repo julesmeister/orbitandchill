@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to database
-    console.log('Saving chart to database...');
+    console.log('🔧 NEW API CODE: Saving chart to database...');
     const savedChart = await ChartService.createChart({
       userId: body.userId,
       subjectName: body.subjectName,
@@ -181,7 +181,17 @@ export async function POST(request: NextRequest) {
       metadata,
     });
 
-    console.log('Chart saved:', !!savedChart, savedChart?.id);
+    console.log('🔧 NEW API CODE: Chart saved:', !!savedChart, savedChart?.id);
+    
+    if (savedChart) {
+      console.log('🔧 NEW API CODE: Chart details:', {
+        id: savedChart.id,
+        userId: savedChart.userId,
+        subjectName: savedChart.subjectName,
+        dateOfBirth: savedChart.dateOfBirth,
+        timeOfBirth: savedChart.timeOfBirth
+      });
+    }
 
     // Track chart generation analytics
     if (savedChart) {

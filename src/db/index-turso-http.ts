@@ -281,7 +281,22 @@ const createMockDb = () => ({
         const query = `INSERT INTO ${tableName} (${fieldNames}) VALUES (${placeholders}) RETURNING *`;
         
         try {
+          // Add special debugging for natal_charts table
+          if (tableName === 'natal_charts') {
+            console.log('🔧 DATABASE: Inserting into natal_charts table');
+            console.log('🔧 DATABASE: Field names:', fieldNames);
+            console.log('🔧 DATABASE: Query:', query);
+            console.log('🔧 DATABASE: Values:', processedValues);
+          }
+          
           const result = await executeQuery(query, processedValues);
+          
+          // Special success logging for natal_charts
+          if (tableName === 'natal_charts') {
+            console.log('🔧 DATABASE: natal_charts insert successful');
+            console.log('🔧 DATABASE: Result:', result);
+            console.log('🔧 DATABASE: Result rows:', result.rows);
+          }
           
           // Insert successful
           return result.rows || [data];
