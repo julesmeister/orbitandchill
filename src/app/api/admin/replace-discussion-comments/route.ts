@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/db/client';
+import { getDbAsync } from '@/db/index-turso-http';
 import { discussionReplies } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -23,10 +23,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = await getDb();
+    const dbInstance = await getDbAsync();
+    if (!dbInstance) {
+      throw new Error('Database not available');
+    }
+    const db = dbInstance.db;
 
     // Start a transaction to ensure data consistency
-    await db.transaction(async (tx) => {
+    await db.transaction(async (tx: any) => {
       // Delete existing replies for this discussion
       await tx.delete(discussionReplies).where(eq(discussionReplies.discussionId, discussionId));
 

@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Generate random timestamps for each reply
     const updates: { id: string; newTimestamp: number }[] = [];
     
-    repliesResult.rows.forEach((row, index) => {
+    repliesResult.rows.forEach((row: any, index: number) => {
       const replyId = row.id as string;
       
       // Generate a random timestamp between discussion creation + 1 hour and now

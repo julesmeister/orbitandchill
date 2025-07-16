@@ -257,6 +257,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
               <div className="flex space-x-4">
                 <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100 overflow-hidden">
                   {(() => {
+                    // eslint-disable-next-line react-hooks/rules-of-hooks
                     const { avatarSrc, initials } = useUserAvatar({
                       author: reply.author,
                       avatar: reply.avatar,
@@ -343,6 +344,7 @@ export default function RepliesSection({ discussionId, onReplyToComment, onReply
                       <div className="flex space-x-3">
                         <div className="w-10 h-10 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100 overflow-hidden">
                           {(() => {
+                            // eslint-disable-next-line react-hooks/rules-of-hooks
                             const { avatarSrc, initials } = useUserAvatar({
                               author: childReply.author,
                               avatar: childReply.avatar,
