@@ -318,6 +318,7 @@ export default function ChartPage() {
                             personAvatar={selectedPerson ? undefined : user?.profilePictureUrl}
                             onShare={async () => {
                               if (cachedChart?.id) {
+                                console.log('Attempting to share chart with ID:', cachedChart.id);
                                 const shareUrl = await shareChart(cachedChart.id);
                                 if (shareUrl) {
                                   // Try native sharing first, fallback to clipboard

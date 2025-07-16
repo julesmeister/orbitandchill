@@ -339,7 +339,21 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
     }
 
     try {
-      const response = await fetch(`/api/charts/${chartId}/share`, {
+      // First, try to get the most recent chart ID from the database
+      // This ensures we're always sharing the latest chart, not a cached one
+      const userCharts = await getUserCharts();
+      const latestChart = userCharts.find(chart => 
+        activePersonData &&
+        chart.dateOfBirth === activePersonData.dateOfBirth &&
+        chart.timeOfBirth === activePersonData.timeOfBirth &&
+        Math.abs(parseFloat(chart.latitude) - parseFloat(activePersonData.coordinates.lat)) < 0.001 &&
+        Math.abs(parseFloat(chart.longitude) - parseFloat(activePersonData.coordinates.lon)) < 0.001
+      );
+      
+      const actualChartId = latestChart?.id || chartId;
+      console.log('Sharing chart - requested ID:', chartId, 'actual ID:', actualChartId);
+      
+      const response = await fetch(`/api/charts/${actualChartId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -367,7 +381,7 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
       // Component should handle share errors
       return null;
     }
-  }, [user]);
+  }, [user, activePersonData, getUserCharts]);
 
   return {
     generateChart,
