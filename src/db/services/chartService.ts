@@ -84,15 +84,15 @@ export class ChartService {
     };
 
     // Check database availability before attempting operation
-    console.log('ChartService.createChart: Checking database availability...');
-    console.log('ChartService.createChart: Database object:', !!db);
-    console.log('ChartService.createChart: Database client:', !!db?.client);
-    console.log('ChartService.createChart: TURSO_DATABASE_URL:', !!process.env.TURSO_DATABASE_URL);
+    console.log('🔧 ChartService.createChart: NEW CODE VERSION - Checking database availability...');
+    console.log('🔧 ChartService.createChart: Database object:', !!db);
+    console.log('🔧 ChartService.createChart: Database client:', !!db?.client);
+    console.log('🔧 ChartService.createChart: TURSO_DATABASE_URL:', !!process.env.TURSO_DATABASE_URL);
     
     // Bypass resilience wrapper and go directly to database
     // The resilience wrapper is incorrectly detecting database as unavailable
     try {
-      console.log('ChartService.createChart: Attempting direct database insert...');
+      console.log('🔧 ChartService.createChart: NEW CODE - Attempting direct database insert...');
       await db.insert(natalCharts).values(newChart);
       
       // Verify the chart was actually saved
@@ -134,7 +134,8 @@ export class ChartService {
    * Get a chart by ID
    */
   static async getChartById(id: string, userId?: string): Promise<ChartData | null> {
-    return resilient.item(db, 'getChartById', async () => {
+    // Bypass resilience wrapper - direct database access
+    try {
       // Use the same database approach as createChart for consistency
       const whereConditions = userId 
         ? and(eq(natalCharts.id, id), eq(natalCharts.userId, userId))
@@ -155,14 +156,29 @@ export class ChartService {
         createdAt: chart.createdAt,
         updatedAt: chart.updatedAt,
       };
-    });
+    } catch (error) {
+      console.error('ChartService.getChartById: Database operation failed:', error);
+      
+      // If database is truly unavailable, return null
+      if (error && typeof error === 'object' && 'message' in error) {
+        const message = (error as Error).message;
+        if (message.includes('Database not available') || message.includes('Connection failed')) {
+          console.warn('ChartService.getChartById: Database unavailable, returning null');
+          return null;
+        }
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
    * Get a chart by share token (for public sharing)
    */
   static async getChartByShareToken(shareToken: string): Promise<ChartData | null> {
-    return resilient.item(db, 'getChartByShareToken', async () => {
+    // Bypass resilience wrapper - direct database access
+    try {
       // Use the same database approach as createChart for consistency
       const [chart] = await db
         .select()
@@ -184,7 +200,21 @@ export class ChartService {
         createdAt: chart.createdAt,
         updatedAt: chart.updatedAt,
       };
-    });
+    } catch (error) {
+      console.error('ChartService.getChartByShareToken: Database operation failed:', error);
+      
+      // If database is truly unavailable, return null
+      if (error && typeof error === 'object' && 'message' in error) {
+        const message = (error as Error).message;
+        if (message.includes('Database not available') || message.includes('Connection failed')) {
+          console.warn('ChartService.getChartByShareToken: Database unavailable, returning null');
+          return null;
+        }
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
@@ -320,7 +350,8 @@ export class ChartService {
    * Generate a new share token for a chart
    */
   static async generateShareToken(id: string, userId: string): Promise<string | null> {
-    return resilient.operation(db, 'generateShareToken', async () => {
+    // Bypass resilience wrapper - direct database access
+    try {
       // First get the existing chart to check if it already has a token
       console.log('Looking for chart with ID:', id, 'for user:', userId);
       const chart = await this.getChartById(id, userId);
@@ -356,7 +387,21 @@ export class ChartService {
         );
 
       return shareToken;
-    }, null); // Return null if database unavailable
+    } catch (error) {
+      console.error('ChartService.generateShareToken: Database operation failed:', error);
+      
+      // If database is truly unavailable, return null
+      if (error && typeof error === 'object' && 'message' in error) {
+        const message = (error as Error).message;
+        if (message.includes('Database not available') || message.includes('Connection failed')) {
+          console.warn('ChartService.generateShareToken: Database unavailable, returning null');
+          return null;
+        }
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
