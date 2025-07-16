@@ -13,8 +13,15 @@ export const useSharedCharts = (): UseSharedChartsReturn => {
   const [sharedCharts, setSharedCharts] = useState<SharedChart[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  const fetchSharedCharts = async () => {
+  const fetchSharedCharts = async (forceRefresh: boolean = false) => {
+    // Don't refetch if we already have data and it's less than 5 minutes old
+    const now = Date.now();
+    if (!forceRefresh && sharedCharts.length > 0 && (now - lastFetchTime) < 300000) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
@@ -40,6 +47,7 @@ export const useSharedCharts = (): UseSharedChartsReturn => {
         }));
         
         setSharedCharts(convertedCharts);
+        setLastFetchTime(now);
       } else {
         setError(result.error || 'Failed to fetch shared charts');
       }
@@ -59,6 +67,6 @@ export const useSharedCharts = (): UseSharedChartsReturn => {
     sharedCharts,
     isLoading,
     error,
-    refetch: fetchSharedCharts,
+    refetch: () => fetchSharedCharts(true),
   };
 };

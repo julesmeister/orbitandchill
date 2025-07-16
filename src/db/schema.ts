@@ -821,3 +821,21 @@ export const tarotLeaderboard = sqliteTable('tarot_leaderboard', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+// People table - for managing chart subjects
+export const people = sqliteTable('people', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(),
+  relationship: text('relationship', { 
+    enum: ['self', 'family', 'friend', 'partner', 'colleague', 'other'] 
+  }).notNull(),
+  dateOfBirth: text('date_of_birth').notNull(),
+  timeOfBirth: text('time_of_birth').notNull(),
+  locationOfBirth: text('location_of_birth').notNull(),
+  coordinates: text('coordinates').notNull(), // JSON string with {lat, lon}
+  notes: text('notes'),
+  isDefault: integer('is_default', { mode: 'boolean' }).default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});

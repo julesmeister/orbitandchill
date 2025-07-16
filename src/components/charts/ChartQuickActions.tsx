@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { Person } from '../../types/people';
 import PeopleSelector from '../people/PeopleSelector';
 import CompactNatalChartForm from '../forms/CompactNatalChartForm';
-import { usePeopleStore } from '../../store/peopleStore';
+import { usePeopleAPI } from '../../hooks/usePeopleAPI';
 import StatusToast from '../reusable/StatusToast';
 import { useStatusToast } from '../../hooks/useStatusToast';
 import { useUserStore } from '../../store/userStore';
@@ -31,14 +31,19 @@ export default function ChartQuickActions({
   const [showAddPersonForm, setShowAddPersonForm] = useState(false);
   const [showEditPersonForm, setShowEditPersonForm] = useState(false);
   const [editingPersonData, setEditingPersonData] = useState<Person | null>(null);
-  const { selectedPerson, defaultPerson, loadPeople, people, selectedPersonId, setSelectedPerson } = usePeopleStore();
+  const { selectedPerson, defaultPerson, loadPeople, people, selectedPersonId, setSelectedPerson } = usePeopleAPI();
   const { user } = useUserStore();
   const { toast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
 
-  // Load people when component mounts (only once)
+  // Debug log people changes
   React.useEffect(() => {
-    loadPeople();
-  }, []); // Empty dependency array to run only once
+    console.log('ChartQuickActions - People array changed:', {
+      peopleCount: people.length,
+      people: people.map(p => ({ id: p.id, name: p.name, relationship: p.relationship, isDefault: p.isDefault })),
+      selectedPersonId,
+      defaultPerson: defaultPerson ? { id: defaultPerson.id, name: defaultPerson.name } : null
+    });
+  }, [people, selectedPersonId, defaultPerson]);
 
 
   const handleAddPersonClick = () => {
@@ -112,17 +117,20 @@ export default function ChartQuickActions({
   }, [selectedPerson, defaultPerson, showEditPersonForm, editingPersonData?.id]);
 
   // Handle person selection from PeopleSelector
-  const handlePersonSelectWrapper = (person: Person | null) => {
+  const handlePersonSelectWrapper = React.useCallback((person: Person | null) => {
     if (person) {
       // Update global store selection
       setSelectedPerson(person.id);
+    } else {
+      // Clear selection if null
+      setSelectedPerson(null);
     }
     // Also call the parent's handler
     onPersonChange?.(person);
-  };
+  }, [setSelectedPerson, onPersonChange]);
 
   // Handle share chart button click
-  const handleShareChart = async () => {
+  const handleShareChart = React.useCallback(async () => {
     if (!chartId || !user?.id) {
       showError('Share Failed', 'Chart ID or user not available');
       return;
@@ -157,7 +165,7 @@ export default function ChartQuickActions({
       console.error('Share chart error:', error);
       showError('Share Failed', 'Unable to create share link. Please try again.');
     }
-  };
+  }, [chartId, user?.id, showLoading, showSuccess, showError]);
 
   return (
     <div className="bg-white overflow-visible">

@@ -57,24 +57,37 @@ export const usePeopleStore = create<PeopleState>()(
       // Actions
       loadPeople: async () => {
         try {
+          console.log('PeopleStore - loadPeople called');
           set({ isLoading: true, error: null });
           
           // Get current user from user store
           const userStore = await import('./userStore');
           const user = userStore.useUserStore.getState().user;
           
+          console.log('PeopleStore - User in loadPeople:', {
+            hasUser: !!user,
+            userId: user?.id,
+            username: user?.username,
+          });
+          
           if (!user) {
+            console.log('PeopleStore - No user found, setting empty people array');
             set({ people: [], isLoading: false });
             return;
           }
 
           // Load people from database
+          console.log('PeopleStore - Loading people from database for user:', user.id);
           const peopleStorage = await db.getUserPeople(user.id);
+          console.log('PeopleStore - Raw people from database:', peopleStorage);
+          
           const people = peopleStorage.map(storage => db.personStorageToPerson(storage));
+          console.log('PeopleStore - Converted people:', people);
           
           set({ people, isLoading: false });
+          console.log('PeopleStore - People loaded successfully, count:', people.length);
         } catch (error) {
-          console.error('Failed to load people:', error);
+          console.error('PeopleStore - Failed to load people:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Failed to load people',
             isLoading: false 
@@ -84,11 +97,17 @@ export const usePeopleStore = create<PeopleState>()(
 
       addPerson: async (personData: PersonFormData) => {
         try {
+          console.log('PeopleStore - addPerson called with:', personData);
           set({ isLoading: true, error: null });
           
           // Get current user from user store
           const userStore = await import('./userStore');
           const user = userStore.useUserStore.getState().user;
+          
+          console.log('PeopleStore - User in addPerson:', {
+            hasUser: !!user,
+            userId: user?.id,
+          });
           
           if (!user) {
             throw new Error('No user found');
@@ -105,31 +124,49 @@ export const usePeopleStore = create<PeopleState>()(
 
           // If this is the first person or marked as default, make it default
           const { people } = get();
+          console.log('PeopleStore - Current people before adding:', people.length);
+          
           if (people.length === 0 || personData.isDefault) {
             newPerson.isDefault = true;
+            console.log('PeopleStore - Making new person default');
           }
+
+          console.log('PeopleStore - New person object:', newPerson);
 
           // Save to database
           const personStorage = db.personToPersonStorage(newPerson);
+          console.log('PeopleStore - Person storage object:', personStorage);
+          
           await db.savePerson(personStorage);
+          console.log('PeopleStore - Person saved to database');
 
           // If this is the new default, update other people
           if (newPerson.isDefault) {
+            console.log('PeopleStore - Setting as default person in database');
             await db.setDefaultPerson(user.id, newPerson.id);
           }
 
           // Update local state
-          set(state => ({
-            people: newPerson.isDefault 
-              ? [...state.people.map(p => ({ ...p, isDefault: false })), newPerson] // Clear other defaults
-              : [...state.people, newPerson],
-            selectedPersonId: newPerson.id,
-            isLoading: false
-          }));
+          console.log('PeopleStore - Updating local state');
+          set(state => {
+            const newState = {
+              people: newPerson.isDefault 
+                ? [...state.people.map(p => ({ ...p, isDefault: false })), newPerson] // Clear other defaults
+                : [...state.people, newPerson],
+              selectedPersonId: newPerson.id,
+              isLoading: false
+            };
+            console.log('PeopleStore - New state after adding person:', {
+              peopleCount: newState.people.length,
+              selectedPersonId: newState.selectedPersonId,
+            });
+            return newState;
+          });
 
+          console.log('PeopleStore - Person added successfully:', newPerson);
           return newPerson;
         } catch (error) {
-          console.error('Failed to add person:', error);
+          console.error('PeopleStore - Failed to add person:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Failed to add person',
             isLoading: false 

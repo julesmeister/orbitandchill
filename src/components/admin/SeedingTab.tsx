@@ -525,9 +525,9 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
     return (
       <LoadingSpinner
         variant="dots"
-        size="md"
-        title="Loading seeding tools..."
-        subtitle="Preparing AI-powered discussion generation interface."
+        size="lg"
+        title="Loading Discussion Seeding Tools"
+        subtitle="Preparing AI-powered content generation and discussion management interface..."
       />
     );
   }

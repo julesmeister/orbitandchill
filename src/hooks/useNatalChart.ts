@@ -67,82 +67,86 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
   // Load cached chart on mount if active person has complete data
   useEffect(() => {
     const loadCachedChart = async () => {
-      
-      if (user && activePersonData?.dateOfBirth && activePersonData?.timeOfBirth && activePersonData?.coordinates?.lat && activePersonData?.coordinates?.lon) {
-        setIsLoadingCache(true);
-        setHasExistingChart(true); // We have complete data, so a chart should exist or can be generated
-        
-        const personId = activePerson?.id || user.id;
-        // Normalize coordinates to prevent precision issues causing cache misses
-        const normalizedLat = parseFloat(activePersonData.coordinates.lat).toFixed(4);
-        const normalizedLon = parseFloat(activePersonData.coordinates.lon).toFixed(4);
-        const cacheKey = `natal_chart_${personId}_${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${normalizedLat}_${normalizedLon}`;
-        
-        try {
-          const cached = await db.getCache<NatalChartData>(cacheKey);
-          
-          if (cached) {
-            setCachedChart(cached);
-            setIsLoadingCache(false);
-          } else {
-            // Don't clear cached chart immediately - prevents chart loss during transitions
-            // console.log('useNatalChart: No cache found, but keeping existing chart to prevent loss');
-            
-            // Try to load from API if no local cache
-            // console.log('useNatalChart: No local cache, trying to load existing charts from API');
-            try {
-              const charts = await getUserCharts();
-              // console.log('useNatalChart: API charts found:', charts.length);
-              
-              if (charts.length > 0) {
-                // Find matching chart or use the latest one
-                const matchingChart = charts.find((chart: { dateOfBirth: string; timeOfBirth: string; latitude: string; longitude: string; }) => 
-                  chart.dateOfBirth === activePersonData.dateOfBirth &&
-                  chart.timeOfBirth === activePersonData.timeOfBirth &&
-                  Math.abs(parseFloat(chart.latitude) - parseFloat(activePersonData.coordinates.lat)) < 0.001 &&
-                  Math.abs(parseFloat(chart.longitude) - parseFloat(activePersonData.coordinates.lon)) < 0.001
-                );
-                
-                const chartToLoad = matchingChart || charts[0];
-                console.log('useNatalChart: Loading chart from API:', chartToLoad.id);
-                
-                // Transform API chart to local format
-                const chartData: NatalChartData = {
-                  id: chartToLoad.id,
-                  svg: chartToLoad.chartData,
-                  metadata: {
-                    name: chartToLoad.subjectName,
-                    birthData: {
-                      dateOfBirth: chartToLoad.dateOfBirth,
-                      timeOfBirth: chartToLoad.timeOfBirth,
-                      locationOfBirth: chartToLoad.locationOfBirth,
-                      coordinates: {
-                        lat: chartToLoad.latitude.toString(),
-                        lon: chartToLoad.longitude.toString()
-                      }
-                    },
-                    generatedAt: chartToLoad.createdAt,
-                    chartData: chartToLoad.metadata?.chartData
-                  }
-                };
-                
-                // Cache it locally
-                await db.setCache(cacheKey, chartData, 1440);
-                setCachedChart(chartData);
-              }
-            } catch (error) {
-              console.error('useNatalChart: Error loading charts from API:', error);
-            }
-            setIsLoadingCache(false);
-          }
-        } catch (error) {
-          console.error('Error loading cached chart:', error);
-          setIsLoadingCache(false);
-        }
-      } else {
+      // Only proceed if we have complete birth data
+      if (!user || !activePersonData?.dateOfBirth || !activePersonData?.timeOfBirth || !activePersonData?.coordinates?.lat || !activePersonData?.coordinates?.lon) {
         // Don't clear cached chart to prevent chart loss during data transitions
-        console.log('useNatalChart: Invalid person data, keeping existing chart to prevent loss');
         setHasExistingChart(false);
+        setIsLoadingCache(false);
+        return;
+      }
+
+      // Create cache key for this specific chart
+      const personId = activePerson?.id || user.id;
+      const normalizedLat = parseFloat(activePersonData.coordinates.lat).toFixed(4);
+      const normalizedLon = parseFloat(activePersonData.coordinates.lon).toFixed(4);
+      const cacheKey = `natal_chart_${personId}_${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${normalizedLat}_${normalizedLon}`;
+      
+      // Check if we already have this exact chart cached
+      if (cachedChart && cachedChart.metadata?.birthData?.dateOfBirth === activePersonData.dateOfBirth && 
+          cachedChart.metadata?.birthData?.timeOfBirth === activePersonData.timeOfBirth &&
+          Math.abs(parseFloat(cachedChart.metadata?.birthData?.coordinates?.lat || '0') - parseFloat(activePersonData.coordinates.lat)) < 0.001) {
+        // We already have the right chart cached, no need to reload
+        setHasExistingChart(true);
+        setIsLoadingCache(false);
+        return;
+      }
+
+      setIsLoadingCache(true);
+      setHasExistingChart(true); // We have complete data, so a chart should exist or can be generated
+      
+      try {
+        // First, check local cache
+        const cached = await db.getCache<NatalChartData>(cacheKey);
+        
+        if (cached) {
+          setCachedChart(cached);
+        } else {
+          // Try to load from API if no local cache
+          try {
+            const charts = await getUserCharts();
+            
+            if (charts.length > 0) {
+              // Find matching chart or use the latest one
+              const matchingChart = charts.find((chart: { dateOfBirth: string; timeOfBirth: string; latitude: string; longitude: string; }) => 
+                chart.dateOfBirth === activePersonData.dateOfBirth &&
+                chart.timeOfBirth === activePersonData.timeOfBirth &&
+                Math.abs(parseFloat(chart.latitude) - parseFloat(activePersonData.coordinates.lat)) < 0.001 &&
+                Math.abs(parseFloat(chart.longitude) - parseFloat(activePersonData.coordinates.lon)) < 0.001
+              );
+              
+              const chartToLoad = matchingChart || charts[0];
+              
+              // Transform API chart to local format
+              const chartData: NatalChartData = {
+                id: chartToLoad.id,
+                svg: chartToLoad.chartData,
+                metadata: {
+                  name: chartToLoad.subjectName,
+                  birthData: {
+                    dateOfBirth: chartToLoad.dateOfBirth,
+                    timeOfBirth: chartToLoad.timeOfBirth,
+                    locationOfBirth: chartToLoad.locationOfBirth,
+                    coordinates: {
+                      lat: chartToLoad.latitude.toString(),
+                      lon: chartToLoad.longitude.toString()
+                    }
+                  },
+                  generatedAt: chartToLoad.createdAt,
+                  chartData: chartToLoad.metadata?.chartData
+                }
+              };
+              
+              // Cache it locally for future use
+              await db.setCache(cacheKey, chartData, 1440);
+              setCachedChart(chartData);
+            }
+          } catch (error) {
+            console.error('useNatalChart: Error loading charts from API:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading cached chart:', error);
+      } finally {
         setIsLoadingCache(false);
       }
     };

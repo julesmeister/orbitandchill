@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test People API</title>
+</head>
+<body>
+  <h1>Test People API</h1>
+  <button onclick="testAPI()">Test People API</button>
+  <pre id="output"></pre>
+  
+  <script>
+    async function testAPI() {
+      const output = document.getElementById('output');
+      const userId = '113425479876942125321';
+      
+      try {
+        output.textContent = 'Testing GET /api/people...\n';
+        
+        const response = await fetch(`/api/people?userId=${userId}`);
+        const result = await response.json();
+        
+        output.textContent += 'Response:\n' + JSON.stringify(result, null, 2);
+        
+        if (result.success && result.people.length === 0) {
+          output.textContent += '\n\nTesting POST /api/people...\n';
+          
+          const createResponse = await fetch('/api/people', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: userId,
+              name: 'Test User',
+              relationship: 'self',
+              birthData: {
+                dateOfBirth: '1990-01-01',
+                timeOfBirth: '12:00',
+                locationOfBirth: 'New York, NY',
+                coordinates: { lat: '40.7128', lon: '-74.0060' }
+              },
+              notes: 'Test person from browser',
+              isDefault: true
+            })
+          });
+          
+          const createResult = await createResponse.json();
+          output.textContent += 'POST Response:\n' + JSON.stringify(createResult, null, 2);
+        }
+      } catch (error) {
+        output.textContent += '\nError: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

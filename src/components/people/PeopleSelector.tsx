@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { Person, SharedChart } from '../../types/people';
-import { usePeopleStore } from '../../store/peopleStore';
+import { usePeopleAPI } from '../../hooks/usePeopleAPI';
 import { useUserStore } from '../../store/userStore';
 import { useSharedCharts } from '../../hooks/useSharedCharts';
 
@@ -40,7 +40,7 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
     defaultPerson,
     selectedPersonId: storeSelectedPersonId,
     setSelectedPerson 
-  } = usePeopleStore();
+  } = usePeopleAPI();
   
   const { user } = useUserStore();
   const { sharedCharts, isLoading: isSharedChartsLoading } = useSharedCharts();
@@ -50,18 +50,23 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   const [editingName, setEditingName] = useState('');
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const userAddedRef = useRef(false);
+  // userAddedRef removed - auto-add logic now handled by usePeopleAPI hook
   
-  // Reset userAddedRef when user changes
-  useEffect(() => {
-    userAddedRef.current = false;
-  }, [user?.id]);
+  console.log('PeopleSelector - Component state:', {
+    isLoading,
+    error,
+    peopleCount: people.length,
+    peopleList: people.map(p => ({ id: p.id, name: p.name, isDefault: p.isDefault })),
+    selectedPersonId,
+    storeSelectedPersonId,
+    defaultPerson: defaultPerson ? { id: defaultPerson.id, name: defaultPerson.name } : null,
+    userId: user?.id,
+    userName: user?.username,
+    userHasBirthData: !!user?.birthData
+  });
 
 
-  // Load people on component mount
-  useEffect(() => {
-    loadPeople();
-  }, [loadPeople]);
+  // People are auto-loaded by usePeopleAPI hook
 
   // Auto-select a person if none is selected
   useEffect(() => {
@@ -74,75 +79,21 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
       }
       
       if (personToSelect) {
-        console.log('Auto-selecting person:', personToSelect.name);
+        console.log('PeopleSelector - Auto-selecting person:', personToSelect.name);
         setSelectedPerson(personToSelect.id);
         // Only call onPersonSelect if explicitly needed - this prevents disrupting existing charts
         // onPersonSelect(personToSelect);
         
         // If this person isn't marked as default, make them default
         if (!personToSelect.isDefault) {
-          console.log('Setting as default:', personToSelect.name);
+          console.log('PeopleSelector - Setting as default:', personToSelect.name);
           setDefaultPerson(personToSelect.id).catch(console.error);
         }
       }
     }
   }, [isLoading, people, storeSelectedPersonId, defaultPerson, setSelectedPerson, onPersonSelect, setDefaultPerson]);
 
-  // Auto-add user to people store if they have birth data and aren't already added
-  useEffect(() => {
-    // Early return if no user data or still loading
-    if (!user?.birthData || !user.username || isLoading) {
-      return;
-    }
-
-    // Early return if we already processed this user
-    const storageKey = `user_added_${user.id}`;
-    const alreadyProcessed = localStorage.getItem(storageKey) === 'true' || userAddedRef.current;
-    
-    if (alreadyProcessed) {
-      return;
-    }
-
-    // Check if user is already in people store (by checking for a person with relationship 'self' and matching userId)
-    const userExists = people.some(person => 
-      person.relationship === 'self' && person.userId === user.id
-    );
-
-    console.log('Auto-add check:', {
-      userExists,
-      peopleCount: people.length,
-      userId: user.id,
-      hasUserData: !!user?.birthData,
-      peopleDetails: people.map(p => ({ id: p.id, name: p.name, isDefault: p.isDefault, relationship: p.relationship }))
-    });
-
-    if (!userExists) {
-      userAddedRef.current = true; // Prevent multiple additions
-      localStorage.setItem(storageKey, 'true'); // Mark as attempted
-      console.log('Adding user to people store');
-      
-      // Add user to people store
-      const userPersonData = {
-        name: user.username || 'Me',
-        relationship: 'self' as const,
-        birthData: user.birthData,
-        isDefault: true, // Make user the default person
-        notes: 'Your personal birth data'
-      };
-
-      addPerson(userPersonData).then(() => {
-        console.log('Successfully added user to people store');
-      }).catch(error => {
-        console.error('Failed to add user to people store:', error);
-        userAddedRef.current = false; // Reset on error to allow retry
-        localStorage.removeItem(storageKey); // Remove the flag to allow retry
-      });
-    } else {
-      console.log('User already exists in people store');
-      userAddedRef.current = true; // Mark as added to prevent future attempts
-      localStorage.setItem(storageKey, 'true'); // Mark as added
-    }
-  }, [user?.id, user?.birthData, user?.username, isLoading, addPerson]); // Removed 'people' from dependencies
+  // Auto-add user logic is now handled by usePeopleAPI hook
 
   // Close dropdown when clicking outside (completely disabled when editing)
   useEffect(() => {
@@ -319,6 +270,7 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   };
 
   if (isLoading && people.length === 0) {
+    console.log('PeopleSelector - Showing loading state');
     return (
       <div className={`flex items-center justify-center p-4 bg-gray-100 rounded-lg ${className}`}>
         <div className="flex items-center space-x-1">
@@ -467,11 +419,26 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
           {uniquePeople.length === 0 ? (
             <div className="p-4 text-center">
               <div className="text-gray-500 text-sm mb-2">No people added yet</div>
+              {(() => {
+                console.log('PeopleSelector - Empty state debug:', {
+                  isLoading,
+                  peopleCount: people.length,
+                  uniquePeopleCount: uniquePeople.length,
+                  showAddNew,
+                  hasOnAddNew: !!onAddNew,
+                  hasUser: !!user,
+                  userId: user?.id,
+                  hasUserBirthData: !!user?.birthData,
+                  localStorageKey: `user_added_${user?.id}`,
+                  localStorageValue: user?.id ? localStorage.getItem(`user_added_${user.id}`) : null,
+                });
+                return null;
+              })()}
               {showAddNew && onAddNew && (
                 <button
                   onClick={() => {
-                    console.log('Add first person clicked');
-                    console.log('onAddNew function:', onAddNew);
+                    console.log('PeopleSelector - Add first person clicked');
+                    console.log('PeopleSelector - onAddNew function:', onAddNew);
                     onAddNew();
                     setIsOpen(false);
                   }}

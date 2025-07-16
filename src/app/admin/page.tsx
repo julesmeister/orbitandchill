@@ -1,26 +1,19 @@
 "use client";
 
 import { lazy, Suspense } from 'react';
+import LoadingSpinner from '@/components/reusable/LoadingSpinner';
 
 const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard'));
 
-// Loading skeleton for admin dashboard
-const AdminLoadingSkeleton = () => (
-  <div className="min-h-screen bg-white flex items-center justify-center">
-    <div className="text-center">
-      <div className="flex items-center justify-center space-x-2 mb-4">
-        <div className="w-3 h-3 bg-gray-900 animate-bounce [animation-delay:-0.3s]"></div>
-        <div className="w-3 h-3 bg-gray-900 animate-bounce [animation-delay:-0.15s]"></div>
-        <div className="w-3 h-3 bg-gray-900 animate-bounce"></div>
-      </div>
-      <div className="text-gray-600 font-open-sans">Loading Admin Dashboard...</div>
-    </div>
-  </div>
-);
-
 export default function AdminPage() {
   return (
-    <Suspense fallback={<AdminLoadingSkeleton />}>
+    <Suspense fallback={
+      <LoadingSpinner 
+        size="lg"
+        title="Loading Admin Dashboard"
+        subtitle="Preparing administrative tools and data management interface..."
+      />
+    }>
       <AdminDashboard />
     </Suspense>
   );

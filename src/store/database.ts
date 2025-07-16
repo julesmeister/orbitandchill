@@ -318,7 +318,9 @@ export class LuckstrologyDatabase extends Dexie {
 
   // People management methods
   async savePerson(person: PersonStorage): Promise<void> {
+    console.log('Database - savePerson called with:', person);
     await this.people.put(person);
+    console.log('Database - savePerson completed successfully');
   }
 
   async getPerson(id: string): Promise<PersonStorage | null> {
@@ -327,17 +329,23 @@ export class LuckstrologyDatabase extends Dexie {
   }
 
   async getUserPeople(userId: string): Promise<PersonStorage[]> {
+    console.log('Database - getUserPeople called for userId:', userId);
     const people = await this.people
       .where("userId")
       .equals(userId)
       .toArray();
+    
+    console.log('Database - getUserPeople raw results:', people);
 
     // Sort by updatedAt in descending order, with default person first
-    return people.sort((a, b) => {
+    const sortedPeople = people.sort((a, b) => {
       if (a.isDefault && !b.isDefault) return -1;
       if (!a.isDefault && b.isDefault) return 1;
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
+    
+    console.log('Database - getUserPeople sorted results:', sortedPeople);
+    return sortedPeople;
   }
 
   async getDefaultPerson(userId: string): Promise<PersonStorage | null> {
@@ -350,15 +358,21 @@ export class LuckstrologyDatabase extends Dexie {
   }
 
   async setDefaultPerson(userId: string, personId: string): Promise<void> {
+    console.log('Database - setDefaultPerson called:', { userId, personId });
+    
     // First, remove default flag from all user's people
     const userPeople = await this.getUserPeople(userId);
+    console.log('Database - setDefaultPerson userPeople:', userPeople);
+    
     const updatePromises = userPeople.map(person => 
       this.people.update(person.id, { isDefault: false })
     );
     await Promise.all(updatePromises);
+    console.log('Database - setDefaultPerson cleared all defaults');
 
     // Then set the new default
     await this.people.update(personId, { isDefault: true });
+    console.log('Database - setDefaultPerson set new default:', personId);
   }
 
   async deletePerson(personId: string): Promise<void> {

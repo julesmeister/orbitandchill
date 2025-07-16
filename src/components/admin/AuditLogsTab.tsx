@@ -463,6 +463,7 @@ export default function AuditLogsTab({ isLoading: parentLoading }: AuditLogsTabP
                           variant="dots"
                           size="sm"
                           centered={true}
+                          screenCentered={false}
                         />
                       </td>
                     </tr>

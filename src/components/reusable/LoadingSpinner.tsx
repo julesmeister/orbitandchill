@@ -11,6 +11,7 @@ interface LoadingSpinnerProps {
   subtitle?: string;
   className?: string;
   centered?: boolean;
+  screenCentered?: boolean; // New prop for full-screen centering
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
@@ -20,6 +21,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   subtitle,
   className = '',
   centered = true,
+  screenCentered = true,
 }) => {
   const sizeClasses = {
     sm: {
@@ -33,20 +35,20 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       container: 'py-16',
       dots: 'w-3 h-3',
       pulse: 'h-12 w-12',
-      title: 'text-2xl',
-      subtitle: 'text-base',
+      title: 'text-2xl md:text-3xl',
+      subtitle: 'text-base md:text-lg',
     },
     lg: {
       container: 'py-24',
       dots: 'w-4 h-4',
       pulse: 'h-16 w-16',
-      title: 'text-3xl',
-      subtitle: 'text-lg',
+      title: 'text-3xl md:text-4xl lg:text-5xl',
+      subtitle: 'text-lg md:text-xl',
     },
   };
 
   const renderDots = () => (
-    <div className="flex items-center justify-center space-x-2 mb-4">
+    <div className={`flex items-center justify-center space-x-2 ${screenCentered ? 'mb-8' : 'mb-4'}`}>
       <div 
         className={`${sizeClasses[size].dots} bg-black animate-bounce [animation-delay:-0.3s]`}
       ></div>
@@ -77,6 +79,30 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     }
   };
 
+  // If screenCentered is true, use full-screen centered layout like chart page
+  if (screenCentered) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          {renderAnimation()}
+          
+          {title && (
+            <h1 className={`font-space-grotesk font-bold text-black mb-6 ${sizeClasses[size].title}`}>
+              {title}
+            </h1>
+          )}
+          
+          {subtitle && (
+            <p className={`text-black/80 font-open-sans leading-relaxed max-w-3xl mx-auto ${sizeClasses[size].subtitle}`}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Regular centered layout for inline usage
   const containerClasses = `
     ${centered ? 'text-center' : ''}
     ${sizeClasses[size].container}
