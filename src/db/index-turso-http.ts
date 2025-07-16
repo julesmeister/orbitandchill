@@ -717,6 +717,15 @@ const createMockDb = () => ({
               const sql = `UPDATE ${tableName} SET ${updates.join(', ')} WHERE ${whereClause}`;
               const allParams = [...values, ...whereParams];
               
+              // Debug UPDATE query for natal_charts
+              if (tableName === 'natal_charts') {
+                console.log('🔧 DATABASE UPDATE: Generated SQL:', sql);
+                console.log('🔧 DATABASE UPDATE: Parameters:', allParams);
+                console.log('🔧 DATABASE UPDATE: Updates:', updates);
+                console.log('🔧 DATABASE UPDATE: WHERE clause:', whereClause);
+                console.log('🔧 DATABASE UPDATE: WHERE params:', whereParams);
+              }
+              
               try {
                 const result = await executeQuery(sql, allParams);
                 // Update successful
