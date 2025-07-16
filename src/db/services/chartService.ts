@@ -83,14 +83,51 @@ export class ChartService {
       updatedAt: new Date(),
     };
 
-    return resilient.operation(db, 'createChart', async () => {
+    // Check database availability before attempting operation
+    console.log('ChartService.createChart: Checking database availability...');
+    console.log('ChartService.createChart: Database object:', !!db);
+    console.log('ChartService.createChart: Database client:', !!db?.client);
+    console.log('ChartService.createChart: TURSO_DATABASE_URL:', !!process.env.TURSO_DATABASE_URL);
+    
+    // Bypass resilience wrapper and go directly to database
+    // The resilience wrapper is incorrectly detecting database as unavailable
+    try {
+      console.log('ChartService.createChart: Attempting direct database insert...');
       await db.insert(natalCharts).values(newChart);
+      
+      // Verify the chart was actually saved
+      const [savedChart] = await db
+        .select()
+        .from(natalCharts)
+        .where(eq(natalCharts.id, chartId))
+        .limit(1);
+      
+      if (!savedChart) {
+        console.error('ChartService.createChart: Chart was not saved to database!');
+        throw new Error('Chart was not saved to database');
+      }
+      
+      console.log('ChartService.createChart: Chart successfully saved with ID:', savedChart.id);
       
       return {
         ...newChart,
         metadata: data.metadata, // Return original object, not stringified
       };
-    }, null); // Return null if database unavailable
+    } catch (error) {
+      console.error('ChartService.createChart: Database operation failed:', error);
+      
+      // If database is truly unavailable, return null
+      if (error && typeof error === 'object' && 'message' in error) {
+        const message = (error as Error).message;
+        if (message.includes('Database not available') || message.includes('Connection failed')) {
+          console.warn('ChartService.createChart: Database unavailable, returning null');
+          return null;
+        }
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
@@ -154,13 +191,19 @@ export class ChartService {
    * Get all charts for a user
    */
   static async getUserCharts(userId: string): Promise<ChartData[]> {
-    return resilient.array(db, 'getUserCharts', async () => {
-      // Use the same database approach as createChart for consistency
+    // Bypass resilience wrapper - direct database access
+    try {
+      console.log('ChartService.getUserCharts: Looking for charts for user:', userId);
       const charts = await db
         .select()
         .from(natalCharts)
         .where(eq(natalCharts.userId, userId))
         .orderBy(desc(natalCharts.createdAt));
+
+      console.log('ChartService.getUserCharts: Found', charts.length, 'charts for user', userId);
+      if (charts.length > 0) {
+        console.log('ChartService.getUserCharts: Chart IDs:', charts.map(c => c.id));
+      }
 
       return charts.map((chart: any) => ({
         ...chart,
@@ -169,7 +212,21 @@ export class ChartService {
         createdAt: chart.createdAt,
         updatedAt: chart.updatedAt,
       }));
-    });
+    } catch (error) {
+      console.error('ChartService.getUserCharts: Database operation failed:', error);
+      
+      // If database is truly unavailable, return empty array
+      if (error && typeof error === 'object' && 'message' in error) {
+        const message = (error as Error).message;
+        if (message.includes('Database not available') || message.includes('Connection failed')) {
+          console.warn('ChartService.getUserCharts: Database unavailable, returning empty array');
+          return [];
+        }
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
@@ -265,9 +322,13 @@ export class ChartService {
   static async generateShareToken(id: string, userId: string): Promise<string | null> {
     return resilient.operation(db, 'generateShareToken', async () => {
       // First get the existing chart to check if it already has a token
+      console.log('Looking for chart with ID:', id, 'for user:', userId);
       const chart = await this.getChartById(id, userId);
       
       if (!chart) {
+        console.log('Chart not found - let\'s check all charts for this user');
+        const userCharts = await this.getUserCharts(userId);
+        console.log('User has', userCharts.length, 'charts:', userCharts.map(c => ({ id: c.id, title: c.title })));
         throw new Error('Chart not found');
       }
 

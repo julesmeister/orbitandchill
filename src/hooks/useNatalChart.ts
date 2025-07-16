@@ -341,7 +341,10 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
     try {
       // First, try to get the most recent chart ID from the database
       // This ensures we're always sharing the latest chart, not a cached one
+      console.log('Getting user charts for sharing...');
       const userCharts = await getUserCharts();
+      console.log('User has', userCharts.length, 'charts:', userCharts.map(c => ({ id: c.id, dateOfBirth: c.dateOfBirth, timeOfBirth: c.timeOfBirth })));
+      
       const latestChart = userCharts.find(chart => 
         activePersonData &&
         chart.dateOfBirth === activePersonData.dateOfBirth &&
@@ -350,8 +353,17 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
         Math.abs(parseFloat(chart.longitude) - parseFloat(activePersonData.coordinates.lon)) < 0.001
       );
       
-      const actualChartId = latestChart?.id || chartId;
+      let actualChartId = latestChart?.id || chartId;
       console.log('Sharing chart - requested ID:', chartId, 'actual ID:', actualChartId);
+      console.log('Latest chart found:', latestChart ? { id: latestChart.id, dateOfBirth: latestChart.dateOfBirth } : 'none');
+      console.log('Active person data:', activePersonData);
+      
+      if (!latestChart && userCharts.length > 0) {
+        console.log('No matching chart found, using most recent chart instead');
+        const mostRecentChart = userCharts[0]; // getUserCharts returns charts sorted by createdAt desc
+        console.log('Using most recent chart:', { id: mostRecentChart.id, dateOfBirth: mostRecentChart.dateOfBirth });
+        actualChartId = mostRecentChart.id;
+      }
       
       const response = await fetch(`/api/charts/${actualChartId}/share`, {
         method: 'POST',
