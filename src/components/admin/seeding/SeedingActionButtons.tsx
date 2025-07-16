@@ -9,12 +9,14 @@ interface SeedingActionButtonsProps {
   previewContent: any[];
   aiApiKey: string;
   seedUsersInitialized: boolean;
+  areConfigSectionsHidden: boolean;
   
   // Action handlers
   onProcessContent: () => void;
   onProcessWithAI: () => void;
   onExecuteSeeding: () => void;
   onClearAll: () => void;
+  onToggleConfigSections: () => void;
   
   // Optional styling
   className?: string;
@@ -35,10 +37,12 @@ export default function SeedingActionButtons({
   previewContent,
   aiApiKey,
   seedUsersInitialized,
+  areConfigSectionsHidden,
   onProcessContent,
   onProcessWithAI,
   onExecuteSeeding,
   onClearAll,
+  onToggleConfigSections,
   className = ""
 }: SeedingActionButtonsProps) {
   
@@ -68,6 +72,12 @@ export default function SeedingActionButtons({
       disabled: seedingInProgress,
       className: `${baseButtonClass} bg-gray-600 hover:bg-gray-700`,
       children: 'Clear All'
+    },
+    {
+      onClick: onToggleConfigSections,
+      disabled: seedingInProgress,
+      className: `${baseButtonClass} bg-yellow-600 hover:bg-yellow-700`,
+      children: areConfigSectionsHidden ? 'Show Config' : 'Hide Config'
     }
   ];
 

@@ -146,6 +146,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
   
   // Collapsible sections state
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
+  const [areConfigSectionsHidden, setAreConfigSectionsHidden] = useState(false);
 
   // User Management State
   const [selectedUsers, setSelectedUsers] = useState<string[]>(SEED_PERSONA_TEMPLATES.map(u => u.id));
@@ -597,8 +598,10 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         {/* Content Generation Tab */}
         {activeTab === 'generation' && (
           <React.Fragment>
-            {/* Process Steps */}
-            <ProcessSteps steps={processSteps} className="mb-8" />
+            {/* Process Steps - Can be hidden/shown */}
+            {!areConfigSectionsHidden && (
+              <ProcessSteps steps={processSteps} className="mb-8" />
+            )}
 
         {/* Seed Users Status */}
         {!seedUsersInitialized && (
@@ -665,7 +668,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         )}
 
         {/* Fix Avatar Paths */}
-        {seedUsersInitialized && (
+        {seedUsersInitialized && usersNeedingFix > 0 && (
           <div className="bg-orange-50 border border-orange-200 mb-8 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -713,29 +716,33 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
                   previewContent={previewContent}
                   aiApiKey={aiApiKey}
                   seedUsersInitialized={seedUsersInitialized}
+                  areConfigSectionsHidden={areConfigSectionsHidden}
                   onProcessContent={handleProcessContentWrapper}
                   onProcessWithAI={handleProcessWithAIWrapper}
                   onExecuteSeeding={handleExecuteSeedingWrapper}
                   onClearAll={clearAllContent}
+                  onToggleConfigSections={() => setAreConfigSectionsHidden(!areConfigSectionsHidden)}
                   className=""
                 />
               </div>
-              <button
-                onClick={() => setIsControlPanelCollapsed(!isControlPanelCollapsed)}
-                className="ml-4 p-2 hover:bg-gray-100 transition-colors rounded"
-                title={isControlPanelCollapsed ? 'Show progress and results' : 'Hide progress and results'}
-              >
-                <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${
-                    isControlPanelCollapsed ? 'rotate-180' : ''
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsControlPanelCollapsed(!isControlPanelCollapsed)}
+                  className="p-2 hover:bg-gray-100 transition-colors"
+                  title={isControlPanelCollapsed ? 'Show progress and results' : 'Hide progress and results'}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+                  <svg
+                    className={`w-5 h-5 text-gray-500 transition-transform ${
+                      isControlPanelCollapsed ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {!isControlPanelCollapsed && (
@@ -836,45 +843,53 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         </div>
 
         {/* Content Input & AI Configuration */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className={`grid grid-cols-1 ${!areConfigSectionsHidden ? 'lg:grid-cols-2' : ''} gap-8 mb-8`}>
           <ContentInputForm
             pastedContent={pastedContent}
             onContentChange={setPastedContent}
             onProcessComments={handleProcessComments}
           />
           
-          <AIConfigurationForm
-            aiProvider={aiProvider}
-            aiModel={aiModel}
-            aiApiKey={aiApiKey}
-            temperature={temperature}
-            onProviderChange={handleProviderChange}
-            onModelChange={handleModelChange}
-            onApiKeyChange={handleApiKeyChange}
-            onTemperatureChange={handleTemperatureChange}
-          />
+          {/* AI Configuration - Can be hidden/shown */}
+          {!areConfigSectionsHidden && (
+            <AIConfigurationForm
+              aiProvider={aiProvider}
+              aiModel={aiModel}
+              aiApiKey={aiApiKey}
+              temperature={temperature}
+              onProviderChange={handleProviderChange}
+              onModelChange={handleModelChange}
+              onApiKeyChange={handleApiKeyChange}
+              onTemperatureChange={handleTemperatureChange}
+            />
+          )}
         </div>
 
-        <GenerationSettings
-          discussionsToGenerate={discussionsToGenerate}
-          repliesPerDiscussion={repliesPerDiscussion}
-          maxNestingDepth={maxNestingDepth}
-          contentVariation={contentVariation}
-          onDiscussionsChange={setDiscussionsToGenerate}
-          onMinRepliesChange={(value) => setRepliesPerDiscussion(prev => ({...prev, min: value}))}
-          onMaxRepliesChange={(value) => setRepliesPerDiscussion(prev => ({...prev, max: value}))}
-          onMaxNestingChange={setMaxNestingDepth}
-          onContentVariationChange={setContentVariation}
-        />
+        {/* Configuration Sections - Can be hidden/shown */}
+        {!areConfigSectionsHidden && (
+          <>
+            <GenerationSettings
+              discussionsToGenerate={discussionsToGenerate}
+              repliesPerDiscussion={repliesPerDiscussion}
+              maxNestingDepth={maxNestingDepth}
+              contentVariation={contentVariation}
+              onDiscussionsChange={setDiscussionsToGenerate}
+              onMinRepliesChange={(value) => setRepliesPerDiscussion(prev => ({...prev, min: value}))}
+              onMaxRepliesChange={(value) => setRepliesPerDiscussion(prev => ({...prev, max: value}))}
+              onMaxNestingChange={setMaxNestingDepth}
+              onContentVariationChange={setContentVariation}
+            />
 
-        <UserPersonaManager
-          selectedUsers={selectedUsers}
-          personasExpanded={personasExpanded}
-          editingUser={editingUser}
-          onToggleUserSelection={toggleUserSelection}
-          onToggleExpanded={() => setPersonasExpanded(!personasExpanded)}
-          onEditUser={setEditingUser}
-        />
+            <UserPersonaManager
+              selectedUsers={selectedUsers}
+              personasExpanded={personasExpanded}
+              editingUser={editingUser}
+              onToggleUserSelection={toggleUserSelection}
+              onToggleExpanded={() => setPersonasExpanded(!personasExpanded)}
+              onEditUser={setEditingUser}
+            />
+          </>
+        )}
 
         <PreviewContentDisplay
           previewContent={previewContent}
@@ -898,12 +913,14 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
         />
 
         {/* Active Reply Personas - Placed after content preview for better UX */}
-        <PersonaSelector
-          activePersonas={activePersonas}
-          onTogglePersona={togglePersonaActive}
-          onSetAllActive={setAllPersonasActive}
-          className="mb-8"
-        />
+        {!areConfigSectionsHidden && (
+          <PersonaSelector
+            activePersonas={activePersonas}
+            onTogglePersona={togglePersonaActive}
+            onSetAllActive={setAllPersonasActive}
+            className="mb-8"
+          />
+        )}
           </React.Fragment>
         )}
 
@@ -923,13 +940,15 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           </React.Fragment>
         )}
 
-        {/* Documentation Link */}
-        <div className="mt-8 p-4 bg-blue-50 border border-blue-200">
-          <p className="text-sm text-blue-800 font-open-sans">
-            📄 For detailed technical specifications, see{' '}
-            <code className="bg-blue-100 px-1 rounded">DISCUSSIONS_SEEDING_PLAN.md</code>
-          </p>
-        </div>
+        {/* Documentation Link - Only show in Content Generation tab */}
+        {activeTab === 'generation' && !areConfigSectionsHidden && (
+          <div className="mt-8 p-4 bg-blue-50 border border-blue-200">
+            <p className="text-sm text-blue-800 font-open-sans">
+              📄 For detailed technical specifications, see{' '}
+              <code className="bg-blue-100 px-1 rounded">DISCUSSIONS_SEEDING_PLAN.md</code>
+            </p>
+          </div>
+        )}
 
         {/* Status Toast for Reply Management */}
         <StatusToast
