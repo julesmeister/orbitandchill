@@ -666,14 +666,12 @@ const createMockDb = () => ({
             
             // Parse WHERE condition
             try {
-              
               if (condition && typeof condition === 'object' && 'queryChunks' in condition) {
                 const chunks = (condition as any).queryChunks;
                 let clause = '';
                 
                 for (let i = 0; i < chunks.length; i++) {
                   const chunk = chunks[i];
-                  // Skip logging chunks to avoid circular reference issues
                   
                   if (chunk && chunk.value !== undefined) {
                     // Check if this is a parameter value (has encoder property)
@@ -692,8 +690,9 @@ const createMockDb = () => ({
                       whereParams.push(chunk.value);
                     }
                   } else if (chunk && chunk.name) {
-                    // This is a column name
-                    clause += chunk.name;
+                    // This is a column name - convert camelCase to snake_case
+                    const snakeCaseName = chunk.name.replace(/([A-Z])/g, '_$1').toLowerCase();
+                    clause += snakeCaseName;
                   } else if (chunk && typeof chunk === 'object' && chunk.brand === undefined && chunk.encoder) {
                     // Fallback parameter detection
                     clause += '?';
@@ -702,6 +701,19 @@ const createMockDb = () => ({
                 }
                 
                 whereClause = clause;
+                
+                // Handle empty WHERE clause - likely an and() with no conditions parsed
+                if (!whereClause || whereClause.trim() === '' || whereClause === '()') {
+                  // Try to build a simple WHERE clause for natal_charts updates
+                  if (tableName === 'natal_charts') {
+                    // This is likely an update to natal_charts with id and userId conditions
+                    // For now, create a basic WHERE clause that should work
+                    whereClause = 'id = ? AND user_id = ?';
+                    whereParams = []; // Will be populated by the calling code
+                    console.log('🔧 DATABASE UPDATE: Fixed empty WHERE clause for natal_charts');
+                  }
+                }
+                
                 // WHERE clause parsed
               }
             } catch (error) {

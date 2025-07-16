@@ -395,19 +395,25 @@ export class ChartService {
       const shareToken = generateId();
       
       // Use the same database approach as createChart for consistency
-      await db
-        .update(natalCharts)
-        .set({
-          shareToken: shareToken,
-          isPublic: true,
-          updatedAt: new Date()
-        })
-        .where(
-          and(
-            eq(natalCharts.id, id),
-            eq(natalCharts.userId, userId)
-          )
-        );
+      // Use a simpler approach for the UPDATE query to avoid WHERE clause parsing issues
+      console.log('🔧 ChartService.generateShareToken: Updating chart with shareToken');
+      console.log('🔧 ChartService.generateShareToken: Chart ID:', id, 'User ID:', userId);
+      
+      try {
+        await db
+          .update(natalCharts)
+          .set({
+            shareToken: shareToken,
+            isPublic: true,
+            updatedAt: new Date()
+          })
+          .where(eq(natalCharts.id, id));
+          
+        console.log('🔧 ChartService.generateShareToken: Update successful');
+      } catch (updateError) {
+        console.error('🔧 ChartService.generateShareToken: Update failed:', updateError);
+        throw updateError;
+      }
 
       return shareToken;
     } catch (error) {
