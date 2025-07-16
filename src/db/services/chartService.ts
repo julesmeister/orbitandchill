@@ -93,17 +93,40 @@ export class ChartService {
     // The resilience wrapper is incorrectly detecting database as unavailable
     try {
       console.log('🔧 ChartService.createChart: NEW CODE - Attempting direct database insert...');
-      await db.insert(natalCharts).values(newChart);
+      console.log('🔧 ChartService.createChart: Chart data to insert:', {
+        id: chartId,
+        userId: data.userId,
+        subjectName: data.subjectName,
+        dateOfBirth: data.dateOfBirth,
+        timeOfBirth: data.timeOfBirth,
+        locationOfBirth: data.locationOfBirth,
+        chartDataLength: data.chartData.length,
+        hasMetadata: !!data.metadata
+      });
+      
+      const insertResult = await db.insert(natalCharts).values(newChart);
+      console.log('🔧 ChartService.createChart: Insert result:', insertResult);
       
       // Verify the chart was actually saved
+      console.log('🔧 ChartService.createChart: Verifying chart was saved...');
       const [savedChart] = await db
         .select()
         .from(natalCharts)
         .where(eq(natalCharts.id, chartId))
         .limit(1);
       
+      console.log('🔧 ChartService.createChart: Verification query result:', savedChart);
+      
       if (!savedChart) {
         console.error('ChartService.createChart: Chart was not saved to database!');
+        
+        // Try to debug by checking all charts for this user
+        const allUserCharts = await db
+          .select()
+          .from(natalCharts)
+          .where(eq(natalCharts.userId, data.userId));
+        console.log('🔧 ChartService.createChart: All charts for user:', allUserCharts.length);
+        
         throw new Error('Chart was not saved to database');
       }
       
