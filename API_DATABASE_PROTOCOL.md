@@ -1884,6 +1884,186 @@ This pattern ensures critical functionality remains operational even when servic
 
 ---
 
+## Critical Database Persistence Issues & Solutions ✅ **RESOLVED**
+
+### Issue: Chart Service Database Persistence Failure
+
+**Problem**: Charts appeared to save successfully (showing success messages) but `getUserCharts()` consistently returned empty arrays, causing chart sharing and persistence features to fail.
+
+**Root Cause Analysis**:
+1. **Missing `.returning()` call**: Drizzle ORM's `.insert()` method returns a query builder, not the actual query result
+2. **Resilience wrapper interference**: The resilience service was incorrectly detecting database unavailability
+3. **Silent failure pattern**: Database operations appeared to succeed but weren't actually executing
+
+#### ❌ Broken Pattern (Silent Failure)
+```typescript
+// This returns a query builder, not executed results
+const insertResult = await db.insert(natalCharts).values(newChart);
+console.log('Chart saved successfully'); // FALSE - nothing was actually saved
+
+// Query doesn't execute, getUserCharts returns empty array
+const charts = await db.select().from(natalCharts).where(eq(natalCharts.userId, userId));
+```
+
+#### ✅ Working Pattern (Proper Execution)
+```typescript
+// Fixed: Add .returning() to actually execute the INSERT
+const insertResult = await db.insert(natalCharts).values(newChart).returning();
+console.log('Chart saved successfully:', insertResult); // TRUE - actually saved
+
+// Verify the chart was saved
+const [savedChart] = await db
+  .select()
+  .from(natalCharts)
+  .where(eq(natalCharts.id, chartId))
+  .limit(1);
+
+if (!savedChart) {
+  throw new Error('Chart was not saved to database');
+}
+```
+
+### Issue: WHERE Clause Parsing Failures
+
+**Problem**: Complex WHERE clauses with `and(eq(), eq())` were being parsed incorrectly, generating invalid SQL like `WHERE ()` which caused SQL_PARSE_ERROR.
+
+**Root Cause**: The Turso HTTP client's SQL parsing couldn't handle nested Drizzle ORM WHERE clause builders properly.
+
+#### ❌ Broken Pattern (Complex WHERE Clauses)
+```typescript
+// This generates invalid SQL: WHERE ()
+const whereConditions = and(
+  eq(natalCharts.id, id),
+  eq(natalCharts.userId, userId)
+);
+
+await db.update(natalCharts).set(updates).where(whereConditions);
+```
+
+#### ✅ Working Pattern (Simplified WHERE Clauses)
+```typescript
+// Use single eq() conditions for reliable parsing
+await db
+  .update(natalCharts)
+  .set({
+    shareToken: shareToken,
+    isPublic: true,
+    updatedAt: new Date()
+  })
+  .where(eq(natalCharts.id, id)); // Single condition works reliably
+```
+
+### Issue: Resilience Wrapper Database Availability Detection
+
+**Problem**: The resilience wrapper was incorrectly detecting database as unavailable when `db.client` was null, but environment variables were properly set and database was accessible.
+
+**Root Cause**: The availability check was incomplete - it only checked `!!db` instead of checking actual connectivity options.
+
+#### ❌ Broken Pattern (Incomplete Availability Check)
+```typescript
+// This fails when db.client is null but env vars are available
+const isAvailable = !!db;
+if (!isAvailable) {
+  return mockFallback; // Returns mock data instead of using database
+}
+```
+
+#### ✅ Working Pattern (Comprehensive Availability Check)
+```typescript
+// Check multiple ways database could be available
+const isAvailable = !!db && (
+  !!db.client ||                    // Has client
+  !!db.insert ||                    // Has insert method (mock db)
+  !!process.env.TURSO_DATABASE_URL  // Has environment variables
+);
+
+// For critical operations, bypass resilience wrapper entirely
+try {
+  const result = await db.insert(natalCharts).values(newChart).returning();
+  console.log('Direct database insert successful:', result);
+} catch (error) {
+  console.error('Database operation failed:', error);
+  throw error; // Don't swallow errors
+}
+```
+
+### Issue: Debugging Database Operations
+
+**Problem**: Database operations failed silently, making it impossible to identify what was going wrong.
+
+**Solution**: Implemented comprehensive debugging with emoji markers for production troubleshooting.
+
+#### ✅ Enhanced Debugging Pattern
+```typescript
+// Add debugging throughout the operation
+console.log('🔧 DATABASE: Starting chart creation...');
+console.log('🔧 DATABASE: Chart data to insert:', {
+  id: chartId,
+  userId: data.userId,
+  chartDataLength: data.chartData.length,
+  hasMetadata: !!data.metadata
+});
+
+const insertResult = await db.insert(natalCharts).values(newChart).returning();
+console.log('🔧 DATABASE: Insert result:', insertResult);
+
+// Verify the operation actually worked
+const [savedChart] = await db
+  .select()
+  .from(natalCharts)
+  .where(eq(natalCharts.id, chartId))
+  .limit(1);
+
+console.log('🔧 DATABASE: Verification query result:', savedChart);
+
+if (!savedChart) {
+  // Debug by checking all charts for this user
+  const allUserCharts = await db
+    .select()
+    .from(natalCharts)
+    .where(eq(natalCharts.userId, data.userId));
+  console.log('🔧 DATABASE: All charts for user:', allUserCharts.length);
+  
+  throw new Error('Chart was not saved to database');
+}
+```
+
+### Critical Lessons Learned
+
+1. **Always use `.returning()` with Drizzle ORM INSERT operations** when using Turso HTTP client
+2. **Verify database operations actually executed** - don't trust silent "success"
+3. **Bypass resilience wrappers for critical operations** when they interfere with functionality
+4. **Use single WHERE conditions** instead of complex `and()` clauses for better compatibility
+5. **Implement comprehensive debugging** with unique markers for production troubleshooting
+6. **Test database persistence end-to-end** - verify data can be saved AND retrieved
+
+### When to Bypass Resilience Wrappers
+
+**Use direct database access for:**
+- Chart creation and persistence (`ChartService.createChart`)
+- User authentication and profile operations
+- Critical sharing functionality
+- Any operation that MUST work reliably
+
+**Keep resilience wrappers for:**
+- Non-critical features that can degrade gracefully
+- Admin operations where fallbacks are acceptable
+- Background processes that can retry later
+
+### Production Debugging Protocol
+
+When database operations fail in production:
+
+1. **Enable comprehensive logging** with unique emoji markers (🔧, 🔍, ⚠️, ❌)
+2. **Log both input data and results** for each database operation
+3. **Verify operations with immediate SELECT queries** after INSERT/UPDATE
+4. **Check all fallback scenarios** including environment variables and direct connections
+5. **Use unique request IDs** to trace operations across multiple service calls
+
+This persistence issue resolution demonstrates the importance of verifying database operations end-to-end and not relying on optimistic success indicators.
+
+---
+
 ## Conclusion
 
 This protocol document captures the proven patterns for building resilient, user-friendly APIs and database integrations. Key principles:
