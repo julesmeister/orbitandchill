@@ -12,6 +12,7 @@ import EventCard from './events/EventCard';
 import CalendarEventItem from './events/CalendarEventItem';
 import LocationRequestToast from './reusable/LocationRequestToast';
 import StatusToast from './reusable/StatusToast';
+import PlanetaryHours from './PlanetaryHours';
 
 // AstrologicalEvent interface is now imported from utils
 
@@ -19,7 +20,7 @@ import StatusToast from './reusable/StatusToast';
 
 export default function AstrologicalEvents() {
   // Component state
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'calendar'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'calendar' | 'planetaryHours'>('upcoming');
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
   // Location management hooks
@@ -128,6 +129,15 @@ export default function AstrologicalEvents() {
                 }`}
             >
               🗓️ Calendar View
+            </button>
+            <button
+              onClick={() => setActiveTab('planetaryHours')}
+              className={`px-4 py-2 font-space-grotesk font-bold text-sm transition-colors ${activeTab === 'planetaryHours'
+                  ? 'bg-black text-white'
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
+                }`}
+            >
+              ⏰ Planetary Hours
             </button>
           </div>
         </div>
@@ -295,6 +305,11 @@ export default function AstrologicalEvents() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Planetary Hours Tab */}
+          {!isLoading && activeTab === 'planetaryHours' && (
+            <PlanetaryHours />
           )}
         </div>
 
