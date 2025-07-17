@@ -9,6 +9,7 @@ import BirthDataSummary from "../../components/charts/BirthDataSummary";
 import InterpretationSidebar from "../../components/charts/InterpretationSidebar";
 import StatusToast from "../../components/reusable/StatusToast";
 import { useChartPage } from "../../hooks/useChartPage";
+import { getAvatarByIdentifier } from "../../utils/avatarUtils";
 import { BRAND } from "../../config/brand";
 
 function ChartContent() {
@@ -32,6 +33,22 @@ function ChartContent() {
     hideStatus,
     setActiveTab,
   } = useChartPage();
+
+  // Get the chart subject's avatar using the same logic as navbar
+  const chartSubjectName = cachedChart?.metadata?.name || personToShow?.name || "Unknown";
+  
+  // Determine the appropriate avatar to show
+  const getChartSubjectAvatar = () => {
+    // If this is the current user's own chart, show their actual avatar
+    if (user && (chartSubjectName === user.username || personToShow?.relationship === 'self')) {
+      return user.preferredAvatar || user.profilePictureUrl || getAvatarByIdentifier(user.username);
+    }
+    
+    // For other people's charts, use deterministic generated avatars
+    return getAvatarByIdentifier(chartSubjectName);
+  };
+  
+  const chartSubjectAvatar = getChartSubjectAvatar();
 
   // Show chart display
   return (
@@ -89,7 +106,7 @@ function ChartContent() {
                         }
                         chartData={cachedChart.metadata?.chartData}
                         personName={cachedChart.metadata?.name || personToShow?.name}
-                        personAvatar={user?.profilePictureUrl}
+                        personAvatar={chartSubjectAvatar}
                         onShare={handleShare}
                       />
                     </div>

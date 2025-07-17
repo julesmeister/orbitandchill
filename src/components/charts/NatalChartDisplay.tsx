@@ -163,7 +163,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                 alt={`${personName || user?.username}'s avatar`}
                 width={32}
                 height={32}
-                className="w-8 h-8 mr-3 border-2 border-black"
+                className="w-8 h-8 mr-3 border-2 border-black bg-white"
               />
             ) : (
               <div className="w-8 h-8 mr-3 bg-black flex items-center justify-center text-white font-bold text-sm border-2 border-black">
