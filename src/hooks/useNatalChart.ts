@@ -8,6 +8,28 @@ import { Person } from '@/types/people';
 import { generateNatalChart } from '@/utils/natalChart';
 // Removed Sonner import - components should handle their own toasts
 
+// Import ChartData type for getUserCharts return type
+interface ChartData {
+  id: string;
+  userId: string;
+  subjectName: string;
+  dateOfBirth: string;
+  timeOfBirth: string;
+  locationOfBirth: string;
+  latitude: number;
+  longitude: number;
+  chartType: string;
+  title?: string;
+  description?: string;
+  theme?: string;
+  isPublic?: boolean;
+  shareToken?: string;
+  chartData: string;
+  metadata: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface NatalChartData {
   id: string;
   svg: string;
@@ -343,12 +365,12 @@ export const useNatalChart = (selectedPerson?: Person | null, enableHookToasts =
       // This ensures we're always sharing the latest chart, not a cached one
       const userCharts = await getUserCharts();
       
-      const latestChart = userCharts.find(chart => 
+      const latestChart = userCharts.find((chart: ChartData) => 
         activePersonData &&
         chart.dateOfBirth === activePersonData.dateOfBirth &&
         chart.timeOfBirth === activePersonData.timeOfBirth &&
-        Math.abs(parseFloat(chart.latitude) - parseFloat(activePersonData.coordinates.lat)) < 0.001 &&
-        Math.abs(parseFloat(chart.longitude) - parseFloat(activePersonData.coordinates.lon)) < 0.001
+        Math.abs(chart.latitude - parseFloat(activePersonData.coordinates.lat)) < 0.001 &&
+        Math.abs(chart.longitude - parseFloat(activePersonData.coordinates.lon)) < 0.001
       );
       
       let actualChartId = latestChart?.id || chartId;
