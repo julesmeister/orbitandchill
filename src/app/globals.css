@@ -110,7 +110,7 @@ select:not([multiple]) {
   font-size: 0.875rem;
   font-weight: 600;
   color: #19181a;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-space-grotesk), sans-serif;
   text-align: left;
 }
 
@@ -207,7 +207,7 @@ select:not([multiple]) {
   border: none;
   outline: none;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-space-grotesk), sans-serif;
 }
 
 .synapsas-date-input {
@@ -219,7 +219,7 @@ select:not([multiple]) {
   border: none;
   background: transparent;
   outline: none;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-space-grotesk), sans-serif;
 }
 
 .synapsas-date-input::placeholder {
