@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faBolt, faCircle, faFilter, faTimes, faLock } from '@fortawesome/free-solid-svg-icons';
@@ -32,10 +31,6 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
   } = useAspectFilters();
 
   const aspectFilteringEnabled = shouldShowFeature('aspect-filtering', userIsPremium);
-
-  if (!chartData?.aspects) {
-    return null;
-  }
 
   const getAspectCategory = (aspect: ChartAspect): AspectCategory[] => {
     const categories: AspectCategory[] = [];
@@ -117,7 +112,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
     { value: 'neutral', label: 'Neutral', color: getAspectTypeStyle('neutral').badge },
   ];
 
-  if (majorAspects.length === 0) {
+  if (!chartData?.aspects || majorAspects.length === 0) {
     return null;
   }
 
