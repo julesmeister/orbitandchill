@@ -29,6 +29,23 @@ export const useSharedCharts = (): UseSharedChartsReturn => {
       const response = await fetch('/api/charts/shared?list=true');
       const result = await response.json();
       
+      // Debug log to see what shared charts are returned
+      console.log('=== SHARED CHARTS API DEBUG ===');
+      console.log('API response:', result);
+      console.log('Charts returned:', result.charts);
+      result.charts?.forEach((chart: any, index: number) => {
+        console.log(`Chart ${index + 1}:`, {
+          id: chart.id,
+          subjectName: chart.subjectName,
+          dateOfBirth: chart.dateOfBirth,
+          timeOfBirth: chart.timeOfBirth,
+          locationOfBirth: chart.locationOfBirth,
+          shareToken: chart.shareToken,
+          createdAt: chart.createdAt
+        });
+      });
+      console.log('===============================');
+      
       if (result.success && result.charts) {
         // Convert chart data to SharedChart format
         const convertedCharts: SharedChart[] = result.charts.map((chart: any) => ({

@@ -148,6 +148,17 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   };
 
   const handleSharedChartSelect = (chart: SharedChart) => {
+    // Debug log for shared chart selection
+    console.log('=== PEOPLE SELECTOR SHARED CHART DEBUG ===');
+    console.log('Original chart data:', chart);
+    console.log('Chart birth data:', {
+      dateOfBirth: chart.dateOfBirth,
+      timeOfBirth: chart.timeOfBirth,
+      locationOfBirth: chart.locationOfBirth,
+      latitude: chart.latitude,
+      longitude: chart.longitude
+    });
+    
     // Convert shared chart to a Person-like object for compatibility
     const chartAsPerson: Person = {
       id: `shared_${chart.shareToken}`,
@@ -167,6 +178,9 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
       updatedAt: new Date(chart.createdAt),
       notes: `Shared chart from ${new Date(chart.createdAt).toLocaleDateString()}`,
     };
+
+    console.log('Converted chartAsPerson:', chartAsPerson);
+    console.log('==========================================');
 
     onSharedChartSelect?.(chart);
     onPersonSelect(chartAsPerson);
@@ -637,7 +651,11 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">{chart.subjectName}</div>
                           <div className="text-sm text-gray-500 truncate">
-                            Shared {new Date(chart.createdAt).toLocaleDateString()}
+                            Born {new Date(chart.dateOfBirth).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
                           </div>
                         </div>
                         <svg className="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

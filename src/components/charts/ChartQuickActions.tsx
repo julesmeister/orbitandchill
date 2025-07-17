@@ -136,6 +136,15 @@ export default function ChartQuickActions({
       return;
     }
 
+    // Log current state for debugging
+    console.log('=== SHARE CHART DEBUG ===');
+    console.log('Chart ID being shared:', chartId);
+    console.log('User ID:', user.id);
+    console.log('Selected person:', selectedPerson);
+    console.log('Default person:', defaultPerson);
+    console.log('Selected person ID:', selectedPersonId);
+    console.log('=========================');
+
     try {
       showLoading('Generating Share Link', 'Creating shareable link for your chart...');
 
@@ -153,6 +162,12 @@ export default function ChartQuickActions({
       }
 
       const data = await response.json();
+      
+      // Log the response data for debugging
+      console.log('=== SHARE RESPONSE DEBUG ===');
+      console.log('Share API response:', data);
+      console.log('Chart data in response:', data.chart);
+      console.log('============================');
       
       if (data.shareUrl) {
         // Copy to clipboard with proper error handling
@@ -247,6 +262,14 @@ export default function ChartQuickActions({
             <PeopleSelector
               onPersonSelect={handlePersonSelectWrapper}
               onSharedChartSelect={(chart) => {
+                // Log the shared chart data for debugging
+                console.log('=== SHARED CHART SELECTED DEBUG (Form) ===');
+                console.log('Shared chart data:', chart);
+                console.log('Date of birth:', chart.dateOfBirth);
+                console.log('Time of birth:', chart.timeOfBirth);
+                console.log('Subject name:', chart.subjectName);
+                console.log('==========================================');
+                
                 // Generate a chart from shared chart data
                 const chartAsPerson = {
                   id: `shared_${chart.shareToken}`,
@@ -266,6 +289,8 @@ export default function ChartQuickActions({
                   updatedAt: new Date(chart.createdAt),
                   notes: `Shared chart from ${new Date(chart.createdAt).toLocaleDateString()}`,
                 };
+                
+                console.log('Generated chartAsPerson (Form):', chartAsPerson);
                 handlePersonSelectWrapper(chartAsPerson);
               }}
               onAddNew={handleAddPersonClick}
@@ -436,6 +461,14 @@ export default function ChartQuickActions({
             <PeopleSelector
               onPersonSelect={handlePersonSelectWrapper}
               onSharedChartSelect={(chart) => {
+                // Log the shared chart data for debugging
+                console.log('=== SHARED CHART SELECTED DEBUG (Main) ===');
+                console.log('Shared chart data:', chart);
+                console.log('Date of birth:', chart.dateOfBirth);
+                console.log('Time of birth:', chart.timeOfBirth);
+                console.log('Subject name:', chart.subjectName);
+                console.log('==========================================');
+                
                 // Generate a chart from shared chart data
                 const chartAsPerson = {
                   id: `shared_${chart.shareToken}`,
@@ -455,6 +488,8 @@ export default function ChartQuickActions({
                   updatedAt: new Date(chart.createdAt),
                   notes: `Shared chart from ${new Date(chart.createdAt).toLocaleDateString()}`,
                 };
+                
+                console.log('Generated chartAsPerson (Main):', chartAsPerson);
                 handlePersonSelectWrapper(chartAsPerson);
               }}
               onAddNew={handleAddPersonClick}
