@@ -40,7 +40,7 @@ function ChartContent() {
   // Determine the appropriate avatar to show
   const getChartSubjectAvatar = () => {
     // If this is the current user's own chart, show their actual avatar
-    if (user && (chartSubjectName === user.username || personToShow?.relationship === 'self')) {
+    if (user && (chartSubjectName === user.username || (personToShow && 'relationship' in personToShow && personToShow.relationship === 'self'))) {
       return user.preferredAvatar || user.profilePictureUrl || getAvatarByIdentifier(user.username);
     }
     

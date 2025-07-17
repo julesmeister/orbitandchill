@@ -39,7 +39,7 @@ export default function QuickStats({
       value: avgSessionDuration, 
       color: '#f2e356' 
     }
-  ].filter(Boolean);
+  ].filter(Boolean) as { label: string; value: string; color: string; }[];
 
   return (
     <div className="bg-white border border-black p-4 sm:p-6 lg:p-8">

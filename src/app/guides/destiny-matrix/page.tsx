@@ -217,7 +217,7 @@ export default function DestinyMatrixGuidePage() {
                     <li>• <strong>Month:</strong> November (11) = 11</li>
                     <li>• <strong>Year:</strong> 1990 = 1+9+9+0 = 19</li>
                     <li>• Numbers 1-22 stay as is</li>
-                    <li>• Numbers >22 reduce again</li>
+                    <li>• Numbers &gt;22 reduce again</li>
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
