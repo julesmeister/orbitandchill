@@ -22,7 +22,7 @@ interface MetricsGridProps {
   dailyVisitors: number;
   activeUsers: number;
   monthlyGrowth: number;
-  eventsCount: number;
+  eventsCount?: number;
   trends: {
     newUsers: number;
     activeUsers: number;
