@@ -80,6 +80,11 @@ interface SectionCardProps {
 }
 
 export function SectionCard({ icon, title, subtitle, description, keyQuestions, backgroundColor, className = "" }: SectionCardProps) {
+  // Check if custom text color is provided in className
+  const hasCustomTextColor = className.includes('text-white') || className.includes('text-black');
+  const textColor = hasCustomTextColor ? '' : 'text-black';
+  const textOpacity = hasCustomTextColor && className.includes('text-white') ? 'opacity-80' : 'opacity-80';
+  
   return (
     <div className={`p-6 ${className}`} style={{ backgroundColor }}>
       <div className="flex items-center mb-4">
@@ -87,15 +92,15 @@ export function SectionCard({ icon, title, subtitle, description, keyQuestions, 
           <span className="text-white text-2xl">{icon}</span>
         </div>
         <div>
-          <h4 className="font-space-grotesk font-bold text-black text-lg">{title}</h4>
-          <span className="text-black text-xs font-medium">{subtitle}</span>
+          <h4 className={`font-space-grotesk font-bold ${textColor} text-lg`}>{title}</h4>
+          <span className={`${textColor} text-xs font-medium`}>{subtitle}</span>
         </div>
       </div>
       <div className="space-y-4">
-        <p className="text-black text-sm leading-relaxed">{description}</p>
+        <p className={`${textColor} text-sm leading-relaxed`}>{description}</p>
         <div className="space-y-2">
-          <div className="text-black font-medium text-sm">Key Questions:</div>
-          <div className="space-y-1 text-xs text-black opacity-80">
+          <div className={`${textColor} font-medium text-sm`}>Key Questions:</div>
+          <div className={`space-y-1 text-xs ${textColor} ${textOpacity}`}>
             {keyQuestions.map((question, index) => (
               <div key={index}>• {question}</div>
             ))}

@@ -40,12 +40,12 @@ const guides: Guide[] = [
     featured: true
   },
   {
-    id: '3',
+    id: 'astrological-houses',
     title: 'The Astrological Houses: Life\'s Twelve Stages',
     description: 'Explore the twelve houses and how they represent different areas of your life experience, from identity to spirituality.',
-    level: 'intermediate',
+    level: 'beginner',
     category: 'Houses',
-    estimatedTime: '40 min',
+    estimatedTime: '35 min',
     topics: ['Angular Houses', 'Succedent Houses', 'Cadent Houses', 'House Meanings'],
     featured: false
   },
@@ -60,7 +60,7 @@ const guides: Guide[] = [
     featured: true
   },
   {
-    id: '5',
+    id: 'big-three',
     title: 'Your Big Three: Sun, Moon, and Rising Signs',
     description: 'Master the foundation of astrological interpretation by understanding your core personality trio.',
     level: 'beginner',
@@ -70,7 +70,7 @@ const guides: Guide[] = [
     featured: false
   },
   {
-    id: '6',
+    id: 'transits-and-timing',
     title: 'Transits and Timing: When the Planets Move',
     description: 'Understand how current planetary movements affect your natal chart and learn to track important life cycles.',
     level: 'advanced',
@@ -80,7 +80,7 @@ const guides: Guide[] = [
     featured: false
   },
   {
-    id: '7',
+    id: 'retrograde-planets',
     title: 'Retrograde Planets: Cosmic Course Corrections',
     description: 'Demystify retrograde planets in your natal chart and current transits. Learn what they really mean beyond the Mercury retrograde hype.',
     level: 'intermediate',
@@ -100,7 +100,7 @@ const guides: Guide[] = [
     featured: true
   },
   {
-    id: '9',
+    id: 'elements-and-modalities',
     title: 'Elements and Modalities: The Building Blocks',
     description: 'Understand the four elements (Fire, Earth, Air, Water) and three modalities (Cardinal, Fixed, Mutable) that shape astrological interpretation.',
     level: 'beginner',
@@ -110,7 +110,7 @@ const guides: Guide[] = [
     featured: false
   },
   {
-    id: '10',
+    id: 'moon-phases',
     title: 'The Moon Phases and Your Emotional Cycle',
     description: 'Learn how lunar cycles connect to your emotional patterns and how to work with moon energy for personal growth.',
     level: 'intermediate',
@@ -118,10 +118,60 @@ const guides: Guide[] = [
     estimatedTime: '35 min',
     topics: ['New Moon', 'Full Moon', 'Waxing Moon', 'Waning Moon', 'Lunar Returns'],
     featured: false
+  },
+  {
+    id: 'tarot-fundamentals',
+    title: 'Tarot Fundamentals: Cards, Spreads, and Intuition',
+    description: 'Master the essential skills of tarot reading. Learn to choose decks, interpret cards, create spreads, and develop your intuitive abilities for accurate and meaningful readings.',
+    level: 'beginner',
+    category: 'Tarot',
+    estimatedTime: '50 min',
+    topics: ['Card Meanings', 'Spreads', 'Intuition', 'Reading Skills', 'Ethics'],
+    featured: true
+  },
+  {
+    id: 'major-arcana',
+    title: 'The Fool\'s Journey: Understanding the Major Arcana',
+    description: 'Explore the 22 Major Arcana cards as a complete spiritual journey from innocence to wisdom. Learn the archetypal meanings and personal growth lessons of each card.',
+    level: 'beginner',
+    category: 'Tarot',
+    estimatedTime: '45 min',
+    topics: ['Archetypes', 'Spiritual Journey', 'Card Meanings', 'Life Lessons'],
+    featured: false
+  },
+  {
+    id: 'minor-arcana',
+    title: 'The Four Suits: Mastering the Minor Arcana',
+    description: 'Master the 56 Minor Arcana cards through the four elemental suits. Learn how Wands, Cups, Swords, and Pentacles connect to astrology and provide detailed guidance for daily life.',
+    level: 'intermediate',
+    category: 'Tarot',
+    estimatedTime: '40 min',
+    topics: ['Four Suits', 'Elements', 'Court Cards', 'Daily Guidance'],
+    featured: false
+  },
+  {
+    id: 'tarot-astrology',
+    title: 'Tarot & Astrology: Weaving Two Sacred Systems',
+    description: 'Discover the profound connections between tarot and astrology. Learn how zodiac signs, planets, and elements correspond to tarot cards for deeper, more nuanced readings.',
+    level: 'intermediate',
+    category: 'Tarot',
+    estimatedTime: '55 min',
+    topics: ['Zodiac Correspondences', 'Planetary Rulers', 'Elemental Connections', 'Integrated Readings'],
+    featured: true
+  },
+  {
+    id: 'destiny-matrix',
+    title: 'Destiny Matrix: Your Sacred Numerological Blueprint',
+    description: 'Unlock the power of the Destiny Matrix system to discover your life purpose, karmic lessons, and soul\'s journey through the ancient wisdom of numerology and sacred geometry.',
+    level: 'intermediate',
+    category: 'Numerology',
+    estimatedTime: '60 min',
+    topics: ['Life Purpose', 'Karmic Patterns', 'Sacred Geometry', 'Soul Blueprint'],
+    featured: true
   }
 ];
 
-const categories = ['All Guides', 'Chart Basics', 'Astrocartography', 'Houses', 'Electional Astrology', 'Essential Signs', 'Transits', 'Planetary Motion', 'Horary Astrology', 'Fundamentals', 'Lunar Astrology'];
+const categories = ['All Guides', 'Chart Basics', 'Astrocartography', 'Houses', 'Electional Astrology', 'Essential Signs', 'Transits', 'Planetary Motion', 'Horary Astrology', 'Fundamentals', 'Lunar Astrology', 'Tarot', 'Numerology'];
 const levels = ['All Levels', 'beginner', 'intermediate', 'advanced'];
 
 export default function GuidesPage() {
