@@ -31,9 +31,9 @@ interface RealMetrics {
   dailyVisitors: number;
   monthlyGrowth: number;
   newUsersThisMonth: number;
-  avgChartsPerUser: string;
+  avgChartsPerUser?: string;
   totalPageViews: number;
-  conversionRate: string;
+  conversionRate?: string;
 }
 
 interface NatalChartsData {
@@ -178,13 +178,13 @@ export function useRealMetrics(
     
     // Enhanced stats with better calculations
     const avgChartsPerUser = totalUsers > 0 ? 
-      (chartsGenerated / totalUsers).toFixed(1) : '0.0';
+      (chartsGenerated / totalUsers).toFixed(1) : undefined;
     
     // More realistic conversion rate (users who generated at least one chart)
     const usersWithCharts = realUserData?.usersWithCharts || 
       userAnalytics.filter(u => (u.chartsGenerated || 0) > 0).length;
     const conversionRate = totalUsers > 0 ? 
-      Math.round((usersWithCharts / totalUsers) * 100) + '%' : '0%';
+      Math.round((usersWithCharts / totalUsers) * 100) + '%' : undefined;
     
     return {
       totalUsers,

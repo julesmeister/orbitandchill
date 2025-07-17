@@ -2,34 +2,44 @@
 import React from 'react';
 
 interface QuickStatsProps {
-  avgChartsPerUser: string;
+  avgChartsPerUser?: string;
   totalPageViews: number;
-  conversionRate: string;
+  conversionRate?: string;
+  peakActivityTime?: string;
+  topLocation?: string;
+  avgSessionDuration?: string;
 }
 
-export default function QuickStats({ avgChartsPerUser, totalPageViews, conversionRate }: QuickStatsProps) {
+export default function QuickStats({ 
+  avgChartsPerUser, 
+  totalPageViews, 
+  conversionRate, 
+  peakActivityTime, 
+  topLocation, 
+  avgSessionDuration 
+}: QuickStatsProps) {
   const stats = [
-    { 
+    avgChartsPerUser && { 
       label: 'Average Charts per User', 
       value: avgChartsPerUser, 
       color: '#6bdbff' 
     },
-    { 
+    peakActivityTime && { 
       label: 'Peak Activity Time', 
-      value: 'N/A', 
+      value: peakActivityTime, 
       color: '#51bd94' 
     },
-    { 
+    topLocation && { 
       label: 'Top Location', 
-      value: 'N/A', 
+      value: topLocation, 
       color: '#ff91e9' 
     },
-    { 
+    avgSessionDuration && { 
       label: 'Avg. Session Duration', 
-      value: '0m 0s', 
+      value: avgSessionDuration, 
       color: '#f2e356' 
     }
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="bg-white border border-black p-4 sm:p-6 lg:p-8">
@@ -50,22 +60,28 @@ export default function QuickStats({ avgChartsPerUser, totalPageViews, conversio
         ))}
       </div>
       
-      <div className="mt-4 pt-3 border-t border-black/20">
-        <div className="grid grid-cols-2 gap-3 text-center">
-          <div>
-            <div className="font-space-grotesk text-lg font-bold text-black">
-              {totalPageViews.toLocaleString()}
-            </div>
-            <div className="font-open-sans text-xs text-black/60">Page Views</div>
-          </div>
-          <div>
-            <div className="font-space-grotesk text-lg font-bold text-black">
-              {conversionRate}
-            </div>
-            <div className="font-open-sans text-xs text-black/60">Chart Conversion</div>
+      {(totalPageViews > 0 || conversionRate) && (
+        <div className="mt-4 pt-3 border-t border-black/20">
+          <div className={conversionRate ? "grid grid-cols-2 gap-3 text-center" : "text-center"}>
+            {totalPageViews > 0 && (
+              <div>
+                <div className="font-space-grotesk text-lg font-bold text-black">
+                  {totalPageViews.toLocaleString()}
+                </div>
+                <div className="font-open-sans text-xs text-black/60">Page Views</div>
+              </div>
+            )}
+            {conversionRate && (
+              <div>
+                <div className="font-space-grotesk text-lg font-bold text-black">
+                  {conversionRate}
+                </div>
+                <div className="font-open-sans text-xs text-black/60">Chart Conversion</div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

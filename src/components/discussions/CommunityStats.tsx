@@ -40,17 +40,55 @@ export default function CommunityStats({
         // Fetch discussions data
         const response = await fetch('/api/discussions?limit=1000&sortBy=recent');
         const data = await response.json();
+        
+        // Try to fetch replies data - this endpoint might not exist yet
+        let repliesData = { success: false, replies: [] };
+        try {
+          const repliesResponse = await fetch('/api/discussions/replies?limit=1000');
+          if (repliesResponse.ok) {
+            repliesData = await repliesResponse.json();
+          }
+        } catch (error) {
+          console.log('Replies API not available, will use discussion data only');
+        }
 
         if (data.success && data.discussions) {
           const discussions = data.discussions;
 
+          // Debug logging to see what's being returned
+          console.log('=== COMMUNITY STATS DEBUG ===');
+          console.log('Total discussions returned:', discussions.length);
+          console.log('Sample discussions:', discussions.slice(0, 3).map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            author: d.author,
+            authorId: d.authorId,
+            authorName: d.authorName
+          })));
+          
+          // Collect all unique authors from discussions and replies
+          const discussionAuthors = discussions.map((d: any) => d.authorId || d.author).filter(Boolean);
+          const replyAuthors = repliesData.success && repliesData.replies ? 
+            repliesData.replies.map((r: any) => r.authorId || r.author).filter(Boolean) : [];
+          
+          const allAuthors = [...discussionAuthors, ...replyAuthors];
+          const uniqueAuthors = [...new Set(allAuthors)];
+          
+          console.log('Discussion authors:', discussionAuthors);
+          console.log('Reply authors:', replyAuthors);
+          console.log('All authors combined:', allAuthors);
+          console.log('Unique authors:', uniqueAuthors);
+          console.log('Replies API response:', repliesData);
+          console.log('=============================');
+
           // Calculate real statistics
           const discussionStats: DiscussionStats = {
             totalDiscussions: discussions.length,
-            totalReplies: discussions.reduce((sum: number, d: any) => sum + (d.replies || 0), 0),
+            totalReplies: repliesData.success && repliesData.replies ? repliesData.replies.length : 
+              discussions.reduce((sum: number, d: any) => sum + (d.replies || 0), 0),
             totalViews: discussions.reduce((sum: number, d: any) => sum + (d.views || 0), 0),
             totalVotes: discussions.reduce((sum: number, d: any) => sum + (d.upvotes || 0) + (d.downvotes || 0), 0),
-            uniqueAuthors: new Set(discussions.map((d: any) => d.authorId || d.author).filter(Boolean)),
+            uniqueAuthors: new Set(uniqueAuthors),
             recentActivity: discussions.filter((d: any) => {
               // Handle various date formats
               let createdAt;

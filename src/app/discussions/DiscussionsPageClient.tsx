@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useUserStore } from '@/store/userStore';
 import { trackPageView } from '@/utils/analytics';
 import { useDiscussions } from '@/hooks/useDiscussions';
-import DiscussionsHero from '@/components/discussions/DiscussionsHero';
 import DiscussionsSearchFilters from '@/components/discussions/DiscussionsSearchFilters';
 import MobileCategoryFilter from '@/components/discussions/MobileCategoryFilter';
 import MobileSearchFilters from '@/components/discussions/MobileSearchFilters';
@@ -20,6 +19,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { getCategoryColor } from '@/utils/categories';
 
 export default function DiscussionsPageClient() {
+
   // Database-backed categories management
   const {
     categories: dbCategories,
@@ -27,10 +27,10 @@ export default function DiscussionsPageClient() {
     error: categoriesError,
     fallback: categoriesFallback
   } = useCategories();
-  
+
   // Add "All Categories" to the beginning and convert to string array for compatibility
   const categories = ['All Categories', ...dbCategories.map(cat => cat.name)];
-  
+
   // Custom hook for discussions data management
   const {
     discussions,
@@ -98,6 +98,10 @@ export default function DiscussionsPageClient() {
     trackPageView('/discussions');
   }, []);
 
+
+
+
+
   // Initial loading state (no cached data)
   if (loading && !isFromCache) {
     return <DiscussionsLoadingState />;
@@ -110,8 +114,6 @@ export default function DiscussionsPageClient() {
 
   return (
     <div className="bg-white">
-      {/* Hero Section */}
-      <DiscussionsHero />
 
       {/* Mobile Search Filters */}
       <MobileSearchFilters
@@ -163,8 +165,8 @@ export default function DiscussionsPageClient() {
                       key={category}
                       onClick={() => handleCategoryChange(category)}
                       className={`w-full text-left px-4 py-3 transition-all duration-200 flex items-center justify-between group relative ${selectedCategory === category
-                          ? 'bg-black text-white'
-                          : 'text-black hover:pl-6'
+                        ? 'bg-black text-white'
+                        : 'text-black hover:pl-6'
                         }`}
                     >
                       {/* Animated accent bar on hover */}
@@ -177,8 +179,8 @@ export default function DiscussionsPageClient() {
 
                       <span className="font-medium text-sm">{category}</span>
                       <span className={`text-xs px-2 py-1 border ${selectedCategory === category
-                          ? 'border-white text-white'
-                          : 'border-black text-black'
+                        ? 'border-white text-white'
+                        : 'border-black text-black'
                         }`}>
                         {categoryCount}
                       </span>
@@ -193,7 +195,7 @@ export default function DiscussionsPageClient() {
 
             {/* Content - Full width on mobile, 3/4 width on desktop */}
             <div className="col-span-1 lg:col-span-3 border border-black lg:border-t lg:border-r lg:border-b bg-white">
-              
+
               {/* Cache indicator - show when displaying cached data */}
               {isFromCache && !isFetchingFresh && (
                 <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-600 flex items-center justify-between">
@@ -203,7 +205,7 @@ export default function DiscussionsPageClient() {
                     </svg>
                     <span>Showing cached discussions ({cacheAge})</span>
                   </div>
-                  <button 
+                  <button
                     onClick={forceRefresh}
                     className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
                   >

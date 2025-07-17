@@ -10,6 +10,8 @@ export default function DiscussionsHero({
   title = "Astrology Discussions",
   description = "Connect with fellow star enthusiasts, share insights, and explore the mysteries of the cosmos together"
 }: DiscussionsHeroProps) {
+  console.log('🔥 DiscussionsHero is being rendered!', { title, description });
+  
   return (
     <>
       {/* Mobile Hero */}

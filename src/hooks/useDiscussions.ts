@@ -112,7 +112,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
       setState(prev => ({
         ...prev,
         discussions: transformedDiscussions,
-        loading: false,
+        loading: true, // Keep loading true even with cached data
         isFromCache: true,
         cacheAge: DiscussionsCache.formatCacheAge(),
       }));
@@ -187,7 +187,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
         setState(prev => ({ 
           ...prev, 
           discussions: transformedDiscussions, 
-          loading: false,
+          loading: false, // Only set loading to false after fresh data is loaded
           isFetchingFresh: false,
           isFromCache: false,
           cacheAge: 'Just updated'
