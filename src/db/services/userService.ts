@@ -47,6 +47,7 @@ export interface UpdateUserData {
   showBirthInfoPublicly?: boolean;
   allowDirectMessages?: boolean;
   showOnlineStatus?: boolean;
+  updatedAt?: Date;
 }
 
 export interface AccountDeletionRequest {
