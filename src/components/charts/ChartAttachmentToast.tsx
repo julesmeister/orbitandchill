@@ -55,7 +55,7 @@ export default function ChartAttachmentToast({
   const { getAllEvents } = useEventsStore();
   
   // Get bookmarked events
-  const bookmarkedEvents = getAllEvents().filter(event => event.isBookmarked);
+  const bookmarkedEvents = getAllEvents().filter((event) => event.isBookmarked);
   
   // Detect current page and available charts
   const [currentPageType, setCurrentPageType] = useState<'natal' | 'horary' | 'event' | null>(null);

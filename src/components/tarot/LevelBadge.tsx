@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
+import LevelDetailsModal from './LevelDetailsModal';
 
 interface LevelBadgeProps {
   level: string;
@@ -83,6 +84,7 @@ export default function LevelBadge({
   totalPoints = 0,
   className = '' 
 }: LevelBadgeProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const normalizedLevel = level.toLowerCase();
   const levelConfig = LEVEL_CONFIG[normalizedLevel as keyof typeof LEVEL_CONFIG];
   const sizeConfig = SIZE_CONFIGS[size];
@@ -102,61 +104,73 @@ export default function LevelBadge({
   const isMaxLevel = level.toLowerCase() === 'grandmaster';
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      {/* Progress Details (Left Side) */}
-      {showProgressDetails && (
-        <div className="text-right">
-          <div className="text-sm font-semibold text-black font-space-grotesk">
-            {levelConfig.name}
+    <>
+      <div className={`flex items-center gap-3 ${className}`}>
+        {/* Progress Details (Left Side) */}
+        {showProgressDetails && (
+          <div className="text-right">
+            <div className="text-sm font-semibold text-black font-space-grotesk">
+              {levelConfig.name}
+            </div>
+            <div className="text-xs text-black/70 font-inter">
+              {totalPoints.toLocaleString()} points
+            </div>
+            {!isMaxLevel && (
+              <div className="text-xs text-black/50 font-inter">
+                {pointsToNext.toLocaleString()} to next level
+              </div>
+            )}
+            {/* Progress Bar */}
+            {!isMaxLevel && (
+              <div className="w-20 bg-gray-200 h-1.5 border border-black mt-1 ml-auto">
+                <div 
+                  className="bg-black h-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+            )}
+            {isMaxLevel && (
+              <div className="text-xs text-black/50 font-inter">
+                Max Level Achieved! 🏆
+              </div>
+            )}
           </div>
-          <div className="text-xs text-black/70 font-inter">
-            {totalPoints.toLocaleString()} points
-          </div>
-          {!isMaxLevel && (
-            <div className="text-xs text-black/50 font-inter">
-              {pointsToNext.toLocaleString()} to next level
-            </div>
-          )}
-          {/* Progress Bar */}
-          {!isMaxLevel && (
-            <div className="w-20 bg-gray-200 h-1.5 border border-black mt-1 ml-auto">
-              <div 
-                className="bg-black h-full transition-all duration-300"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
-          )}
-          {isMaxLevel && (
-            <div className="text-xs text-black/50 font-inter">
-              Max Level Achieved! 🏆
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {/* Level Badge */}
-      <div 
-        className={`${sizeConfig.container} relative border-2 border-black bg-white shadow-md flex-shrink-0`}
-        title={`${levelConfig.name} - ${levelConfig.description}`}
-        style={{ aspectRatio: '2/3' }} // Tarot card proportions
-      >
-        {/* Image fills the entire card since it already contains the level text */}
-        <Image
-          src={levelConfig.image}
-          alt={`${levelConfig.name} level badge`}
-          fill
-          className="object-cover"
-          sizes={sizeConfig.image}
-        />
+        {/* Level Badge */}
+        <div 
+          className={`${sizeConfig.container} relative border-2 border-black bg-white shadow-md flex-shrink-0 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+          title={`${levelConfig.name} - ${levelConfig.description}`}
+          style={{ aspectRatio: '2/3' }} // Tarot card proportions
+          onClick={() => setIsModalOpen(true)}
+        >
+          {/* Image fills the entire card since it already contains the level text */}
+          <Image
+            src={levelConfig.image}
+            alt={`${levelConfig.name} level badge`}
+            fill
+            className="object-cover"
+            sizes={sizeConfig.image}
+          />
+        </div>
+
+        {/* Label (Right Side) */}
+        {showLabel && !showProgressDetails && (
+          <span className={`${sizeConfig.text} font-semibold text-black ml-1`}>
+            {levelConfig.name}
+          </span>
+        )}
       </div>
 
-      {/* Label (Right Side) */}
-      {showLabel && !showProgressDetails && (
-        <span className={`${sizeConfig.text} font-semibold text-black ml-1`}>
-          {levelConfig.name}
-        </span>
+      {/* Level Details Modal */}
+      {isModalOpen && (
+        <LevelDetailsModal
+          level={level}
+          totalPoints={totalPoints}
+          onClose={() => setIsModalOpen(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
 

@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSeedingPersistence } from './useSeedingPersistence';
 
 interface AIConfig {
   provider: string;
@@ -23,29 +22,25 @@ interface UsePublicAIConfigReturn {
 }
 
 /**
- * Hook for accessing public AI configuration
- * 
- * Priority order:
- * 1. Database configuration (public, set by admin)
- * 2. Fallback to seeding persistence (localStorage)
- * 3. Fallback to default configuration
+ * Hook for accessing public AI configuration from database only
  */
 export const usePublicAIConfig = (): UsePublicAIConfigReturn => {
   const [config, setConfig] = useState<AIConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Get seeding persistence as fallback
-  const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
 
   const loadConfig = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
+    console.log('🔍 Loading AI configuration from database...');
+    
     try {
-      // First, try to fetch from database
+      // Fetch from database only
       const response = await fetch('/api/admin/ai-config?type=public');
       const result = await response.json();
+      
+      console.log('🔍 Database response:', { success: result.success, hasConfig: !!result.config, hasApiKey: result.config?.apiKey ? '***' : 'empty' });
       
       if (result.success && result.config) {
         // Use database configuration if available and has API key
@@ -54,26 +49,13 @@ export const usePublicAIConfig = (): UsePublicAIConfigReturn => {
           setConfig(result.config);
           return;
         } else {
-          console.log('⚠️ Database config found but no API key, falling back to localStorage');
+          console.log('⚠️ Database config found but no API key');
         }
+      } else {
+        console.log('⚠️ No database config found');
       }
       
-      // Fallback to seeding persistence (localStorage)
-      if (aiApiKey && aiApiKey.trim()) {
-        console.log('✅ Using localStorage AI configuration');
-        setConfig({
-          provider: aiProvider,
-          model: aiModel,
-          apiKey: aiApiKey,
-          temperature,
-          isDefault: false,
-          isPublic: false,
-          description: 'Local configuration from admin seeding'
-        });
-        return;
-      }
-      
-      // Final fallback to default configuration (no API key)
+      // Fallback to default configuration (no API key)
       console.log('⚠️ No valid AI configuration found, using default without API key');
       setConfig({
         provider: 'openrouter',
@@ -86,37 +68,24 @@ export const usePublicAIConfig = (): UsePublicAIConfigReturn => {
       });
       
     } catch (error) {
-      console.error('Failed to load AI configuration:', error);
-      setError('Failed to load AI configuration');
+      console.error('❌ Failed to load AI configuration from database:', error);
+      setError('Failed to load AI configuration from database');
       
-      // Even on error, try to use localStorage fallback
-      if (aiApiKey && aiApiKey.trim()) {
-        console.log('✅ Using localStorage AI configuration (after error)');
-        setConfig({
-          provider: aiProvider,
-          model: aiModel,
-          apiKey: aiApiKey,
-          temperature,
-          isDefault: false,
-          isPublic: false,
-          description: 'Local configuration from admin seeding'
-        });
-      } else {
-        // Default config without API key
-        setConfig({
-          provider: 'openrouter',
-          model: 'deepseek/deepseek-r1-distill-llama-70b:free',
-          apiKey: '',
-          temperature: 0.7,
-          isDefault: true,
-          isPublic: true,
-          description: 'Default configuration - API key needed'
-        });
-      }
+      // Default config without API key
+      console.log('❌ Database error, using default configuration without API key');
+      setConfig({
+        provider: 'openrouter',
+        model: 'deepseek/deepseek-r1-distill-llama-70b:free',
+        apiKey: '',
+        temperature: 0.7,
+        isDefault: true,
+        isPublic: true,
+        description: 'Default configuration - API key needed'
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [aiProvider, aiModel, aiApiKey, temperature]);
+  }, []);
 
   const refreshConfig = useCallback(async () => {
     await loadConfig();

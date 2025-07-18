@@ -86,7 +86,7 @@ function EventChartContent() {
   const [eventFromDb, setEventFromDb] = useState<any>(null);
 
   // Find if this event is already in the events store  
-  const existingEvent = eventDate ? findExistingEvent(getAllEvents(), eventDate, eventTime, eventTitle) : undefined;
+  const existingEvent = eventDate ? findExistingEvent(Object.values(getAllEvents()), eventDate, eventTime, eventTitle) : undefined;
   const isBookmarked = existingEvent?.isBookmarked || eventFromDb?.isBookmarked || false;
 
   // Load event from database if not found in store
