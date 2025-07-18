@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { AI_PROVIDERS, useAIConfiguration } from '@/hooks/useAIConfiguration';
+import { useAIConfigAdmin } from '@/hooks/usePublicAIConfig';
 import SynapsasDropdown from '@/components/reusable/SynapsasDropdown';
 import StatusToast from '@/components/reusable/StatusToast';
 import ConfirmationToast from '@/components/reusable/ConfirmationToast';
@@ -31,6 +32,7 @@ const AIConfigurationForm: React.FC<AIConfigurationFormProps> = ({
 }) => {
   const { user } = useUserStore();
   const { getSelectedAiProvider, addCustomModel, removeCustomModel, customModels, isLoading } = useAIConfiguration(user?.id);
+  const { saveConfig } = useAIConfigAdmin();
   const [showCustomModel, setShowCustomModel] = useState(false);
   const [customModel, setCustomModel] = useState('');
   const [toast, setToast] = useState<{
@@ -69,6 +71,31 @@ const AIConfigurationForm: React.FC<AIConfigurationFormProps> = ({
 
   const hideToast = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
+  const handleSaveToDatabase = async () => {
+    if (!aiApiKey.trim()) {
+      showToast('Save Failed', 'API key is required to save configuration', 'error');
+      return;
+    }
+
+    showToast('Saving Configuration', 'Saving AI configuration to database...', 'loading');
+    
+    const result = await saveConfig({
+      provider: aiProvider,
+      model: aiModel,
+      apiKey: aiApiKey,
+      temperature,
+      isDefault: true,
+      isPublic: true,
+      description: 'Admin configuration for public use'
+    });
+
+    if (result.success) {
+      showToast('Configuration Saved', 'AI configuration saved successfully. Now available for public use!', 'success');
+    } else {
+      showToast('Save Failed', `Failed to save configuration: ${result.error}`, 'error');
+    }
   };
 
   const handleAddCustomModel = async () => {
@@ -222,9 +249,17 @@ const AIConfigurationForm: React.FC<AIConfigurationFormProps> = ({
               API key required for AI transformation
             </p>
           ) : (
-            <p className="text-xs text-green-600 mt-1 font-open-sans">
-              ✓ API key saved (will persist across sessions)
-            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-xs text-green-600 font-open-sans">
+                ✓ API key saved (will persist across sessions)
+              </p>
+              <button
+                onClick={handleSaveToDatabase}
+                className="px-3 py-1 text-xs bg-blue-600 text-white font-semibold hover:bg-blue-700 border-none transition-colors duration-200"
+              >
+                Save to Database
+              </button>
+            </div>
           )}
         </div>
 

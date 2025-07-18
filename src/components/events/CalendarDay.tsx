@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AstrologicalEvent } from '../../store/eventsStore';
 import { DailyAspect } from '../../hooks/useDailyAspects';
 import { CalendarDay as CalendarDayType } from './utils/calendarUtils';
@@ -26,6 +26,14 @@ export default function CalendarDay({
 }: CalendarDayProps) {
   const isLastRow = Math.floor(index / 7) === 5;
   const isLastColumn = (index % 7) === 6;
+  
+  // State for showing more events
+  const [showAllEvents, setShowAllEvents] = useState(false);
+  const [showAllAspects, setShowAllAspects] = useState(false);
+  
+  // Limit for visible events/aspects
+  const EVENT_LIMIT = 5;
+  const ASPECT_LIMIT = 5;
 
   // Create a day tooltip component for showing events and aspects
   const DayTooltip = ({ children }: { children: React.ReactNode }) => {
@@ -96,7 +104,7 @@ export default function CalendarDay({
         )}
         
         {/* Events */}
-        {day.events.map(event => (
+        {day.events.slice(0, showAllEvents ? day.events.length : EVENT_LIMIT).map(event => (
           <EventItem
             key={event.id}
             event={event}
@@ -105,8 +113,22 @@ export default function CalendarDay({
           />
         ))}
         
+        {/* Show More Events Button */}
+        {day.events.length > EVENT_LIMIT && (
+          <button
+            onClick={() => setShowAllEvents(!showAllEvents)}
+            className="w-full text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 py-1 px-2 transition-colors duration-200 mt-1"
+          >
+            {showAllEvents ? (
+              <>Show Less ({day.events.length - EVENT_LIMIT} hidden)</>
+            ) : (
+              <>Show More ({day.events.length - EVENT_LIMIT} more)</>
+            )}
+          </button>
+        )}
+        
         {/* Daily Aspects as Event Entries */}
-        {showAspects && day.dailyAspects.map((aspect, aspectIndex) => (
+        {showAspects && day.dailyAspects.slice(0, showAllAspects ? day.dailyAspects.length : ASPECT_LIMIT).map((aspect, aspectIndex) => (
           <AspectItem
             key={`aspect-${aspectIndex}`}
             aspect={aspect}
@@ -114,6 +136,20 @@ export default function CalendarDay({
             day={day.date}
           />
         ))}
+        
+        {/* Show More Aspects Button */}
+        {showAspects && day.dailyAspects.length > ASPECT_LIMIT && (
+          <button
+            onClick={() => setShowAllAspects(!showAllAspects)}
+            className="w-full text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 py-1 px-2 transition-colors duration-200 mt-1"
+          >
+            {showAllAspects ? (
+              <>Show Less ({day.dailyAspects.length - ASPECT_LIMIT} hidden)</>
+            ) : (
+              <>Show More ({day.dailyAspects.length - ASPECT_LIMIT} more)</>
+            )}
+          </button>
+        )}
       </div>
     </DayTooltip>
   );

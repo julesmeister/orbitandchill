@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { TarotCard } from '@/data/tarotCards';
 import { useSituationGeneration } from '@/hooks/useSituationGeneration';
-import { useSeedingPersistence } from '@/hooks/useSeedingPersistence';
+import { usePublicAIConfig } from '@/hooks/usePublicAIConfig';
 
 interface GameState {
   isPlaying: boolean;
@@ -45,16 +45,8 @@ export const useTarotGameInterface = (
   const [errorToast, setErrorToast] = useState({ visible: false, message: '' });
   const [evaluationLoadingToast, setEvaluationLoadingToast] = useState(false);
 
-  // Get persisted AI configuration from SeedingTab
-  const { aiProvider, aiModel, aiApiKey, temperature } = useSeedingPersistence();
-
-  // Create AI config object with fallback
-  const aiConfig = {
-    provider: aiProvider as 'openrouter' | 'openai' | 'claude' | 'gemini',
-    model: aiModel || 'deepseek/deepseek-r1-distill-llama-70b:free',
-    apiKey: aiApiKey || '',
-    temperature: temperature || 0.7
-  };
+  // Get AI configuration from public config (database first, then localStorage fallback)
+  const { config: aiConfig, hasValidConfig } = usePublicAIConfig();
 
   const { generateSituation, isGenerating } = useSituationGeneration();
 
@@ -150,7 +142,7 @@ export const useTarotGameInterface = (
   };
 
   const generateNewSituation = async () => {
-    if (!gameState.currentCard) return;
+    if (!gameState.currentCard || !aiConfig) return;
 
     try {
       setGameState(prev => ({ ...prev, isLoading: true }));
@@ -160,7 +152,12 @@ export const useTarotGameInterface = (
       // Generate new situation using AI or fallback
       const generated = await generateSituation({
         card: gameState.currentCard,
-        aiConfig,
+        aiConfig: {
+          provider: aiConfig.provider as 'openrouter' | 'openai' | 'claude' | 'gemini',
+          model: aiConfig.model,
+          apiKey: aiConfig.apiKey,
+          temperature: aiConfig.temperature
+        },
         previousSituations
       });
 
@@ -238,6 +235,7 @@ export const useTarotGameInterface = (
     setEvaluationLoadingToast,
     
     // AI Config
-    aiConfig
+    aiConfig,
+    hasValidConfig
   };
 };

@@ -94,7 +94,7 @@ export const useEventManager = (options: EventManagerOptions) => {
   // Event generation
   const { handleGenerateOptimalTiming } = useOptimalTimingHandler({
     selectedPriorities,
-    locationForGeneration: options.locationForGeneration,
+    locationForGeneration: options.locationForGeneration || null,
     currentDate: options.currentDate,
     userId: user?.id,
     showError: options.showError,
@@ -106,7 +106,7 @@ export const useEventManager = (options: EventManagerOptions) => {
 
   // Manual event handling
   const { handleAddEvent } = useManualEventHandler({
-    locationForGeneration: options.locationForGeneration,
+    locationForGeneration: options.locationForGeneration || null,
     userId: user?.id,
     showError: options.showError,
     showSuccess: options.showSuccess,
@@ -115,7 +115,7 @@ export const useEventManager = (options: EventManagerOptions) => {
   });
 
   // Tab management with lazy loading
-  const handleTabChange = useCallback((tab: 'all' | 'bookmarked' | 'manual' | 'generated') => {
+  const handleTabChange = useCallback((tab: 'all' | 'bookmarked' | 'manual') => {
     setSelectedTab(tab);
     
     // Lazy load data when switching tabs

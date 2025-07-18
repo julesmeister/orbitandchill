@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { useState } from 'react';
 import { Search, Plus, Calendar, Star, Trash2, Edit3, Bookmark } from 'lucide-react';
 import { useAdminEvents } from '@/hooks/useAdminEvents';
 import { useEventFiltering } from '@/hooks/useEventFiltering';
@@ -16,6 +17,17 @@ interface EventsTabProps {
 }
 
 export default function EventsTab({ isLoading }: EventsTabProps) {
+  // State for filtering
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<'all' | 'benefic' | 'challenging' | 'neutral'>('all');
+  const [selectedSource, setSelectedSource] = useState<'all' | 'generated' | 'manual'>('all');
+  const [selectedTab, setSelectedTab] = useState<'all' | 'bookmarked' | 'manual'>('all');
+  const [hideChallengingDates, setHideChallengingDates] = useState(false);
+  const [showCombosOnly, setShowCombosOnly] = useState(false);
+  const [showHousesOnly, setShowHousesOnly] = useState(false);
+  const [showAspectsOnly, setShowAspectsOnly] = useState(false);
+  const [showElectionalOnly, setShowElectionalOnly] = useState(false);
+
   // Use the custom hook for data management
   const {
     events,
@@ -34,14 +46,14 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
   // Use consolidated filtering hook
   const { filteredEvents, filterStats } = useEventFiltering({
     events,
-    selectedTab: 'all',
-    selectedType: 'all',
-    hideChallengingDates: false,
-    showCombosOnly: false,
-    showHousesOnly: false,
-    showAspectsOnly: false,
-    showElectionalOnly: false,
-    searchQuery: '',
+    selectedTab,
+    selectedType,
+    hideChallengingDates,
+    showCombosOnly,
+    showHousesOnly,
+    showAspectsOnly,
+    showElectionalOnly,
+    searchQuery,
   });
 
   const {

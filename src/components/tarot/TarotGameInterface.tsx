@@ -60,12 +60,35 @@ export default function TarotGameInterface({
     updateUserInterpretation,
     setSituationLoadingToast,
     setErrorToast,
-    setEvaluationLoadingToast
+    setEvaluationLoadingToast,
+    aiConfig,
+    hasValidConfig
   } = useTarotGameInterface(gameState, setGameState, userId);
 
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
       <div className="px-6 py-12">
+        {/* AI Configuration Warning */}
+        {!hasValidConfig && (
+          <div className="mb-6 bg-yellow-100 border-2 border-yellow-300 p-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <h3 className="font-bold text-yellow-800 font-space-grotesk">AI Configuration Required</h3>
+                <p className="text-yellow-700 font-inter text-sm">
+                  AI features are currently limited. An administrator needs to configure the AI settings 
+                  with a valid API key to enable situation generation and interpretation feedback.
+                </p>
+                {aiConfig?.provider && (
+                  <p className="text-yellow-600 font-inter text-xs mt-1">
+                    Current config: {aiConfig.provider} - {aiConfig.model} (API key: {aiConfig.apiKey ? 'Present' : 'Missing'})
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
         {gameState.currentCard && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Card Display */}

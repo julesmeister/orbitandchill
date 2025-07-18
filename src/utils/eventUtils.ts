@@ -20,11 +20,13 @@ export function createNewBookmarkedEvent(
   eventTitle: string,
   eventDate: string, 
   eventTime: string,
+  userId: string,
   isOptimal: boolean = false,
   optimalScore: number | null = null
 ): AstrologicalEvent {
   return {
     id: `bookmark_${Date.now()}`,
+    userId,
     title: eventTitle,
     date: eventDate,
     time: eventTime,

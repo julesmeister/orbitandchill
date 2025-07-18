@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useCallback } from 'react';
+import { AstrologicalEvent } from '@/store/eventsStore';
 
 interface EventsAnalytics {
   totalEvents: number;
@@ -23,21 +24,6 @@ interface EventsAnalytics {
   };
 }
 
-interface AstrologicalEvent {
-  id: string;
-  userId: string;
-  title: string;
-  date: string;
-  time: string;
-  type: 'benefic' | 'challenging' | 'neutral';
-  description: string;
-  score: number;
-  isGenerated: boolean;
-  isBookmarked: boolean;
-  createdAt: string;
-  timingMethod?: 'electional' | 'aspects' | 'houses';
-  planetsInvolved?: string[];
-}
 
 interface UseAdminEventsReturn {
   // Data
@@ -77,7 +63,8 @@ const mockEvents: AstrologicalEvent[] = [
     isBookmarked: true,
     createdAt: '2024-01-10T10:00:00Z',
     timingMethod: 'aspects',
-    planetsInvolved: ['Jupiter', 'Venus']
+    aspects: ['Jupiter conjunction Venus'],
+    planetaryPositions: ['Jupiter in Pisces', 'Venus in Pisces']
   },
   {
     id: '2',
@@ -92,7 +79,8 @@ const mockEvents: AstrologicalEvent[] = [
     isBookmarked: false,
     createdAt: '2024-01-10T11:00:00Z',
     timingMethod: 'aspects',
-    planetsInvolved: ['Mars', 'Saturn']
+    aspects: ['Mars square Saturn'],
+    planetaryPositions: ['Mars in Gemini', 'Saturn in Pisces']
   },
   {
     id: '3',
@@ -106,7 +94,9 @@ const mockEvents: AstrologicalEvent[] = [
     isGenerated: false,
     isBookmarked: true,
     createdAt: '2024-01-05T15:30:00Z',
-    timingMethod: 'electional'
+    timingMethod: 'electional',
+    aspects: ['Moon trine Venus'],
+    planetaryPositions: ['Moon in Taurus', 'Venus in Pisces']
   }
 ];
 

@@ -118,8 +118,10 @@ export const useEventsStore = create<EventsState>()(
   persist(
     (set, get) => ({
       // Initial state
-      events: [],
-      generatedEvents: [],
+      events: {},
+      generatedEvents: {},
+      eventIds: [],
+      generatedEventIds: [],
       cachedMonths: new Map(),
       loadedMonths: new Set(),
       showCalendar: true, // Show calendar by default so users can see toggles
@@ -208,19 +210,22 @@ export const useEventsStore = create<EventsState>()(
         const cacheExpiry = 10 * 60 * 1000; // 10 minutes cache
         
         if (cached && (Date.now() - cached.loadedAt < cacheExpiry)) {
-          console.log(`📋 Using cached events for ${monthKey} (${cached.events.length} events)`);
+          console.log(`📋 Using cached events for ${monthKey} (${cached.eventIds.length} events)`);
           
           // Preserve ALL generated events when loading cached data
           const currentState = get();
           const allGeneratedEvents = currentState.generatedEvents;
           const allGeneratedEventIds = currentState.generatedEventIds;
           
-          // Convert cached events to normalized structure
-          const cachedEventsById = cached.events.reduce((acc, event) => {
-            acc[event.id] = event;
+          // Get cached events from main state using cached IDs
+          const cachedEventsById = cached.eventIds.reduce((acc, eventId) => {
+            const event = currentState.events[eventId];
+            if (event) {
+              acc[eventId] = event;
+            }
             return acc;
           }, {} as Record<string, AstrologicalEvent>);
-          const cachedEventIds = cached.events.map(e => e.id);
+          const cachedEventIds = cached.eventIds;
           
           // Keep generated events separate from regular events
           set({ 
@@ -229,7 +234,7 @@ export const useEventsStore = create<EventsState>()(
             generatedEvents: allGeneratedEvents,
             generatedEventIds: allGeneratedEventIds
           });
-          console.log(`📊 State after cached load: ${cached.events.length} regular, ${allGeneratedEventIds?.length || 0} generated`);
+          console.log(`📊 State after cached load: ${cached.eventIds.length} regular, ${allGeneratedEventIds?.length || 0} generated`);
           return;
         }
 
@@ -267,26 +272,33 @@ export const useEventsStore = create<EventsState>()(
             const currentState = get();
             const allGeneratedEvents = currentState.generatedEvents;
             
-            // Merge API events with ALL generated events
-            const mergedEvents = [...data.events];
-            const apiEventIds = new Set(data.events.map(e => e.id));
-            const uniqueGeneratedEvents = allGeneratedEvents.filter(event => !apiEventIds.has(event.id));
+            // Convert API events to normalized structure
+            const apiEventsById = data.events.reduce((acc: Record<string, AstrologicalEvent>, event: AstrologicalEvent) => {
+              acc[event.id] = event;
+              return acc;
+            }, {} as Record<string, AstrologicalEvent>);
             
-            if (uniqueGeneratedEvents.length > 0) {
-              console.log(`🔄 Merged ${uniqueGeneratedEvents.length} generated events with API data`);
+            const apiEventIds = new Set(data.events.map((e: AstrologicalEvent) => e.id));
+            const allGeneratedEventIds = currentState.generatedEventIds || [];
+            const uniqueGeneratedEventIds = allGeneratedEventIds.filter(eventId => !apiEventIds.has(eventId));
+            
+            if (uniqueGeneratedEventIds.length > 0) {
+              console.log(`🔄 Merged ${uniqueGeneratedEventIds.length} generated events with API data`);
             }
             
             // Cache the loaded data (tabs are just UI filters, not server data)
             const newCachedMonths = new Map(cachedMonths);
             newCachedMonths.set(monthKey, {
-              events: data.events, // Cache only API events, not local generated ones
+              eventIds: data.events.map((e: AstrologicalEvent) => e.id), // Cache only API event IDs
               loadedAt: Date.now(),
               tab: 'all'
             });
             
             set({ 
-              events: data.events, // Keep only API events in regular events array
-              generatedEvents: [...allGeneratedEvents], // Keep generated events separate
+              events: apiEventsById, // Keep only API events in normalized structure
+              eventIds: data.events.map((e: AstrologicalEvent) => e.id), // API event IDs
+              generatedEvents: allGeneratedEvents, // Keep generated events separate
+              generatedEventIds: uniqueGeneratedEventIds, // Keep generated event IDs
               isLoading: false,
               cachedMonths: newCachedMonths,
               loadedMonths: new Set([...get().loadedMonths, monthKey])
@@ -347,8 +359,8 @@ export const useEventsStore = create<EventsState>()(
           const data = await response.json();
           if (data.success) {
             // For bookmarked/manual tabs, we need to separate generated events from API events
-            const apiEvents = data.events.filter(e => !e.isGenerated);
-            const generatedEventsFromApi = data.events.filter(e => e.isGenerated);
+            const apiEvents = data.events.filter((e: AstrologicalEvent) => !e.isGenerated);
+            const generatedEventsFromApi = data.events.filter((e: AstrologicalEvent) => e.isGenerated);
             
             // Preserve existing local generated events and merge with any generated events from API
             const currentState = get();
@@ -359,7 +371,7 @@ export const useEventsStore = create<EventsState>()(
             const allGeneratedEvents = { ...existingGeneratedEvents };
             const allGeneratedEventIds = [...(existingGeneratedEventIds || [])];
             
-            generatedEventsFromApi.forEach(event => {
+            generatedEventsFromApi.forEach((event: AstrologicalEvent) => {
               if (!allGeneratedEvents[event.id]) {
                 allGeneratedEvents[event.id] = event;
                 allGeneratedEventIds.push(event.id);
@@ -367,11 +379,11 @@ export const useEventsStore = create<EventsState>()(
             });
             
             // Convert API events to normalized structure
-            const apiEventsById = apiEvents.reduce((acc, event) => {
+            const apiEventsById = apiEvents.reduce((acc: Record<string, AstrologicalEvent>, event: AstrologicalEvent) => {
               acc[event.id] = event;
               return acc;
             }, {} as Record<string, AstrologicalEvent>);
-            const apiEventIds = apiEvents.map(e => e.id);
+            const apiEventIds = apiEvents.map((e: AstrologicalEvent) => e.id);
             
             set({ 
               events: apiEventsById,
@@ -416,7 +428,8 @@ export const useEventsStore = create<EventsState>()(
           if (data.success) {
             const newEvent = data.event;
             set((state) => ({ 
-              events: [newEvent, ...state.events] 
+              events: { ...state.events, [newEvent.id]: newEvent },
+              eventIds: [newEvent.id, ...state.eventIds]
             }));
             
             // Update cache for the event's month
@@ -427,7 +440,7 @@ export const useEventsStore = create<EventsState>()(
               // Update cached data with new event
               const updatedCache = {
                 ...cached,
-                events: [newEvent, ...cached.events]
+                eventIds: [newEvent.id, ...cached.eventIds]
               };
               get().cachedMonths.set(monthKey, updatedCache);
             }
@@ -439,7 +452,8 @@ export const useEventsStore = create<EventsState>()(
           set({ error: error instanceof Error ? error.message : 'Failed to add event' });
           // Still add to local state as fallback
           set((state) => ({ 
-            events: [event, ...state.events] 
+            events: { ...state.events, [event.id]: event },
+            eventIds: [event.id, ...state.eventIds]
           }));
           
           // Update cache for fallback too
@@ -449,7 +463,7 @@ export const useEventsStore = create<EventsState>()(
           if (cached) {
             const updatedCache = {
               ...cached,
-              events: [event, ...cached.events]
+              eventIds: [event.id, ...cached.eventIds]
             };
             get().cachedMonths.set(monthKey, updatedCache);
           }
@@ -610,8 +624,14 @@ export const useEventsStore = create<EventsState>()(
             const data = await response.json();
             if (data.success) {
               // Use the events returned from the database (with proper IDs)
+              const newEventsById = data.events.reduce((acc: Record<string, AstrologicalEvent>, event: AstrologicalEvent) => {
+                acc[event.id] = event;
+                return acc;
+              }, {});
+              
               set((state) => ({ 
-                events: [...data.events, ...state.events] 
+                events: { ...newEventsById, ...state.events },
+                eventIds: [...data.events.map((e: AstrologicalEvent) => e.id), ...state.eventIds]
               }));
               
               if (data.localOnly) {
@@ -652,8 +672,14 @@ export const useEventsStore = create<EventsState>()(
             id: `local_${Date.now()}_${index}` // Ensure unique local IDs
           }));
           
+          const eventsById = eventsWithLocalIds.reduce((acc: Record<string, AstrologicalEvent>, event: AstrologicalEvent) => {
+            acc[event.id] = event;
+            return acc;
+          }, {});
+          
           set((state) => ({ 
-            events: [...eventsWithLocalIds, ...state.events] 
+            events: { ...eventsById, ...state.events },
+            eventIds: [...eventsWithLocalIds.map(e => e.id), ...state.eventIds]
           }));
           
           // Set a more helpful error message for the user
@@ -681,9 +707,10 @@ export const useEventsStore = create<EventsState>()(
           
           const data = await response.json();
           set((state) => ({
-            events: state.events.map(event => 
-              event.id === id ? { ...event, ...data.event } : event
-            )
+            events: {
+              ...state.events,
+              [id]: { ...state.events[id], ...data.event }
+            }
           }));
         } catch (error) {
           console.error('Error updating event:', error);
@@ -710,9 +737,15 @@ export const useEventsStore = create<EventsState>()(
           
           const data = await response.json();
           if (data.success) {
-            set((state) => ({ 
-              events: state.events.filter(e => e.id !== id) 
-            }));
+            set((state) => {
+              const newEvents = { ...state.events };
+              delete newEvents[id];
+              const newEventIds = state.eventIds.filter(eventId => eventId !== id);
+              return { 
+                events: newEvents,
+                eventIds: newEventIds
+              };
+            });
           } else {
             throw new Error(data.error || 'Failed to delete event');
           }
@@ -742,13 +775,14 @@ export const useEventsStore = create<EventsState>()(
           const data = await response.json();
           if (data.success) {
             set((state) => ({
-              events: state.events.map(event => 
-                event.id === id ? { ...event, isBookmarked: data.event.isBookmarked } : event
-              )
+              events: {
+                ...state.events,
+                [id]: { ...state.events[id], isBookmarked: data.event.isBookmarked }
+              }
             }));
             
             // Update cache for all months that contain this event
-            const updatedEvent = get().events.find(e => e.id === id);
+            const updatedEvent = get().events[id];
             if (updatedEvent) {
               const eventDate = new Date(updatedEvent.date);
               const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
@@ -756,9 +790,7 @@ export const useEventsStore = create<EventsState>()(
               if (cached) {
                 const updatedCache = {
                   ...cached,
-                  events: cached.events.map(event => 
-                    event.id === id ? { ...event, isBookmarked: data.event.isBookmarked } : event
-                  )
+                  eventIds: cached.eventIds // Keep the same eventIds, main state is updated
                 };
                 get().cachedMonths.set(monthKey, updatedCache);
               }
@@ -770,16 +802,22 @@ export const useEventsStore = create<EventsState>()(
           console.error('Error toggling bookmark:', error);
           set({ error: error instanceof Error ? error.message : 'Failed to toggle bookmark' });
           // Fallback to local state change
-          set((state) => ({
-            events: state.events.map(event => 
-              event.id === id 
-                ? { ...event, isBookmarked: !event.isBookmarked }
-                : event
-            )
-          }));
+          set((state) => {
+            const event = state.events[id];
+            if (!event) {
+              console.error('Event not found for bookmark toggle:', id);
+              return state;
+            }
+            return {
+              events: {
+                ...state.events,
+                [id]: { ...event, isBookmarked: !event.isBookmarked }
+              }
+            };
+          });
           
           // Update cache for fallback too
-          const updatedEvent = get().events.find(e => e.id === id);
+          const updatedEvent = get().events[id];
           if (updatedEvent) {
             const eventDate = new Date(updatedEvent.date);
             const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
@@ -787,9 +825,7 @@ export const useEventsStore = create<EventsState>()(
             if (cached) {
               const updatedCache = {
                 ...cached,
-                events: cached.events.map(event => 
-                  event.id === id ? { ...event, isBookmarked: !event.isBookmarked } : event
-                )
+                eventIds: cached.eventIds // Keep the same eventIds, main state is updated
               };
               get().cachedMonths.set(monthKey, updatedCache);
             }
@@ -861,8 +897,8 @@ export const useEventsStore = create<EventsState>()(
                 console.warn('⚠️ Database timeout during clear, proceeding with local cleanup only');
                 // Don't throw error, just continue with local cleanup
                 set((state) => {
-                  const newEvents = {};
-                  const newEventIds = [];
+                  const newEvents: Record<string, AstrologicalEvent> = {};
+                  const newEventIds: string[] = [];
                   
                   (state.eventIds || []).forEach(eventId => {
                     const event = state.events[eventId];
@@ -900,8 +936,8 @@ export const useEventsStore = create<EventsState>()(
               
               // Immediately update local state to remove generated events and pattern-matching events
               set((state) => {
-                const newEvents = {};
-                const newEventIds = [];
+                const newEvents: Record<string, AstrologicalEvent> = {};
+                const newEventIds: string[] = [];
                 
                 (state.eventIds || []).forEach(eventId => {
                   const event = state.events[eventId];
@@ -972,8 +1008,8 @@ export const useEventsStore = create<EventsState>()(
               console.warn('⚠️ Clear operation timed out, proceeding with local cleanup only');
               // Don't throw error, just continue with local cleanup
               set((state) => {
-                const newEvents = {};
-                const newEventIds = [];
+                const newEvents: Record<string, AstrologicalEvent> = {};
+                const newEventIds: string[] = [];
                 
                 (state.eventIds || []).forEach(eventId => {
                   const event = state.events[eventId];
@@ -1062,8 +1098,10 @@ export const useEventsStore = create<EventsState>()(
           }
           
           // Ensure events and cache are always empty on rehydration (they come from database)
-          state.events = [];
-          state.generatedEvents = [];
+          state.events = {};
+          state.generatedEvents = {};
+          state.eventIds = [];
+          state.generatedEventIds = [];
           state.cachedMonths = new Map();
           state.loadedMonths = new Set();
           state.isLoading = false;

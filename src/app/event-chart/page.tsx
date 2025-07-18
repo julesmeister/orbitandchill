@@ -47,7 +47,7 @@ function EventChartContent() {
   } = parseEventParams(searchParams);
 
   const { user } = useUserStore();
-  const { events, toggleBookmark } = useEventsStore();
+  const { getAllEvents, toggleBookmark } = useEventsStore();
   const { activeTab } = useChartTab();
   const { generateChart, isGenerating } = useNatalChart();
 
@@ -81,16 +81,91 @@ function EventChartContent() {
   // Get current minutes for the increment input
   const getCurrentMinutes = () => extractMinutes(selectedTime);
 
+  // State to track if we're loading the event
+  const [loadingEvent, setLoadingEvent] = useState(false);
+  const [eventFromDb, setEventFromDb] = useState<any>(null);
+
   // Find if this event is already in the events store  
-  const existingEvent = eventDate ? findExistingEvent(events, eventDate, eventTime, eventTitle) : undefined;
-  const isBookmarked = existingEvent?.isBookmarked || false;
+  const existingEvent = eventDate ? findExistingEvent(getAllEvents(), eventDate, eventTime, eventTitle) : undefined;
+  const isBookmarked = existingEvent?.isBookmarked || eventFromDb?.isBookmarked || false;
+
+  // Load event from database if not found in store
+  useEffect(() => {
+    const loadEventFromDatabase = async () => {
+      if (!eventDate || !eventTime || !eventTitle || !user?.id || existingEvent || loadingEvent) {
+        return;
+      }
+
+      setLoadingEvent(true);
+      try {
+        // Search for the event in the database
+        const response = await fetch(`/api/events?userId=${user.id}&searchTerm=${encodeURIComponent(eventTitle)}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.events) {
+            // Find the matching event
+            const matchingEvent = data.events.find((event: any) => 
+              event.date === eventDate && 
+              event.time === eventTime && 
+              event.title === eventTitle
+            );
+            
+            if (matchingEvent) {
+              setEventFromDb(matchingEvent);
+              console.log('Loaded event from database:', matchingEvent.id, 'isBookmarked:', matchingEvent.isBookmarked);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading event from database:', error);
+      } finally {
+        setLoadingEvent(false);
+      }
+    };
+
+    loadEventFromDatabase();
+  }, [eventDate, eventTime, eventTitle, user?.id, existingEvent, loadingEvent]);
 
   const handleBookmarkToggle = () => {
-    if (existingEvent) {
-      toggleBookmark(existingEvent.id);
+    if (!user?.id) {
+      console.error('User ID is not available for bookmark toggle. User state:', user);
+      return;
+    }
+    
+    const currentEvent = existingEvent || eventFromDb;
+    
+    if (currentEvent) {
+      // Check if this is a local event (starts with 'bookmark_' or 'local_') or a database event
+      const isLocalEvent = currentEvent.id.startsWith('bookmark_') || currentEvent.id.startsWith('local_');
+      
+      if (isLocalEvent) {
+        // For local events, update the local state directly without API calls
+        console.log('Event is local, updating local state:', currentEvent.id);
+        const store = useEventsStore.getState();
+        const updatedEvent = { ...currentEvent, isBookmarked: !currentEvent.isBookmarked };
+        
+        // Update the events store directly
+        store.events = {
+          ...store.events,
+          [currentEvent.id]: updatedEvent
+        };
+        
+        // Force a re-render by setting the state
+        useEventsStore.setState({ events: store.events });
+      } else {
+        // For database events, use the API
+        console.log('Event is in database, toggling bookmark via API:', currentEvent.id);
+        toggleBookmark(currentEvent.id, user.id);
+        
+        // Update the eventFromDb state optimistically
+        if (eventFromDb) {
+          setEventFromDb({ ...eventFromDb, isBookmarked: !eventFromDb.isBookmarked });
+        }
+      }
     } else if (eventDate) {
       // If event doesn't exist, add it as a new bookmarked event
-      const newEvent = createNewBookmarkedEvent(eventTitle, eventDate, eventTime, isOptimal, optimalScore);
+      const newEvent = createNewBookmarkedEvent(eventTitle, eventDate, eventTime, user.id, isOptimal, optimalScore);
       useEventsStore.getState().addEvent(newEvent);
     }
   };

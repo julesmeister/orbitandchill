@@ -33,12 +33,15 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **src/app/api/admin/generate-reply/route.ts** - AI reply generation endpoint
 - **src/app/api/admin/process-pasted-content/route.ts** - Content parsing and preprocessing
 - **src/app/api/admin/process-comments/route.ts** - **NEW: AI comment processing and rephrasing**
+- **src/app/api/admin/ai-config/route.ts** - **NEW: AI configuration persistence and retrieval**
 
 ### AI Utility Functions
 - **src/utils/commentProcessing.ts** - **NEW: Comment extraction, AI rephrasing, and robust JSON parsing**
 
 ### Custom Hooks for AI Operations
 - **src/hooks/useAiConfiguration.ts** - AI provider and model configuration
+- **src/hooks/usePublicAIConfig.ts** - **NEW: Centralized AI configuration for public access**
+- **src/hooks/useAIConfigAdmin.ts** - **NEW: Admin-specific AI configuration management**
 - **src/hooks/useContentProcessing.ts** - Content parsing and transformation logic (legacy)
 - **src/hooks/useReplyGeneration.ts** - AI reply generation management
 - **src/hooks/useGenerationSettings.ts** - Reply and voting generation settings
@@ -77,7 +80,7 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **src/components/admin/SeedingTab.tsx** - **PRIMARY SEEDING INTERFACE** with all UI components
 
 ### Seeding UI Components
-- **src/components/admin/seeding/AIConfigurationForm.tsx** - AI model and API configuration
+- **src/components/admin/seeding/AIConfigurationForm.tsx** - **ENHANCED: AI model and API configuration with database persistence**
 - **src/components/admin/seeding/ContentInputForm.tsx** - Content input with comment processing
 - **src/components/admin/seeding/PreviewContentDisplay.tsx** - **ENHANCED: Inline editing, clear replies, seamless UX**
 - **src/components/admin/seeding/GenerationSettings.tsx** - Reply generation controls
@@ -148,7 +151,7 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 
 ## 🎯 Implementation Status
 
-### ✅ Completed (Phase 1-6)
+### ✅ Completed (Phase 1-7)
 - Core infrastructure (database tables, APIs)
 - AI integration pipeline with DeepSeek R1 Distill Llama 70B
 - Database operations and user management
@@ -162,6 +165,8 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 - **Seamless Inline Editing**: Click-to-edit functionality without textarea appearance (Phase 6)
 - **Advanced Toast System**: Comprehensive user feedback for all operations (Phase 6)
 - **Auto-scroll UX**: Automatic navigation to relevant content sections (Phase 6)
+- **Centralized AI Configuration**: Database-persisted AI config for public access (Phase 7)
+- **Fallback Configuration System**: Database → localStorage → default configuration chain (Phase 7)
 
 ### 🔄 Current Focus
 - Quality assurance and error handling
@@ -170,9 +175,9 @@ This document indexes all files involved in the AI-powered discussion seeding sy
 
 ## 🗂️ File Organization Summary
 
-**Total Files: ~52**
-- **API Routes:** 16+ seeding-related endpoints (including comment processing)
-- **React Hooks:** 12 custom hooks for seeding operations (including toast and reply management)
+**Total Files: ~55**
+- **API Routes:** 17+ seeding-related endpoints (including AI configuration)
+- **React Hooks:** 13 custom hooks for seeding operations (including AI config management)
 - **Utility Functions:** 1 comment processing utility with AI integration
 - **Database Services:** 3 core database service files
 - **UI Components:** 8 seeding-specific components + admin components
