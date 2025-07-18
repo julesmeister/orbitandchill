@@ -69,8 +69,8 @@ export default function TarotLeaderboard({
           ) : (!isLoading && leaderboard.length > 0) ? (
             <div className="divide-y divide-black">
               {leaderboard.slice(0, 5).map((entry, index) => (
-                <div key={entry.id} className="p-3 flex items-center gap-3">
-                  <div className={`w-6 h-6 flex items-center justify-center font-bold text-xs font-space-grotesk ${
+                <div key={entry.id} className="group p-3 flex items-center gap-3 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+                  <div className={`w-6 h-6 flex items-center justify-center font-bold text-xs font-space-grotesk transition-transform duration-200 group-hover:scale-110 ${
                     index === 0 ? 'bg-[#f2e356] text-black border-2 border-black' :
                     index === 1 ? 'bg-[#6bdbff] text-black border-2 border-black' :
                     index === 2 ? 'bg-[#4ade80] text-black border-2 border-black' :
@@ -79,13 +79,13 @@ export default function TarotLeaderboard({
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate text-black font-space-grotesk">{entry.username}</div>
-                    <div className="text-xs text-black/50 font-inter">
+                    <div className="font-semibold text-sm truncate text-black font-space-grotesk group-hover:text-blue-600 transition-colors duration-200">{entry.username}</div>
+                    <div className="text-xs text-black/50 font-inter group-hover:text-black/70 transition-colors duration-200">
                       {entry.cardsCompleted} cards • {entry.accuracy}%
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-black text-sm font-space-grotesk">{entry.score.toLocaleString()}</div>
+                    <div className="font-bold text-black text-sm font-space-grotesk group-hover:text-blue-600 transition-colors duration-200">{entry.score.toLocaleString()}</div>
                   </div>
                 </div>
               ))}

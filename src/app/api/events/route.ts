@@ -4,17 +4,11 @@ import { EventService } from '@/db/services/eventService';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📥 Events API GET endpoint called');
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
-    console.log('🔍 Request params:', {
-      userId,
-      allParams: Object.fromEntries(searchParams.entries())
-    });
     const type = searchParams.get('type') as 'all' | 'benefic' | 'challenging' | 'neutral' | null;
     const tab = searchParams.get('tab') as 'all' | 'bookmarked' | 'manual' | null;
-    console.log('📊 Tab parameter:', tab || 'NOT_PROVIDED');
     const isGenerated = searchParams.get('isGenerated');
     const isBookmarked = searchParams.get('isBookmarked');
     const searchTerm = searchParams.get('searchTerm');
@@ -68,8 +62,8 @@ export async function GET(request: NextRequest) {
       filters.searchTerm = searchTerm;
     }
     
-    // Add month/year filtering for optimized loading
-    if (month !== null && year !== null) {
+    // Add month/year filtering for optimized loading - but NOT for bookmarked/manual tabs
+    if (month !== null && year !== null && tab !== 'bookmarked' && tab !== 'manual') {
       const monthNum = parseInt(month);
       const yearNum = parseInt(year);
       
@@ -81,21 +75,14 @@ export async function GET(request: NextRequest) {
         filters.dateFrom = startDate.toISOString().split('T')[0];
         filters.dateTo = endDate.toISOString().split('T')[0];
         
-        console.log(`🗓️ Filtering events for month ${monthNum + 1}/${yearNum}: ${filters.dateFrom} to ${filters.dateTo}`);
       }
+    } else if (tab === 'bookmarked' || tab === 'manual') {
     }
 
     // Get events based on filters
     let events;
     // If no tab specified or tab is 'all', show all user's events
     const shouldUseAllBranch = (!tab || tab === 'all');
-    console.log('🔀 Branch decision:', {
-      tab,
-      isGenerated,
-      isBookmarked,
-      shouldUseAllBranch,
-      originalCondition: (!tab || tab === 'all') && !isGenerated && !isBookmarked
-    });
     if (shouldUseAllBranch) {
       // For 'all' tab, get both user's personal events AND all generated events
       // Handle database unavailability gracefully for all event types

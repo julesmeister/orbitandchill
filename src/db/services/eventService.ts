@@ -10,32 +10,14 @@ const resilient = createResilientService('EventService');
 
 // Helper function to ensure database is initialized
 async function ensureDatabase() {
-  console.log('🔍 ensureDatabase() called, db status:', {
-    hasDb: !!db,
-    dbType: db ? typeof db : 'undefined'
-  });
-  
   if (!db) {
-    console.log('🚀 Database not initialized, attempting to initialize...');
     try {
       const result = await initializeDatabase();
-      console.log('📋 initializeDatabase() result:', {
-        hasResult: !!result,
-        hasClient: !!result?.client,
-        hasDb: !!result?.db,
-        clientType: result?.client ? typeof result.client : 'undefined',
-        dbType: result?.db ? typeof result.db : 'undefined'
-      });
       
       if (result?.db) {
-        console.log('✅ Database initialized successfully in ensureDatabase()');
         // Update the global db variable
-        if (!db) {
-          console.log('🔄 Updating global db variable');
-        }
         return result.db;
       } else {
-        console.log('⚠️ Database initialization returned null/undefined');
         return null;
       }
     } catch (error) {
@@ -46,11 +28,9 @@ async function ensureDatabase() {
   }
   
   if (!db) {
-    console.log('⚠️ Database not available - using fallback mode');
     return null;
   }
   
-  console.log('✅ Using existing database connection');
   return db;
 }
 
@@ -202,27 +182,15 @@ function eventToDbRow(eventData: CreateEventData) {
 export class EventService {
   // Get all events for a user with optional filtering
   static async getEvents(filters: EventFilters = {}): Promise<AstrologicalEvent[]> {
-    // Check database availability manually first
-    console.log('🔍 Database availability check:', {
-      hasDb: !!db,
-      hasClient: !!db?.client,
-      hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
-      isAvailable: !!db && (!!db.client || !!process.env.TURSO_DATABASE_URL)
-    });
-    
     // Temporarily bypass resilience wrapper to debug manual events issue
     const bypassResilience = false;
     
     if (bypassResilience) {
-      console.log('🚨 BYPASSING resilience wrapper for debugging');
       return await (async () => {
-      console.log('🔍 EventService.getEvents called with filters:', filters);
-      
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
       const conditions = [];
       
       if (filters.userId) {
-        console.log('🎯 Adding userId filter:', filters.userId);
         conditions.push({ column: 'user_id', value: filters.userId });
       }
       
@@ -252,9 +220,6 @@ export class EventService {
         searchSql = ` AND (title LIKE '%${filters.searchTerm}%' OR description LIKE '%${filters.searchTerm}%')`;
       }
       
-      console.log('🔍 Building raw SQL query with', conditions.length, 'conditions');
-      console.log('🔍 Full conditions array:', JSON.stringify(conditions, null, 2));
-      
       const rows = await executeRawSelect(db, {
         table: 'astrological_events',
         conditions,
@@ -269,8 +234,6 @@ export class EventService {
           row.description?.toLowerCase().includes(filters.searchTerm!.toLowerCase())
         );
       }
-      
-      console.log(`📊 EventService.getEvents returning ${filteredRows.length} events for filters:`, filters);
       
       return filteredRows.map((row: any) => dbRowToEvent(transformDatabaseRow(row)));
       })();
@@ -278,13 +241,10 @@ export class EventService {
     
     // Original resilience wrapper path (when bypassResilience is false)
     return resilient.array(db, 'getEvents', async () => {
-      console.log('🔍 EventService.getEvents called with filters (via resilience):', filters);
-      
       // BYPASS DRIZZLE ORM - Use raw SQL due to Turso HTTP client WHERE clause parsing issues
       const conditions = [];
       
       if (filters.userId) {
-        console.log('🎯 Adding userId filter:', filters.userId);
         conditions.push({ column: 'user_id', value: filters.userId });
       }
       
@@ -314,9 +274,6 @@ export class EventService {
         searchSql = ` AND (title LIKE '%${filters.searchTerm}%' OR description LIKE '%${filters.searchTerm}%')`;
       }
       
-      console.log('🔍 Building raw SQL query with', conditions.length, 'conditions');
-      console.log('🔍 Full conditions array:', JSON.stringify(conditions, null, 2));
-      
       const rows = await executeRawSelect(db, {
         table: 'astrological_events',
         conditions,
@@ -331,8 +288,6 @@ export class EventService {
           row.description?.toLowerCase().includes(filters.searchTerm!.toLowerCase())
         );
       }
-      
-      console.log(`📊 EventService.getEvents returning ${filteredRows.length} events for filters:`, filters);
       
       return filteredRows.map((row: any) => dbRowToEvent(transformDatabaseRow(row)));
     });
@@ -350,14 +305,6 @@ export class EventService {
 
   // Create a new event
   static async createEvent(eventData: CreateEventData): Promise<AstrologicalEvent | null> {
-    console.log('🚀 EventService.createEvent called with data:', {
-      userId: eventData.userId,
-      title: eventData.title,
-      date: eventData.date,
-      type: eventData.type,
-      hasLocationData: !!(eventData.locationName || eventData.latitude || eventData.longitude)
-    });
-
     // Ensure database is available before proceeding
     const database = await ensureDatabase();
     if (!database) {
@@ -367,15 +314,6 @@ export class EventService {
 
     try {
       const dbData = eventToDbRow(eventData);
-      console.log('📝 Converted to database format:', {
-        id: dbData.id,
-        userId: dbData.userId,
-        title: dbData.title,
-        locationName: dbData.locationName,
-        latitude: dbData.latitude,
-        longitude: dbData.longitude,
-        timezone: dbData.timezone
-      });
       
       // BYPASS DRIZZLE ORM - Use raw SQL for INSERT to avoid Turso HTTP client issues
       const client = (database as any).client;
@@ -423,19 +361,6 @@ export class EventService {
           ]
         });
         
-        console.log('💾 Raw SQL insert result:', {
-          rowsAffected: insertResult.rowsAffected,
-          lastInsertRowid: insertResult.lastInsertRowid
-        });
-        
-        console.log('🔍 Inserted event details for debugging:', {
-          id: dbData.id,
-          title: dbData.title,
-          isGenerated: dbData.isGenerated,
-          isGeneratedType: typeof dbData.isGenerated,
-          userId: dbData.userId
-        });
-        
         if (insertResult.rowsAffected !== 1) {
           console.error('❌ Insert affected', insertResult.rowsAffected, 'rows, expected 1');
           throw new Error(`Insert affected ${insertResult.rowsAffected} rows, expected 1`);
@@ -455,26 +380,6 @@ export class EventService {
         const insertedRow = selectResult.rows[0];
         const convertedEvent = dbRowToEvent(transformDatabaseRow(insertedRow));
         
-        console.log('✅ Event created successfully:', {
-          id: convertedEvent.id,
-          title: convertedEvent.title,
-          locationName: convertedEvent.locationName
-        });
-        
-        // DEBUG: Immediately check if event exists after creation
-        try {
-          const checkResult = await client.execute({
-            sql: 'SELECT id, title, is_generated, is_bookmarked FROM astrological_events WHERE id = ?',
-            args: [convertedEvent.id]
-          });
-          console.log('🔍 Event verification after creation:', {
-            found: checkResult.rows.length > 0,
-            event: checkResult.rows[0] || 'NOT_FOUND'
-          });
-        } catch (verifyError) {
-          console.error('❌ Could not verify event after creation:', verifyError);
-        }
-        
         return convertedEvent;
     } catch (error) {
       console.error('❌ Database insert failed:', error);
@@ -485,8 +390,6 @@ export class EventService {
   // Update an existing event
   static async updateEvent(id: string, updateData: UpdateEventData): Promise<AstrologicalEvent | null> {
     return resilient.item(db, 'updateEvent', async () => {
-      console.log('🔄 Updating event:', id, 'with data:', updateData);
-      
       // Use raw SQL for update to avoid Drizzle ORM WHERE clause issues and column naming problems
       const client = (db as any).client;
       if (!client) {
@@ -555,23 +458,14 @@ export class EventService {
       updateValues.push(id);
       
       if (updateFields.length === 1) { // Only updated_at was added
-        console.log('⚠️ No fields to update');
         return await this.getEventById(id);
       }
       
       const sql = `UPDATE astrological_events SET ${updateFields.join(', ')} WHERE id = ? RETURNING *`;
       
-      console.log('🔍 Update SQL:', sql);
-      console.log('🔍 Update values:', updateValues);
-      
       const updateResult = await client.execute({
         sql,
         args: updateValues
-      });
-      
-      console.log('✅ Update result:', {
-        rowsAffected: updateResult.rowsAffected,
-        updatedRows: updateResult.rows.length
       });
       
       if (updateResult.rows.length > 0) {
@@ -585,18 +479,14 @@ export class EventService {
   // Delete an event
   static async deleteEvent(id: string, userId?: string): Promise<boolean> {
     const result = await resilient.item(db, 'deleteEvent', async () => {
-      console.log('🗑️ Deleting event with ID:', id, 'by user:', userId);
-      
       // Security check: if userId provided, verify ownership first
       if (userId) {
         const existingEvent = await this.getEventById(id);
         if (!existingEvent) {
-          console.log('❌ Event not found:', id);
           return false;
         }
         
         if (existingEvent.userId !== userId) {
-          console.log('❌ User not authorized to delete this event:', { eventUserId: existingEvent.userId, requestUserId: userId });
           throw new Error('Not authorized to delete this event');
         }
       }
@@ -613,11 +503,6 @@ export class EventService {
         args: [id]
       });
       
-      console.log('✅ Delete result:', {
-        rowsAffected: deleteResult.rowsAffected,
-        deletedRows: deleteResult.rows.length
-      });
-      
       return (deleteResult.rowsAffected || 0) > 0;
     });
     
@@ -628,22 +513,16 @@ export class EventService {
   // Toggle bookmark status
   static async toggleBookmark(id: string, userId?: string): Promise<AstrologicalEvent | null> {
     return resilient.item(db, 'toggleBookmark', async () => {
-      console.log('🔄 Toggling bookmark for event:', id, 'by user:', userId);
-      
       // Get current event
       const currentEvent = await this.getEventById(id);
       if (!currentEvent) {
-        console.log('❌ Event not found:', id);
         return null;
       }
       
       // Security check: if userId provided, ensure it matches the event owner
       if (userId && currentEvent.userId !== userId) {
-        console.log('❌ User not authorized to bookmark this event:', { eventUserId: currentEvent.userId, requestUserId: userId });
         throw new Error('Not authorized to bookmark this event');
       }
-      
-      console.log('🔄 Toggling bookmark for event:', id, 'from', currentEvent.isBookmarked, 'to', !currentEvent.isBookmarked);
       
       // Use raw SQL for update to avoid Drizzle ORM WHERE clause issues
       const client = (db as any).client;
@@ -658,11 +537,6 @@ export class EventService {
         args: [newBookmarkStatus ? 1 : 0, Math.floor(Date.now() / 1000), id]
       });
       
-      console.log('✅ Bookmark toggle result:', {
-        rowsAffected: updateResult.rowsAffected,
-        updatedRows: updateResult.rows.length
-      });
-      
       if (updateResult.rows.length > 0) {
         return dbRowToEvent(transformDatabaseRow(updateResult.rows[0]));
       }
@@ -674,15 +548,10 @@ export class EventService {
   // Bulk create events (for generated events)
   static async createManyEvents(eventsData: CreateEventData[]): Promise<AstrologicalEvent[]> {
     try {
-      console.log('EventService.createManyEvents called with', eventsData.length, 'events');
-      
       // Ensure database is initialized
       const dbInstance = await ensureDatabase();
       
       if (!dbInstance) {
-        console.log('⚠️ Database not available - events cannot be persisted to database');
-        console.log('🔄 Returning events as local-only (they will be managed by client state)');
-        
         // Return the events as if they were saved, but with local IDs
         // This allows the UI to work even when the database is unavailable
         const localEvents: AstrologicalEvent[] = eventsData.map((eventData, index) => ({
@@ -704,14 +573,10 @@ export class EventService {
           createdAt: new Date().toISOString()
         }));
         
-        console.log(`📝 Created ${localEvents.length} local-only events (database unavailable)`);
         return localEvents;
       }
       
-      console.log('Database initialized successfully');
-      
       // Force create astrological_events table if it doesn't exist
-      console.log('🔧 Ensuring astrological_events table exists...');
       try {
         // Get the raw client from the database mock
         const client = (dbInstance as any).client;
@@ -722,7 +587,6 @@ export class EventService {
           );
           
           if (existsResult.rows.length === 0) {
-            console.log('🔧 Creating astrological_events table...');
             await client.execute(`
               CREATE TABLE astrological_events (
                 id TEXT PRIMARY KEY,
@@ -745,9 +609,6 @@ export class EventService {
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
               )
             `);
-            console.log('✅ astrological_events table created successfully');
-          } else {
-            console.log('✅ astrological_events table already exists');
           }
         }
       } catch (tableError) {
@@ -758,7 +619,6 @@ export class EventService {
       // Ensure the user exists before inserting events
       if (eventsData.length > 0 && eventsData[0].userId) {
         const userId = eventsData[0].userId;
-        console.log('🔧 Ensuring user exists:', userId);
         
         try {
           const client = (dbInstance as any).client;
@@ -770,7 +630,6 @@ export class EventService {
             );
             
             if (userExists.rows.length === 0) {
-              console.log('🔧 Creating user for events:', userId);
               // Create the user with minimal required fields
               await client.execute(`
                 INSERT INTO users (
@@ -790,9 +649,6 @@ export class EventService {
                 1, // allow_direct_messages
                 1  // show_online_status
               ]);
-              console.log('✅ User created successfully');
-            } else {
-              console.log('✅ User already exists');
             }
           }
         } catch (userError) {
@@ -808,8 +664,6 @@ export class EventService {
         const eventData = eventsData[i];
         
         try {
-          console.log(`📝 Processing event ${i + 1}/${eventsData.length}: "${eventData.title?.substring(0, 30)}..."`);
-          
           // Validate event data before conversion
           if (!eventData.userId || !eventData.title || !eventData.date || !eventData.type || !eventData.description) {
             const missingFields = [];
@@ -834,20 +688,6 @@ export class EventService {
           
           const dbRow = eventToDbRow(eventData);
           
-          if (i === 0) {
-            console.log('🔍 First event dbRow conversion:', {
-              id: dbRow.id,
-              userId: dbRow.userId,
-              title: dbRow.title,
-              date: dbRow.date,
-              type: dbRow.type,
-              hasDescription: !!dbRow.description,
-              isGenerated: dbRow.isGenerated, // Check if this field is being set
-              keys: Object.keys(dbRow)
-            });
-          }
-          
-          console.log(`💾 Inserting event ${i + 1}/${eventsData.length} into database...`);
           const [insertedRow] = await db
             .insert(astrologicalEvents)
             .values(dbRow)
@@ -855,19 +695,6 @@ export class EventService {
 
           const convertedEvent = dbRowToEvent(insertedRow);
           insertedEvents.push(convertedEvent);
-          
-          if (i === 0) {
-            console.log('✅ First event successfully inserted:', {
-              id: convertedEvent.id,
-              title: convertedEvent.title,
-              date: convertedEvent.date
-            });
-          }
-          
-          // Log progress every 5 events
-          if ((i + 1) % 5 === 0 || i === eventsData.length - 1) {
-            console.log(`📊 Progress: ${i + 1}/${eventsData.length} events inserted successfully`);
-          }
           
         } catch (error) {
           console.error(`❌ Error inserting event ${i + 1}:`, {
@@ -886,7 +713,6 @@ export class EventService {
         }
       }
 
-      console.log('Successfully inserted', insertedEvents.length, 'events');
       return insertedEvents;
     } catch (error) {
       console.error('Error creating multiple events:', {
@@ -901,29 +727,18 @@ export class EventService {
   // Delete all generated events for a user (except bookmarked ones)
   static async clearGeneratedEvents(userId: string, month?: number, year?: number): Promise<number> {
     try {
-      console.log(`🗑️ EventService.clearGeneratedEvents called for user: ${userId}${month !== undefined && year !== undefined ? ` for ${year}-${(month + 1).toString().padStart(2, '0')}` : ' (all months)'}`);
-      
       // Ensure database is initialized
       const dbInstance = await ensureDatabase();
       
       if (!dbInstance) {
         console.error('❌ Database not available for clearGeneratedEvents');
-        console.log('🔄 Returning 0 deleted count (database unavailable - no generated events to clear)');
         // Return 0 instead of throwing - this allows the UI to continue working
         return 0;
       }
       
-      // QUICK FIX: Clear ALL generated events for the user
-      // This handles anonymous user ID inconsistency issues
-      console.log('🔧 Clearing generated events for user (with month/year filtering if provided)');
-      
-      console.log('✅ Database available, proceeding with deletion...');
-      
       // Use raw SQL for better debugging and to handle the mock database
       const client = (dbInstance as any).client;
       if (client) {
-        console.log('🔄 Using raw SQL for bulk delete...');
-        
         // Build query with month/year filtering if provided
         let checkSql = 'SELECT id, title, is_generated, is_bookmarked, user_id, date FROM astrological_events WHERE is_generated = 1 AND user_id = ?';
         const checkArgs: string[] = [userId];
@@ -931,7 +746,6 @@ export class EventService {
         if (month !== undefined && year !== undefined) {
           checkSql += ' AND strftime("%m", date) = ? AND strftime("%Y", date) = ?';
           checkArgs.push((month + 1).toString().padStart(2, '0'), year.toString());
-          console.log(`📅 Filtering by month/year: ${year}-${(month + 1).toString().padStart(2, '0')}`);
         }
         
         // Check generated events for this user (with optional month/year filter)
@@ -939,39 +753,6 @@ export class EventService {
           sql: checkSql,
           args: checkArgs
         });
-        
-        // Also check ALL events to see what user IDs exist
-        const allUsersEventsResult = await client.execute({
-          sql: 'SELECT DISTINCT user_id, COUNT(*) as count FROM astrological_events GROUP BY user_id'
-        });
-        
-        console.log(`🔍 ALL USER IDs in database:`, allUsersEventsResult.rows);
-        console.log(`🎯 Looking for events for user: ${userId}`);
-        if (month !== undefined && year !== undefined) {
-          console.log(`📅 Limited to month: ${year}-${(month + 1).toString().padStart(2, '0')}`);
-        }
-        
-        console.log(`📊 Generated events found:`, {
-          total: allGeneratedEventsResult.rows.length,
-          bookmarked: allGeneratedEventsResult.rows.filter((r: { is_bookmarked: number; }) => r.is_bookmarked === 1).length,
-          notBookmarked: allGeneratedEventsResult.rows.filter((r: { is_bookmarked: number; }) => r.is_bookmarked === 0).length,
-          unique_user_ids: Array.from(new Set(allGeneratedEventsResult.rows.map((r: { user_id: any; }) => r.user_id))),
-          sample_events: allGeneratedEventsResult.rows.slice(0, 5).map((r: { title: string; is_generated: any; user_id: any; is_bookmarked: any; }) => ({ 
-            title: r.title?.substring(0, 30), 
-            is_generated: r.is_generated, 
-            user_id: r.user_id,
-            is_bookmarked: r.is_bookmarked
-          }))
-        });
-        
-        // Debug: Show sample events to see their actual structure
-        console.log(`🔍 Sample events structure:`, allGeneratedEventsResult.rows.slice(0, 3).map((row: { id: any; title: string; is_generated: any; is_bookmarked: any; type: any; }) => ({
-          id: row.id,
-          title: row.title?.substring(0, 30),
-          is_generated: row.is_generated,
-          is_bookmarked: row.is_bookmarked,
-          type: row.type
-        })));
         
         // Method 1: Try standard deletion with userId and optional month/year filtering
         let standardSql = 'SELECT id, title FROM astrological_events WHERE user_id = ? AND is_generated = 1 AND is_bookmarked = 0';
@@ -981,15 +762,12 @@ export class EventService {
           // Add month and year filtering using SQLite date functions
           standardSql += ' AND strftime("%m", date) = ? AND strftime("%Y", date) = ?';
           standardArgs.push((month + 1).toString().padStart(2, '0'), year.toString());
-          console.log(`📅 Adding month/year filter: ${year}-${(month + 1).toString().padStart(2, '0')}`);
         }
         
         const standardCheckResult = await client.execute({
           sql: standardSql,
           args: standardArgs
         });
-        
-        console.log(`📋 Method 1 - Standard: Found ${standardCheckResult.rows.length} generated events to delete${month !== undefined ? ` in ${year}-${(month + 1).toString().padStart(2, '0')}` : ''}`);
         
         if (standardCheckResult.rows.length > 0) {
           let deleteSql = 'DELETE FROM astrological_events WHERE user_id = ? AND is_generated = 1 AND is_bookmarked = 0';
@@ -1003,13 +781,10 @@ export class EventService {
           });
           
           const deletedCount = deleteResult.rowsAffected || standardCheckResult.rows.length;
-          console.log(`✅ Successfully deleted ${deletedCount} generated events using standard method${month !== undefined ? ` from ${year}-${(month + 1).toString().padStart(2, '0')}` : ''}`);
           return deletedCount;
         }
         
         // Method 2: If no standard generated events, try aggressive pattern matching
-        console.log('🔄 Method 2 - Aggressive: No properly marked generated events found, trying pattern matching...');
-        
         let patternSql = `SELECT id, title FROM astrological_events 
                           WHERE user_id = ? 
                           AND is_bookmarked = 0 
@@ -1039,10 +814,6 @@ export class EventService {
           sql: patternSql,
           args: patternArgs
         });
-        
-        console.log(`📋 Method 2 - Aggressive: Found ${patternCheckResult.rows.length} events matching generated patterns:`,
-          patternCheckResult.rows.slice(0, 5).map((row: { id: any; title: any; }) => ({ id: row.id, title: row.title }))
-        );
         
         if (patternCheckResult.rows.length > 0) {
           let aggressiveDeleteSql = `DELETE FROM astrological_events 
@@ -1074,13 +845,10 @@ export class EventService {
           });
           
           const deletedCount = aggressiveDeleteResult.rowsAffected || patternCheckResult.rows.length;
-          console.log(`✅ Successfully deleted ${deletedCount} events using aggressive pattern matching`);
           return deletedCount;
         }
         
         // Method 3: If all else fails, delete ALL non-bookmarked GENERATED events (nuclear option)
-        console.log('🔄 Method 3 - Nuclear: No events found with previous methods, trying to delete ALL non-bookmarked GENERATED events...');
-        
         let nuclearSql = 'SELECT id, title FROM astrological_events WHERE user_id = ? AND is_bookmarked = 0 AND is_generated = 1';
         const nuclearArgs: string[] = [userId];
         
@@ -1094,8 +862,6 @@ export class EventService {
           args: nuclearArgs
         });
         
-        console.log(`📋 Method 3 - Nuclear: Found ${nuclearCheckResult.rows.length} non-bookmarked events to delete${month !== undefined ? ` in ${year}-${(month + 1).toString().padStart(2, '0')}` : ''}`);
-        
         if (nuclearCheckResult.rows.length > 0) {
           let nuclearDeleteSql = 'DELETE FROM astrological_events WHERE user_id = ? AND is_bookmarked = 0 AND is_generated = 1';
           if (month !== undefined && year !== undefined) {
@@ -1108,11 +874,9 @@ export class EventService {
           });
           
           const deletedCount = nuclearDeleteResult.rowsAffected || nuclearCheckResult.rows.length;
-          console.log(`✅ Nuclear method deleted ${deletedCount} non-bookmarked events`);
           return deletedCount;
         }
         
-        console.log('✅ No events to delete found with any method');
         return 0;
         
       } else {

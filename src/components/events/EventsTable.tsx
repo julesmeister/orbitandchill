@@ -289,11 +289,11 @@ export default function EventsTable({
         <table className="min-w-full">
           <thead className="bg-white border-b border-black">
             <tr>
-              <th className="px-8 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Event</th>
-              <th className="px-8 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Date & Time</th>
-              <th className="px-8 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Type</th>
-              <th className="px-8 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Score</th>
-              <th className="px-8 py-4 text-right font-space-grotesk font-bold text-black uppercase tracking-wide">Actions</th>
+              <th className="px-6 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r w-2/5">Event</th>
+              <th className="px-6 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Date & Time</th>
+              <th className="px-6 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Type</th>
+              <th className="px-6 py-4 text-left font-space-grotesk font-bold text-black uppercase tracking-wide border-black border-r">Score</th>
+              <th className="px-6 py-4 text-right font-space-grotesk font-bold text-black uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-black">
@@ -306,8 +306,8 @@ export default function EventsTable({
                   className="hover:bg-gray-50 transition-all duration-200 cursor-pointer relative" 
                   onClick={() => handleEventClick(event)}
                 >
-                  <td className="px-8 py-6 border-black border-r">
-                    <div className="max-w-lg">
+                  <td className="px-6 py-6 border-black border-r">
+                    <div className="max-w-md">
                       <div className="flex items-start space-x-3">
                         <div 
                           className={`w-10 h-10 flex items-center justify-center flex-shrink-0 border border-black`}
@@ -339,7 +339,7 @@ export default function EventsTable({
                       </div>
                     </div>
                   </td>
-                  <td className="px-8 py-6 border-black border-r">
+                  <td className="px-6 py-6 border-black border-r">
                     <div className="text-xs">
                       <div className="font-space-grotesk font-semibold text-black">
                         {new Date(event.date).toLocaleDateString('en-US', { 
@@ -359,9 +359,9 @@ export default function EventsTable({
                       )}
                     </div>
                   </td>
-                  <td className="px-8 py-6 border-black border-r">
+                  <td className="px-6 py-6 border-black border-r">
                     <div 
-                      className={`inline-flex items-center px-3 py-1.5 text-xs font-open-sans font-medium border border-black ${styling.text}`}
+                      className={`inline-flex items-center px-3 py-1.5 text-xs font-open-sans font-medium border border-black ${styling.text} whitespace-nowrap`}
                       style={{ backgroundColor: styling.bgColor }}
                     >
                       {event.type === 'benefic' ? '✓ Favorable' : 
@@ -369,7 +369,7 @@ export default function EventsTable({
                        '• Neutral'}
                     </div>
                   </td>
-                  <td className="px-8 py-6 border-black border-r">
+                  <td className="px-6 py-6 border-black border-r">
                     <div className="flex items-center space-x-2 relative">
                       <div className="relative z-[100]">
                         <ScoreTooltip event={event} position="left" onToggleBookmark={toggleBookmark}>
@@ -386,7 +386,7 @@ export default function EventsTable({
                       <div className="text-xs text-black/60 font-open-sans font-medium">/10</div>
                     </div>
                   </td>
-                  <td className="px-8 py-6">
+                  <td className="px-6 py-6">
                     <div className="flex items-center justify-end space-x-1">
                       {/* Only show bookmark button for non-manual events */}
                       {selectedTab !== 'manual' && (

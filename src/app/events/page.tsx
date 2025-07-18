@@ -90,6 +90,7 @@ export default function EventsPage() {
   // Use events store for all state management
   const {
     events,
+    getAllEvents,
     showCalendar,
     currentDate,
     selectedType,
@@ -131,6 +132,9 @@ export default function EventsPage() {
     setShowElectionalOnly,
     setError
   } = useEventsStore();
+
+  // Get all events (including generated ones)
+  const allEvents = getAllEvents();
 
 
   // Local state for form and animation
@@ -182,33 +186,27 @@ export default function EventsPage() {
   
   // Load events based on tab - all events for bookmarked/manual, month events for others
   useEffect(() => {
-    if (user?.id && !isLoading) {
+    if (user?.id) {
       if (selectedTab === 'bookmarked' || selectedTab === 'manual') {
         loadEvents(user.id, selectedTab);
       } else {
+        // For 'all' and 'generated' tabs, load month events (store handles preserving generated events)
         loadMonthEvents(user.id, stableCurrentDate.getMonth(), stableCurrentDate.getFullYear());
       }
     }
-  }, [user?.id, selectedTab, isLoading, stableCurrentDate]);
-
-  // Separate effect for month changes - only affects all/generated tabs
-  useEffect(() => {
-    if (user?.id && !isLoading && (selectedTab === 'all' || selectedTab === 'generated')) {
-      loadMonthEvents(user.id, stableCurrentDate.getMonth(), stableCurrentDate.getFullYear());
-    }
-  }, [user?.id, stableCurrentDate, isLoading, selectedTab]);
+  }, [user?.id, selectedTab, stableCurrentDate]);
 
   // Calculate event statistics
-  const challengingEventsCount = calculateChallengingEventsCount(events);
-  const comboEventsCount = calculateComboEventsCount(events);
+  const challengingEventsCount = calculateChallengingEventsCount(allEvents);
+  const comboEventsCount = calculateComboEventsCount(allEvents);
 
   // Calculate advanced filter counts
   const filterCounts = useMemo(() => {
-    return calculateFilterCounts(events);
-  }, [events]);
+    return calculateFilterCounts(allEvents);
+  }, [allEvents]);
 
   const filteredEvents = useEventFiltering({
-    events,
+    events: allEvents,
     selectedTab,
     selectedType,
     hideChallengingDates,
@@ -324,7 +322,7 @@ export default function EventsPage() {
                 setViewMode={setViewMode}
                 locationDisplay={locationDisplay}
                 showLocationToast={showLocationToast}
-                events={events}
+                events={allEvents}
                 error={error}
                 setError={setError}
                 currentDate={currentDate}
@@ -333,7 +331,7 @@ export default function EventsPage() {
               {/* Right Panel - Events Display */}
               <EventsRightPanel
                 viewMode={viewMode}
-                events={events}
+                events={allEvents}
                 filteredEvents={filteredEvents}
                 currentDate={currentDate}
                 hideChallengingDates={hideChallengingDates}

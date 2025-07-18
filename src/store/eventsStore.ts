@@ -50,6 +50,8 @@ export interface AstrologicalEvent {
 interface EventsState {
   // State
   events: AstrologicalEvent[];
+  // Store generated events separately to preserve them across tab switches
+  generatedEvents: AstrologicalEvent[];
   // Month-based caching: key is "YYYY-MM" format
   cachedMonths: Map<string, { 
     events: AstrologicalEvent[]; 
@@ -74,6 +76,9 @@ interface EventsState {
   isLoading: boolean;
   error: string | null;
 
+  // Computed properties
+  getAllEvents: () => AstrologicalEvent[];
+  
   // Actions
   setEvents: (events: AstrologicalEvent[]) => void;
   loadEvents: (userId: string, tab?: string, filters?: any) => Promise<void>;
@@ -112,6 +117,7 @@ export const useEventsStore = create<EventsState>()(
     (set, get) => ({
       // Initial state
       events: [],
+      generatedEvents: [],
       cachedMonths: new Map(),
       loadedMonths: new Set(),
       showCalendar: true, // Show calendar by default so users can see toggles
@@ -131,6 +137,17 @@ export const useEventsStore = create<EventsState>()(
       isLoading: false,
       error: null,
 
+      // Computed properties
+      getAllEvents: () => {
+        const { events, generatedEvents } = get();
+        // Combine events and generated events, removing duplicates by ID
+        const allEvents = [...events, ...generatedEvents];
+        const uniqueEvents = allEvents.filter((event, index, self) => 
+          index === self.findIndex(e => e.id === event.id)
+        );
+        return uniqueEvents;
+      },
+      
       // Actions
       setEvents: (events) => set({ events }),
       setError: (error) => set({ error }),
@@ -141,6 +158,12 @@ export const useEventsStore = create<EventsState>()(
 
       // Load events for specific month from API
       loadMonthEvents: async (userId: string, month: number, year: number) => {
+        // Prevent multiple simultaneous loads
+        if (get().isLoading) {
+          console.log('⏳ Already loading events, skipping month load...');
+          return;
+        }
+        
         const { getMonthKey, cachedMonths } = get();
         const monthKey = getMonthKey(month, year);
         
@@ -150,7 +173,26 @@ export const useEventsStore = create<EventsState>()(
         
         if (cached && (Date.now() - cached.loadedAt < cacheExpiry)) {
           console.log(`📋 Using cached events for ${monthKey} (${cached.events.length} events)`);
-          set({ events: cached.events });
+          
+          // Preserve ALL generated events when loading cached data
+          const currentState = get();
+          const allGeneratedEvents = currentState.generatedEvents;
+          
+          // Merge cached events with ALL generated events
+          const mergedEvents = [...cached.events];
+          const cachedEventIds = new Set(cached.events.map(e => e.id));
+          const uniqueGeneratedEvents = allGeneratedEvents.filter(event => !cachedEventIds.has(event.id));
+          
+          if (uniqueGeneratedEvents.length > 0) {
+            console.log(`📋 Merged ${uniqueGeneratedEvents.length} generated events with cached data`);
+          }
+          
+          // Keep generated events separate from regular events
+          set({ 
+            events: cached.events,
+            generatedEvents: [...allGeneratedEvents] 
+          });
+          console.log(`📊 State after cached load: ${cached.events.length} regular, ${allGeneratedEvents.length} generated`);
           return;
         }
 
@@ -184,22 +226,37 @@ export const useEventsStore = create<EventsState>()(
           
           const data = await response.json();
           if (data.success) {
+            // Preserve ALL generated events when loading fresh data from API
+            const currentState = get();
+            const allGeneratedEvents = currentState.generatedEvents;
+            
+            // Merge API events with ALL generated events
+            const mergedEvents = [...data.events];
+            const apiEventIds = new Set(data.events.map(e => e.id));
+            const uniqueGeneratedEvents = allGeneratedEvents.filter(event => !apiEventIds.has(event.id));
+            
+            if (uniqueGeneratedEvents.length > 0) {
+              console.log(`🔄 Merged ${uniqueGeneratedEvents.length} generated events with API data`);
+            }
+            
             // Cache the loaded data (tabs are just UI filters, not server data)
             const newCachedMonths = new Map(cachedMonths);
             newCachedMonths.set(monthKey, {
-              events: data.events,
+              events: data.events, // Cache only API events, not local generated ones
               loadedAt: Date.now(),
               tab: 'all'
             });
             
             set({ 
-              events: data.events, 
+              events: data.events, // Keep only API events in regular events array
+              generatedEvents: [...allGeneratedEvents], // Keep generated events separate
               isLoading: false,
               cachedMonths: newCachedMonths,
               loadedMonths: new Set([...get().loadedMonths, monthKey])
             });
             
-            console.log(`✅ Loaded and cached ${data.events.length} events for ${monthKey}`);
+            console.log(`✅ Loaded and cached ${data.events.length} events for ${monthKey}, total generated: ${allGeneratedEvents.length}`);
+            console.log(`📊 State after API load: ${data.events.length} regular, ${allGeneratedEvents.length} generated`);
           } else {
             throw new Error(data.error || 'Failed to load month events');
           }
@@ -214,6 +271,12 @@ export const useEventsStore = create<EventsState>()(
 
       // Load events from API
       loadEvents: async (userId: string, tab?: string, filters = {}) => {
+        // Prevent multiple simultaneous loads
+        if (get().isLoading) {
+          console.log('⏳ Already loading events, skipping...');
+          return;
+        }
+        
         try {
           set({ isLoading: true, error: null });
           
@@ -246,7 +309,26 @@ export const useEventsStore = create<EventsState>()(
           
           const data = await response.json();
           if (data.success) {
-            set({ events: data.events, isLoading: false });
+            // For bookmarked/manual tabs, we need to separate generated events from API events
+            const apiEvents = data.events.filter(e => !e.isGenerated);
+            const generatedEventsFromApi = data.events.filter(e => e.isGenerated);
+            
+            // Preserve existing local generated events and merge with any generated events from API
+            const currentState = get();
+            const existingGeneratedEvents = currentState.generatedEvents;
+            
+            // Merge generated events, avoiding duplicates
+            const allGeneratedEvents = [...generatedEventsFromApi];
+            const apiGeneratedIds = new Set(generatedEventsFromApi.map(e => e.id));
+            const uniqueLocalGenerated = existingGeneratedEvents.filter(e => !apiGeneratedIds.has(e.id));
+            allGeneratedEvents.push(...uniqueLocalGenerated);
+            
+            set({ 
+              events: apiEvents, 
+              generatedEvents: allGeneratedEvents, 
+              isLoading: false 
+            });
+            console.log(`📊 LoadEvents - State after load: ${apiEvents.length} regular, ${allGeneratedEvents.length} generated`);
           } else {
             throw new Error(data.error || 'Failed to load events');
           }
@@ -327,11 +409,11 @@ export const useEventsStore = create<EventsState>()(
         if (newEvents.length === 0) return;
         
         // Deduplicate events based on key characteristics
-        const { events: existingEvents } = get();
+        const { events: existingEvents, generatedEvents: existingGeneratedEvents } = get();
         const createEventHash = (event: AstrologicalEvent) => 
           `${event.date}-${event.time}-${event.title}-${event.score}-${event.type}`;
         
-        const existingHashes = new Set(existingEvents.map(createEventHash));
+        const existingHashes = new Set([...existingEvents, ...existingGeneratedEvents].map(createEventHash));
         const uniqueNewEvents = newEvents.filter(event => {
           const hash = createEventHash(event);
           return !existingHashes.has(hash);
@@ -353,13 +435,18 @@ export const useEventsStore = create<EventsState>()(
           id: event.id || `local_${Date.now()}_${index}` // Use existing ID or generate local ID
         }));
         
-        // Add to local state only
+        // Separate generated and non-generated events
+        const generatedEventsToAdd = eventsWithLocalIds.filter(e => e.isGenerated);
+        const nonGeneratedEventsToAdd = eventsWithLocalIds.filter(e => !e.isGenerated);
+        
+        // Add to local state
         set((state) => ({ 
-          events: [...eventsWithLocalIds, ...state.events] 
+          events: [...nonGeneratedEventsToAdd, ...state.events], 
+          generatedEvents: [...generatedEventsToAdd, ...state.generatedEvents]
         }));
         
         console.log(`✅ Added ${eventsWithLocalIds.length} events to local state (no database save)`);
-        console.log(`📊 Total events in store after local add: ${get().events.length}`);
+        console.log(`📊 Total events in store after local add: ${get().getAllEvents().length} (${get().events.length} regular + ${get().generatedEvents.length} generated)`);
       },
 
       // Add multiple events via API using bulk endpoint
@@ -836,7 +923,7 @@ export const useEventsStore = create<EventsState>()(
       name: "luckstrology-events-storage",
       // Serialize Date objects properly - EXCLUDE events and caching data from persistence
       partialize: (state) => {
-        const { events, isLoading, error, cachedMonths, loadedMonths, ...persistableState } = state;
+        const { events, generatedEvents, isLoading, error, cachedMonths, loadedMonths, ...persistableState } = state;
         return {
           ...persistableState,
           currentDate: state.currentDate.toISOString(),
@@ -852,6 +939,7 @@ export const useEventsStore = create<EventsState>()(
           
           // Ensure events and cache are always empty on rehydration (they come from database)
           state.events = [];
+          state.generatedEvents = [];
           state.cachedMonths = new Map();
           state.loadedMonths = new Set();
           state.isLoading = false;

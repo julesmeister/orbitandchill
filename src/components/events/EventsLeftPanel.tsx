@@ -62,6 +62,10 @@ interface EventsLeftPanelProps {
   // Error state
   error: string | null;
   setError: (error: string | null) => void;
+  
+  // Date controls
+  currentDate: Date;
+  setCurrentDate: (date: Date) => void;
 }
 
 export default function EventsLeftPanel({
@@ -86,7 +90,9 @@ export default function EventsLeftPanel({
   showLocationToast,
   events,
   error,
-  setError
+  setError,
+  currentDate,
+  setCurrentDate
 }: EventsLeftPanelProps) {
   return (
     <div className="xl:col-span-1 space-y-6">
@@ -216,10 +222,36 @@ export default function EventsLeftPanel({
             <h1 className="font-space-grotesk text-2xl font-bold text-black mb-2">
               Electional Astrology
             </h1>
+            
+            
+            {/* Month Selector */}
+            <div className="mb-4">
+              <div className="bg-white border border-black p-1 flex items-center">
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                  className="inline-flex items-center justify-center px-3 py-2 text-black hover:bg-black hover:text-white transition-all duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-sm font-semibold font-space-grotesk text-black px-4 py-2 flex-1 text-center">
+                  {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                  className="inline-flex items-center justify-center px-3 py-2 text-black hover:bg-black hover:text-white transition-all duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
             <p className="font-open-sans text-sm text-black/70 mb-4">
               Plan your wedding, launch your business, schedule important meetings, or make major decisions when the stars are most favorable for success.
             </p>
-            
             {/* Next Bookmarked Event Countdown */}
             <div className="mb-4">
               <NextBookmarkedEventCountdown events={events} />

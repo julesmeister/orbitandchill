@@ -22,36 +22,13 @@ export default function CalendarHeader({ currentDate, setCurrentDate, onClearAll
             </div>
             <div>
               <h2 className="font-space-grotesk text-xl font-bold text-black">
-                Electional Calendar
+                Electional Calendar - {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h2>
               <div className="w-16 h-0.5 bg-black mt-1"></div>
             </div>
           </div>
         </div>
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          {/* Month picker */}
-          <div className="bg-white border border-black p-1 flex items-center h-[42px]">
-            <button
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-              className="inline-flex items-center justify-center px-3 py-2 text-black hover:bg-black hover:text-white transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <span className="text-sm font-semibold font-space-grotesk text-black px-4 py-2 min-w-[160px] text-center">
-              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </span>
-            <button
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-              className="inline-flex items-center justify-center px-3 py-2 text-black hover:bg-black hover:text-white transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-          
           {/* Clear All Events Button with Dropdown */}
           {onClearAllEvents && (
             <div className="relative group">
