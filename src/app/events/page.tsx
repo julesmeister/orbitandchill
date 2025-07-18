@@ -2,9 +2,8 @@
 // @ts-nocheck
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useUserStore } from '../../store/userStore';
 import { useEventsStore, AstrologicalEvent } from '../../store/eventsStore';
 import { useNatalChart } from '../../hooks/useNatalChart';
@@ -39,13 +38,16 @@ import { useOptimalTimingHandler } from '../../hooks/useOptimalTimingHandler';
 import { useManualEventHandler } from '../../hooks/useManualEventHandler';
 import { useEventActions } from '../../hooks/useEventActions';
 import { BRAND } from '../../config/brand';
+import { useEventFiltering } from '../../hooks/useEventFiltering';
+import { calculateChallengingEventsCount, calculateComboEventsCount } from '../../utils/eventStatistics';
+import { getLocationForGeneration } from '../../utils/eventLocationUtils';
+import { useEventNavigation } from '../../hooks/useEventNavigation';
 
 // Remove duplicate interface - using from store
 
 // Mock events moved to store
 
 export default function EventsPage() {
-  const router = useRouter();
   const { user, isProfileComplete } = useUserStore();
 
   // Use optimal timing hook
@@ -130,6 +132,7 @@ export default function EventsPage() {
     setError
   } = useEventsStore();
 
+
   // Local state for form and animation
   const [isFormAnimating, setIsFormAnimating] = useState(false);
   const [newEvent, setNewEvent] = useState({
@@ -173,106 +176,50 @@ export default function EventsPage() {
     // }
   }, [user?.id, clearGeneratedEvents]); // Only run when user changes
 
-  // Load events for current month when user is available
+  
+  // Stabilize currentDate to prevent infinite loops
+  const stableCurrentDate = useMemo(() => currentDate, [currentDate.getTime()]);
+  
+  // Load events based on tab - all events for bookmarked/manual, month events for others
   useEffect(() => {
     if (user?.id && !isLoading) {
-      // Load events for the current month being displayed
-      loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
+      if (selectedTab === 'bookmarked' || selectedTab === 'manual') {
+        loadEvents(user.id, selectedTab);
+      } else {
+        loadMonthEvents(user.id, stableCurrentDate.getMonth(), stableCurrentDate.getFullYear());
+      }
     }
-  }, [user?.id, loadMonthEvents]); // Load when user changes
+  }, [user?.id, selectedTab, isLoading, stableCurrentDate]);
 
-  // Reload events when tab changes to get properly filtered results
+  // Separate effect for month changes - only affects all/generated tabs
   useEffect(() => {
-    if (user?.id) {
-      // Load month events (but not when tab changes - tabs are just UI filters)
-      loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
+    if (user?.id && !isLoading && (selectedTab === 'all' || selectedTab === 'generated')) {
+      loadMonthEvents(user.id, stableCurrentDate.getMonth(), stableCurrentDate.getFullYear());
     }
-  }, [user?.id, loadMonthEvents, currentDate]); // Reload when user or month changes (not tab)
+  }, [user?.id, stableCurrentDate, isLoading, selectedTab]);
 
-  // Calculate challenging events count
-  const challengingEventsCount = events.filter(event => {
-    const hasWarning = event.title.includes('⚠️');
-    const hasLowScore = event.score < 4;
-    const isChallengingType = event.type === 'challenging';
-    return hasWarning || hasLowScore || isChallengingType;
-  }).length;
-
-  // Calculate combo events count (events with specific planetary combinations)
-  const comboEventsCount = events.filter(event => {
-    // Check if title contains the "&" symbol, which indicates a combo event
-    return event.title.includes('&');
-  }).length;
+  // Calculate event statistics
+  const challengingEventsCount = calculateChallengingEventsCount(events);
+  const comboEventsCount = calculateComboEventsCount(events);
 
   // Calculate advanced filter counts
   const filterCounts = useMemo(() => {
     return calculateFilterCounts(events);
   }, [events]);
 
-  const filteredEvents = events.filter(event => {
-    // First filter by tab
-    if (selectedTab === 'bookmarked' && !event.isBookmarked) return false;
-    if (selectedTab === 'manual' && event.isGenerated) return false;
-    if (selectedTab === 'generated' && !event.isGenerated) return false;
-
-    // Filter by type
-    if (selectedType !== 'all' && event.type !== selectedType) return false;
-
-    // Filter out challenging dates if hide toggle is enabled
-    if (hideChallengingDates) {
-      // Hide events with warning symbols (challenging combos) or low scores or challenging type
-      const hasWarning = event.title.includes('⚠️');
-      const hasLowScore = event.score < 4;
-      const isChallengingType = event.type === 'challenging';
-
-      if (hasWarning || hasLowScore || isChallengingType) return false;
-    }
-
-    // Show only combo events if combo toggle is enabled
-    if (showCombosOnly) {
-      // Check if title contains the "&" symbol, which indicates a combo event
-      return event.title.includes('&');
-    }
-
-    // Apply timing method filters
-    if (showHousesOnly) {
-      return event.timingMethod === 'houses';
-    } else if (showAspectsOnly) {
-      return event.timingMethod === 'aspects';
-    } else if (showElectionalOnly) {
-      return event.timingMethod === 'electional';
-    }
-
-    return true;
+  const filteredEvents = useEventFiltering({
+    events,
+    selectedTab,
+    selectedType,
+    hideChallengingDates,
+    showCombosOnly,
+    showHousesOnly,
+    showAspectsOnly,
+    showElectionalOnly
   });
 
-  // Helper function to get location for events generation
-  const getLocationForGeneration = () => {
-    // If we have manually set location data, use it
-    if (currentLocationData) {
-      return {
-        latitude: parseFloat(currentLocationData.coordinates.lat),
-        longitude: parseFloat(currentLocationData.coordinates.lon),
-        locationName: currentLocationData.name,
-        timezone: currentLocationData.timezone
-      };
-    }
-
-    // If user has birth data, use it
-    if (user?.birthData?.coordinates?.lat && user?.birthData?.coordinates?.lon) {
-      return {
-        latitude: parseFloat(user.birthData.coordinates.lat),
-        longitude: parseFloat(user.birthData.coordinates.lon),
-        locationName: user.birthData.locationOfBirth || 'Your Birth Location',
-        timezone: user.birthData.timezone
-      };
-    }
-
-    // No location available
-    return null;
-  };
-
-  // Initialize hooks with proper dependencies
-  const locationForGeneration = getLocationForGeneration();
+  // Get location for generation using utility
+  const locationForGeneration = getLocationForGeneration(currentLocationData, user);
 
   // Use optimal timing handler hook
   const { handleGenerateOptimalTiming } = useOptimalTimingHandler({
@@ -323,31 +270,19 @@ export default function EventsPage() {
   // Handle month changes from calendar navigation
   const handleMonthChange = useCallback(async (month: number, year: number) => {
     if (user?.id) {
-      // Month changed, loading events
-      await loadMonthEvents(user.id, month, year);
+      // Only load month events if NOT viewing bookmarked/manual tabs
+      if (selectedTab !== 'bookmarked' && selectedTab !== 'manual') {
+        await loadMonthEvents(user.id, month, year);
+      }
+      // For bookmarked/manual tabs, keep showing all events
     }
-  }, [user?.id, loadMonthEvents]);
+  }, [user?.id, selectedTab]);
 
 
 
-  const handleEventClick = (event: AstrologicalEvent) => {
-    const params = new URLSearchParams({
-      date: event.date,
-      time: event.time || '12:00',
-      title: event.title,
-      isOptimal: event.isGenerated ? 'true' : 'false',
-      score: event.score.toString()
-    });
-
-    // Add time window information if available
-    if (event.timeWindow) {
-      params.set('startTime', event.timeWindow.startTime);
-      params.set('endTime', event.timeWindow.endTime);
-      params.set('duration', event.timeWindow.duration);
-    }
-
-    router.push(`/event-chart?${params.toString()}`);
-  };
+  // Use event navigation hook
+  const { navigateToEventChart } = useEventNavigation();
+  const handleEventClick = navigateToEventChart;
 
 
 
@@ -392,6 +327,8 @@ export default function EventsPage() {
                 events={events}
                 error={error}
                 setError={setError}
+                currentDate={currentDate}
+                setCurrentDate={setCurrentDate}
               />
               {/* Right Panel - Events Display */}
               <EventsRightPanel

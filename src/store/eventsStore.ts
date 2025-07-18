@@ -76,7 +76,7 @@ interface EventsState {
 
   // Actions
   setEvents: (events: AstrologicalEvent[]) => void;
-  loadEvents: (userId: string, filters?: any) => Promise<void>;
+  loadEvents: (userId: string, tab?: string, filters?: any) => Promise<void>;
   loadMonthEvents: (userId: string, month: number, year: number) => Promise<void>;
   getMonthKey: (month: number, year: number) => string;
   addEvent: (event: AstrologicalEvent) => Promise<void>;
@@ -213,16 +213,16 @@ export const useEventsStore = create<EventsState>()(
       },
 
       // Load events from API
-      loadEvents: async (userId: string, filters = {}) => {
+      loadEvents: async (userId: string, tab?: string, filters = {}) => {
         try {
           set({ isLoading: true, error: null });
           
-          // Get current tab from store state to include in API request
-          const { selectedTab } = get();
+          // Use provided tab or get current tab from store state
+          const currentTab = tab || get().selectedTab;
           
           const params = new URLSearchParams({
             userId,
-            tab: selectedTab, // Include the tab parameter
+            tab: currentTab, // Include the tab parameter
             ...filters
           });
           
@@ -280,9 +280,23 @@ export const useEventsStore = create<EventsState>()(
           
           const data = await response.json();
           if (data.success) {
+            const newEvent = data.event;
             set((state) => ({ 
-              events: [data.event, ...state.events] 
+              events: [newEvent, ...state.events] 
             }));
+            
+            // Update cache for the event's month
+            const eventDate = new Date(newEvent.date);
+            const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
+            const cached = get().cachedMonths.get(monthKey);
+            if (cached) {
+              // Update cached data with new event
+              const updatedCache = {
+                ...cached,
+                events: [newEvent, ...cached.events]
+              };
+              get().cachedMonths.set(monthKey, updatedCache);
+            }
           } else {
             throw new Error(data.error || 'Failed to create event');
           }
@@ -293,6 +307,18 @@ export const useEventsStore = create<EventsState>()(
           set((state) => ({ 
             events: [event, ...state.events] 
           }));
+          
+          // Update cache for fallback too
+          const eventDate = new Date(event.date);
+          const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
+          const cached = get().cachedMonths.get(monthKey);
+          if (cached) {
+            const updatedCache = {
+              ...cached,
+              events: [event, ...cached.events]
+            };
+            get().cachedMonths.set(monthKey, updatedCache);
+          }
         }
       },
       
@@ -557,6 +583,23 @@ export const useEventsStore = create<EventsState>()(
                 event.id === id ? { ...event, isBookmarked: data.event.isBookmarked } : event
               )
             }));
+            
+            // Update cache for all months that contain this event
+            const updatedEvent = get().events.find(e => e.id === id);
+            if (updatedEvent) {
+              const eventDate = new Date(updatedEvent.date);
+              const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
+              const cached = get().cachedMonths.get(monthKey);
+              if (cached) {
+                const updatedCache = {
+                  ...cached,
+                  events: cached.events.map(event => 
+                    event.id === id ? { ...event, isBookmarked: data.event.isBookmarked } : event
+                  )
+                };
+                get().cachedMonths.set(monthKey, updatedCache);
+              }
+            }
           } else {
             throw new Error(data.error || 'Failed to toggle bookmark');
           }
@@ -571,6 +614,23 @@ export const useEventsStore = create<EventsState>()(
                 : event
             )
           }));
+          
+          // Update cache for fallback too
+          const updatedEvent = get().events.find(e => e.id === id);
+          if (updatedEvent) {
+            const eventDate = new Date(updatedEvent.date);
+            const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
+            const cached = get().cachedMonths.get(monthKey);
+            if (cached) {
+              const updatedCache = {
+                ...cached,
+                events: cached.events.map(event => 
+                  event.id === id ? { ...event, isBookmarked: !event.isBookmarked } : event
+                )
+              };
+              get().cachedMonths.set(monthKey, updatedCache);
+            }
+          }
         }
       },
 
