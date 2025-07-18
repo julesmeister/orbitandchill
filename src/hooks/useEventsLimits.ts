@@ -35,7 +35,7 @@ export interface EventsLimits {
 
 export function useEventsLimits() {
   const { user } = useUserStore();
-  const { events } = useEventsStore();
+  const { getAllEvents } = useEventsStore();
   const { shouldShowFeature } = usePremiumFeatures();
   
   const [limits, setLimits] = useState<EventsLimits>({
@@ -81,7 +81,8 @@ export function useEventsLimits() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Filter user's generated events
-    const userEvents = events.filter(e => e.userId === user.id);
+    const allEvents = getAllEvents();
+    const userEvents = allEvents.filter(e => e.userId === user.id);
     const userGeneratedEvents = userEvents.filter(e => e.isGenerated);
     
     const dailyGenerationUsed = userGeneratedEvents.filter(e => {
@@ -160,7 +161,7 @@ export function useEventsLimits() {
       nextResetMonthly,
       limitMessage
     });
-  }, [user, events, shouldShowFeature]);
+  }, [user, getAllEvents, shouldShowFeature]);
   
   return limits;
 }

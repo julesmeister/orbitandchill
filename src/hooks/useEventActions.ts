@@ -20,7 +20,7 @@ interface UseEventActionsOptions {
 export const useEventActions = (options: UseEventActionsOptions) => {
   const { user } = useUserStore();
   const { 
-    events, 
+    getAllEvents, 
     deleteEvent, 
     toggleBookmark, 
     updateEvent,
@@ -42,7 +42,8 @@ export const useEventActions = (options: UseEventActionsOptions) => {
     }
 
     // Find the event to get its title for the confirmation
-    const eventToDelete = events.find(e => e.id === id);
+    const allEvents = getAllEvents();
+    const eventToDelete = allEvents.find(e => e.id === id);
     const eventTitle = eventToDelete?.title || 'this event';
 
     showConfirmation({
@@ -90,7 +91,8 @@ export const useEventActions = (options: UseEventActionsOptions) => {
     }
 
     // Check bookmark limits before proceeding
-    const event = events.find(e => e.id === id);
+    const allEvents = getAllEvents();
+    const event = allEvents.find(e => e.id === id);
     if (event && !event.isBookmarked && !eventsLimits.canBookmarkMore) {
       showError("Bookmark Limit Reached", "You have reached your bookmark limit. Remove some bookmarks or upgrade to premium for unlimited bookmarks.");
       return;
@@ -100,7 +102,8 @@ export const useEventActions = (options: UseEventActionsOptions) => {
       await toggleBookmark(id, user.id);
 
       // Find the event to provide specific feedback
-      const event = events.find(e => e.id === id);
+      const allEvents = getAllEvents();
+      const event = allEvents.find(e => e.id === id);
       const eventTitle = event?.title || 'event';
       const isBookmarked = event?.isBookmarked;
 
@@ -158,7 +161,7 @@ export const useEventActions = (options: UseEventActionsOptions) => {
             console.log('🔍 About to reload month events for user ID:', user.id);
             await loadMonthEvents(user.id, currentDate.getMonth(), currentDate.getFullYear());
             console.log('✅ Month events reloaded after clear');
-            console.log('📊 Events count after reload:', events.length);
+            console.log('📊 Events count after reload:', getAllEvents().length);
 
             // Show success message with more detail
             showSuccess(

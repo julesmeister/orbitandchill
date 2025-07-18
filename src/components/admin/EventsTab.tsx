@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Search, Plus, Calendar, Star, Trash2, Edit3, Bookmark } from 'lucide-react';
 import { useAdminEvents } from '@/hooks/useAdminEvents';
-import { useEventsFilters } from '@/hooks/useEventsFilters';
+import { useEventFiltering } from '@/hooks/useEventFiltering';
 import { useAdminEventForm, EventFormData } from '@/hooks/useAdminEventForm';
 import { useEventSelection } from '@/hooks/useEventSelection';
 import { 
@@ -31,16 +31,18 @@ export default function EventsTab({ isLoading }: EventsTabProps) {
     refreshData
   } = useAdminEvents();
 
-  // Use extracted hooks
-  const {
-    filteredEvents,
-    searchQuery,
-    setSearchQuery,
-    selectedType,
-    setSelectedType,
-    selectedSource,
-    setSelectedSource,
-  } = useEventsFilters(events);
+  // Use consolidated filtering hook
+  const { filteredEvents, filterStats } = useEventFiltering({
+    events,
+    selectedTab: 'all',
+    selectedType: 'all',
+    hideChallengingDates: false,
+    showCombosOnly: false,
+    showHousesOnly: false,
+    showAspectsOnly: false,
+    showElectionalOnly: false,
+    searchQuery: '',
+  });
 
   const {
     showCreateForm,

@@ -48,13 +48,15 @@ export interface AstrologicalEvent {
 }
 
 interface EventsState {
-  // State
-  events: AstrologicalEvent[];
-  // Store generated events separately to preserve them across tab switches
-  generatedEvents: AstrologicalEvent[];
+  // Normalized state structure
+  events: Record<string, AstrologicalEvent>; // Events by ID for O(1) lookup
+  generatedEvents: Record<string, AstrologicalEvent>; // Generated events by ID
+  eventIds: string[]; // Array of regular event IDs for ordering
+  generatedEventIds: string[]; // Array of generated event IDs for ordering
+  
   // Month-based caching: key is "YYYY-MM" format
   cachedMonths: Map<string, { 
-    events: AstrologicalEvent[]; 
+    eventIds: string[]; // Just store IDs, events are in main state
     loadedAt: number; // timestamp
     tab: 'all' | 'bookmarked' | 'manual'; // which tab was active when loaded
   }>;
@@ -137,19 +139,53 @@ export const useEventsStore = create<EventsState>()(
       isLoading: false,
       error: null,
 
-      // Computed properties
-      getAllEvents: () => {
-        const { events, generatedEvents } = get();
-        // Combine events and generated events, removing duplicates by ID
-        const allEvents = [...events, ...generatedEvents];
-        const uniqueEvents = allEvents.filter((event, index, self) => 
-          index === self.findIndex(e => e.id === event.id)
-        );
-        return uniqueEvents;
-      },
+      // Computed properties - Memoized to prevent unnecessary re-renders
+      getAllEvents: (() => {
+        let cachedEvents: AstrologicalEvent[] = [];
+        let lastEventIdsLength = 0;
+        let lastGeneratedEventIdsLength = 0;
+        let lastEventIdsHash = '';
+        let lastGeneratedEventIdsHash = '';
+        
+        return () => {
+          const { events, generatedEvents, eventIds, generatedEventIds } = get();
+          
+          // Quick length check first
+          if ((eventIds?.length || 0) === lastEventIdsLength && (generatedEventIds?.length || 0) === lastGeneratedEventIdsLength) {
+            // Create simple hash for deeper comparison
+            const eventIdsHash = (eventIds || []).join(',');
+            const generatedEventIdsHash = (generatedEventIds || []).join(',');
+            
+            if (eventIdsHash === lastEventIdsHash && generatedEventIdsHash === lastGeneratedEventIdsHash) {
+              return cachedEvents;
+            }
+          }
+          
+          // Recalculate only when needed
+          const regularEvents = (eventIds || []).map(id => events[id]).filter(Boolean);
+          const generatedEventsArray = (generatedEventIds || []).map(id => generatedEvents[id]).filter(Boolean);
+          const allEvents = [...regularEvents, ...generatedEventsArray];
+          
+          // Update cache
+          cachedEvents = allEvents;
+          lastEventIdsLength = eventIds?.length || 0;
+          lastGeneratedEventIdsLength = generatedEventIds?.length || 0;
+          lastEventIdsHash = (eventIds || []).join(',');
+          lastGeneratedEventIdsHash = (generatedEventIds || []).join(',');
+          
+          return allEvents;
+        };
+      })(),
       
       // Actions
-      setEvents: (events) => set({ events }),
+      setEvents: (events) => {
+        const eventsById = events.reduce((acc, event) => {
+          acc[event.id] = event;
+          return acc;
+        }, {} as Record<string, AstrologicalEvent>);
+        const eventIds = events.map(event => event.id);
+        set({ events: eventsById, eventIds });
+      },
       setError: (error) => set({ error }),
       setIsLoading: (loading) => set({ isLoading: loading }),
 
@@ -177,22 +213,23 @@ export const useEventsStore = create<EventsState>()(
           // Preserve ALL generated events when loading cached data
           const currentState = get();
           const allGeneratedEvents = currentState.generatedEvents;
+          const allGeneratedEventIds = currentState.generatedEventIds;
           
-          // Merge cached events with ALL generated events
-          const mergedEvents = [...cached.events];
-          const cachedEventIds = new Set(cached.events.map(e => e.id));
-          const uniqueGeneratedEvents = allGeneratedEvents.filter(event => !cachedEventIds.has(event.id));
-          
-          if (uniqueGeneratedEvents.length > 0) {
-            console.log(`📋 Merged ${uniqueGeneratedEvents.length} generated events with cached data`);
-          }
+          // Convert cached events to normalized structure
+          const cachedEventsById = cached.events.reduce((acc, event) => {
+            acc[event.id] = event;
+            return acc;
+          }, {} as Record<string, AstrologicalEvent>);
+          const cachedEventIds = cached.events.map(e => e.id);
           
           // Keep generated events separate from regular events
           set({ 
-            events: cached.events,
-            generatedEvents: [...allGeneratedEvents] 
+            events: cachedEventsById,
+            eventIds: cachedEventIds,
+            generatedEvents: allGeneratedEvents,
+            generatedEventIds: allGeneratedEventIds
           });
-          console.log(`📊 State after cached load: ${cached.events.length} regular, ${allGeneratedEvents.length} generated`);
+          console.log(`📊 State after cached load: ${cached.events.length} regular, ${allGeneratedEventIds?.length || 0} generated`);
           return;
         }
 
@@ -316,19 +353,34 @@ export const useEventsStore = create<EventsState>()(
             // Preserve existing local generated events and merge with any generated events from API
             const currentState = get();
             const existingGeneratedEvents = currentState.generatedEvents;
+            const existingGeneratedEventIds = currentState.generatedEventIds;
             
             // Merge generated events, avoiding duplicates
-            const allGeneratedEvents = [...generatedEventsFromApi];
-            const apiGeneratedIds = new Set(generatedEventsFromApi.map(e => e.id));
-            const uniqueLocalGenerated = existingGeneratedEvents.filter(e => !apiGeneratedIds.has(e.id));
-            allGeneratedEvents.push(...uniqueLocalGenerated);
+            const allGeneratedEvents = { ...existingGeneratedEvents };
+            const allGeneratedEventIds = [...(existingGeneratedEventIds || [])];
+            
+            generatedEventsFromApi.forEach(event => {
+              if (!allGeneratedEvents[event.id]) {
+                allGeneratedEvents[event.id] = event;
+                allGeneratedEventIds.push(event.id);
+              }
+            });
+            
+            // Convert API events to normalized structure
+            const apiEventsById = apiEvents.reduce((acc, event) => {
+              acc[event.id] = event;
+              return acc;
+            }, {} as Record<string, AstrologicalEvent>);
+            const apiEventIds = apiEvents.map(e => e.id);
             
             set({ 
-              events: apiEvents, 
-              generatedEvents: allGeneratedEvents, 
+              events: apiEventsById,
+              eventIds: apiEventIds,
+              generatedEvents: allGeneratedEvents,
+              generatedEventIds: allGeneratedEventIds,
               isLoading: false 
             });
-            console.log(`📊 LoadEvents - State after load: ${apiEvents.length} regular, ${allGeneratedEvents.length} generated`);
+            console.log(`📊 LoadEvents - State after load: ${apiEvents.length} regular, ${allGeneratedEventIds.length} generated`);
           } else {
             throw new Error(data.error || 'Failed to load events');
           }
@@ -409,11 +461,13 @@ export const useEventsStore = create<EventsState>()(
         if (newEvents.length === 0) return;
         
         // Deduplicate events based on key characteristics
-        const { events: existingEvents, generatedEvents: existingGeneratedEvents } = get();
+        const { events: existingEvents, generatedEvents: existingGeneratedEvents, eventIds, generatedEventIds } = get();
         const createEventHash = (event: AstrologicalEvent) => 
-          `${event.date}-${event.time}-${event.title}-${event.score}-${event.type}`;
+          `${event.date}-${event.time}-${event.score}-${event.type}`;
         
-        const existingHashes = new Set([...existingEvents, ...existingGeneratedEvents].map(createEventHash));
+        const existingEventsArray = (eventIds || []).map(id => existingEvents[id]).filter(Boolean);
+        const existingGeneratedEventsArray = (generatedEventIds || []).map(id => existingGeneratedEvents[id]).filter(Boolean);
+        const existingHashes = new Set([...existingEventsArray, ...existingGeneratedEventsArray].map(createEventHash));
         const uniqueNewEvents = newEvents.filter(event => {
           const hash = createEventHash(event);
           return !existingHashes.has(hash);
@@ -439,14 +493,35 @@ export const useEventsStore = create<EventsState>()(
         const generatedEventsToAdd = eventsWithLocalIds.filter(e => e.isGenerated);
         const nonGeneratedEventsToAdd = eventsWithLocalIds.filter(e => !e.isGenerated);
         
-        // Add to local state
-        set((state) => ({ 
-          events: [...nonGeneratedEventsToAdd, ...state.events], 
-          generatedEvents: [...generatedEventsToAdd, ...state.generatedEvents]
-        }));
+        // Add to local state with normalized structure
+        set((state) => {
+          const newEvents = { ...state.events };
+          const newEventIds = [...(state.eventIds || [])];
+          const newGeneratedEvents = { ...state.generatedEvents };
+          const newGeneratedEventIds = [...(state.generatedEventIds || [])];
+          
+          // Add non-generated events
+          nonGeneratedEventsToAdd.forEach(event => {
+            newEvents[event.id] = event;
+            newEventIds.unshift(event.id);
+          });
+          
+          // Add generated events
+          generatedEventsToAdd.forEach(event => {
+            newGeneratedEvents[event.id] = event;
+            newGeneratedEventIds.unshift(event.id);
+          });
+          
+          return {
+            events: newEvents,
+            eventIds: newEventIds,
+            generatedEvents: newGeneratedEvents,
+            generatedEventIds: newGeneratedEventIds
+          };
+        });
         
         console.log(`✅ Added ${eventsWithLocalIds.length} events to local state (no database save)`);
-        console.log(`📊 Total events in store after local add: ${get().getAllEvents().length} (${get().events.length} regular + ${get().generatedEvents.length} generated)`);
+        console.log(`📊 Total events in store after local add: ${get().getAllEvents().length} (${get().eventIds?.length || 0} regular + ${get().generatedEventIds?.length || 0} generated)`);
       },
 
       // Add multiple events via API using bulk endpoint
@@ -456,11 +531,12 @@ export const useEventsStore = create<EventsState>()(
         if (newEvents.length === 0) return;
         
         // Deduplicate events based on key characteristics
-        const { events: existingEvents } = get();
+        const { events: existingEvents, eventIds } = get();
         const createEventHash = (event: AstrologicalEvent) => 
           `${event.date}-${event.time}-${event.title}-${event.score}-${event.type}`;
         
-        const existingHashes = new Set(existingEvents.map(createEventHash));
+        const existingEventsArray = (eventIds || []).map(id => existingEvents[id]).filter(Boolean);
+        const existingHashes = new Set(existingEventsArray.map(createEventHash));
         const uniqueNewEvents = newEvents.filter(event => {
           const hash = createEventHash(event);
           return !existingHashes.has(hash);
@@ -784,14 +860,28 @@ export const useEventsStore = create<EventsState>()(
               if (response.status >= 500 || errorMessage.includes('timeout') || errorMessage.includes('Connection acquisition timeout')) {
                 console.warn('⚠️ Database timeout during clear, proceeding with local cleanup only');
                 // Don't throw error, just continue with local cleanup
-                set((state) => ({
-                  events: state.events.filter(e => {
+                set((state) => {
+                  const newEvents = {};
+                  const newEventIds = [];
+                  
+                  (state.eventIds || []).forEach(eventId => {
+                    const event = state.events[eventId];
+                    if (!event) return;
+                    
                     // Keep bookmarked events and manual events
-                    if (e.isBookmarked || !e.isGenerated) return true;
-                    // Remove generated events
-                    return false;
-                  })
-                }));
+                    if (event.isBookmarked || !event.isGenerated) {
+                      newEvents[eventId] = event;
+                      newEventIds.push(eventId);
+                    }
+                  });
+                  
+                  return {
+                    events: newEvents,
+                    eventIds: newEventIds,
+                    generatedEvents: {}, // Clear all generated events
+                    generatedEventIds: []
+                  };
+                });
                 return; // Exit successfully with local cleanup
               }
               
@@ -806,19 +896,29 @@ export const useEventsStore = create<EventsState>()(
               
               // Get current state for before/after comparison
               const currentState = get();
-              const beforeCount = currentState.events.length;
+              const beforeCount = currentState.eventIds?.length || 0;
               
               // Immediately update local state to remove generated events and pattern-matching events
-              set((state) => ({
-                events: state.events.filter(e => {
+              set((state) => {
+                const newEvents = {};
+                const newEventIds = [];
+                
+                (state.eventIds || []).forEach(eventId => {
+                  const event = state.events[eventId];
+                  if (!event) return;
+                  
                   // Keep bookmarked events
-                  if (e.isBookmarked) return true;
+                  if (event.isBookmarked) {
+                    newEvents[eventId] = event;
+                    newEventIds.push(eventId);
+                    return;
+                  }
                   
                   // Remove events marked as generated
-                  if (e.isGenerated) return false;
+                  if (event.isGenerated) return;
                   
                   // Remove events that match generated patterns (aggressive cleanup)
-                  const title = e.title || '';
+                  const title = event.title || '';
                   const isGeneratedPattern = (
                     title.includes('Jupiter') || 
                     title.includes('Venus') || 
@@ -835,13 +935,23 @@ export const useEventsStore = create<EventsState>()(
                     title.includes('Uranus')
                   );
                   
-                  return !isGeneratedPattern;
-                })
-              }));
+                  if (!isGeneratedPattern) {
+                    newEvents[eventId] = event;
+                    newEventIds.push(eventId);
+                  }
+                });
+                
+                return {
+                  events: newEvents,
+                  eventIds: newEventIds,
+                  generatedEvents: {}, // Clear all generated events
+                  generatedEventIds: []
+                };
+              });
               
               // Show immediate feedback
               const afterState = get();
-              const afterCount = afterState.events.length;
+              const afterCount = afterState.eventIds?.length || 0;
               const localRemovedCount = beforeCount - afterCount;
               
               console.log(`🔄 Local state updated: ${beforeCount} → ${afterCount} events (removed ${localRemovedCount} locally)`);
@@ -861,14 +971,28 @@ export const useEventsStore = create<EventsState>()(
             if (fetchError instanceof Error && (fetchError.name === 'AbortError' || fetchError.message.includes('timeout'))) {
               console.warn('⚠️ Clear operation timed out, proceeding with local cleanup only');
               // Don't throw error, just continue with local cleanup
-              set((state) => ({
-                events: state.events.filter(e => {
+              set((state) => {
+                const newEvents = {};
+                const newEventIds = [];
+                
+                (state.eventIds || []).forEach(eventId => {
+                  const event = state.events[eventId];
+                  if (!event) return;
+                  
                   // Keep bookmarked events and manual events
-                  if (e.isBookmarked || !e.isGenerated) return true;
-                  // Remove generated events
-                  return false;
-                })
-              }));
+                  if (event.isBookmarked || !event.isGenerated) {
+                    newEvents[eventId] = event;
+                    newEventIds.push(eventId);
+                  }
+                });
+                
+                return {
+                  events: newEvents,
+                  eventIds: newEventIds,
+                  generatedEvents: {}, // Clear all generated events
+                  generatedEventIds: []
+                };
+              });
               return; // Exit successfully with local cleanup
             }
             

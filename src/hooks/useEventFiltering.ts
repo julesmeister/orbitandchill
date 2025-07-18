@@ -11,6 +11,21 @@ interface EventFilteringOptions {
   showHousesOnly: boolean;
   showAspectsOnly: boolean;
   showElectionalOnly: boolean;
+  searchQuery?: string; // Added search functionality
+}
+
+interface UseEventFilteringReturn {
+  filteredEvents: AstrologicalEvent[];
+  totalEvents: number;
+  visibleEvents: number;
+  filterStats: {
+    beneficCount: number;
+    challengingCount: number;
+    neutralCount: number;
+    generatedCount: number;
+    manualCount: number;
+    bookmarkedCount: number;
+  };
 }
 
 export function useEventFiltering({
@@ -21,35 +36,41 @@ export function useEventFiltering({
   showCombosOnly,
   showHousesOnly,
   showAspectsOnly,
-  showElectionalOnly
-}: EventFilteringOptions) {
-  const filteredEvents = useMemo(() => {
-    return events.filter(event => {
-      // First filter by tab
+  showElectionalOnly,
+  searchQuery = ''
+}: EventFilteringOptions): UseEventFilteringReturn {
+  
+  const { filteredEvents, filterStats } = useMemo(() => {
+    const filtered = events.filter(event => {
+      // Search filter (if provided)
+      if (searchQuery) {
+        const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             event.description.toLowerCase().includes(searchQuery.toLowerCase());
+        if (!matchesSearch) return false;
+      }
+
+      // Tab filter
       if (selectedTab === 'bookmarked' && !event.isBookmarked) return false;
       if (selectedTab === 'manual' && event.isGenerated) return false;
       if (selectedTab === 'generated' && !event.isGenerated) return false;
 
-      // Filter by type
+      // Type filter
       if (selectedType !== 'all' && event.type !== selectedType) return false;
 
-      // Filter out challenging dates if hide toggle is enabled
+      // Hide challenging dates filter
       if (hideChallengingDates) {
-        // Hide events with warning symbols (challenging combos) or low scores or challenging type
         const hasWarning = event.title.includes('⚠️');
         const hasLowScore = event.score < 4;
         const isChallengingType = event.type === 'challenging';
-
         if (hasWarning || hasLowScore || isChallengingType) return false;
       }
 
-      // Show only combo events if combo toggle is enabled
+      // Show only combo events filter
       if (showCombosOnly) {
-        // Check if title contains the "&" symbol, which indicates a combo event
         return event.title.includes('&');
       }
 
-      // Apply timing method filters
+      // Timing method filters
       if (showHousesOnly) {
         return event.timingMethod === 'houses';
       } else if (showAspectsOnly) {
@@ -71,7 +92,61 @@ export function useEventFiltering({
       // For 'all' view, keep the default chronological order
       return 0;
     });
-  }, [events, selectedTab, selectedType, hideChallengingDates, showCombosOnly, showHousesOnly, showAspectsOnly, showElectionalOnly]);
 
-  return filteredEvents;
+    // Calculate filter statistics
+    const stats = {
+      beneficCount: events.filter(e => e.type === 'benefic').length,
+      challengingCount: events.filter(e => e.type === 'challenging').length,
+      neutralCount: events.filter(e => e.type === 'neutral').length,
+      generatedCount: events.filter(e => e.isGenerated).length,
+      manualCount: events.filter(e => !e.isGenerated).length,
+      bookmarkedCount: events.filter(e => e.isBookmarked).length,
+    };
+
+    return { filteredEvents: filtered, filterStats: stats };
+  }, [events, selectedTab, selectedType, hideChallengingDates, showCombosOnly, showHousesOnly, showAspectsOnly, showElectionalOnly, searchQuery]);
+
+  return {
+    filteredEvents,
+    totalEvents: events.length,
+    visibleEvents: filteredEvents.length,
+    filterStats
+  };
+}
+
+// Additional utility hook for search-specific filtering
+export function useEventSearch(events: AstrologicalEvent[], searchQuery: string) {
+  return useMemo(() => {
+    if (!searchQuery.trim()) return events;
+    
+    return events.filter(event => {
+      const query = searchQuery.toLowerCase();
+      return (
+        event.title.toLowerCase().includes(query) ||
+        event.description.toLowerCase().includes(query) ||
+        event.aspects.some(aspect => aspect.toLowerCase().includes(query)) ||
+        event.planetaryPositions.some(position => position.toLowerCase().includes(query))
+      );
+    });
+  }, [events, searchQuery]);
+}
+
+// Hook for filter statistics only (for dashboards)
+export function useEventStats(events: AstrologicalEvent[]) {
+  return useMemo(() => ({
+    total: events.length,
+    byType: {
+      benefic: events.filter(e => e.type === 'benefic').length,
+      challenging: events.filter(e => e.type === 'challenging').length,
+      neutral: events.filter(e => e.type === 'neutral').length,
+    },
+    bySource: {
+      generated: events.filter(e => e.isGenerated).length,
+      manual: events.filter(e => !e.isGenerated).length,
+    },
+    bookmarked: events.filter(e => e.isBookmarked).length,
+    averageScore: events.reduce((sum, e) => sum + e.score, 0) / events.length || 0,
+    highScoreEvents: events.filter(e => e.score >= 8).length,
+    lowScoreEvents: events.filter(e => e.score < 4).length,
+  }), [events]);
 }

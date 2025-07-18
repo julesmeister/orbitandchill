@@ -205,7 +205,7 @@ export default function EventsPage() {
     return calculateFilterCounts(allEvents);
   }, [allEvents]);
 
-  const filteredEvents = useEventFiltering({
+  const { filteredEvents } = useEventFiltering({
     events: allEvents,
     selectedTab,
     selectedType,
