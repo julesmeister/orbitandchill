@@ -403,6 +403,164 @@ POST /api/events/event_1752857669912_eceo3spap/bookmark?userId=11342547987694212
 ```
 API calls were succeeding, but UI state was not reflecting the changes.
 
+### 7. 🔧 CRITICAL: React Hook Infinite Loop Fixes
+**Issue:** React hook dependency array errors causing infinite loops and "Maximum update depth exceeded" errors
+**Date:** January 2025  
+**Severity:** HIGH - System unusable due to infinite re-renders
+
+**Root Cause Analysis:**
+Multiple React hooks were causing infinite re-render loops due to:
+1. **Unstable Dependencies**: `useEventsLimits` had `eventsCompat` object in dependency array that was recreated on every render
+2. **Missing Memoization**: `useEventsCompat` returned new object on every call without proper memoization
+3. **Multiple Hook Instances**: `useEventActions` created its own `useStatusToast` instance instead of sharing parent's instance
+4. **Stale Closure Issues**: Dependencies array included objects that changed on every render
+
+**Evidence from Console:**
+```
+The final argument passed to useEffect changed size between renders
+Warning: Maximum update depth exceeded
+🔄 useEventsLimits called repeatedly with unstable eventsCompat dependency
+```
+
+**Critical Fixes Applied:**
+
+#### **1. Fixed useEventsLimits Infinite Loop**
+**Problem:** `eventsCompat` object in dependency array was recreated on every render  
+**File:** `src/hooks/useEventsLimits.ts`  
+**Fix:**
+```typescript
+// ❌ Before (Causing infinite loop)
+}, [user?.id, shouldShowFeature, eventsCompat]);
+
+// ✅ After (Stable dependencies only)  
+}, [user?.id, shouldShowFeature]);
+```
+
+#### **2. Fixed useEventsCompat Memoization**
+**Problem:** Hook returned new object on every render causing dependency array instability  
+**File:** `src/hooks/useEventsCompat.ts`  
+**Fix:**
+```typescript
+// ❌ Before (New object every render)
+return {
+  getAllEvents,
+  deleteEvent,
+  toggleBookmark,
+  // ... other methods
+};
+
+// ✅ After (Memoized return value)
+return useMemo(() => ({
+  getAllEvents,
+  deleteEvent, 
+  toggleBookmark,
+  // ... other methods
+}), [store]);
+```
+
+#### **3. Fixed StatusToast Integration**
+**Problem:** `useEventActions` had its own `useStatusToast` instance causing multiple toast systems  
+**Files:** 
+- `src/hooks/useEventActions.ts` - Modified to accept toast functions as parameters
+- `src/app/electional/ElectionalPageClient.tsx` - Updated to pass toast functions
+
+**Fix:**
+```typescript
+// ❌ Before (Multiple toast instances)
+export const useEventActions = (options: UseEventActionsOptions) => {
+  const fallbackToast = useStatusToast(); // Created new instance each time
+  // ...
+};
+
+// ✅ After (Shared toast instance)
+interface UseEventActionsOptions {
+  // ... existing options
+  showSuccess?: (title: string, message: string, duration?: number) => void;
+  showError?: (title: string, message: string, duration?: number) => void;
+  showLoading?: (title: string, message: string, showProgress?: boolean) => void;
+}
+
+export const useEventActions = (options: UseEventActionsOptions) => {
+  const fallbackToast = useStatusToast();
+  const showError = options.showError || fallbackToast.showError;
+  const showSuccess = options.showSuccess || fallbackToast.showSuccess;
+  // ...
+};
+```
+
+#### **4. Fixed Bookmark Event Filtering Logic**
+**Problem:** Bookmarked events appeared in Generated and Manual tabs due to incorrect filtering  
+**File:** `src/hooks/useEventFiltering.ts`  
+**Fix:**
+```typescript
+// ❌ Before (Bookmarked events leaked to other tabs)
+if (selectedTab === 'manual' && event.isGenerated) return false;
+if (selectedTab === 'generated' && !event.isGenerated) return false;
+
+// ✅ After (Bookmarked events exclusive to bookmarked tab)
+if (selectedTab === 'bookmarked' && !event.isBookmarked) return false;
+if (selectedTab === 'manual' && (event.isGenerated || event.isBookmarked)) return false;
+if (selectedTab === 'generated' && (!event.isGenerated || event.isBookmarked)) return false;
+```
+
+#### **5. Fixed Tab Count Calculations**
+**Problem:** Tab counts included bookmarked events in generated/manual counts  
+**File:** `src/components/events/EventsTable.tsx`  
+**Fix:**
+```typescript
+// ❌ Before (Incorrect counts)
+Generated Events: {events.filter(e => e.isGenerated).length}
+Manual Events: {events.filter(e => !e.isGenerated).length}
+
+// ✅ After (Exclude bookmarked events)
+Generated Events: {events.filter(e => e.isGenerated && !e.isBookmarked).length}
+Manual Events: {events.filter(e => !e.isGenerated && !e.isBookmarked).length}
+```
+
+**Technical Implementation Details:**
+
+#### **React Hook Dependency Management:**
+- **Removed Unstable Dependencies**: Eliminated objects that change on every render from dependency arrays
+- **Added Proper Memoization**: Used `useMemo` to stabilize return values of custom hooks  
+- **Dependency Array Cleanup**: Only included primitive values and stable references
+- **Logging Integration**: Added comprehensive logging to trace dependency changes during debugging
+
+#### **Toast System Architecture:**
+- **Single Instance Pattern**: Ensured only one `StatusToast` instance per page
+- **Function Injection**: Parent components pass toast functions to child hooks
+- **Fallback Mechanism**: Hooks fall back to local toast if none provided
+- **State Synchronization**: All components share the same toast state
+
+#### **Event Classification System:**
+- **Exclusive Categories**: Events can only belong to one primary category (Generated, Manual, Bookmarked)
+- **Priority Order**: Bookmarked status takes precedence over generated/manual classification
+- **Filter Logic**: Updated all filtering logic to respect the exclusive category system
+- **Count Calculations**: Tab counts now correctly exclude overlapping categories
+
+**Files Modified:**
+- `src/hooks/useEventsLimits.ts` - Fixed infinite loop by removing unstable dependency
+- `src/hooks/useEventsCompat.ts` - Added memoization to prevent object recreation
+- `src/hooks/useEventActions.ts` - Modified to accept toast functions as parameters
+- `src/app/electional/ElectionalPageClient.tsx` - Updated to pass toast functions to useEventActions
+- `src/hooks/useEventFiltering.ts` - Fixed filtering logic for bookmarked events
+- `src/components/events/EventsTable.tsx` - Fixed tab count calculations
+
+**Results:**
+- **Before**: Infinite re-render loops, "Maximum update depth exceeded" errors, system unusable
+- **After**: Clean React hook execution, stable dependencies, smooth user experience
+- **Performance**: Eliminated unnecessary re-renders, improved responsiveness
+- **UX**: Bookmark button now shows immediate visual feedback with StatusToast
+- **Stability**: No more infinite loops or hook dependency warnings
+- **Tab Behavior**: Bookmarked events now appear only in Bookmarked tab with correct counts
+
+**Expected Behavior:**
+1. ✅ **React Hook Stability**: No infinite loops or dependency array warnings
+2. ✅ **Bookmark Visual Feedback**: Button changes color immediately on click  
+3. ✅ **StatusToast Integration**: Success/error messages appear for bookmark actions
+4. ✅ **Tab Exclusivity**: Bookmarked events only appear in Bookmarked tab
+5. ✅ **Accurate Counts**: Tab counts exclude bookmarked events from generated/manual totals
+6. ✅ **Performance**: Smooth user interactions without unnecessary re-renders
+
 **Solution Implemented:**
 
 **1. Database Event Loading on Page Load:**

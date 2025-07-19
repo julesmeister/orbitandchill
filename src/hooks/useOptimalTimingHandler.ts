@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useEventsStore } from '../store/eventsStore';
+import { useEventsCompat } from './useEventsCompat';
 import { useEventsLimits } from './useEventsLimits';
 import { useOptimalTiming } from './useOptimalTiming';
 
@@ -34,7 +34,7 @@ export const useOptimalTimingHandler = ({
 }: UseOptimalTimingHandlerProps) => {
   const eventsLimits = useEventsLimits();
   const { generateOptimalTiming } = useOptimalTiming();
-  const { clearGeneratedEvents, addEventsLocal } = useEventsStore();
+  const { clearGeneratedEvents, addEventsLocal, getAllEvents } = useEventsCompat();
 
   const handleGenerateOptimalTiming = useCallback(async () => {
     // Check if user has reached their generation limit
@@ -92,7 +92,7 @@ export const useOptimalTimingHandler = ({
           // Real-time event addition callback - local only during generation
           console.log('🎯 Real-time event generated:', newEvent.title);
           addEventsLocal([newEvent]);
-          console.log('📊 Current events count after add:', useEventsStore.getState().getAllEvents().length);
+          console.log('📊 Current events count after add:', getAllEvents().length);
         },
         onEventsGenerated: async (events) => {
           // Final batch completion callback

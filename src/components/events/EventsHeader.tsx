@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { AstrologicalEvent } from '../../store/eventsStore';
+import type { AstrologicalEvent } from '../../types/events';
 
 interface NewEvent {
   title: string;

@@ -16,5 +16,3 @@ export const BRAND = {
     facebook: "@luckstrology"
   }
 } as const;
-
-export default BRAND;

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { useEventsStore, AstrologicalEvent } from '../store/eventsStore';
+import { useEventsCompat } from './useEventsCompat';
+import type { AstrologicalEvent } from '../types/events';
 import { useManualEventAnalysis } from './useManualEventAnalysis';
 import { NewEvent } from './useEventForm';
 
@@ -28,7 +29,7 @@ export const useManualEventHandler = ({
   setShowAddForm
 }: UseManualEventHandlerProps) => {
   const { analyzeManualEvent } = useManualEventAnalysis();
-  const { addEvent } = useEventsStore();
+  const { addEvent } = useEventsCompat();
 
   const handleAddEvent = useCallback(async (e: React.FormEvent, newEvent: NewEvent) => {
     e.preventDefault();

@@ -4,7 +4,7 @@
 import React from 'react';
 import { TimingPriority } from '../../hooks/optimalTiming/types';
 import NextBookmarkedEventCountdown from './NextBookmarkedEventCountdown';
-import { AstrologicalEvent } from '../../store/eventsStore';
+import type { AstrologicalEvent } from '../../types/events';
 import Panel from '../ui/Panel';
 import PanelHeader from '../ui/PanelHeader';
 import FormInput from '../ui/FormInput';

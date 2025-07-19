@@ -741,7 +741,7 @@ export default function WorldMap({
       <div
         ref={containerRef}
         className="world-map-container w-full h-auto"
-        style={{ minHeight: "300px", maxHeight: "80vh" }}
+        style={{ minHeight: "300px", maxHeight: "80vh", boxShadow: "none", filter: "none" }}
       >
         <div className="flex items-center justify-center h-96">
           <div className="text-gray-500">Loading world map...</div>

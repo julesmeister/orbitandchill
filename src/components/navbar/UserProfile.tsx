@@ -54,8 +54,18 @@ const UserProfile = ({
       },
       {
         type: "link" as const,
+        label: "Generate",
+        href: "/generate",
+        icon: (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+          </svg>
+        ),
+      },
+      {
+        type: "link" as const,
         label: "Electional Astrology",
-        href: "/events",
+        href: "/electional",
         icon: (
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -86,8 +96,8 @@ const UserProfile = ({
       { type: "divider" as const },
     ];
 
-    // Only show admin dashboard to orbitandchill@gmail.com
-    if (user?.email === "orbitandchill@gmail.com") {
+    // Show admin dashboard to users with admin role
+    if (user?.role === "admin") {
       items.push({
         type: "link" as const,
         label: "Admin Dashboard",
@@ -133,7 +143,7 @@ const UserProfile = ({
     });
 
     return items;
-  }, [isAnonymousUser, isLoading, onGoogleSignIn, onSignOut, user?.username, user?.email]);
+  }, [isAnonymousUser, isLoading, onGoogleSignIn, onSignOut, user?.username, user?.role]);
 
   if (isMobile) {
     return (

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import OrbitingLogo from '../navbar/OrbitingLogo';
 import { formatEventDate } from '../../utils/eventUtils';
 import { formatTime12Hour } from '../../utils/timeNavigation';
 import { getBookmarkClasses } from '../../utils/uiHelpers';
@@ -27,12 +28,19 @@ export default function EventHeader({
 }: EventHeaderProps) {
   return (
     <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <Link href="/events" className="text-blue-600 hover:text-blue-700 mb-2 inline-block">
-          ← Back to Events
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-900">{eventTitle}</h1>
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4">
+        <div className="flex-shrink-0">
+          <OrbitingLogo 
+            size="normal"
+            className="text-black"
+          />
+        </div>
+        <div className="flex-1">
+          <Link href="/electional" className="text-blue-600 hover:text-blue-700 mb-2 inline-block">
+            ← Back to Electional
+          </Link>
+          <h1 className="text-3xl font-bold text-gray-900">{eventTitle}</h1>
+          <div className="flex items-center space-x-4">
           <p className="text-gray-600">
             {formatEventDate(eventDate)} at {formatTime12Hour(selectedTime)}
           </p>
@@ -49,6 +57,7 @@ export default function EventHeader({
               </span>
             </div>
           )}
+        </div>
         </div>
       </div>
       <button

@@ -212,10 +212,12 @@ export const useEventsStore = create<EventsState>()(
         if (cached && (Date.now() - cached.loadedAt < cacheExpiry)) {
           console.log(`📋 Using cached events for ${monthKey} (${cached.eventIds.length} events)`);
           
-          // Preserve ALL generated events when loading cached data
+          // Preserve ALL generated events AND existing persistent events when loading cached data
           const currentState = get();
           const allGeneratedEvents = currentState.generatedEvents;
           const allGeneratedEventIds = currentState.generatedEventIds;
+          const existingPersistentEvents = currentState.events || {};
+          const existingPersistentEventIds = currentState.eventIds || [];
           
           // Get cached events from main state using cached IDs
           const cachedEventsById = cached.eventIds.reduce((acc, eventId) => {
@@ -225,12 +227,17 @@ export const useEventsStore = create<EventsState>()(
             }
             return acc;
           }, {} as Record<string, AstrologicalEvent>);
-          const cachedEventIds = cached.eventIds;
+          
+          // CRITICAL: Preserve existing persistent events when using cache
+          const mergedCachedEvents = { ...existingPersistentEvents, ...cachedEventsById };
+          const mergedCachedEventIds = [...existingPersistentEventIds.filter(id => !cached.eventIds.includes(id)), ...cached.eventIds];
+          
+          console.log(`🔄 CACHE: Preserving ${Object.keys(existingPersistentEvents).length} persistent events, loading ${cached.eventIds.length} cached events`);
           
           // Keep generated events separate from regular events
           set({ 
-            events: cachedEventsById,
-            eventIds: cachedEventIds,
+            events: mergedCachedEvents,
+            eventIds: mergedCachedEventIds,
             generatedEvents: allGeneratedEvents,
             generatedEventIds: allGeneratedEventIds
           });
@@ -294,9 +301,20 @@ export const useEventsStore = create<EventsState>()(
               tab: 'all'
             });
             
+            // CRITICAL: Preserve existing persistent events (like bookmarked generated events)
+            const existingPersistentEvents = currentState.events || {};
+            const existingPersistentEventIds = currentState.eventIds || [];
+            
+            // Merge API events with existing persistent events, API events take precedence
+            const mergedEvents = { ...existingPersistentEvents, ...apiEventsById };
+            const apiEventIdArray = data.events.map((e: AstrologicalEvent) => e.id);
+            const mergedEventIds = [...existingPersistentEventIds.filter(id => !apiEventIdArray.includes(id)), ...apiEventIdArray];
+            
+            console.log(`🔄 Preserving ${Object.keys(existingPersistentEvents).length} existing persistent events, adding ${apiEventIdArray.length} API events`);
+            
             set({ 
-              events: apiEventsById, // Keep only API events in normalized structure
-              eventIds: data.events.map((e: AstrologicalEvent) => e.id), // API event IDs
+              events: mergedEvents, // Merge existing persistent + API events
+              eventIds: mergedEventIds, // Merge existing persistent + API event IDs
               generatedEvents: allGeneratedEvents, // Keep generated events separate
               generatedEventIds: uniqueGeneratedEventIds, // Keep generated event IDs
               isLoading: false,
@@ -757,6 +775,7 @@ export const useEventsStore = create<EventsState>()(
       
       // Toggle bookmark via API
       toggleBookmark: async (id: string, userId?: string) => {
+        console.log('🚀 toggleBookmark START:', { id, userId });
         try {
           set({ error: null });
           
@@ -764,6 +783,141 @@ export const useEventsStore = create<EventsState>()(
             throw new Error('User ID is required to toggle bookmark');
           }
           
+          // Check if this is a local/generated event that doesn't exist in the database
+          const isLocalEvent = id.startsWith('astro_') || id.startsWith('local_') || id.startsWith('bookmark_');
+          console.log('🔍 Event type check:', { id, isLocalEvent });
+          
+          if (isLocalEvent) {
+            console.log('📍 Handling LOCAL event bookmark toggle');
+            // Handle local events without API call
+            set((state) => {
+              console.log('🗂️ BEFORE - Store state:', {
+                totalEvents: Object.keys(state.events).length,
+                totalGenerated: Object.keys(state.generatedEvents).length,
+                eventInEvents: !!state.events[id],
+                eventInGenerated: !!state.generatedEvents[id]
+              });
+              
+              // Check both regular events and generated events
+              const event = state.events[id] || state.generatedEvents[id];
+              console.log('🎯 Event lookup result:', {
+                eventFound: !!event,
+                currentBookmarkState: event?.isBookmarked,
+                eventTitle: event?.title?.substring(0, 50) + '...'
+              });
+              
+              if (!event) {
+                console.error('❌ Event not found for bookmark toggle:', id);
+                return state;
+              }
+              
+              // Update the event in the correct location
+              const willBeBookmarked = !event.isBookmarked;
+              console.log('🔄 About to toggle bookmark:', {
+                from: event.isBookmarked,
+                to: willBeBookmarked,
+                isInEventsStore: !!state.events[id],
+                isInGeneratedStore: !!state.generatedEvents[id]
+              });
+              
+              if (state.events[id]) {
+                console.log('📝 Updating event in persistent events store');
+                const result = {
+                  events: {
+                    ...state.events,
+                    [id]: { ...event, isBookmarked: willBeBookmarked }
+                  }
+                };
+                console.log('✅ Updated in events store, new bookmark state:', willBeBookmarked);
+                return result;
+              } else {
+                // For generated events, when bookmarking move them to persistent events store
+                const updatedEvent = { ...event, isBookmarked: willBeBookmarked };
+                
+                if (updatedEvent.isBookmarked) {
+                  console.log('📦 BOOKMARKING: Moving from generatedEvents to events (persistent)');
+                  const newGeneratedEvents = { ...state.generatedEvents };
+                  const newGeneratedEventIds = state.generatedEventIds.filter(eid => eid !== id);
+                  delete newGeneratedEvents[id];
+                  
+                  const result = {
+                    events: {
+                      ...state.events,
+                      [id]: updatedEvent
+                    },
+                    eventIds: [id, ...state.eventIds], // Add to front
+                    generatedEvents: newGeneratedEvents,
+                    generatedEventIds: newGeneratedEventIds
+                  };
+                  
+                  console.log('✅ MIGRATION COMPLETE - Event moved to persistent store:', {
+                    newEventsCount: Object.keys(result.events).length,
+                    newGeneratedCount: Object.keys(result.generatedEvents).length,
+                    eventNowInEvents: !!result.events[id],
+                    newBookmarkState: result.events[id]?.isBookmarked
+                  });
+                  
+                  return result;
+                } else {
+                  console.log('📤 UNBOOKMARKING: Moving from events back to generatedEvents');
+                  const newEvents = { ...state.events };
+                  const newEventIds = state.eventIds.filter(eid => eid !== id);
+                  delete newEvents[id];
+                  
+                  const result = {
+                    events: newEvents,
+                    eventIds: newEventIds,
+                    generatedEvents: {
+                      ...state.generatedEvents,
+                      [id]: updatedEvent
+                    },
+                    generatedEventIds: [id, ...state.generatedEventIds] // Add to front
+                  };
+                  
+                  console.log('✅ REVERSE MIGRATION COMPLETE - Event moved back to generated store:', {
+                    newEventsCount: Object.keys(result.events).length,
+                    newGeneratedCount: Object.keys(result.generatedEvents).length,
+                    eventNowInGenerated: !!result.generatedEvents[id],
+                    newBookmarkState: result.generatedEvents[id]?.isBookmarked
+                  });
+                  
+                  return result;
+                }
+              }
+            });
+            
+            // Final state check
+            const finalState = get();
+            const finalEvent = finalState.events[id] || finalState.generatedEvents[id];
+            console.log('🏁 FINAL STATE after bookmark toggle:', {
+              eventFound: !!finalEvent,
+              finalBookmarkState: finalEvent?.isBookmarked,
+              nowInEventsStore: !!finalState.events[id],
+              nowInGeneratedStore: !!finalState.generatedEvents[id],
+              totalEventsInStore: Object.keys(finalState.events).length,
+              totalGeneratedInStore: Object.keys(finalState.generatedEvents).length
+            });
+            
+            // CRITICAL: Invalidate cache when bookmarks change to prevent override
+            const updatedEvent = finalEvent;
+            if (updatedEvent) {
+              const eventDate = new Date(updatedEvent.date);
+              const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
+              
+              console.log('🗑️ INVALIDATING CACHE for month:', monthKey, 'to prevent bookmark override');
+              
+              // Remove the cached month to force fresh load that includes our migration
+              get().cachedMonths.delete(monthKey);
+              get().loadedMonths.delete(monthKey);
+              
+              console.log('✅ Cache invalidated - future loads will see our migrated bookmark');
+            }
+            
+            console.log('✨ toggleBookmark LOCAL COMPLETE for:', id);
+            return;
+          }
+          
+          // Handle database events with API call
           const response = await fetch(`/api/events/${id}/bookmark?userId=${userId}`, {
             method: 'POST'
           });
@@ -803,32 +957,69 @@ export const useEventsStore = create<EventsState>()(
           set({ error: error instanceof Error ? error.message : 'Failed to toggle bookmark' });
           // Fallback to local state change
           set((state) => {
-            const event = state.events[id];
+            const event = state.events[id] || state.generatedEvents[id];
             if (!event) {
               console.error('Event not found for bookmark toggle:', id);
               return state;
             }
-            return {
-              events: {
-                ...state.events,
-                [id]: { ...event, isBookmarked: !event.isBookmarked }
+            
+            // Update the event in the correct location
+            if (state.events[id]) {
+              return {
+                events: {
+                  ...state.events,
+                  [id]: { ...event, isBookmarked: !event.isBookmarked }
+                }
+              };
+            } else {
+              // For generated events, when bookmarking move them to persistent events store
+              const updatedEvent = { ...event, isBookmarked: !event.isBookmarked };
+              
+              if (updatedEvent.isBookmarked) {
+                // Moving from generatedEvents to events (persistent) when bookmarking
+                const newGeneratedEvents = { ...state.generatedEvents };
+                const newGeneratedEventIds = state.generatedEventIds.filter(eid => eid !== id);
+                delete newGeneratedEvents[id];
+                
+                return {
+                  events: {
+                    ...state.events,
+                    [id]: updatedEvent
+                  },
+                  eventIds: [id, ...state.eventIds], // Add to front
+                  generatedEvents: newGeneratedEvents,
+                  generatedEventIds: newGeneratedEventIds
+                };
+              } else {
+                // Moving back to generatedEvents when unbookmarking
+                const newEvents = { ...state.events };
+                const newEventIds = state.eventIds.filter(eid => eid !== id);
+                delete newEvents[id];
+                
+                return {
+                  events: newEvents,
+                  eventIds: newEventIds,
+                  generatedEvents: {
+                    ...state.generatedEvents,
+                    [id]: updatedEvent
+                  },
+                  generatedEventIds: [id, ...state.generatedEventIds] // Add to front
+                };
               }
-            };
+            }
           });
           
-          // Update cache for fallback too
-          const updatedEvent = get().events[id];
+          // Invalidate cache for fallback too to prevent override
+          const updatedEvent = get().events[id] || get().generatedEvents[id];
           if (updatedEvent) {
             const eventDate = new Date(updatedEvent.date);
             const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
-            const cached = get().cachedMonths.get(monthKey);
-            if (cached) {
-              const updatedCache = {
-                ...cached,
-                eventIds: cached.eventIds // Keep the same eventIds, main state is updated
-              };
-              get().cachedMonths.set(monthKey, updatedCache);
-            }
+            
+            console.log('🗑️ FALLBACK: Invalidating cache for month:', monthKey);
+            
+            // Remove the cached month to force fresh load that includes our migration
+            get().cachedMonths.delete(monthKey);
+            get().loadedMonths.delete(monthKey);
           }
         }
       },

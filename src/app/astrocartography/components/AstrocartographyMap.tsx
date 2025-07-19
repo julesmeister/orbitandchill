@@ -27,7 +27,7 @@ export default function AstrocartographyMap({
   isCalculating
 }: AstrocartographyMapProps) {
   return (
-    <div className="w-full bg-white/80 backdrop-blur-sm border-t border-b border-slate-200">
+    <div className="w-full bg-white/80 backdrop-blur-sm">
       <div className="w-full relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <WorldMap

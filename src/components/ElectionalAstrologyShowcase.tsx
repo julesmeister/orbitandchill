@@ -282,11 +282,11 @@ const ElectionalAstrologyShowcase: React.FC = () => {
                 Get personalized recommendations based on your birth chart
               </p>
               <Link
-                href="/events"
+                href="/electional"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-semibold border border-black transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 <span>📅</span>
-                Explore Events Dashboard
+                Explore Electional Dashboard
               </Link>
             </div>
           </div>

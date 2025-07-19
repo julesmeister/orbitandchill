@@ -101,6 +101,15 @@ export function getCalculationMethodExplanation(method: CalculationMethod): {
 } {
   const methodInfo = CALCULATION_METHODS[method];
   
+  // Handle invalid method gracefully
+  if (!methodInfo) {
+    return {
+      summary: 'Using standard calculation method',
+      technical: 'Standard astrological calculation approach',
+      userNote: 'This is the standard method used by most professional astrology software.'
+    };
+  }
+  
   return {
     summary: `Using ${methodInfo.name}: ${methodInfo.description}`,
     technical: methodInfo.technicalDetails,

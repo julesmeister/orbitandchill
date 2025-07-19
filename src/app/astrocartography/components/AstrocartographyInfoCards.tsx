@@ -3,8 +3,8 @@
 
 interface AstrocartographyInfoCardsProps {
   hasAstroData: boolean;
-  visiblePlanets: string[];
-  parans: any[];
+  visiblePlanets?: string[];
+  parans?: any[];
   selectedCountry: string | null;
 }
 
@@ -28,7 +28,7 @@ export default function AstrocartographyInfoCards({
             <h3 className="text-lg font-semibold text-slate-800 mb-2">Planetary Lines</h3>
             <p className="text-slate-600 text-sm">
               {hasAstroData ? (
-                `Currently showing ${visiblePlanets.length} planetary lines. Each colored line represents where that planet's energy is strongest on Earth.`
+                `Currently showing ${visiblePlanets?.length || 0} planetary lines. Each colored line represents where that planet's energy is strongest on Earth.`
               ) : (
                 'Generate your natal chart first to see personalized planetary lines based on your birth data.'
               )}
@@ -44,7 +44,7 @@ export default function AstrocartographyInfoCards({
             </div>
             <h3 className="text-lg font-semibold text-slate-800 mb-2">Parans</h3>
             <p className="text-slate-600 text-sm">
-              {parans.length > 0 ? (
+              {parans?.length > 0 ? (
                 `Found ${parans.length} paran intersection${parans.length === 1 ? '' : 's'}. These special points combine planetary energies within a 75-mile radius.`
               ) : (
                 'Parans are intersection points where planetary lines cross, creating powerful combined energies.'

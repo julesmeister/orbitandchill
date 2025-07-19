@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import { AstrologicalEvent } from '../../store/eventsStore';
+import type { AstrologicalEvent } from '../../types/events';
 import { DailyAspect } from '../../hooks/useDailyAspects';
 import EventsCalendarFilters, { AdvancedFilterState } from './EventsCalendarFilters';
 import CalendarHeader from './CalendarHeader';

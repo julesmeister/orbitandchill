@@ -19,7 +19,7 @@ const NAVIGATION_LINKS = [
   { href: '/chart', label: 'Chart' },
   { href: '/astrocartography', label: 'Astrocartography' },
   { href: '/horary', label: 'Horary' },
-  { href: '/events', label: 'Electional' },
+  { href: '/electional', label: 'Electional' },
   { href: '/discussions', label: 'Discussions' },
   { href: '/blog', label: 'Blog' },
 ];

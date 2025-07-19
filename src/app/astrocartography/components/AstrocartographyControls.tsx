@@ -15,7 +15,7 @@ interface AstrocartographyControlsProps {
   showReferencePoints: boolean;
   onToggleReferencePoints: () => void;
   onToggleFullscreen: () => void;
-  parans: any[];
+  parans?: any[];
 }
 
 export default function AstrocartographyControls({
@@ -37,12 +37,13 @@ export default function AstrocartographyControls({
   return (
     <>
       {/* Map Controls */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Interactive World Map</h2>
-          <p className="text-slate-600">Click on any country to explore astrological influences</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="px-6 md:px-12 lg:px-20 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">Interactive World Map</h2>
+            <p className="text-slate-600">Click on any country to explore astrological influences</p>
+          </div>
+          <div className="flex items-center gap-2">
           <div className="flex items-center bg-white/60 backdrop-blur-sm border border-slate-200 rounded-full p-1">
             <button
               onClick={onToggleParans}
@@ -57,7 +58,7 @@ export default function AstrocartographyControls({
               Parans
               <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${showParans ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-600'
                 }`}>
-                {parans.length}
+                {parans?.length || 0}
               </span>
             </button>
           </div>
@@ -88,6 +89,7 @@ export default function AstrocartographyControls({
           </div>
         </div>
       </div>
+    </div>
 
       {/* Planet Controls */}
       {(hasAstroData || isCalculating) && (
