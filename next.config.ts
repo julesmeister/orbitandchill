@@ -28,9 +28,10 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60 * 60 * 24 * 7, // Cache for 7 days
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // Ensure proper production builds
-  swcMinify: true,
   webpack: (config, { isServer, dev }) => {
     // Fix for drizzle-orm vendor chunk issue
     if (!isServer) {

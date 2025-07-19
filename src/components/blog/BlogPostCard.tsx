@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { BlogPost } from '@/types/blog';
 import { Clock, Eye, Calendar, Tag } from 'lucide-react';
+import SafeImage from './SafeImage';
 import AnimatedZodiacCard from './AnimatedZodiacCard';
 import { trackBlogPost } from '@/lib/analytics';
 
@@ -29,9 +29,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         onClick={() => trackBlogPost(post.title, post.category)}
       >
         {post.imageUrl ? (
-          <Image
+          <SafeImage
             src={post.imageUrl}
             alt={post.title}
+            fallbackCategory={post.category}
             fill
             className="object-cover hover:scale-105 transition-transform duration-300"
           />

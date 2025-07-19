@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { BlogPost } from '@/types/blog';
 import { Clock, Eye, Calendar, Tag, Star } from 'lucide-react';
+import SafeImage from './SafeImage';
 import AnimatedZodiacCard from './AnimatedZodiacCard';
 
 interface FeaturedPostCardProps {
@@ -30,11 +30,13 @@ const FeaturedPostCard: React.FC<FeaturedPostCardProps> = ({ post }) => {
         {/* Image Section */}
         <Link href={`/discussions/${post.slug}`} className="block relative h-64 md:h-full overflow-hidden">
           {post.imageUrl ? (
-            <Image
+            <SafeImage
               src={post.imageUrl}
               alt={post.title}
+              fallbackCategory={post.category}
               fill
               className="object-cover hover:scale-105 transition-transform duration-300"
+              priority={true}
             />
           ) : (
             <AnimatedZodiacCard 
