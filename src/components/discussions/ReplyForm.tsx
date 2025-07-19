@@ -1,6 +1,6 @@
 import { ReplyFormState } from '../../types/threads';
 import { useUserStore } from '../../store/userStore';
-import { getAvatarByIdentifier } from '../../utils/avatarUtils';
+import { useUserAvatar } from '../../hooks/useUserAvatar';
 import Image from 'next/image';
 
 interface ReplyFormProps {
@@ -25,7 +25,13 @@ export default function ReplyForm({
   
   // Get user display info
   const displayName = user?.username || 'Anonymous User';
-  const avatarUrl = user?.profilePictureUrl || getAvatarByIdentifier(displayName);
+  
+  // Use the same avatar pattern as DiscussionSidebar
+  const { avatarSrc, initials } = useUserAvatar({
+    author: displayName,
+    preferredAvatar: user?.preferredAvatar,
+    profilePictureUrl: user?.profilePictureUrl,
+  });
 
   if (isLocked) return null;
 
@@ -62,14 +68,29 @@ export default function ReplyForm({
 
       <form onSubmit={onSubmit}>
         <div className="flex space-x-4">
-          <div className="w-12 h-12 border border-black overflow-hidden flex-shrink-0">
-            <Image
-              src={avatarUrl}
-              alt={displayName}
-              width={48}
-              height={48}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 bg-gray-100 overflow-hidden">
+            {avatarSrc ? (
+              <Image
+                src={avatarSrc}
+                alt={`${displayName}'s avatar`}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `<span class="text-black font-bold text-sm font-space-grotesk">${initials}</span>`;
+                  }
+                }}
+              />
+            ) : (
+              <span className="text-black font-bold text-sm font-space-grotesk">
+                {initials}
+              </span>
+            )}
           </div>
           <div className="flex-1">
             <textarea
