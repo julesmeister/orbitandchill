@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { useUserStore } from '@/store/userStore';
-import { useEventsStore } from '@/store/eventsStore';
+import { useEventsCompat } from './useEventsCompat';
 import { usePremiumFeatures } from './usePremiumFeatures';
 
 export interface EventsLimits {
@@ -35,7 +35,7 @@ export interface EventsLimits {
 
 export function useEventsLimits() {
   const { user } = useUserStore();
-  const { getAllEvents } = useEventsStore();
+  const eventsCompat = useEventsCompat();
   const { shouldShowFeature } = usePremiumFeatures();
   
   const [limits, setLimits] = useState<EventsLimits>({
@@ -63,7 +63,9 @@ export function useEventsLimits() {
   });
   
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
     
     const userIsPremium = user.subscriptionTier === 'premium';
     
@@ -81,7 +83,7 @@ export function useEventsLimits() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Filter user's generated events
-    const allEvents = getAllEvents();
+    const allEvents = eventsCompat.getAllEvents();
     const userEvents = allEvents.filter(e => e.userId === user.id);
     const userGeneratedEvents = userEvents.filter(e => e.isGenerated);
     
@@ -106,10 +108,10 @@ export function useEventsLimits() {
     const nextResetMonthly = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     
     // Determine what user can do
-    let canGenerateEvents = true;
-    let canAddMoreEvents = true;
-    let canBookmarkMore = true;
-    let limitMessage: string | undefined;
+    const canGenerateEvents = true;
+    const canAddMoreEvents = true;
+    const canBookmarkMore = true;
+    const limitMessage: string | undefined = undefined;
     
     // DEVELOPMENT: All limits disabled
     // if (!userIsPremium) {
@@ -161,7 +163,7 @@ export function useEventsLimits() {
       nextResetMonthly,
       limitMessage
     });
-  }, [user, getAllEvents, shouldShowFeature]);
+  }, [user?.id, shouldShowFeature, eventsCompat]);
   
   return limits;
 }

@@ -49,10 +49,10 @@ export function useEventFiltering({
         if (!matchesSearch) return false;
       }
 
-      // Tab filter
+      // Tab filter - bookmarked events should only appear in bookmarked tab
       if (selectedTab === 'bookmarked' && !event.isBookmarked) return false;
-      if (selectedTab === 'manual' && event.isGenerated) return false;
-      if (selectedTab === 'generated' && !event.isGenerated) return false;
+      if (selectedTab === 'manual' && (event.isGenerated || event.isBookmarked)) return false;
+      if (selectedTab === 'generated' && (!event.isGenerated || event.isBookmarked)) return false;
 
       // Type filter
       if (selectedType !== 'all' && event.type !== selectedType) return false;

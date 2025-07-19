@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEventsStore } from '../store/eventsStore';
+import { useEventsCompat } from './useEventsCompat';
 import { useUserStore } from '../store/userStore';
 import { useStatusToast } from './useStatusToast';
 import { useConfirmationToast } from './useConfirmationToast';
@@ -15,6 +15,9 @@ interface UseEventActionsOptions {
     cancelText?: string;
     confirmButtonColor?: 'red' | 'green' | 'blue';
   }) => void;
+  showSuccess?: (title: string, message: string, duration?: number) => void;
+  showError?: (title: string, message: string, duration?: number) => void;
+  showLoading?: (title: string, message: string, showProgress?: boolean) => void;
 }
 
 export const useEventActions = (options: UseEventActionsOptions) => {
@@ -26,9 +29,14 @@ export const useEventActions = (options: UseEventActionsOptions) => {
     updateEvent,
     clearGeneratedEvents,
     loadMonthEvents 
-  } = useEventsStore();
+  } = useEventsCompat();
   
-  const { showError, showSuccess, showLoading } = useStatusToast();
+  // Use passed-in toast functions if provided, otherwise fall back to local ones
+  const fallbackToast = useStatusToast();
+  const showError = options.showError || fallbackToast.showError;
+  const showSuccess = options.showSuccess || fallbackToast.showSuccess;
+  const showLoading = options.showLoading || fallbackToast.showLoading;
+  
   const { showConfirmation: fallbackShowConfirmation } = useConfirmationToast();
   const eventsLimits = useEventsLimits();
   
@@ -90,29 +98,38 @@ export const useEventActions = (options: UseEventActionsOptions) => {
       return;
     }
 
-    // Check bookmark limits before proceeding
+    // Get current state BEFORE the toggle to determine what the new state will be
     const allEvents = getAllEvents();
     const event = allEvents.find(e => e.id === id);
-    if (event && !event.isBookmarked && !eventsLimits.canBookmarkMore) {
+    
+    if (!event) {
+      showError("Event Not Found", "Unable to find this event. Please refresh and try again.");
+      return;
+    }
+
+    // Check bookmark limits before proceeding (only when adding bookmark)
+    if (!event.isBookmarked && !eventsLimits.canBookmarkMore) {
       showError("Bookmark Limit Reached", "You have reached your bookmark limit. Remove some bookmarks or upgrade to premium for unlimited bookmarks.");
       return;
     }
 
+    // Determine what the new state will be BEFORE the toggle
+    const willBeBookmarked = !event.isBookmarked;
+    const eventTitle = event.title || 'event';
+
     try {
+      console.log('🔖 useEventActions: Starting bookmark toggle for:', id, 'will be bookmarked:', willBeBookmarked);
+      
       await toggleBookmark(id, user.id);
+      
+      console.log('🔖 useEventActions: toggleBookmark completed');
 
-      // Find the event to provide specific feedback
-      const allEvents = getAllEvents();
-      const event = allEvents.find(e => e.id === id);
-      const eventTitle = event?.title || 'event';
-      const isBookmarked = event?.isBookmarked;
-
-      // Show success feedback
+      // Show success feedback using the predicted state
       showSuccess(
-        isBookmarked ? "Bookmark Removed" : "Bookmark Added",
-        isBookmarked
-          ? `"${eventTitle}" has been removed from your bookmarks.`
-          : `"${eventTitle}" has been bookmarked. Find it in the Bookmarked tab.`,
+        willBeBookmarked ? "Bookmark Added" : "Bookmark Removed",
+        willBeBookmarked
+          ? `"${eventTitle}" has been bookmarked. Find it in the Bookmarked tab.`
+          : `"${eventTitle}" has been removed from your bookmarks.`,
         3000
       );
     } catch (error) {

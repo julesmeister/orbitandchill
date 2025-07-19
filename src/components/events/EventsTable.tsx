@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { AstrologicalEvent } from '../../store/eventsStore';
+import type { AstrologicalEvent } from '../../types/events';
 import ScoreTooltip from '../reusable/ScoreTooltip';
 import TablePagination from '../reusable/TablePagination';
 import SynapsasDropdown from '../reusable/SynapsasDropdown';
@@ -175,7 +175,7 @@ export default function EventsTable({
               <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
                 selectedTab === 'generated' ? 'bg-white text-black' : 'bg-black text-white'
               }`}>
-                {events.filter(e => e.isGenerated).length}
+                {events.filter(e => e.isGenerated && !e.isBookmarked).length}
               </span>
             </button>
             <button
@@ -207,7 +207,7 @@ export default function EventsTable({
               <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
                 selectedTab === 'manual' ? 'bg-white text-black' : 'bg-black text-white'
               }`}>
-                {events.filter(e => !e.isGenerated).length}
+                {events.filter(e => !e.isGenerated && !e.isBookmarked).length}
               </span>
             </button>
           </div>
@@ -400,6 +400,7 @@ export default function EventsTable({
                               ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                               : 'bg-white text-black hover:bg-gray-50'
                           }`}
+                          data-bookmarked={event.isBookmarked}
                           title={event.isBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
                         >
                           <div className={`w-3 h-3 ${event.isBookmarked ? 'bg-white' : 'bg-yellow-500'} border border-black`}></div>
