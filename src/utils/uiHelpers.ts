@@ -74,10 +74,18 @@ export function getBookmarkClasses(isBookmarked: boolean): string {
  * @returns Loading content object
  */
 export function createLoadingContent(
-  eventDate: string,
-  selectedTime: string,
-  formatTime12Hour: (time: string) => string
+  eventDate?: string,
+  selectedTime?: string,
+  formatTime12Hour?: (time: string) => string
 ) {
+  if (!eventDate || !selectedTime || !formatTime12Hour) {
+    return {
+      message: 'Loading chart...',
+      formattedDate: '',
+      formattedTime: ''
+    };
+  }
+
   const formattedDate = new Date(eventDate).toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
