@@ -24,15 +24,15 @@ export default function HoraryQuestionsList({
   const [currentPage, setCurrentPage] = useState(1);
 
   // Get current user ID from the questions to ensure consistency
-  const currentUserId = userQuestions.find(q => q.userId)?.userId;
+  const currentUserId = userQuestions?.find(q => q.userId)?.userId;
   
   // Extra safety filter: Only show questions that definitely belong to current user
-  const safeDisplayQuestions = displayQuestions.filter(q => 
+  const safeDisplayQuestions = (displayQuestions || []).filter(q => 
     !currentUserId || q.userId === currentUserId
   );
 
-  if (safeDisplayQuestions.length !== displayQuestions.length) {
-    console.warn(`⚠️ UI Safety filter: Removed ${displayQuestions.length - safeDisplayQuestions.length} inconsistent questions`);
+  if (safeDisplayQuestions.length !== (displayQuestions || []).length) {
+    console.warn(`⚠️ UI Safety filter: Removed ${(displayQuestions || []).length - safeDisplayQuestions.length} inconsistent questions`);
   }
 
   // Pagination calculations
@@ -60,14 +60,14 @@ export default function HoraryQuestionsList({
               <div className="bg-black text-white px-3 py-1.5 font-space-grotesk font-bold text-sm">
                 {safeDisplayQuestions.length}
               </div>
-              {!userIsPremium && userQuestions.length > 10 && (
+              {!userIsPremium && (userQuestions || []).length > 10 && (
                 <div className="text-xs text-black/60 font-open-sans">
-                  (+{userQuestions.length - 10} more)
+                  (+{(userQuestions || []).length - 10} more)
                 </div>
               )}
             </div>
           </div>
-          {!userIsPremium && userQuestions.length > 10 && (
+          {!userIsPremium && (userQuestions || []).length > 10 && (
             <div className="mt-3 p-2 bg-yellow-100 border border-yellow-300">
               <p className="text-xs text-yellow-800 font-open-sans">
                 Free users see last 10 questions. <span className="font-semibold">Upgrade for full history.</span>
@@ -78,7 +78,7 @@ export default function HoraryQuestionsList({
 
         {/* Questions List */}
         <div className="min-h-[400px]">
-          {userQuestions.length === 0 ? (
+          {(userQuestions || []).length === 0 ? (
             <div className="text-center py-16">
               <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-xl">🔮</span>

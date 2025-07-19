@@ -637,9 +637,9 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
                     </div>
                   </div>
                   <div className="max-h-32 overflow-y-auto">
-                    {sharedCharts.slice(0, 5).map((chart) => (
+                    {sharedCharts.slice(0, 5).map((chart, index) => (
                       <div
-                        key={chart.shareToken}
+                        key={chart.shareToken || `chart-${index}`}
                         onClick={() => handleSharedChartSelect(chart)}
                         className="flex items-center space-x-3 p-3 border-b border-gray-100 last:border-b-0 hover:bg-purple-50 cursor-pointer transition-colors"
                       >

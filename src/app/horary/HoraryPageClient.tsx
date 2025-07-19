@@ -105,162 +105,267 @@ export default function HoraryPageClient() {
     return sortedFiltered;
   }, [questions, user?.id, user?.authProvider]);
 
-  // Load questions when user changes
+  // Load questions from database on mount with improved timing
   useEffect(() => {
-    if (user?.id) {
-      loadQuestions(user.id);
-    }
-  }, [user?.id, loadQuestions]);
+    // Add delay for Google auth users to ensure user is fully persisted
+    const loadWithDelay = async () => {
+      if (user?.id) {
+        // If Google user, add small delay to ensure database persistence completed
+        if (user.authProvider === 'google') {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
 
-  const handleQuestionSelect = async (question: HoraryQuestion) => {
-    setSelectedQuestion(question);
-    setShowQuestionForm(false);
-    
-    // Extract location data from the question
-    const location = {
-      latitude: question.latitude,
-      longitude: question.longitude,
-      locationName: question.location
+        loadQuestions(user.id);
+      }
     };
 
-    // Generate chart data
-    try {
-      const data = await generateHoraryChart(
-        question.question,
-        new Date(question.date),
-        location
-      );
+    loadWithDelay();
+  }, [user?.id, user?.authProvider]); // Removed loadQuestions to prevent infinite loop
+
+  // Force update when questions change
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [questions]);
+
+  // Apply premium limits to question history
+  const userIsPremium = user?.subscriptionTier === 'premium';
+  const displayQuestions = useMemo(() => {
+    if (userIsPremium) {
+      return userQuestions;
+    }
+    // Free users see only last 10 questions
+    return userQuestions.slice(0, 10);
+  }, [userQuestions, userIsPremium]);
+
+
+
+
+  const handleSubmitQuestion = async () => {
+    const result = await submitQuestion(voidStatus);
+    if (result) {
+      setSelectedQuestion(result.question);
+      setCurrentChartData(result.chartData);
+      setShowQuestionForm(false);
       
-      if (data) {
-        setCurrentChartData(data);
-        setRealChartData(data);
+      // Force refresh questions list
+      if (user?.id) {
+        await loadQuestions(user.id);
       }
-    } catch (error) {
-      console.error('Failed to generate chart for selected question:', error);
-      toast.show('Failed to generate chart for the selected question', 'error');
+      setForceUpdate(prev => prev + 1);
     }
   };
 
-  const handleBackToForm = () => {
+
+  const handleQuestionClick = (q: HoraryQuestion) => {
+    // Get the most up-to-date question from store
+    const allQuestions = useHoraryStore.getState().questions;
+    const currentQuestion = allQuestions.find(question => question.id === q.id);
+
+    if (currentQuestion) {
+      setSelectedQuestion(currentQuestion);
+    } else {
+      setSelectedQuestion(q);
+    }
+
+    setCurrentChartData(null); // Clear any temporary chart data
+    setRealChartData(null); // Clear real chart data so new one is generated
+    setShowQuestionForm(false); // Hide the form and show the chart
+  };
+
+  const handleAskAnotherQuestion = () => {
     setShowQuestionForm(true);
     setSelectedQuestion(null);
     setCurrentChartData(null);
     setRealChartData(null);
+    setQuestion('');
+  };
+
+
+  const handleProceedWithVoidMoon = async () => {
+    const result = await proceedWithVoidMoon();
+    if (result) {
+      setSelectedQuestion(result.question);
+      setCurrentChartData(result.chartData);
+      setShowQuestionForm(false);
+      
+      // Force refresh questions list
+      if (user?.id) {
+        await loadQuestions(user.id);
+      }
+      setForceUpdate(prev => prev + 1);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <FontAwesomeIcon icon={faQuestion} className="text-purple-600 text-4xl mr-4" />
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Horary Astrology</h1>
-          </div>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Ask a specific question and receive guidance from the stars. 
-            Horary astrology provides precise answers by casting a chart for the moment your question is asked.
-          </p>
-        </div>
-
-        {/* Daily limit banner */}
-        <HoraryLimitBanner user={user} userQuestions={userQuestions} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Reference Cards */}
-          <div className="lg:col-span-1">
-            <HoraryReferenceCards voidStatus={voidStatus} />
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {showQuestionForm ? (
-              <>
-                {/* Question Form */}
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+      <div className="min-h-screen bg-white">
+        {/* Main Content Section */}
+        <section className="px-[5%] py-12">
+          {/* Horary Limit Banner for Free Users */}
+          <HoraryLimitBanner />
+          
+          {/* Main Content Grid */}
+          <div className="grid lg:grid-cols-3 gap-0 border border-black mb-12">
+            {/* Question Input Card or Chart Display - 2 columns */}
+            <div className="lg:col-span-2 border-r border-black">
+              {showQuestionForm ? (
                 <HoraryQuestionForm
                   question={question}
                   setQuestion={setQuestion}
                   isAnalyzing={isAnalyzing}
+                  onSubmit={handleSubmitQuestion}
+                  voidStatus={voidStatus}
+                  locationDisplay={sharedLocationDisplay}
+                  onShowLocationToast={showSharedLocationToast}
                   useCustomTime={useCustomTime}
                   setUseCustomTime={setUseCustomTime}
                   customTimeData={customTimeData}
                   setCustomTimeData={setCustomTimeData}
-                  submitQuestion={submitQuestion}
-                  handleLocationSetWithFeedback={handleLocationSetWithFeedback}
-                  sharedLocationDisplay={sharedLocationDisplay}
-                  userQuestions={userQuestions}
-                  user={user}
                 />
-
-                {/* Previous Questions */}
-                {user && userQuestions.length > 0 && (
-                  <div className="mt-8">
-                    <HoraryQuestionsList
-                      questions={userQuestions}
-                      onQuestionSelect={handleQuestionSelect}
-                      onDeleteQuestion={handleDeleteQuestion}
-                    />
+              ) : (
+                /* Chart Display Section */
+                <div>
+                  {/* Ask Another Question Button */}
+                  <div className="w-full">
+                    <button
+                      onClick={handleAskAnotherQuestion}
+                      className="w-full flex items-center justify-center px-8 py-8 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-space-grotesk font-bold text-lg"
+                    >
+                      <span className="mr-3">❓</span>
+                      Ask Another Question
+                    </button>
                   </div>
-                )}
-              </>
-            ) : (
-              <>
-                {/* Chart Display */}
-                {selectedQuestion && currentChartData && (
-                  <HoraryChartDisplay
-                    question={selectedQuestion}
-                    chartData={currentChartData}
-                    onBackToForm={handleBackToForm}
-                  />
-                )}
 
-                {/* Interpretation Tabs */}
-                {selectedQuestion && realChartData && (
-                  <div className="mt-8">
-                    <HoraryInterpretationTabs
-                      question={selectedQuestion}
-                      chartData={realChartData}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+                  {/* Chart Display */}
+                  {(currentChartData || (selectedQuestion && selectedQuestion.chartData)) ? (
+                    <div className="space-y-6">
+                      <HoraryChartDisplay
+                        svgContent={(currentChartData || selectedQuestion!.chartData).svg}
+                        question={selectedQuestion!}
+                        onShare={() => {
+                          navigator.share?.({
+                            title: `Horary Chart`,
+                            text: `Check out my horary chart for: ${selectedQuestion!.question}`,
+                            url: window.location.href,
+                          });
+                        }}
+                        onRealChartDataReady={(realData) => {
+                          setRealChartData(realData);
+                        }}
+                      />
+
+                      {/* Horary Interpretation Tabs */}
+                      <HoraryInterpretationTabs 
+                        chartData={realChartData || currentChartData || selectedQuestion!.chartData}
+                        question={selectedQuestion!}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-white/60 backdrop-blur-sm border border-slate-200 rounded-2xl">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FontAwesomeIcon icon={faQuestion} className="text-slate-500 text-xl" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">Chart Not Available</h3>
+                      <p className="text-slate-600 mb-4">
+                        This question doesn't have a generated chart yet.
+                      </p>
+                      <button
+                        onClick={async () => {
+                          if (selectedQuestion) {
+                            setIsAnalyzing(true);
+                            try {
+                              const chartData = await generateHoraryChart(selectedQuestion);
+                              if (chartData) {
+                                setCurrentChartData(chartData);
+                              }
+                            } finally {
+                              setIsAnalyzing(false);
+                            }
+                          }
+                        }}
+                        disabled={isAnalyzing || !selectedQuestion}
+                        className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                      >
+                        {isAnalyzing ? 'Generating...' : 'Generate Chart'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Past Questions List - 1 column */}
+            <HoraryQuestionsList
+              userQuestions={userQuestions}
+              displayQuestions={displayQuestions}
+              userIsPremium={userIsPremium}
+              onQuestionClick={handleQuestionClick}
+              onDeleteQuestion={handleDeleteQuestion}
+            />
           </div>
-        </div>
 
-        {/* Void Moon Warning Modal */}
-        <VoidMoonWarningModal
-          isOpen={showVoidMoonWarning}
-          onProceed={proceedWithVoidMoon}
-          onCancel={cancelVoidMoonSubmission}
-          voidStatus={voidStatus}
-        />
+          {/* Reference Cards */}
+          <HoraryReferenceCards />
+        </section>
+
 
         {/* Delete Confirmation Modal */}
         <ConfirmationModal
           isOpen={showDeleteConfirm}
           title="Delete Question"
-          message={`Are you sure you want to delete "${questionToDelete?.question}"? This action cannot be undone.`}
+          message={
+            questionToDelete
+              ? `Are you sure you want to delete this question: "${questionToDelete.question.length > 80
+                ? questionToDelete.question.substring(0, 80) + '...'
+                : questionToDelete.question}"?`
+              : 'Are you sure you want to delete this question?'
+          }
           confirmText="Delete"
           cancelText="Cancel"
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
-          isDestructive={true}
+          autoClose={10} // Auto-cancel after 10 seconds
+        />
+
+        {/* Void Moon Warning Modal */}
+        <VoidMoonWarningModal
+          isOpen={showVoidMoonWarning}
+          moonSign={voidStatus.moonSign}
+          onProceed={handleProceedWithVoidMoon}
+          onCancel={cancelVoidMoonSubmission}
         />
 
         {/* Status Toast */}
         <StatusToast
-          isVisible={toast.isVisible}
+          title={toast.title}
           message={toast.message}
-          type={toast.type}
+          status={toast.status}
+          isVisible={toast.isVisible}
           onHide={toast.hide}
+          duration={toast.status === 'success' ? 3000 : toast.status === 'error' ? 5000 : 0}
         />
 
-        {/* Shared Location Toast */}
+        {/* Location Request Toast */}
         <LocationRequestToast
           isVisible={isSharedLocationToastVisible}
-          onAllow={requestSharedLocationPermission}
-          onDismiss={hideSharedLocationToast}
+          onHide={hideSharedLocationToast}
+          onLocationSet={handleLocationSetWithFeedback}
+          onRequestPermission={async () => {
+            try {
+              await requestSharedLocationPermission();
+              toast.show(
+                'Location Detected',
+                `Using your current location for horary calculations`,
+                'success'
+              );
+            } catch (error) {
+              toast.show(
+                'Location Error',
+                'Unable to get your current location. Please search for your city instead.',
+                'error'
+              );
+            }
+          }}
         />
       </div>
     </div>
