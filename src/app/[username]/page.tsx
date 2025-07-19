@@ -11,6 +11,9 @@ import NatalChartForm, { NatalChartFormData } from '../../components/forms/Natal
 import UserActivitySection from '../../components/profile/UserActivitySection';
 import UserDiscussionsSection from '../../components/profile/UserDiscussionsSection';
 import ProfileStelliums from '../../components/profile/ProfileStelliums';
+import { detectStelliums } from '../../utils/stelliumDetection';
+import { generateNatalChart } from '../../utils/natalChart';
+import LoadingSpinner from '../../components/reusable/LoadingSpinner';
 import { User } from '../../types/user';
 
 // Avatar options (matching avatarUtils.ts)
@@ -84,6 +87,126 @@ export default function UserProfilePage() {
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser && profileUser && currentUser.id === profileUser.id;
 
+  // Detect and sync stelliums if user has birth data but missing stellium data
+  const detectAndSyncStelliums = useCallback(async (user: User, forceUpdate: boolean = false) => {
+    console.log('🔍 detectAndSyncStelliums called:', { 
+      userId: user.id, 
+      username: user.username, 
+      isOwnProfile, 
+      hasBirthData: !!user.birthData, 
+      forceUpdate 
+    });
+    
+    // Only sync for current user's own profile
+    if (!isOwnProfile || !user.birthData) {
+      console.log('❌ Skipping stellium detection:', { isOwnProfile, hasBirthData: !!user.birthData });
+      return;
+    }
+    
+    // Check if user already has stellium data (skip check if forcing update)
+    if (!forceUpdate) {
+      const hasStelliumData = (
+        (user.stelliumSigns && user.stelliumSigns.length > 0) ||
+        (user.stelliumHouses && user.stelliumHouses.length > 0) ||
+        user.sunSign ||
+        (user.detailedStelliums && user.detailedStelliums.length > 0)
+      );
+      
+      console.log('📊 Current stellium data:', {
+        stelliumSigns: user.stelliumSigns,
+        stelliumHouses: user.stelliumHouses,
+        sunSign: user.sunSign,
+        detailedStelliums: user.detailedStelliums,
+        hasStelliumData
+      });
+      
+      if (hasStelliumData) {
+        console.log('✅ User already has stellium data, skipping detection');
+        return;
+      }
+    } else {
+      console.log('🔄 Force update enabled, recalculating stelliums...');
+    }
+    
+    try {
+      console.log('🎯 Generating natal chart with birth data:', {
+        dateOfBirth: user.birthData.dateOfBirth,
+        timeOfBirth: user.birthData.timeOfBirth,
+        locationOfBirth: user.birthData.locationOfBirth,
+        coordinates: user.birthData.coordinates
+      });
+      
+      // Generate chart data for stellium detection
+      const chartResult = await generateNatalChart({
+        name: user.username || 'User',
+        dateOfBirth: user.birthData.dateOfBirth,
+        timeOfBirth: user.birthData.timeOfBirth,
+        locationOfBirth: user.birthData.locationOfBirth,
+        coordinates: user.birthData.coordinates
+      });
+      
+      console.log('📈 Chart generation result:', {
+        hasChartResult: !!chartResult,
+        hasMetadata: !!chartResult?.metadata,
+        hasChartData: !!chartResult?.metadata?.chartData,
+        hasPlanets: !!chartResult?.metadata?.chartData?.planets,
+        planetsCount: chartResult?.metadata?.chartData?.planets?.length
+      });
+      
+      if (chartResult && chartResult.metadata && chartResult.metadata.chartData && chartResult.metadata.chartData.planets) {
+        console.log('🪐 Planets found:', chartResult.metadata.chartData.planets.map(p => ({
+          name: p.name,
+          sign: p.sign,
+          house: p.house
+        })));
+        
+        // Detect stelliums from chart data
+        const stelliumResult = detectStelliums(chartResult.metadata.chartData);
+        
+        console.log('⭐ Stellium detection result:', stelliumResult);
+        
+        // Prepare update data
+        const updateData: Partial<User> = { hasNatalChart: true };
+        
+        if (stelliumResult.signStelliums.length > 0) {
+          updateData.stelliumSigns = stelliumResult.signStelliums;
+          console.log('🌟 Adding sign stelliums:', stelliumResult.signStelliums);
+        }
+        
+        if (stelliumResult.houseStelliums.length > 0) {
+          updateData.stelliumHouses = stelliumResult.houseStelliums;
+          console.log('🏠 Adding house stelliums:', stelliumResult.houseStelliums);
+        }
+        
+        if (stelliumResult.sunSign) {
+          updateData.sunSign = stelliumResult.sunSign;
+          console.log('☉ Setting sun sign:', stelliumResult.sunSign);
+        }
+        
+        if (stelliumResult.detailedStelliums && stelliumResult.detailedStelliums.length > 0) {
+          updateData.detailedStelliums = stelliumResult.detailedStelliums;
+          console.log('✨ Adding detailed stelliums:', stelliumResult.detailedStelliums);
+        }
+        
+        console.log('💾 Updating user with data:', updateData);
+        
+        // Update user profile
+        await updateUser(updateData);
+        
+        console.log('✅ User store updated successfully');
+        
+        // Update profileUser state to reflect changes immediately
+        setProfileUser(prev => prev ? { ...prev, ...updateData } : prev);
+        
+        console.log('🔄 Profile user state updated');
+      } else {
+        console.warn('⚠️ Failed to generate chart data or missing planets');
+      }
+    } catch (error) {
+      console.error('❌ Error detecting stelliums:', error);
+    }
+  }, [isOwnProfile, updateUser]);
+
   // Fetch user by username
   const fetchUserByUsername = useCallback(async (targetUsername: string) => {
     try {
@@ -136,6 +259,34 @@ export default function UserProfilePage() {
   useEffect(() => {
     loadChartCount();
   }, [loadChartCount]);
+
+  // Detect stelliums when profile user is loaded
+  useEffect(() => {
+    console.log('👤 Profile user changed:', { 
+      hasProfileUser: !!profileUser, 
+      isOwnProfile, 
+      username: profileUser?.username 
+    });
+    
+    if (profileUser && isOwnProfile) {
+      console.log('🚀 Triggering stellium detection for profile user');
+      detectAndSyncStelliums(profileUser);
+    }
+  }, [profileUser, isOwnProfile, detectAndSyncStelliums]);
+
+  // Force recalculate stelliums (for debugging)
+  const forceRecalculateStelliums = useCallback(async () => {
+    if (profileUser && isOwnProfile) {
+      console.log('🔄 Force recalculating stelliums for user:', profileUser.username);
+      console.log('📝 Current profile user data before force update:', {
+        sunSign: profileUser.sunSign,
+        stelliumSigns: profileUser.stelliumSigns,
+        stelliumHouses: profileUser.stelliumHouses,
+        detailedStelliums: profileUser.detailedStelliums
+      });
+      await detectAndSyncStelliums(profileUser, true);
+    }
+  }, [profileUser, isOwnProfile, detectAndSyncStelliums]);
 
   // Handle birth data submission (only for own profile)
   const handleBirthDataSubmit = async (formData: NatalChartFormData) => {
@@ -192,21 +343,12 @@ export default function UserProfilePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="bg-white">
-        <section className="px-[5%] py-16">
-          <div className="max-w-7xl mx-auto text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-3 h-3 bg-black animate-bounce"></div>
-            </div>
-            <h1 className="font-space-grotesk text-4xl font-bold text-black mb-4">
-              Loading Profile...
-            </h1>
-            <p className="font-open-sans text-xl text-black/80">Fetching user information.</p>
-          </div>
-        </section>
-      </div>
+      <LoadingSpinner
+        title="Loading Profile..."
+        subtitle="Fetching user information."
+        size="lg"
+        screenCentered={true}
+      />
     );
   }
 
@@ -459,12 +601,23 @@ export default function UserProfilePage() {
                         </div>
                       )}
                       {isOwnProfile && (
-                        <button
-                          onClick={() => setEditingBirthData(!editingBirthData)}
-                          className="px-3 py-1 bg-white text-black font-semibold border border-black transition-all duration-300 hover:bg-black hover:text-white text-xs"
-                        >
-                          {editingBirthData ? 'Cancel' : 'Edit'}
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => setEditingBirthData(!editingBirthData)}
+                            className="px-3 py-1 bg-white text-black font-semibold border border-black transition-all duration-300 hover:bg-black hover:text-white text-xs"
+                          >
+                            {editingBirthData ? 'Cancel' : 'Edit'}
+                          </button>
+                          {profileUser?.birthData && (
+                            <button
+                              onClick={forceRecalculateStelliums}
+                              className="px-3 py-1 bg-yellow-400 text-black font-semibold border border-black transition-all duration-300 hover:bg-yellow-500 text-xs"
+                              title="Force recalculate sun sign and stelliums"
+                            >
+                              Recalc
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

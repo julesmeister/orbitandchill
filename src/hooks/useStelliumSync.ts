@@ -7,8 +7,10 @@ import { NatalChartData } from '../utils/natalChart';
 /**
  * Hook to sync stellium data from chart data to user profile
  * This ensures stelliums are populated when viewing chart interpretations
+ * @param chartData - The natal chart data to sync from
+ * @param isOwnChart - Whether this chart belongs to the current user (forces sync)
  */
-export function useStelliumSync(chartData?: NatalChartData) {
+export function useStelliumSync(chartData?: NatalChartData, isOwnChart: boolean = false) {
   const { user, updateUser } = useUserStore();
   const [isUpdating, setIsUpdating] = useState(false);
   const [hasAttempted, setHasAttempted] = useState(false);
@@ -35,10 +37,16 @@ export function useStelliumSync(chartData?: NatalChartData) {
       currentUser.sunSign
     );
 
-    // If user already has chart data, don't need to sync
-    if (hasChartData) {
+    // If user already has chart data, don't need to sync UNLESS this is their own chart
+    if (hasChartData && !isOwnChart) {
+      console.log('🔄 useStelliumSync: User has existing data, skipping sync for non-own chart');
       setHasAttempted(true);
       return;
+    }
+
+    // Force sync if this is user's own chart (to update potentially incorrect cached data)
+    if (isOwnChart && hasChartData) {
+      console.log('🔄 useStelliumSync: Force syncing stelliums for user\'s own chart');
     }
 
     // Detect stelliums from chart data
@@ -50,7 +58,15 @@ export function useStelliumSync(chartData?: NatalChartData) {
 
       try {
         // Syncing stelliums and sun sign from chart data
+        console.log('🔄 useStelliumSync: Detecting stelliums from chart data...', {
+          isOwnChart,
+          hasExistingData: hasChartData,
+          forceSync: isOwnChart && hasChartData
+        });
+        
         const stelliumResult = detectStelliums(chartData);
+        
+        console.log('⭐ useStelliumSync: Stellium detection complete:', stelliumResult);
         
         // Prepare update data
         const updateData: any = { hasNatalChart: true };
@@ -103,7 +119,7 @@ export function useStelliumSync(chartData?: NatalChartData) {
     };
 
     syncStelliums();
-  }, [chartData, hasAttempted]); // Removed user dependencies to prevent loops
+  }, [chartData, hasAttempted, isOwnChart]); // Include isOwnChart to force sync when viewing own chart
 
   return {
     isUpdating,

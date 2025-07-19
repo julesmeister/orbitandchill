@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { NatalChartData } from '../../utils/natalChart';
 import InterpretationModal from './InterpretationModal';
 import { usePremiumFeatures } from '../../hooks/usePremiumFeatures';
 import { useUserStore } from '../../store/userStore';
 import { useInterpretationSections } from '../../store/chartStore';
 import { useStelliumSync } from '../../hooks/useStelliumSync';
+import { usePeopleAPI } from '../../hooks/usePeopleAPI';
 import CorePersonalitySection from './sections/CorePersonalitySection';
 import StelliumsSection from './sections/StelliumsSection';
 import PlanetaryInfluencesSection from './sections/PlanetaryInfluencesSection';
@@ -27,9 +28,38 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
   const { user } = useUserStore();
   const { shouldShowFeature, isFeaturePremium, features } = usePremiumFeatures();
   const { orderedSections } = useInterpretationSections();
+  const { selectedPerson, defaultPerson } = usePeopleAPI();
+  
+  // Detect if user is viewing their own chart
+  const isOwnChart = useMemo(() => {
+    // If no person selected, assume it's user's own chart
+    if (!selectedPerson && !defaultPerson) {
+      console.log('🔍 ChartInterpretation: No person selected, assuming own chart');
+      return true;
+    }
+    
+    // If selected person is the default person (represents user), it's own chart
+    if (selectedPerson && defaultPerson && selectedPerson.id === defaultPerson.id) {
+      console.log('🔍 ChartInterpretation: Selected person is default person (own chart)');
+      return true;
+    }
+    
+    // If only default person exists and no other selection, it's own chart
+    if (!selectedPerson && defaultPerson) {
+      console.log('🔍 ChartInterpretation: Using default person (own chart)');
+      return true;
+    }
+    
+    console.log('🔍 ChartInterpretation: Viewing other person\'s chart', { 
+      selectedPerson: selectedPerson?.name, 
+      defaultPerson: defaultPerson?.name 
+    });
+    return false;
+  }, [selectedPerson, defaultPerson]);
   
   // Sync stelliums to user profile when viewing chart interpretations
-  const { isUpdating: isSyncingStelliums } = useStelliumSync(chartData);
+  // Force sync if this is user's own chart to update potentially incorrect cached data
+  const { isUpdating: isSyncingStelliums } = useStelliumSync(chartData, isOwnChart);
   
   // For demo purposes, assume user is not premium unless specified
   // In a real app, this would be determined by user subscription status
