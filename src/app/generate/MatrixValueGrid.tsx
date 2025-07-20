@@ -47,17 +47,15 @@ const MatrixValueGrid: React.FC<MatrixValueGridProps> = ({
 
     return [
       // Desktop column borders - only show right border if NOT the last column in desktop layout
-      !isLastColumnLg ? 'lg:border-r' : '',
+      !isLastColumnLg ? 'lg:border-r border-black' : '',
       // Desktop row borders (only if multiple rows)
-      needsRowBorderLg ? 'lg:border-b' : '',
+      needsRowBorderLg ? 'lg:border-b border-black' : '',
       // Tablet column borders - only show right border if NOT the last column in tablet layout  
-      !isLastColumnMd ? 'md:border-r' : '',
+      !isLastColumnMd ? 'md:border-r border-black' : '',
       // Tablet row borders (only if multiple rows)
-      needsRowBorderMd ? 'md:border-b' : '',
+      needsRowBorderMd ? 'md:border-b border-black' : '',
       // Mobile column borders - only show right border if NOT the last column in mobile layout
-      !isLastColumnSm ? 'border-r' : '',
-      // Border color class applied once
-      'border-black'
+      !isLastColumnSm ? 'border-r border-black' : ''
     ].filter(Boolean).join(' ');
   };
 
