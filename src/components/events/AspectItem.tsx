@@ -19,6 +19,7 @@ export default function AspectItem({ aspect, aspectIndex, day }: AspectItemProps
   // Create a mock event for the aspect to use with ScoreTooltip
   const aspectAsEvent: AstrologicalEvent = {
     id: `aspect-${day.getTime()}-${aspectIndex}`,
+    userId: '', // Mock events don't need real userId
     title: `${aspect.planets} ${aspect.aspect}`,
     description: `${aspect.interpretation} (${aspect.strength} exactness, ${aspect.significance} aspect)`,
     date: day.toISOString().split('T')[0],

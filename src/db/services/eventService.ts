@@ -559,7 +559,7 @@ export class EventService {
           userId: eventData.userId,
           title: eventData.title,
           date: eventData.date,
-          time: eventData.time || undefined,
+          time: eventData.time || '12:00',
           type: eventData.type,
           description: eventData.description,
           aspects: eventData.aspects || [],

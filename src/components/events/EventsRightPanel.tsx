@@ -49,8 +49,8 @@ interface EventsRightPanelProps {
   // Table props
   selectedTab: string;
   selectedType: string;
-  setSelectedTab: (tab: string) => void;
-  setSelectedType: (type: string) => void;
+  setSelectedTab: (tab: 'all' | 'bookmarked' | 'manual' | 'generated') => void;
+  setSelectedType: (type: 'all' | 'benefic' | 'challenging' | 'neutral') => void;
   handleDeleteEvent: (id: string) => void;
   handleRenameEvent: (id: string, newTitle: string) => void;
   setShowTimingOptions: (show: boolean) => void;

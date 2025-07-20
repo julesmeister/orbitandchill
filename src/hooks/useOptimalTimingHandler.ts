@@ -66,7 +66,7 @@ export const useOptimalTimingHandler = ({
     if (userId) {
       try {
         updateProgress(8, "Clearing existing events...");
-        await clearGeneratedEvents(userId, new Date(currentDate));
+        await clearGeneratedEvents(userId);
         updateProgress(15, "Existing events cleared...");
       } catch (clearError) {
         console.warn('Warning: Could not clear existing events:', clearError);
@@ -110,6 +110,8 @@ export const useOptimalTimingHandler = ({
       });
 
       // Check if we have database errors but events were generated
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useEventsStore } = require('@/store/eventsStore');
       const { error: storeError } = useEventsStore.getState();
       if (storeError && generatedEvents && Array.isArray(generatedEvents) && generatedEvents.length > 0) {
         showSuccess(

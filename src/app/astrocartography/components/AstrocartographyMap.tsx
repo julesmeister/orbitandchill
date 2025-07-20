@@ -5,14 +5,18 @@ import WorldMap from '../../../components/WorldMap';
 
 interface AstrocartographyMapProps {
   onCountryClick: (countryId: string) => void;
-  onMapClick: (lat: number, lng: number, countryInfo?: { countryId: string; countryName: string } | null) => void;
+  onMapClick: (lat: number, lng: number, countryInfo?: { countryId: string; countryName: string } | null) => Promise<void>;
   astrocartographyLines: any[];
   parans: any[];
   onLineHover: (planet: string, lineType: string) => void;
   onLineHoverEnd: () => void;
+  hoveredLine: { planet: string; lineType: string } | null;
   showReferencePoints: boolean;
   showParans: boolean;
+  visiblePlanets: string[];
   isCalculating: boolean;
+  hasAstroData: boolean;
+  onTogglePlanet: (planet: string) => void;
 }
 
 export default function AstrocartographyMap({
@@ -22,9 +26,13 @@ export default function AstrocartographyMap({
   parans,
   onLineHover,
   onLineHoverEnd,
+  hoveredLine,
   showReferencePoints,
   showParans,
-  isCalculating
+  visiblePlanets,
+  isCalculating,
+  hasAstroData,
+  onTogglePlanet
 }: AstrocartographyMapProps) {
   return (
     <div className="w-full bg-white/80 backdrop-blur-sm">

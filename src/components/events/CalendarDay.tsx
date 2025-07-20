@@ -54,10 +54,11 @@ export default function CalendarDay({
 
     const mockEvent: AstrologicalEvent = {
       id: `day-${day.date.getTime()}`,
+      userId: '', // Mock events don't need real userId
       title: `Daily Overview - ${day.date.toLocaleDateString()}`,
       description: '',
       date: day.date.toISOString().split('T')[0],
-      time: '',
+      time: '12:00',
       score: day.score,
       type: day.score >= 6 ? 'benefic' : day.score >= 4 ? 'neutral' : 'challenging',
       isBookmarked: false,

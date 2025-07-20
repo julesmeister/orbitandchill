@@ -14,6 +14,7 @@ import { getAstrocartographyInterpretation } from '../../utils/astrocartographyI
 
 interface AstrocartographyAnalysisProps {
   analysis: AstrocartographyAnalysis | null;
+  isAnalyzing: boolean;
   onClose: () => void;
 }
 
@@ -24,6 +25,7 @@ const SkeletonLine: React.FC<{ width?: string }> = ({ width = "w-full" }) => (
 
 const AstrocartographyAnalysisComponent: React.FC<AstrocartographyAnalysisProps> = ({
   analysis,
+  isAnalyzing,
   onClose
 }) => {
   const [locationInfo, setLocationInfo] = useState<LocationInfo | null>(null);

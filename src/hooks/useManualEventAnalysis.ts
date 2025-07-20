@@ -12,6 +12,7 @@ export interface ManualEventOptions {
   longitude: number;
   locationName?: string;
   timezone?: string;
+  userId?: string;
 }
 
 export const useManualEventAnalysis = () => {
@@ -19,7 +20,7 @@ export const useManualEventAnalysis = () => {
   const { analyzeChartForPriorities } = useOptimalTiming();
 
   const analyzeManualEvent = async (options: ManualEventOptions): Promise<AstrologicalEvent> => {
-    const { title, date, time, description, latitude, longitude, locationName, timezone } = options;
+    const { title, date, time, description, latitude, longitude, locationName, timezone, userId } = options;
     
     setIsAnalyzing(true);
     
@@ -74,6 +75,7 @@ export const useManualEventAnalysis = () => {
       
       return {
         id: Date.now().toString(),
+        userId: userId || '',
         title,
         date,
         time: time || '12:00',
@@ -98,6 +100,7 @@ export const useManualEventAnalysis = () => {
       // Return a basic event if analysis fails
       return {
         id: Date.now().toString(),
+        userId: userId || '',
         title,
         date,
         time: time || '12:00',

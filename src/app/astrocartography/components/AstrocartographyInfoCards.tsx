@@ -44,7 +44,7 @@ export default function AstrocartographyInfoCards({
             </div>
             <h3 className="text-lg font-semibold text-slate-800 mb-2">Parans</h3>
             <p className="text-slate-600 text-sm">
-              {parans?.length > 0 ? (
+              {parans && parans.length > 0 ? (
                 `Found ${parans.length} paran intersection${parans.length === 1 ? '' : 's'}. These special points combine planetary energies within a 75-mile radius.`
               ) : (
                 'Parans are intersection points where planetary lines cross, creating powerful combined energies.'

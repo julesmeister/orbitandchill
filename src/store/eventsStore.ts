@@ -3,10 +3,10 @@ import { persist } from "zustand/middleware";
 
 export interface AstrologicalEvent {
   id: string;
-  userId?: string;
+  userId: string;
   title: string;
   date: string;
-  time?: string;
+  time: string;
   type: 'benefic' | 'challenging' | 'neutral';
   description: string;
   aspects: string[];

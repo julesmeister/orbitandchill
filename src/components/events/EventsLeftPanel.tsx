@@ -13,7 +13,7 @@ import ViewToggleButton from '../ui/ViewToggleButton';
 import PriorityButton from '../ui/PriorityButton';
 
 interface LocationDisplay {
-  source: 'current' | 'birth' | 'default';
+  source: 'current' | 'birth' | 'fallback';
   shortName: string;
   name: string;
   coordinates: {
@@ -51,7 +51,7 @@ interface EventsLeftPanelProps {
   // View controls
   selectedTab: string;
   viewMode: 'calendar' | 'list';
-  setSelectedTab: (tab: string) => void;
+  setSelectedTab: (tab: 'all' | 'bookmarked' | 'manual' | 'generated') => void;
   setViewMode: (mode: 'calendar' | 'list') => void;
   
   // Location and events

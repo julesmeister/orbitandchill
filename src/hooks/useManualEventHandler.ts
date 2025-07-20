@@ -52,7 +52,8 @@ export const useManualEventHandler = ({
           latitude,
           longitude,
           locationName: locationForGeneration.locationName,
-          timezone: locationForGeneration.timezone
+          timezone: locationForGeneration.timezone,
+          userId: userId || ''
         });
 
         if (analyzedEvent) {
@@ -85,7 +86,7 @@ export const useManualEventHandler = ({
           id: Date.now().toString(),
           title: newEvent.title,
           date: newEvent.date,
-          time: newEvent.time || '',
+          time: newEvent.time || '12:00',
           description: newEvent.description || '',
           score: 5, // Neutral score for manual events
           type: 'neutral',

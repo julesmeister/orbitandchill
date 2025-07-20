@@ -12,7 +12,7 @@ export interface AstrologicalEvent {
   date: string;
   time: string;
   type: 'benefic' | 'challenging' | 'neutral';
-  description?: string;
+  description: string;
   aspects: string[];
   planetaryPositions: string[];
   score: number;
