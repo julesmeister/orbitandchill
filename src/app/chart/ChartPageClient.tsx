@@ -8,6 +8,7 @@ import ChartQuickActions from "../../components/charts/ChartQuickActions";
 import BirthDataSummary from "../../components/charts/BirthDataSummary";
 import InterpretationSidebar from "../../components/charts/InterpretationSidebar";
 import StatusToast from "../../components/reusable/StatusToast";
+import LoadingSpinner from "../../components/reusable/LoadingSpinner";
 import { useChartPage } from "../../hooks/useChartPage";
 import { getAvatarByIdentifier } from "../../utils/avatarUtils";
 import { BRAND } from "../../config/brand";
@@ -60,26 +61,13 @@ function ChartContent() {
             {(() => {
               if (isLoading) {
                 return (
-                  <div className="border border-black bg-white min-h-screen flex items-center justify-center">
-                    <div className="text-center">
-                      {/* Three-Element Bounce Loading */}
-                      <div className="flex items-center justify-center space-x-2 mb-8">
-                        <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-3 h-3 bg-black animate-bounce"></div>
-                      </div>
-
-                      {/* Heading */}
-                      <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
-                        {loadingTitle}
-                      </h1>
-
-                      {/* Description */}
-                      <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
-                        {loadingDescription}
-                      </p>
-                    </div>
-                  </div>
+                  <LoadingSpinner
+                    variant="dots"
+                    size="lg"
+                    title={loadingTitle}
+                    subtitle={loadingDescription}
+                    screenCentered={true}
+                  />
                 );
               }
 
@@ -274,21 +262,13 @@ function ChartContent() {
 export default function ChartPageClient() {
   return (
     <Suspense fallback={
-      <div className="border border-black bg-white min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-8">
-            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-            <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-            <div className="w-3 h-3 bg-black animate-bounce"></div>
-          </div>
-          <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
-            Loading Chart
-          </h1>
-          <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
-            Preparing your cosmic experience...
-          </p>
-        </div>
-      </div>
+      <LoadingSpinner
+        variant="dots"
+        size="lg"
+        title="Loading Chart"
+        subtitle="Preparing your cosmic experience..."
+        screenCentered={true}
+      />
     }>
       <ChartContent />
     </Suspense>

@@ -8,6 +8,7 @@ import NatalChartDisplay from "../../../../components/charts/NatalChartDisplay";
 import BirthDataSummary from "../../../../components/charts/BirthDataSummary";
 import { useStatusToast } from "../../../../hooks/useStatusToast";
 import StatusToast from "../../../../components/reusable/StatusToast";
+import LoadingSpinner from "../../../../components/reusable/LoadingSpinner";
 import { BRAND } from "../../../../config/brand";
 
 interface SharedChartClientProps {
@@ -127,26 +128,13 @@ export default function SharedChartClient({ token, initialChart }: SharedChartCl
             {(() => {
               if (isLoading) {
                 return (
-                  <div className="border border-black bg-white min-h-screen flex items-center justify-center">
-                    <div className="text-center">
-                      {/* Three-Element Bounce Loading */}
-                      <div className="flex items-center justify-center space-x-2 mb-8">
-                        <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-3 h-3 bg-black animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-3 h-3 bg-black animate-bounce"></div>
-                      </div>
-
-                      {/* Heading */}
-                      <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
-                        Loading Chart
-                      </h1>
-
-                      {/* Description */}
-                      <p className="font-open-sans text-xl text-black/80 leading-relaxed max-w-3xl mx-auto">
-                        We're retrieving this cosmic blueprint. This should only take a moment...
-                      </p>
-                    </div>
-                  </div>
+                  <LoadingSpinner
+                    variant="dots"
+                    size="lg"
+                    title="Loading Chart"
+                    subtitle="We're retrieving this cosmic blueprint. This should only take a moment..."
+                    screenCentered={true}
+                  />
                 );
               }
 
