@@ -84,7 +84,7 @@ const GeneratePageClient: React.FC = () => {
   const createMockPositions = () => {
     const centerX = 350;
     const centerY = 350;
-    const radius = 140;
+    const radius = 300;
     const cos45 = Math.cos(Math.PI / 4);
     const sin45 = Math.sin(Math.PI / 4);
 
@@ -106,6 +106,7 @@ const GeneratePageClient: React.FC = () => {
     return {
       centerX: 350,
       centerY: 350,
+      radius: 300,
       circleRadius: { outer: 25, center: 36 },
       fontSize: { outer: 21, center: 25 },
       innerElements: {
@@ -114,7 +115,7 @@ const GeneratePageClient: React.FC = () => {
         guard: { radius: 16, offsetX: -225, offsetY: 0 },
         earthPurpose: { radius: 16, offsetX: -130, offsetY: 0 },
       },
-      ageDot: { radius: 1.5, fontSize: 8, labelOffset: 10 }
+      ageDot: { radius: 3.5, fontSize: 9, labelOffset: 11 }
     };
   };
 
@@ -280,7 +281,7 @@ const GeneratePageClient: React.FC = () => {
                   responsive={createMockResponsive()}
                   positions={createMockPositions()}
                   updatedDebugPositions={createMockDebugPositions()}
-                  dimensions={{ width: 1200, height: 1200 }}
+                  dimensions={{ width: 700, height: 700 }}
                   selectedPosition={null}
                   hoveredPosition={null}
                   setSelectedPosition={mockHandlers.setSelectedPosition}

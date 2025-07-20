@@ -104,11 +104,45 @@ export const useUserStore = create<UserState>()(
               })
             });
             
-            if (!response.ok) {
+            if (response.ok) {
+              const result = await response.json();
+              if (result.success && result.user) {
+                // Update local state with server response to ensure consistency
+                const convertedUser = {
+                  ...result.user,
+                  createdAt: new Date(result.user.createdAt),
+                  updatedAt: new Date(result.user.updatedAt),
+                  preferredAvatar: result.user.preferredAvatar,
+                  birthData: result.user.dateOfBirth ? {
+                    dateOfBirth: result.user.dateOfBirth,
+                    timeOfBirth: result.user.timeOfBirth || '',
+                    locationOfBirth: result.user.locationOfBirth || '',
+                    coordinates: {
+                      lat: result.user.latitude?.toString() || '',
+                      lon: result.user.longitude?.toString() || '',
+                    }
+                  } : undefined,
+                  privacy: {
+                    showZodiacPublicly: result.user.showZodiacPublicly || false,
+                    showStelliumsPublicly: result.user.showStelliumsPublicly || false,
+                    showBirthInfoPublicly: result.user.showBirthInfoPublicly || false,
+                    allowDirectMessages: result.user.allowDirectMessages ?? true,
+                    showOnlineStatus: result.user.showOnlineStatus ?? true,
+                  }
+                };
+                
+                set({ user: convertedUser });
+                console.log('✅ User profile updated successfully and synced with server');
+              }
+            } else {
               console.error('Failed to update user profile:', response.statusText);
+              // Revert to previous state on server error
+              set({ user: currentUser });
             }
           } catch (error) {
             console.error('Error updating user profile:', error);
+            // Revert to previous state on network error
+            set({ user: currentUser });
           }
         }
       },

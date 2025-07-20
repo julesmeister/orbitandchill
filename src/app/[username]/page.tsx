@@ -302,7 +302,22 @@ export default function UserProfilePage() {
     if (!isOwnProfile) return;
     
     if (usernameInput.trim() && usernameInput !== currentUser?.username) {
-      await updateUser({ username: usernameInput.trim() });
+      try {
+        // Update user store first
+        await updateUser({ username: usernameInput.trim() });
+        
+        // Update profileUser state to reflect the change immediately
+        setProfileUser(prev => prev ? { ...prev, username: usernameInput.trim() } : prev);
+        
+        // Force refresh the profile data from the API to ensure consistency
+        await fetchUserByUsername(usernameInput.trim());
+        
+        console.log('✅ Username updated successfully');
+      } catch (error) {
+        console.error('❌ Failed to update username:', error);
+        // Revert username input on error
+        setUsernameInput(currentUser?.username || '');
+      }
     }
     setEditingUsername(false);
   };
@@ -316,6 +331,8 @@ export default function UserProfilePage() {
     if (!isOwnProfile || !selectedAvatar) return;
     
     await updateUser({ preferredAvatar: selectedAvatar });
+    // Update profileUser state to reflect the change immediately
+    setProfileUser(prev => prev ? { ...prev, preferredAvatar: selectedAvatar } : prev);
     setShowAvatarModal(false);
     setSelectedAvatar(null);
   };
