@@ -117,11 +117,61 @@ const GeneratePageClient: React.FC = () => {
         E: matrixValues.E || 5,
         J: matrixValues.J || 10,
       },
+      diagonalSquare: {
+        A: matrixValues.A || 1,
+        B: matrixValues.B || 2,
+        C: matrixValues.C || 3,
+        D: matrixValues.D || 4,
+      },
+      straightSquare: {
+        F: matrixValues.F || 6,
+        G: matrixValues.G || 7,
+        H: matrixValues.H || 8,
+        I: matrixValues.I || 9,
+      },
+      karmicTail: {
+        d1: matrixValues.d1 || 15,
+        d2: matrixValues.d2 || 16,
+        d: matrixValues.d || 17,
+      },
       innerElements: {
         heart: matrixValues.POA || 11,
         talent: matrixValues.T || 20,
         guard: matrixValues.K || 11,
         earthPurpose: matrixValues.L || 12,
+        // Add required additional inner elements with default values
+        shadowAspects: 13,
+        spiritualGifts: 14,
+        karmicLessons: 15,
+        pastKarma: 16,
+        heartDesire: 17,
+        partnershipPotential: 18,
+        materialKarma: 19,
+        financialTalents: 20,
+        prosperityFlow: 21,
+        spiritualWealth: 22,
+        rootChakra: 1,
+        sacralChakra: 2,
+        solarPlexusChakra: 3,
+        heartChakra: 4,
+        throatChakra: 5,
+        thirdEyeChakra: 6,
+        crownChakra: 7,
+        paternalLine: 8,
+        maternalLine: 9,
+        balancePoint: 10,
+        ancestralWisdom: 11,
+        ancestralHealing: 12,
+      },
+      purposes: {
+        skypoint: 1,
+        earthpoint: 2,
+        perspurpose: 3,
+        femalepoint: 4,
+        malepoint: 5,
+        socialpurpose: 6,
+        generalpurpose: 7,
+        planetarypurpose: 8,
       }
     };
   };
@@ -160,6 +210,7 @@ const GeneratePageClient: React.FC = () => {
         talent: { radius: 20, offsetX: 0, offsetY: -120 },
         guard: { radius: 16, offsetX: -225, offsetY: 0 },
         earthPurpose: { radius: 16, offsetX: -130, offsetY: 0 },
+        karmicTail: { leftOffsetX: -180, centerOffsetX: 0, rightOffsetX: 180, offsetY: 200, radius: 18 },
       },
       ageDot: { radius: 3.5, fontSize: 9, labelOffset: 11 }
     };
@@ -295,10 +346,39 @@ const GeneratePageClient: React.FC = () => {
     
     return {
       ...relativePositions,
+      // Ensure all required DebugPositions properties are present
+      K: relativePositions.K || { x: 0, y: 0 },
+      L: relativePositions.L || { x: 0, y: 0 },
+      M: relativePositions.M || { x: 0, y: 0 },
+      N: relativePositions.N || { x: 0, y: 0 },
+      V: relativePositions.V || { x: 0, y: 0 },
+      F: relativePositions.F || { x: 0, y: 0 },
+      G: relativePositions.G || { x: 0, y: 0 },
+      H: relativePositions.H || { x: 0, y: 0 },
+      I: relativePositions.I || { x: 0, y: 0 },
+      HEART_POWER: relativePositions.HEART_POWER || { x: 0, y: 0 },
+      TALENT: relativePositions.TALENT || relativePositions.T || { x: 0, y: 0 },
+      GUARD: relativePositions.GUARD || { x: 0, y: 0 },
+      EARTH_PURPOSE: relativePositions.EARTH_PURPOSE || { x: 0, y: 0 },
+      F1: relativePositions.F1 || { x: 0, y: 0 },
+      F2: relativePositions.F2 || { x: 0, y: 0 },
+      G1: relativePositions.G1 || { x: 0, y: 0 },
+      G2: relativePositions.G2 || { x: 0, y: 0 },
+      H1: relativePositions.H1 || { x: 0, y: 0 },
+      H2: relativePositions.H2 || { x: 0, y: 0 },
+      I1: relativePositions.I1 || { x: 0, y: 0 },
+      I2: relativePositions.I2 || { x: 0, y: 0 },
+      O: relativePositions.O || { x: 0, y: 0 },
+      P: relativePositions.P || { x: 0, y: 0 },
+      Q: relativePositions.Q || { x: 0, y: 0 },
+      R: relativePositions.R || { x: 0, y: 0 },
+      J: relativePositions.J || { x: 0, y: 0 },
       diagonal: {
         x1: jRelative.x, y1: jRelative.y,
         x2: nRelative.x, y2: nRelative.y
-      }
+      },
+      FUTURE_CHILDREN: relativePositions.FUTURE_CHILDREN || { x: 0, y: 0 },
+      POWER_OF_ANCESTORS: relativePositions.POWER_OF_ANCESTORS || { x: 0, y: 0 }
     };
   };
 
