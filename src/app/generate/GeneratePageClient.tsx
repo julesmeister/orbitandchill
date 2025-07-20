@@ -459,7 +459,7 @@ const GeneratePageClient: React.FC = () => {
                     positions={matrixPositions.main}
                     values={matrixValues}
                     onChange={handleValueChange}
-                    columns={{ mobile: 1, tablet: 2, desktop: 3 }}
+                    columns={{ mobile: 1, tablet: 3, desktop: 3 }}
                     size="medium"
                   />
                   
