@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import EmptyMatrixSVGChart from '@/components/generate/EmptyMatrixSVGChart';
+import MatrixValueGrid from './MatrixValueGrid';
 
 // Synapsas color palette
 const synapsasColors = {
@@ -16,12 +17,57 @@ const synapsasColors = {
   lightGreen: '#e7fff6'
 };
 
+// Matrix position definitions
+const matrixPositions = {
+  main: [
+    { key: 'A', label: 'Reputation', description: 'Personal character and talents' },
+    { key: 'B', label: 'Inspiration', description: 'Emotional nature and inner world' },
+    { key: 'C', label: 'Money Block', description: 'Life purpose and destiny path' },
+    { key: 'D', label: 'Biggest Obstacle', description: 'Lessons to learn in this lifetime' },
+    { key: 'E', label: 'Comfort Zone', description: 'Core essence and identity' }
+  ],
+  ancestral: [
+    { key: 'F', label: 'Dad\'s Talents', description: 'Ancestral influences and gifts' },
+    { key: 'G', label: 'Mom\'s Talents', description: 'Natural abilities and skills' },
+    { key: 'H', label: 'Dad\'s Karma', description: 'Lessons related to material world' },
+    { key: 'I', label: 'Mom\'s Karma', description: 'Spiritual growth and evolution' }
+  ],
+  lifeAspects: [
+    { key: 'J', label: 'Past Life Mistakes', description: 'Karmic patterns to heal' },
+    { key: 'K', label: 'Income Streams', description: 'Financial abundance sources' },
+    { key: 'L', label: 'Work Life Balance', description: 'Professional harmony' },
+    { key: 'M', label: 'Love Ingredients', description: 'Relationship foundations' },
+    { key: 'N', label: 'Past Life Income', description: 'Previous wealth patterns' },
+    { key: 'O', label: 'As a Parent', description: 'Parenting qualities and gifts' }
+  ],
+  soulPath: [
+    { key: 'P', label: 'Higher Self', description: 'Spiritual potential and wisdom' },
+    { key: 'Q', label: 'Money Mindset', description: 'Past life financial beliefs' },
+    { key: 'R', label: 'Life Task', description: 'Present incarnation purpose' },
+    { key: 'V', label: 'Sexuality', description: 'Intimate energy and expression' }
+  ],
+  special: [
+    { key: 'POA', label: 'Power of Ancestors', description: 'Inherited spiritual gifts and wisdom' },
+    { key: 'T', label: 'Heart\'s Desire', description: 'Soul\'s deepest yearning and purpose' }
+  ],
+  generational: [
+    { key: 'F1', label: 'Dad Line 1', description: 'Paternal heritage flow' },
+    { key: 'F2', label: 'Dad Line 2', description: 'Secondary paternal gifts' },
+    { key: 'G1', label: 'Mom Line 1', description: 'Maternal heritage flow' },
+    { key: 'G2', label: 'Mom Line 2', description: 'Secondary maternal gifts' },
+    { key: 'H1', label: 'Material 1', description: 'Primary material karma' },
+    { key: 'H2', label: 'Material 2', description: 'Secondary material lessons' },
+    { key: 'I1', label: 'Spiritual 1', description: 'Primary spiritual task' },
+    { key: 'I2', label: 'Spiritual 2', description: 'Secondary spiritual growth' }
+  ]
+};
+
 const GeneratePageClient: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('destiny-matrix');
   const [matrixValues, setMatrixValues] = useState<Record<string, number>>({
     A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9,
     J: 10, K: 11, L: 12, M: 13, N: 14, O: 15, P: 16, Q: 17,
-    R: 18, S: 19, T: 20, U: 21, V: 22, POA: 11,
+    R: 18, T: 20, V: 22, POA: 11,
     F1: 1, F2: 2, G1: 3, G2: 4, H1: 5, H2: 6, I1: 7, I2: 8
   });
 
@@ -119,31 +165,140 @@ const GeneratePageClient: React.FC = () => {
     };
   };
 
-  // Create mock debug positions
+  // Create mock debug positions that match the real positioning logic
   const createMockDebugPositions = () => {
+    // Mock responsive values - matching the real chart's calculations
+    const centerX = 350;
+    const centerY = 325;
+    const radius = 300;
+    
+    // Calculate base positions using the same logic as calculateMatrixPositions
+    const cos45 = Math.cos(Math.PI / 4);
+    const sin45 = Math.sin(Math.PI / 4);
+    
+    const basePositions = {
+      A: { x: centerX - radius, y: centerY },        // Left
+      B: { x: centerX, y: centerY - radius },        // Top
+      C: { x: centerX + radius, y: centerY },        // Right
+      D: { x: centerX, y: centerY + radius },        // Bottom
+      F: { x: centerX - radius * cos45, y: centerY - radius * sin45 }, // Top-left diagonal
+      G: { x: centerX + radius * cos45, y: centerY - radius * sin45 }, // Top-right diagonal
+      H: { x: centerX + radius * cos45, y: centerY + radius * sin45 }, // Bottom-right diagonal
+      I: { x: centerX - radius * cos45, y: centerY + radius * sin45 }, // Bottom-left diagonal
+    };
+    
+    // Helper functions (copied from useMatrixPositionCalculations)
+    const calculatePositionAtPercent = (fromPosition: { x: number; y: number }, toCenter: { x: number; y: number }, percent: number) => ({
+      x: fromPosition.x + (toCenter.x - fromPosition.x) * percent,
+      y: fromPosition.y + (toCenter.y - fromPosition.y) * percent
+    });
+    
+    const calculateMidpoint = (pointA: { x: number; y: number }, pointB: { x: number; y: number }) => ({
+      x: (pointA.x + pointB.x) / 2,
+      y: (pointA.y + pointB.y) / 2
+    });
+    
+    const convertToRelativePosition = (position: { x: number; y: number }, center: { x: number; y: number }) => ({
+      x: position.x - center.x,
+      y: position.y - center.y
+    });
+    
+    const calculateLineIntersection = (
+      line1Start: { x: number; y: number }, line1End: { x: number; y: number },
+      line2Start: { x: number; y: number }, line2End: { x: number; y: number }
+    ) => {
+      const x1 = line1Start.x, y1 = line1Start.y;
+      const x2 = line1End.x, y2 = line1End.y;
+      const x3 = line2Start.x, y3 = line2Start.y;
+      const x4 = line2End.x, y4 = line2End.y;
+      
+      const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+      
+      if (Math.abs(denominator) < 0.0001) {
+        return null; // Lines are parallel
+      }
+      
+      const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
+      
+      return {
+        x: x1 + t * (x2 - x1),
+        y: y1 + t * (y2 - y1)
+      };
+    };
+    
+    const centerPoint = { x: centerX, y: centerY };
+    
+    // Calculate positioned spheres using the same logic as the real chart
+    const calculatedPositions = {
+      // 30% positions from outer toward center
+      T: calculatePositionAtPercent(basePositions.B, centerPoint, 0.30), // Self Expression
+      N: calculatePositionAtPercent(basePositions.C, centerPoint, 0.30), // Past Life Income
+      FUTURE_CHILDREN: calculatePositionAtPercent(basePositions.A, centerPoint, 0.30),
+      J: calculatePositionAtPercent(basePositions.D, centerPoint, 0.30), // Past Life Mistakes
+      
+      // Midpoint positions between outer circles and their respective 30% positions
+      O: calculateMidpoint(basePositions.A, calculatePositionAtPercent(basePositions.A, centerPoint, 0.30)), // As a Parent
+      P: calculateMidpoint(basePositions.B, calculatePositionAtPercent(basePositions.B, centerPoint, 0.30)), // Higher Self
+      Q: calculateMidpoint(basePositions.C, calculatePositionAtPercent(basePositions.C, centerPoint, 0.30)), // Past Life Money Mindset
+      R: calculateMidpoint(basePositions.D, calculatePositionAtPercent(basePositions.D, centerPoint, 0.30)), // Foundation
+      
+      // Special positioned spheres
+      V: calculatePositionAtPercent(centerPoint, basePositions.C, 0.33), // Sexuality - 33% from center toward C
+      POWER_OF_ANCESTORS: calculatePositionAtPercent(centerPoint, basePositions.C, 0.20), // 20% from center toward C
+      
+      // Calculate L using intersection logic
+      L: (() => {
+        const jPosition = calculatePositionAtPercent(basePositions.D, centerPoint, 0.30);
+        const nPosition = calculatePositionAtPercent(basePositions.C, centerPoint, 0.30);
+        
+        const intersection = calculateLineIntersection(
+          basePositions.F, basePositions.H,
+          jPosition, nPosition
+        );
+        
+        return intersection || calculatePositionAtPercent(basePositions.D, centerPoint, 0.45); // fallback
+      })(),
+      
+      // Generational line positions (30% from corners toward center)
+      F2: calculatePositionAtPercent(basePositions.F, centerPoint, 0.30),
+      G2: calculatePositionAtPercent(basePositions.G, centerPoint, 0.30),
+      H2: calculatePositionAtPercent(basePositions.I, centerPoint, 0.30), // Swapped
+      I2: calculatePositionAtPercent(basePositions.H, centerPoint, 0.30), // Swapped
+    };
+    
+    // Calculate generational line F1, G1, H1, I1 as midpoints
+    const generationalMidpoints = {
+      F1: calculateMidpoint(basePositions.F, calculatedPositions.F2),
+      G1: calculateMidpoint(basePositions.G, calculatedPositions.G2),
+      H1: calculateMidpoint(basePositions.I, calculatedPositions.H2), // Swapped
+      I1: calculateMidpoint(basePositions.H, calculatedPositions.I2), // Swapped
+    };
+    
+    // Calculate anchor positions for relationship circles
+    const anchorPositions = {
+      M: calculateMidpoint(calculatedPositions.J, calculatedPositions.L), // Ingredients for Love
+      K: calculateMidpoint(calculatedPositions.L, calculatedPositions.N), // Income Streams
+    };
+    
+    // Convert all positions to relative coordinates (relative to center)
+    const allPositions = { ...calculatedPositions, ...generationalMidpoints, ...anchorPositions };
+    const relativePositions = Object.fromEntries(
+      Object.entries(allPositions).map(([key, pos]) => [
+        key,
+        convertToRelativePosition(pos, centerPoint)
+      ])
+    );
+    
+    // Calculate diagonal line coordinates
+    const jRelative = convertToRelativePosition(calculatedPositions.J, centerPoint);
+    const nRelative = convertToRelativePosition(calculatedPositions.N, centerPoint);
+    
     return {
-      POWER_OF_ANCESTORS: { x: 50, y: 0 },
-      FUTURE_CHILDREN: { x: -225, y: 0 },
-      diagonal: { x1: 0, y1: 60, x2: 80, y2: -80 },
-      J: { x: 0, y: 60 },
-      K: { x: -80, y: 80 },
-      L: { x: 80, y: 80 },
-      M: { x: -80, y: -80 },
-      N: { x: 80, y: -80 },
-      O: { x: -60, y: 0 },
-      P: { x: 0, y: -60 },
-      Q: { x: 60, y: 0 },
-      R: { x: 0, y: 120 },
-      T: { x: 0, y: -120 },
-      V: { x: 50, y: 50 },
-      F1: { x: -120, y: -60 },
-      F2: { x: -100, y: -40 },
-      G1: { x: 120, y: -60 },
-      G2: { x: 100, y: -40 },
-      H1: { x: 120, y: 60 },
-      H2: { x: 100, y: 40 },
-      I1: { x: -120, y: 60 },
-      I2: { x: -100, y: 40 },
+      ...relativePositions,
+      diagonal: {
+        x1: jRelative.x, y1: jRelative.y,
+        x2: nRelative.x, y2: nRelative.y
+      }
     };
   };
 
@@ -296,140 +451,205 @@ const GeneratePageClient: React.FC = () => {
                 
                 {/* Matrix Value Controls */}
                 <div className="mt-12">
-                  <h4 className="font-space-grotesk text-xl font-bold text-black mb-6 text-center">
+                  <h4 className="font-space-grotesk text-xl font-bold text-black mb-8 text-center">
                     Customize Matrix Values
                   </h4>
                   
-                  {/* Main Positions (A, B, C, D, E) */}
-                  <div className="mb-8">
-                    <h5 className="font-space-grotesk font-bold text-black mb-4">Main Positions</h5>
-                    <div className="grid grid-cols-5 gap-4">
-                      {['A', 'B', 'C', 'D', 'E'].map((position) => (
-                        <div key={position} className="text-center">
-                          <label className="block text-sm font-medium text-black mb-2">
-                            {position}
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="22"
-                            value={matrixValues[position] || 1}
-                            onChange={(e) => handleValueChange(position, parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 border border-black rounded text-center font-bold"
-                          />
+                  <MatrixValueGrid
+                    positions={matrixPositions.main}
+                    values={matrixValues}
+                    onChange={handleValueChange}
+                    columns={{ mobile: 1, tablet: 2, desktop: 3 }}
+                    size="medium"
+                  />
+                  
+                  {/* Ancestral Positions Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 bg-white rounded-2xl overflow-hidden border border-black mb-8">
+                    {[
+                      { key: 'F', label: 'Dad\'s Talents', description: 'Ancestral influences and gifts' },
+                      { key: 'G', label: 'Mom\'s Talents', description: 'Natural abilities and skills' },
+                      { key: 'H', label: 'Dad\'s Karma', description: 'Lessons related to material world' },
+                      { key: 'I', label: 'Mom\'s Karma', description: 'Spiritual growth and evolution' }
+                    ].map((position, index) => {
+                      const isLastColumn = (index + 1) % 4 === 0; // Every 4th item
+                      
+                      return (
+                        <div key={position.key} className={`group p-6 hover:bg-gray-50 transition-all duration-300 relative ${
+                          !isLastColumn ? 'lg:border-r border-black' : ''
+                        } ${index < 2 ? 'md:border-r border-black' : ''}`}>
+                          <div className="text-center">
+                            <h6 className="font-space-grotesk text-sm font-bold text-black mb-1">
+                              {position.label}
+                            </h6>
+                            <p className="text-xs text-black/70 mb-3 leading-tight">
+                              {position.description}
+                            </p>
+                            <input
+                              type="text"
+                                  value={matrixValues[position.key] || 1}
+                              onChange={(e) => handleValueChange(position.key, parseInt(e.target.value) || 1)}
+                              className="w-20 px-3 py-2 border border-black text-center font-bold bg-white focus:outline-none focus:bg-gray-50 transition-colors"
+                              style={{ borderRadius: '0' }}
+                            />
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                   
-                  {/* Corner Positions (F, G, H, I) */}
-                  <div className="mb-8">
-                    <h5 className="font-space-grotesk font-bold text-black mb-4">Corner Positions</h5>
-                    <div className="grid grid-cols-4 gap-4">
-                      {['F', 'G', 'H', 'I'].map((position) => (
-                        <div key={position} className="text-center">
-                          <label className="block text-sm font-medium text-black mb-2">
-                            {position}
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="22"
-                            value={matrixValues[position] || 1}
-                            onChange={(e) => handleValueChange(position, parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 border border-black rounded text-center font-bold"
-                          />
+                  {/* Life Aspects Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 bg-white rounded-2xl overflow-hidden border border-black mb-8">
+                    {[
+                      { key: 'J', label: 'Past Life Mistakes', description: 'Karmic patterns to heal' },
+                      { key: 'K', label: 'Income Streams', description: 'Financial abundance sources' },
+                      { key: 'L', label: 'Work Life Balance', description: 'Professional harmony' },
+                      { key: 'M', label: 'Love Ingredients', description: 'Relationship foundations' },
+                      { key: 'N', label: 'Past Life Income', description: 'Previous wealth patterns' },
+                      { key: 'O', label: 'As a Parent', description: 'Parenting qualities and gifts' }
+                    ].map((position, index) => {
+                      const isLastColumn = (index + 1) % 3 === 0; // Every 3rd item
+                      const isInFirstRow = index < 3; // First 3 items (0, 1, 2)
+                      
+                      return (
+                        <div key={position.key} className={`group p-6 hover:bg-gray-50 transition-all duration-300 relative ${
+                          !isLastColumn ? 'lg:border-r border-black' : ''
+                        } ${isInFirstRow ? 'lg:border-b border-black' : ''} ${
+                          index < 2 ? 'md:border-r border-black' : ''
+                        } ${index < 2 ? 'md:border-b border-black' : ''}`}>
+                          <div className="text-center">
+                            <h6 className="font-space-grotesk text-sm font-bold text-black mb-1">
+                              {position.label}
+                            </h6>
+                            <p className="text-xs text-black/70 mb-3 leading-tight">
+                              {position.description}
+                            </p>
+                            <input
+                              type="text"
+                                  value={matrixValues[position.key] || 1}
+                              onChange={(e) => handleValueChange(position.key, parseInt(e.target.value) || 1)}
+                              className="w-20 px-3 py-2 border border-black text-center font-bold bg-white focus:outline-none focus:bg-gray-50 transition-colors"
+                              style={{ borderRadius: '0' }}
+                            />
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                   
-                  {/* Inner Circle Positions */}
-                  <div className="mb-8">
-                    <h5 className="font-space-grotesk font-bold text-black mb-4">Inner Circle Positions</h5>
-                    <div className="grid grid-cols-6 gap-4">
-                      {['J', 'K', 'L', 'M', 'N', 'O'].map((position) => (
-                        <div key={position} className="text-center">
-                          <label className="block text-sm font-medium text-black mb-2">
-                            {position}
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="22"
-                            value={matrixValues[position] || 1}
-                            onChange={(e) => handleValueChange(position, parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 border border-black rounded text-center font-bold"
-                          />
+                  {/* Soul Path Positions Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 bg-white rounded-2xl overflow-hidden border border-black mb-8">
+                    {[
+                      { key: 'P', label: 'Higher Self', description: 'Spiritual potential and wisdom' },
+                      { key: 'Q', label: 'Money Mindset', description: 'Past life financial beliefs' },
+                      { key: 'R', label: 'Life Task', description: 'Present incarnation purpose' },
+                      { key: 'V', label: 'Sexuality', description: 'Intimate energy and expression' }
+                    ].map((position, index) => {
+                      const isLastColumn = (index + 1) % 4 === 0; // Every 4th item
+                      
+                      return (
+                        <div key={position.key} className={`group p-6 hover:bg-gray-50 transition-all duration-300 relative ${
+                          !isLastColumn ? 'lg:border-r border-black' : ''
+                        } ${index < 2 ? 'md:border-r border-black' : ''}`}>
+                          <div className="text-center">
+                            <h6 className="font-space-grotesk text-sm font-bold text-black mb-1">
+                              {position.label}
+                            </h6>
+                            <p className="text-xs text-black/70 mb-3 leading-tight">
+                              {position.description}
+                            </p>
+                            <input
+                              type="text"
+                                  value={matrixValues[position.key] || 1}
+                              onChange={(e) => handleValueChange(position.key, parseInt(e.target.value) || 1)}
+                              className="w-20 px-3 py-2 border border-black text-center font-bold bg-white focus:outline-none focus:bg-gray-50 transition-colors"
+                              style={{ borderRadius: '0' }}
+                            />
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                   
-                  {/* Additional Positions */}
-                  <div className="mb-8">
-                    <h5 className="font-space-grotesk font-bold text-black mb-4">Additional Positions</h5>
-                    <div className="grid grid-cols-6 gap-4">
-                      {['P', 'Q', 'R', 'S', 'T', 'U'].map((position) => (
-                        <div key={position} className="text-center">
-                          <label className="block text-sm font-medium text-black mb-2">
-                            {position}
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="22"
-                            value={matrixValues[position] || 1}
-                            onChange={(e) => handleValueChange(position, parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 border border-black rounded text-center font-bold"
-                          />
+                  {/* Special Elements Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-0 bg-white rounded-2xl overflow-hidden border border-black mb-8">
+                    {[
+                      { key: 'POA', label: 'Power of Ancestors', description: 'Inherited spiritual gifts and wisdom' },
+                      { key: 'T', label: 'Heart\'s Desire', description: 'Soul\'s deepest yearning and purpose' }
+                    ].map((position, index) => {
+                      const isLastColumn = (index + 1) % 2 === 0; // Every 2nd item
+                      
+                      return (
+                        <div key={position.key} className={`group p-6 hover:bg-gray-50 transition-all duration-300 relative ${
+                          !isLastColumn ? 'md:border-r border-black' : ''
+                        }`}>
+                          <div className="text-center">
+                            <h6 className="font-space-grotesk text-sm font-bold text-black mb-1">
+                              {position.label}
+                            </h6>
+                            <p className="text-xs text-black/70 mb-3 leading-tight">
+                              {position.description}
+                            </p>
+                            <input
+                              type="text"
+                                  value={matrixValues[position.key] || 1}
+                              onChange={(e) => handleValueChange(position.key, parseInt(e.target.value) || 1)}
+                              className="w-20 px-3 py-2 border border-black text-center font-bold bg-white focus:outline-none focus:bg-gray-50 transition-colors"
+                              style={{ borderRadius: '0' }}
+                            />
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                   
-                  {/* Extended Positions */}
-                  <div className="mb-8">
-                    <h5 className="font-space-grotesk font-bold text-black mb-4">Extended Positions</h5>
-                    <div className="grid grid-cols-4 gap-4">
-                      {['V', 'POA'].map((position) => (
-                        <div key={position} className="text-center">
-                          <label className="block text-sm font-medium text-black mb-2">
-                            {position}
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="22"
-                            value={matrixValues[position] || 1}
-                            onChange={(e) => handleValueChange(position, parseInt(e.target.value) || 1)}
-                            className="w-full px-3 py-2 border border-black rounded text-center font-bold"
-                          />
+                  {/* Generational Lines Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-0 bg-white rounded-2xl overflow-hidden border border-black mb-8">
+                    {[
+                      { key: 'F1', label: 'Dad Line 1', description: 'Paternal heritage flow' },
+                      { key: 'F2', label: 'Dad Line 2', description: 'Secondary paternal gifts' },
+                      { key: 'G1', label: 'Mom Line 1', description: 'Maternal heritage flow' },
+                      { key: 'G2', label: 'Mom Line 2', description: 'Secondary maternal gifts' },
+                      { key: 'H1', label: 'Material 1', description: 'Primary material karma' },
+                      { key: 'H2', label: 'Material 2', description: 'Secondary material lessons' },
+                      { key: 'I1', label: 'Spiritual 1', description: 'Primary spiritual task' },
+                      { key: 'I2', label: 'Spiritual 2', description: 'Secondary spiritual growth' }
+                    ].map((position, index) => {
+                      // Desktop (lg): 8 columns - right border on items 0-6 (not on 7)
+                      const isLastColumnLg = (index + 1) % 8 === 0;
+                      // Tablet (md): 4 columns - right border on items 0,1,2 and 4,5,6 (not on 3,7)
+                      const isLastColumnMd = (index + 1) % 4 === 0;
+                      // Mobile: 2 columns - right border on items 0,2,4,6 (not on 1,3,5,7)
+                      const isLastColumnSm = (index + 1) % 2 === 0;
+                      
+                      // Row borders - first 4 items get bottom border on desktop
+                      const isInFirstRowLg = index < 4;
+                      // On tablet: first 4 items get bottom border
+                      const isInFirstRowMd = index < 4;
+                      
+                      return (
+                        <div key={position.key} className={`group p-4 hover:bg-gray-50 transition-all duration-300 relative ${
+                          !isLastColumnLg ? 'lg:border-r border-black' : ''
+                        } ${!isLastColumnMd ? 'md:border-r border-black' : ''} ${
+                          !isLastColumnSm ? 'border-r border-black' : ''
+                        }`}>
+                          <div className="text-center h-full flex flex-col">
+                            <h6 className="font-space-grotesk text-xs font-bold text-black mb-1">
+                              {position.label}
+                            </h6>
+                            <p className="text-xs text-black/60 mb-2 leading-tight flex-1">
+                              {position.description}
+                            </p>
+                            <input
+                              type="text"
+                                  value={matrixValues[position.key] || 1}
+                              onChange={(e) => handleValueChange(position.key, parseInt(e.target.value) || 1)}
+                              className="w-16 px-2 py-1 border border-black text-center font-bold text-sm bg-white focus:outline-none focus:bg-gray-50 transition-colors mx-auto"
+                              style={{ borderRadius: '0' }}
+                            />
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Generational Positions */}
-                  <div className="mb-8">
-                    <h5 className="font-space-grotesk font-bold text-black mb-4">Generational Line Positions</h5>
-                    <div className="grid grid-cols-8 gap-3">
-                      {['F1', 'F2', 'G1', 'G2', 'H1', 'H2', 'I1', 'I2'].map((position) => (
-                        <div key={position} className="text-center">
-                          <label className="block text-xs font-medium text-black mb-2">
-                            {position}
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="22"
-                            value={matrixValues[position] || 1}
-                            onChange={(e) => handleValueChange(position, parseInt(e.target.value) || 1)}
-                            className="w-full px-2 py-1 border border-black rounded text-center font-bold text-sm"
-                          />
-                        </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                   
                   {/* Reset Button */}
@@ -438,10 +658,11 @@ const GeneratePageClient: React.FC = () => {
                       onClick={() => setMatrixValues({
                         A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7, H: 8, I: 9,
                         J: 10, K: 11, L: 12, M: 13, N: 14, O: 15, P: 16, Q: 17,
-                        R: 18, S: 19, T: 20, U: 21, V: 22, POA: 11,
+                        R: 18, T: 20, V: 22, POA: 11,
                         F1: 1, F2: 2, G1: 3, G2: 4, H1: 5, H2: 6, I1: 7, I2: 8
                       })}
-                      className="px-6 py-3 bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:bg-white hover:text-black"
+                      className="px-8 py-4 bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:bg-white hover:text-black hover:-translate-y-0.5"
+                      style={{ borderRadius: '0' }}
                     >
                       Reset to Default Values
                     </button>
