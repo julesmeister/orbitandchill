@@ -301,13 +301,15 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // Generate a consistent user ID based on Firebase UID
-      const userId = `firebase_${firebaseUid}`;
+      console.log(`🔍 Looking for existing user with firebaseUid: ${firebaseUid}`);
       
-      // Check if user exists
-      let user = await UserService.getUserById(userId);
+      // IMPORTANT: First check if user already exists with the Google ID (WITHOUT firebase_ prefix)
+      // This ensures we link to existing accounts instead of creating duplicates
+      let user = await UserService.getUserById(firebaseUid);
+      let userId = firebaseUid; // Use the plain Google ID as the user ID
       
       if (user) {
+        console.log(`✅ Found existing user with Google ID: ${firebaseUid}`);
         // Update existing user with any new info
         const updatedUser = await UserService.updateUser(userId, {
           email,
@@ -315,7 +317,7 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date()
         });
         
-        // Generate JWT token
+        // Generate JWT token with existing user ID
         const token = generateJWT(userId, email);
         
         console.log(`✅ Mobile Firebase auth success - existing user: ${email} (${deviceInfo.platform})`);
@@ -328,9 +330,10 @@ export async function POST(request: NextRequest) {
           message: 'Successfully logged in'
         });
       } else {
-        // Create new user
+        console.log(`❌ No user found with Google ID: ${firebaseUid}, creating new user`);
+        // Create new user with the Google ID directly (NOT firebase_ prefix)
         const newUser = await UserService.createUser({
-          id: userId,
+          id: userId, // Use firebaseUid directly as the user ID
           username: name,
           email,
           authProvider: 'google' // Use 'google' since Firebase is handling Google auth
