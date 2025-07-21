@@ -55,7 +55,7 @@ export const trackDiscussionView = (discussionId: string, category: string) => {
   });
 };
 
-export const trackUserRegistration = (method: 'google' | 'anonymous') => {
+export const trackUserRegistration = (method: 'google' | 'anonymous' | 'email' | 'firebase') => {
   event('sign_up', {
     method: method
   });

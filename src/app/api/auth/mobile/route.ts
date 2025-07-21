@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserService } from '@/db/services/userService';
 import { trackUserRegistration } from '@/lib/analytics';
+import jwt from 'jsonwebtoken';
+import { generateToken } from '@/utils/idGenerator';
 
 interface GoogleTokenInfo {
   sub: string;
@@ -15,6 +17,36 @@ interface GoogleTokenInfo {
   exp: number;
   iat: number;
   iss: string;
+}
+
+interface EmailAuthRequest {
+  provider: 'email';
+  email: string;
+  name: string;
+  deviceInfo: {
+    platform: string;
+    version: string;
+  };
+}
+
+interface GoogleAuthRequest {
+  provider: 'google';
+  token: string;
+  deviceInfo: {
+    platform: string;
+    version: string;
+  };
+}
+
+interface FirebaseAuthRequest {
+  provider: 'firebase';
+  email: string;
+  name: string;
+  firebaseUid: string;
+  deviceInfo: {
+    platform: string;
+    version: string;
+  };
 }
 
 async function verifyGoogleToken(token: string): Promise<GoogleTokenInfo | null> {
@@ -98,6 +130,24 @@ function isRateLimited(identifier: string): boolean {
   return false;
 }
 
+function generateJWT(userId: string, email: string): string {
+  const secret = process.env.JWT_SECRET || 'fallback_secret_key_for_development';
+  const payload = {
+    userId,
+    email,
+    type: 'mobile_auth',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+  };
+  
+  return jwt.sign(payload, secret);
+}
+
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 function validateDeviceInfo(deviceInfo: any): boolean {
   if (!deviceInfo || typeof deviceInfo !== 'object') {
     return false;
@@ -138,99 +188,273 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json();
-    const { token, deviceInfo } = body;
+    console.log('Mobile auth request body:', JSON.stringify(body, null, 2));
+    const { provider, deviceInfo } = body;
     
-    // Validate required fields
-    if (!token || typeof token !== 'string') {
-      return NextResponse.json(
-        { error: 'Google access token is required and must be a string' },
-        { status: 400 }
-      );
-    }
+    // Validate device info first
+    console.log('Device info validation:', deviceInfo);
+    const deviceValidation = validateDeviceInfo(deviceInfo);
+    console.log('Device validation result:', deviceValidation);
     
-    // Validate token format (basic check)
-    if (token.length < 20 || token.length > 2000) {
-      return NextResponse.json(
-        { error: 'Invalid token format' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate device info
-    if (!validateDeviceInfo(deviceInfo)) {
+    if (!deviceValidation) {
+      console.log('Device validation failed for:', deviceInfo);
       return NextResponse.json(
         { error: 'Invalid device information provided' },
         { status: 400 }
       );
     }
     
-    // Verify the Google token
-    const tokenInfo = await verifyGoogleToken(token);
-    
-    if (!tokenInfo) {
+    console.log('Provider received:', provider);
+
+    // Handle different authentication providers
+    if (provider === 'email') {
+      console.log('🟢 EMAIL AUTH BRANCH - Starting email authentication');
+      // Email-based authentication
+      const { email, name } = body as EmailAuthRequest;
+      
+      // Validate required fields
+      if (!email || !name) {
+        return NextResponse.json(
+          { error: 'Email and name are required for email authentication' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate email format
+      if (!validateEmail(email)) {
+        return NextResponse.json(
+          { error: 'Invalid email format' },
+          { status: 400 }
+        );
+      }
+      
+      // Generate a unique ID based on email for consistency
+      const userId = `email_${Buffer.from(email).toString('base64').replace(/[^a-zA-Z0-9]/g, '')}`;
+      
+      // Check if user exists
+      let user = await UserService.getUserById(userId);
+      
+      if (user) {
+        // Update existing user with any new info
+        const updatedUser = await UserService.updateUser(userId, {
+          email,
+          username: name,
+          updatedAt: new Date()
+        });
+        
+        // Generate JWT token
+        const token = generateJWT(userId, email);
+        
+        console.log(`✅ Mobile email auth success - existing user: ${email} (${deviceInfo.platform})`);
+        
+        return NextResponse.json({
+          success: true,
+          token,
+          user: updatedUser,
+          action: 'login',
+          message: 'Successfully logged in'
+        });
+      } else {
+        // Create new user
+        const newUser = await UserService.createUser({
+          id: userId,
+          username: name,
+          email,
+          authProvider: 'anonymous' // Use anonymous for email-based auth
+        });
+        
+        // Track new user registration
+        trackUserRegistration('email');
+        
+        // Generate JWT token
+        const token = generateJWT(userId, email);
+        
+        console.log(`✅ Mobile email auth success - new user: ${email} (${deviceInfo.platform})`);
+        
+        return NextResponse.json({
+          success: true,
+          token,
+          user: newUser,
+          action: 'register',
+          message: 'Successfully registered new user'
+        });
+      }
+      
+    } else if (provider === 'firebase') {
+      console.log('🔥 FIREBASE AUTH BRANCH - Starting Firebase authentication');
+      // Firebase authentication
+      const { email, name, firebaseUid } = body as FirebaseAuthRequest;
+      
+      // Validate required fields
+      if (!email || !name || !firebaseUid) {
+        return NextResponse.json(
+          { error: 'Email, name, and firebaseUid are required for Firebase authentication' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate email format
+      if (!validateEmail(email)) {
+        return NextResponse.json(
+          { error: 'Invalid email format' },
+          { status: 400 }
+        );
+      }
+      
+      // Generate a consistent user ID based on Firebase UID
+      const userId = `firebase_${firebaseUid}`;
+      
+      // Check if user exists
+      let user = await UserService.getUserById(userId);
+      
+      if (user) {
+        // Update existing user with any new info
+        const updatedUser = await UserService.updateUser(userId, {
+          email,
+          username: name,
+          updatedAt: new Date()
+        });
+        
+        // Generate JWT token
+        const token = generateJWT(userId, email);
+        
+        console.log(`✅ Mobile Firebase auth success - existing user: ${email} (${deviceInfo.platform})`);
+        
+        return NextResponse.json({
+          success: true,
+          token,
+          user: updatedUser,
+          action: 'login',
+          message: 'Successfully logged in'
+        });
+      } else {
+        // Create new user
+        const newUser = await UserService.createUser({
+          id: userId,
+          username: name,
+          email,
+          authProvider: 'google' // Use 'google' since Firebase is handling Google auth
+        });
+        
+        // Track new user registration
+        trackUserRegistration('firebase');
+        
+        // Generate JWT token
+        const token = generateJWT(userId, email);
+        
+        console.log(`✅ Mobile Firebase auth success - new user: ${email} (${deviceInfo.platform})`);
+        
+        return NextResponse.json({
+          success: true,
+          token,
+          user: newUser,
+          action: 'register',
+          message: 'Successfully registered new user'
+        });
+      }
+      
+    } else if (provider === 'google') {
+      console.log('🔵 GOOGLE AUTH BRANCH - Starting Google authentication');
+      // Google OAuth authentication
+      const { token } = body as GoogleAuthRequest;
+      
+      // Validate required fields
+      if (!token || typeof token !== 'string') {
+        return NextResponse.json(
+          { error: 'Google access token is required and must be a string' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate token format (basic check)
+      if (token.length < 20 || token.length > 2000) {
+        return NextResponse.json(
+          { error: 'Invalid token format' },
+          { status: 400 }
+        );
+      }
+      
+      // Verify the Google token
+      const tokenInfo = await verifyGoogleToken(token);
+      
+      if (!tokenInfo) {
+        return NextResponse.json(
+          { error: 'Invalid or expired Google token' },
+          { status: 401 }
+        );
+      }
+      
+      // Extract user info from verified token
+      const googleUserId = tokenInfo.sub;
+      const email = tokenInfo.email;
+      const name = tokenInfo.name || tokenInfo.given_name || 'Google User';
+      const picture = tokenInfo.picture;
+      
+      // Additional security checks
+      if (!email || !googleUserId) {
+        return NextResponse.json(
+          { error: 'Required user information not available from token' },
+          { status: 400 }
+        );
+      }
+      
+      // Check if user exists
+      let user = await UserService.getUserById(googleUserId);
+      
+      if (user) {
+        // Update existing user with any new info
+        const updatedUser = await UserService.updateUser(googleUserId, {
+          email,
+          username: name,
+          profilePictureUrl: picture,
+          updatedAt: new Date()
+        });
+        
+        // Generate JWT token
+        const jwtToken = generateJWT(googleUserId, email);
+        
+        console.log(`✅ Mobile Google auth success - existing user: ${email} (${deviceInfo.platform})`);
+        
+        return NextResponse.json({
+          success: true,
+          token: jwtToken,
+          user: updatedUser,
+          action: 'login',
+          message: 'Successfully logged in'
+        });
+      } else {
+        // Create new user
+        const newUser = await UserService.createUser({
+          id: googleUserId,
+          username: name,
+          email,
+          profilePictureUrl: picture,
+          authProvider: 'google'
+        });
+        
+        // Track new user registration
+        trackUserRegistration('google');
+        
+        // Generate JWT token
+        const jwtToken = generateJWT(googleUserId, email);
+        
+        console.log(`✅ Mobile Google auth success - new user: ${email} (${deviceInfo.platform})`);
+        
+        return NextResponse.json({
+          success: true,
+          token: jwtToken,
+          user: newUser,
+          action: 'register',
+          message: 'Successfully registered new user'
+        });
+      }
+      
+    } else {
+      console.log('🔴 UNKNOWN PROVIDER BRANCH - Invalid provider:', provider);
       return NextResponse.json(
-        { error: 'Invalid or expired Google token' },
-        { status: 401 }
-      );
-    }
-    
-    // Extract user info from verified token
-    const googleUserId = tokenInfo.sub;
-    const email = tokenInfo.email;
-    const name = tokenInfo.name || tokenInfo.given_name || 'Google User';
-    const picture = tokenInfo.picture;
-    
-    // Additional security checks
-    if (!email || !googleUserId) {
-      return NextResponse.json(
-        { error: 'Required user information not available from token' },
+        { error: 'Invalid authentication provider. Use "email", "firebase", or "google"' },
         { status: 400 }
       );
-    }
-    
-    // Check if user exists
-    let user = await UserService.getUserById(googleUserId);
-    
-    if (user) {
-      // Update existing user with any new info
-      const updatedUser = await UserService.updateUser(googleUserId, {
-        email,
-        username: name,
-        profilePictureUrl: picture,
-        updatedAt: new Date()
-      });
-      
-      // Log successful authentication
-      console.log(`✅ Mobile auth success - existing user: ${email} (${deviceInfo.platform})`);
-      
-      return NextResponse.json({
-        success: true,
-        user: updatedUser,
-        action: 'login',
-        message: 'Successfully logged in'
-      });
-    } else {
-      // Create new user
-      const newUser = await UserService.createUser({
-        id: googleUserId,
-        username: name,
-        email,
-        profilePictureUrl: picture,
-        authProvider: 'google'
-      });
-      
-      // Track new user registration
-      trackUserRegistration('google');
-      
-      // Log successful registration
-      console.log(`✅ Mobile auth success - new user: ${email} (${deviceInfo.platform})`);
-      
-      return NextResponse.json({
-        success: true,
-        user: newUser,
-        action: 'register',
-        message: 'Successfully registered new user'
-      });
     }
     
   } catch (error) {

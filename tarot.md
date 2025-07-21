@@ -117,12 +117,26 @@ Implementation of an interactive tarot learning game as a premium feature. Users
 │   │   ├── ✅ Returns correct totalScore (FIXED database connection)
 │   │   └── ✅ Weekly statistics
 │   │
-│   └── ✅ GET /api/tarot/leaderboard (src/app/api/tarot/leaderboard/route.ts)
-│       ├── ✅ All-time rankings by total_score
-│       ├── ✅ Weekly/monthly filtering options
-│       ├── ✅ Returns user entries (FIXED database queries)
-│       ├── ✅ Player statistics calculation
-│       └── ✅ Ranking position assignment
+│   ├── ✅ GET /api/tarot/leaderboard (src/app/api/tarot/leaderboard/route.ts)
+│   │   ├── ✅ All-time rankings by total_score
+│   │   ├── ✅ Weekly/monthly filtering options
+│   │   ├── ✅ Returns user entries (FIXED database queries)
+│   │   ├── ✅ Player statistics calculation
+│   │   └── ✅ Ranking position assignment
+│   │
+│   ├── ✅ GET /api/tarot/card-progress (src/app/api/tarot/card-progress/route.ts)
+│   │   ├── ✅ Individual card mastery tracking
+│   │   ├── ✅ Upright/reversed performance metrics
+│   │   ├── ✅ Familiarity levels and learning streaks
+│   │   ├── ✅ Mastery percentage calculations
+│   │   └── ✅ Last played timestamps
+│   │
+│   └── ✅ POST /api/tarot/award-points (src/app/api/tarot/award-points/route.ts)
+│       ├── ✅ Manual point awarding system
+│       ├── ✅ Matching exercise integration
+│       ├── ✅ Leaderboard updates via Turso HTTP client
+│       ├── ✅ Session type tracking
+│       └── ✅ Achievement point distribution
 │
 ├── 🤖 AI Integration
 │   ├── ✅ Evaluation Algorithm (Basic)
@@ -254,6 +268,8 @@ Implementation of an interactive tarot learning game as a premium feature. Users
   - `/api/tarot/generate-situation` - AI-powered scenario generation
   - `/api/tarot/progress` - User progress retrieval
   - `/api/tarot/leaderboard` - Global rankings
+  - `/api/tarot/card-progress` - Individual card mastery tracking
+  - `/api/tarot/award-points` - Manual point awarding system
 - **Error Resilience**: Graceful degradation when database unavailable
 - **Direct SQL**: Uses Turso HTTP client with proper column mapping
 - **Type Safety**: TypeScript interfaces for all request/response data
@@ -702,5 +718,726 @@ console.log('Actual columns:', schemaResult.rows.map(row => row.name));
 
 ---
 
-*Last Updated: July 18, 2025*
-*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed, TypeScript/ESLint Errors Resolved, Level Badge Enhancement Complete*
+## 📚 API Documentation for Mobile Integration
+
+### Base URL
+**https://orbitandchill.com/api/tarot/**
+
+### Complete API Endpoints
+
+#### 1. **User Progress** - GET
+**URL:** `https://orbitandchill.com/api/tarot/progress?userId={userId}`
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "progress": {
+    "totalScore": 1250,
+    "totalCards": 23,
+    "accuracy": 78,
+    "level": "Apprentice",
+    "cardProgress": [
+      {
+        "cardId": "the-fool",
+        "familiarityLevel": "apprentice",
+        "masteryPercentage": 75,
+        "totalAttempts": 8,
+        "averageScore": 68,
+        "lastPlayed": "2025-07-21T10:30:00Z"
+      }
+    ],
+    "recentSessions": [
+      {
+        "cardId": "the-fool",
+        "score": 85,
+        "accuracyRating": "good",
+        "createdAt": "2025-07-21T10:30:00Z"
+      }
+    ],
+    "achievements": ["First 10 Cards", "Accuracy Expert"],
+    "weeklyStats": {
+      "sessionsThisWeek": 12,
+      "weeklyScore": 450,
+      "currentStreak": 5
+    }
+  }
+}
+```
+
+#### 2. **Evaluate User Answer** - POST
+**URL:** `https://orbitandchill.com/api/tarot/evaluate`
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "cardId": "the-fool",
+  "cardOrientation": "upright",
+  "situation": "You're considering a major career change...",
+  "interpretation": "This card suggests new beginnings and taking a leap of faith...",
+  "cardMeaning": "The Fool represents new beginnings, innocence, and spontaneity...",
+  "cardKeywords": ["new beginnings", "innocence", "spontaneity", "leap of faith"],
+  "aiConfig": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "apiKey": "your-api-key",
+    "temperature": 0.7
+  },
+  "overrideScore": 85
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "score": 78,
+  "feedback": "You scored 78 points. Good interpretation...\n\nEXPERT EXAMPLE:\nIn this career situation, The Fool suggests...\n\nTRADITIONAL MEANING:\nNew beginnings and fresh starts...",
+  "accuracyRating": "good",
+  "keywordAccuracy": 0.6,
+  "contextRelevance": 0.7,
+  "traditionalAlignment": 0.8,
+  "creativityBonus": 0.2,
+  "strengthsIdentified": ["Good use of traditional keywords"],
+  "improvementAreas": ["Connect more to situation"],
+  "recommendedStudy": ["Practice situational interpretation"]
+}
+```
+
+#### 3. **Global Leaderboard** - GET
+**URL:** `https://orbitandchill.com/api/tarot/leaderboard?limit=50&timeFilter=all-time&sortBy=score&extended=true`
+
+**Query Parameters:**
+- `limit`: Number of entries (default: 50)
+- `timeFilter`: "all-time", "weekly", "monthly", "daily" (default: "all-time")
+- `sortBy`: "score", "accuracy", "cards", "streak" (default: "score")
+- `extended`: "true" for detailed stats (default: false)
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "leaderboard": [
+    {
+      "id": "user_123",
+      "username": "TarotMaster",
+      "score": 15750,
+      "cardsCompleted": 45,
+      "accuracy": 82,
+      "lastPlayed": "2025-07-21T10:30:00Z",
+      "level": "Master",
+      "rank": 1,
+      "gamesPlayed": 120,
+      "averageScore": 78,
+      "streak": 12,
+      "joinedDate": "2025-01-15T08:00:00Z"
+    }
+  ],
+  "stats": {
+    "totalPlayers": 1247,
+    "averageScore": 65,
+    "topScore": 15750,
+    "gamesPlayedToday": 89
+  }
+}
+```
+
+#### 4. **Individual Card Progress** - GET
+**URL:** `https://orbitandchill.com/api/tarot/card-progress?userId={userId}`
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "progress": {
+    "the-fool": {
+      "cardId": "the-fool",
+      "totalAttempts": 8,
+      "averageScore": 68,
+      "masteryPercentage": 75,
+      "uprightAttempts": 5,
+      "uprightAverage": 72,
+      "reversedAttempts": 3,
+      "reversedAverage": 62,
+      "familiarityLevel": "apprentice",
+      "learningStreak": 3,
+      "lastPlayed": "2025-07-21T10:30:00Z"
+    }
+  }
+}
+```
+
+#### 5. **Award Points** - POST
+**URL:** `https://orbitandchill.com/api/tarot/award-points`
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "points": 150,
+  "reason": "Matching exercise completion",
+  "sessionType": "matching_exercise"
+}
+```
+
+#### 6. **AI Scenario Generation** - POST
+**URL:** `https://orbitandchill.com/api/tarot/generate-situation`
+
+**Request Body:**
+```json
+{
+  "cardId": "the-fool",
+  "cardMeaning": "New beginnings and fresh starts...",
+  "previousSituations": ["career change scenario", "travel situation"],
+  "aiConfig": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "apiKey": "your-api-key",
+    "temperature": 0.8
+  }
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "situation": "You're standing at the edge of a major life decision...",
+  "context": "personal_growth"
+}
+```
+
+#### 7. **AI Evaluation** - POST
+**URL:** `https://orbitandchill.com/api/tarot/ai-evaluate`
+
+**Request Body:**
+```json
+{
+  "userInterpretation": "This card suggests new beginnings...",
+  "cardMeaning": "The Fool represents...",
+  "cardKeywords": ["new beginnings", "innocence"],
+  "situation": "career change scenario",
+  "aiConfig": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "apiKey": "your-api-key",
+    "temperature": 0.7
+  }
+}
+```
+
+### Level System 🎯
+
+**Point Thresholds:**
+- **Novice:** 0-2,499 points
+- **Apprentice:** 2,500-9,999 points  
+- **Adept:** 10,000-24,999 points
+- **Master:** 25,000-49,999 points
+- **Grandmaster:** 50,000+ points
+
+### Usage for Flutter/Mobile App 📱
+
+#### For Tinder-Style Flashcard System:
+
+1. **Get user progress:** Call `/progress` to show stats
+2. **Present card:** Use local card data + call `/generate-situation` for dynamic scenarios
+3. **User swipes/answers:** Call `/evaluate` with their interpretation
+4. **Update progress:** Response automatically updates database
+5. **Show rankings:** Call `/leaderboard` for competitive elements
+6. **Individual card tracking:** Use `/card-progress` for detailed card mastery
+
+## 🔐 Authentication System Documentation
+
+### Overview
+The Orbit & Chill authentication system supports both **anonymous users** and **Google OAuth** authentication with seamless transitions between the two. All user data is persisted in a Turso SQLite database with local caching.
+
+### User Types
+
+#### 1. Anonymous Users
+- **ID Format**: `anon_${random}${timestamp}` (e.g., `anon_abc123_1721552400`)
+- **Persistence**: Stored in localStorage and database
+- **Username**: Auto-generated creative names (e.g., "Cosmic Seeker 123")
+- **Features**: Full access to all features without authentication
+- **Upgrade Path**: Can upgrade to Google authentication seamlessly
+
+#### 2. Google OAuth Users  
+- **ID Format**: Google user ID (numeric string)
+- **Authentication**: Google Identity Services (GIS) OAuth2
+- **Data Sync**: Profile picture, email, display name from Google
+- **Cross-Device**: Synchronization across devices
+
+#### 3. Admin Users
+- **Master Admin**: `orbitandchill@gmail.com` has automatic admin privileges
+- **Premium Override**: Automatic premium access for tarot features
+- **Role-Based Access**: Admin dashboard and management features
+
+### Authentication API Endpoints
+
+#### Mobile Authentication
+**POST** `https://orbitandchill.com/api/auth/mobile`
+
+**Purpose**: Primary authentication endpoint for mobile apps
+
+**Firebase Authentication Request (Recommended):**
+```json
+{
+  "provider": "firebase",
+  "email": "user@gmail.com",
+  "name": "User Name",
+  "firebaseUid": "firebase_user_id_here",
+  "deviceInfo": {
+    "platform": "ios" | "android", 
+    "version": "app_version"
+  }
+}
+```
+
+**Email Authentication Request:**
+```json
+{
+  "provider": "email",
+  "email": "user@gmail.com",
+  "name": "User Name",
+  "deviceInfo": {
+    "platform": "ios" | "android",
+    "version": "app_version"
+  }
+}
+```
+
+**Google Authentication Request:**
+```json
+{
+  "provider": "google",
+  "token": "google_access_token_here",
+  "deviceInfo": {
+    "platform": "ios" | "android",
+    "version": "app_version"
+  }
+}
+```
+
+**How It Works:**
+1. Mobile app sends user's email + name to API
+2. API generates its own JWT/session token for that user
+3. API returns user data + generated token
+4. Mobile app uses returned token for subsequent API calls
+
+**Response:**
+```json
+{
+  "success": true,
+  "token": "jwt_generated_by_api_abc123...",
+  "user": {
+    "id": "user_id", 
+    "username": "Display Name",
+    "email": "user@example.com",
+    "authProvider": "google",
+    "profilePictureUrl": "https://...",
+    "subscriptionTier": "free" | "premium" | "pro",
+    "role": "user" | "admin",
+    "birthData": { ... },
+    "privacy": { ... }
+  }
+}
+```
+
+#### User Profile API
+**GET/POST/PATCH** `https://orbitandchill.com/api/users/profile`
+
+**GET** - Retrieve user profile by ID:
+```
+GET https://orbitandchill.com/api/users/profile?userId=user_123
+```
+
+**POST** - Create/update user profile:
+```json
+{
+  "userId": "user_123",
+  "username": "New Username",
+  "email": "user@example.com",
+  "birthData": {
+    "dateOfBirth": "1990-01-01",
+    "timeOfBirth": "12:00",
+    "locationOfBirth": "New York, NY",
+    "coordinates": { "lat": "40.7128", "lon": "-74.0060" }
+  }
+}
+```
+
+#### Logout Endpoint
+**POST** `https://orbitandchill.com/api/auth/logout`
+
+**Request Body:**
+```json
+{
+  "userId": "user_id"
+}
+```
+
+### Authentication Flow for Mobile Apps
+
+#### Option 1: Anonymous User Flow
+```javascript
+// Generate anonymous user ID
+const generateAnonymousId = () => {
+  const random = Math.random().toString(36).substring(2, 8);
+  const timestamp = Date.now().toString(36);
+  return `anon_${random}_${timestamp}`;
+};
+
+// Authenticate anonymous user
+const authenticateAnonymous = async () => {
+  const anonymousId = generateAnonymousId();
+  
+  const response = await fetch('https://orbitandchill.com/api/auth/mobile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider: 'anonymous',
+      anonymousId: anonymousId,
+      deviceInfo: {
+        platform: 'ios', // or 'android'
+        version: '1.0.0'
+      }
+    })
+  });
+  
+  const data = await response.json();
+  return data.user;
+};
+```
+
+#### Option 2: Google OAuth Flow
+
+**Method A - With Google Token (Preferred):**
+```javascript
+const authenticateWithGoogleToken = async (googleToken) => {
+  const response = await fetch('https://orbitandchill.com/api/auth/mobile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider: 'google',
+      token: googleToken, // Google ID token or access token
+      deviceInfo: {
+        platform: 'ios', // or 'android'
+        version: '1.0.0'
+      }
+    })
+  });
+  
+  const data = await response.json();
+  return data.user;
+};
+```
+
+**Method B - With Email/Name (Fallback):**
+```javascript
+const authenticateWithGoogleEmail = async (email, name) => {
+  const response = await fetch('https://orbitandchill.com/api/auth/mobile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider: 'email', // Changed from 'google' - API generates its own token
+      email: email,
+      name: name,
+      deviceInfo: {
+        platform: 'ios', // or 'android'
+        version: '1.0.0'
+      }
+    })
+  });
+  
+  const data = await response.json();
+  return { user: data.user, token: data.token }; // API returns generated JWT token
+};
+```
+
+#### Checking User Status
+```javascript
+// Check if user exists and get profile
+const getUserProfile = async (userId) => {
+  const response = await fetch(
+    `https://orbitandchill.com/api/users/profile?userId=${userId}`
+  );
+  
+  const data = await response.json();
+  if (data.success) {
+    return {
+      user: data.user,
+      isAuthenticated: data.user.authProvider === 'google',
+      isAnonymous: data.user.authProvider === 'anonymous',
+      isPremium: data.user.subscriptionTier !== 'free',
+      isAdmin: data.user.role === 'admin'
+    };
+  }
+  return null;
+};
+```
+
+### User Data Structure
+
+#### User Object
+```typescript
+interface User {
+  id: string;                          // Google ID or anon_xxxxx
+  username: string;                    // Display name
+  email?: string;                      // Google users only
+  authProvider: "google" | "anonymous";
+  profilePictureUrl?: string;          // Google profile picture
+  subscriptionTier: "free" | "premium" | "pro";
+  role: "user" | "admin";
+  
+  // Astrological data (optional)
+  birthData?: {
+    dateOfBirth: string;               // YYYY-MM-DD
+    timeOfBirth: string;               // HH:MM
+    locationOfBirth: string;           // City, State/Country
+    coordinates: {
+      lat: string;
+      lon: string;
+    }
+  };
+  
+  // Privacy settings
+  privacy: {
+    showZodiacPublicly: boolean;
+    showBirthInfoPublicly: boolean;
+    allowDirectMessages: boolean;
+    showOnlineStatus: boolean;
+  };
+}
+```
+
+### Premium Access Control
+
+#### Admin Override
+- **Master Admin**: `orbitandchill@gmail.com` automatically gets premium access
+- **Auto-Elevation**: Admin users bypass all premium checks
+
+#### Premium Validation
+```javascript
+const checkPremiumAccess = (user) => {
+  // Admin override
+  if (user.email === 'orbitandchill@gmail.com' || user.role === 'admin') {
+    return true;
+  }
+  
+  // Subscription tier check
+  return user.subscriptionTier === 'premium' || user.subscriptionTier === 'pro';
+};
+```
+
+### Session Management
+
+#### Client-Side Storage
+- **Anonymous ID**: Store in device's persistent storage
+- **User Profile**: Cache user data locally
+- **Session Duration**: 24-hour sessions with automatic refresh
+
+#### Session Refresh
+```javascript
+const refreshUserSession = async (userId) => {
+  const profile = await getUserProfile(userId);
+  // Update local cache
+  return profile;
+};
+```
+
+### Error Handling
+
+#### Common Error Responses
+```json
+{
+  "success": false,
+  "error": "Invalid token format",
+  "code": "INVALID_TOKEN"
+}
+
+{
+  "success": false,
+  "error": "Rate limit exceeded",
+  "code": "RATE_LIMIT"
+}
+
+{
+  "success": false,
+  "error": "User not found",
+  "code": "USER_NOT_FOUND"
+}
+```
+
+#### Rate Limiting
+- **Authentication**: 5 attempts per 15 minutes per IP
+- **Profile Updates**: 10 requests per minute per user
+
+### Security Features
+
+#### Input Validation
+- Token format validation
+- Device info validation
+- Email format verification (Google users)
+
+#### Privacy Protection
+- Granular privacy controls
+- Public profile filtering
+- Optional data exposure
+
+### Integration Notes
+
+#### For Mobile Apps
+1. **Choose Authentication**: Start with anonymous for immediate access
+2. **Upgrade Path**: Offer Google sign-in for enhanced features
+3. **Data Persistence**: Store user ID securely on device
+4. **Premium Features**: Check subscription tier for feature gating
+5. **Session Management**: Refresh user data periodically
+
+#### For Web Apps
+- Same API endpoints work for web applications
+- Additional social login options available
+- Real-time WebSocket connections for live features
+
+#### Usage Example (Any Platform)
+```javascript
+// Example: Get user progress
+const response = await fetch('https://orbitandchill.com/api/tarot/progress?userId=user_123');
+const data = await response.json();
+
+if (data.success) {
+  console.log('User Level:', data.progress.level);
+  console.log('Total Score:', data.progress.totalScore);
+  console.log('Accuracy:', data.progress.accuracy);
+}
+
+// Example: Submit card evaluation
+const evalResponse = await fetch('https://orbitandchill.com/api/tarot/evaluate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userId: 'user_123',
+    cardId: 'the-fool',
+    cardOrientation: 'upright',
+    situation: 'Career change scenario...',
+    interpretation: 'This card suggests new beginnings...',
+    cardMeaning: 'The Fool represents new beginnings...',
+    cardKeywords: ['new beginnings', 'innocence', 'spontaneity']
+  })
+});
+
+const evalData = await evalResponse.json();
+console.log('Score:', evalData.score);
+console.log('Feedback:', evalData.feedback);
+```
+
+### Leaderboard API Access 🏆
+
+#### Basic API Call
+**URL:** `https://orbitandchill.com/api/tarot/leaderboard`
+
+**Query Parameters:**
+- `limit`: Number of entries (default: 50, max: 50)
+- `timeFilter`: "all-time", "weekly", "monthly", "daily" (default: "all-time")  
+- `sortBy`: "score", "accuracy", "cards", "streak" (default: "score")
+- `extended`: "true" for detailed user stats (default: false)
+
+#### Example API Calls
+
+**Get Top 10 All-Time Leaders:**
+```
+GET https://orbitandchill.com/api/tarot/leaderboard?limit=10&timeFilter=all-time&sortBy=score&extended=true
+```
+
+**Get Weekly Top Performers:**
+```
+GET https://orbitandchill.com/api/tarot/leaderboard?limit=20&timeFilter=weekly&sortBy=score&extended=true
+```
+
+**Get Most Accurate Players:**
+```
+GET https://orbitandchill.com/api/tarot/leaderboard?sortBy=accuracy&extended=true
+```
+
+#### Response Data Structure
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "leaderboard": [
+    {
+      "id": "user_123",
+      "username": "TarotMaster",
+      "score": 15750,
+      "cardsCompleted": 45,
+      "accuracy": 82,
+      "lastPlayed": "2025-07-21T10:30:00Z",
+      "level": "Master",
+      "rank": 1,
+      "gamesPlayed": 120,
+      "averageScore": 78,
+      "streak": 12,
+      "joinedDate": "2025-01-15T08:00:00Z"
+    }
+  ],
+  "stats": {
+    "totalPlayers": 1247,
+    "averageScore": 65,
+    "topScore": 15750,
+    "gamesPlayedToday": 89
+  }
+}
+```
+
+#### Key Data Fields
+
+**Leaderboard Entry:**
+- `id`: User identifier
+- `username`: Display name  
+- `score`: Total points earned
+- `cardsCompleted`: Number of cards mastered
+- `accuracy`: Overall accuracy percentage
+- `level`: Current level (Novice, Apprentice, Adept, Master, Grandmaster)
+- `rank`: Position on leaderboard (1-indexed)
+- `gamesPlayed`: Total games played (extended only)
+- `averageScore`: Average score per game (extended only)  
+- `streak`: Current learning streak (extended only)
+
+**Global Stats:**
+- `totalPlayers`: Total users on leaderboard
+- `averageScore`: Average score across all players
+- `topScore`: Highest score achieved
+- `gamesPlayedToday`: Games played today across all users
+
+#### Finding User's Rank
+
+To find a specific user's rank, call the leaderboard API and search through the results:
+
+```javascript
+// Pseudo-code for finding user rank
+const leaderboardData = await fetch('https://orbitandchill.com/api/tarot/leaderboard?extended=true');
+const { leaderboard } = leaderboardData;
+
+const userEntry = leaderboard.find(entry => entry.id === userId);
+const userRank = userEntry ? userEntry.rank : null;
+```
+
+#### Use Cases for Mobile Apps
+
+1. **Display Top 10**: Show top performers
+2. **User Rank**: Find and display user's current position
+3. **Weekly Competition**: Show weekly leaderboard for fresh competition
+4. **Achievement Tracking**: Compare user stats against global averages
+5. **Social Features**: Show friends' rankings
+6. **Motivation**: Display next rank requirements
+
+#### Authentication Note:
+All endpoints require a `userId` parameter. The system supports both anonymous users (with persistent IDs like `anon_xyz123`) and authenticated Google users.
+
+#### Error Handling:
+All endpoints return `{ success: true/false, error?: string }` format for consistent error handling across all platforms.
+
+---
+
+*Last Updated: July 21, 2025*
+*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed, TypeScript/ESLint Errors Resolved, Level Badge Enhancement Complete, API Documentation Added for Mobile Integration*
