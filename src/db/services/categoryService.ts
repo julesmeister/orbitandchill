@@ -379,6 +379,136 @@ export const incrementCategoryUsage = async (categoryName: string): Promise<Cate
 };
 
 /**
+ * Recalculate usage counts for all categories based on actual thread data
+ * Following API_DATABASE_PROTOCOL.md analytics patterns
+ */
+export const recalculateCategoryUsage = async (): Promise<CategoryServiceResponse<Record<string, number>>> => {
+  try {
+    if (!db || !db.client) {
+      return {
+        success: false,
+        error: 'Database connection unavailable',
+        fallback: true
+      };
+    }
+
+    // Get all discussions and count by category
+    const { discussions } = await import('@/db/schema');
+    const discussionCounts = await db
+      .select({
+        category: discussions.category,
+        count: sql<number>`count(*)`
+      })
+      .from(discussions)
+      .where(eq(discussions.isActive, true))
+      .groupBy(discussions.category);
+
+    // Convert to map for easy lookup
+    const usageCounts: Record<string, number> = {};
+    discussionCounts.forEach((row: { category: string; count: number }) => {
+      usageCounts[row.category] = row.count;
+    });
+
+    // Update all categories with their actual usage counts
+    for (const [categoryName, count] of Object.entries(usageCounts)) {
+      await db
+        .update(categories)
+        .set({ 
+          usageCount: count,
+          updatedAt: new Date()
+        })
+        .where(eq(categories.name, categoryName));
+    }
+
+    // Also reset unused categories to 0
+    const unusedCategories = await db
+      .select({ name: categories.name })
+      .from(categories)
+      .where(eq(categories.isActive, true));
+
+    for (const category of unusedCategories) {
+      if (!usageCounts[category.name]) {
+        await db
+          .update(categories)
+          .set({ 
+            usageCount: 0,
+            updatedAt: new Date()
+          })
+          .where(eq(categories.name, category.name));
+      }
+    }
+
+    return {
+      success: true,
+      data: usageCounts
+    };
+
+  } catch (error) {
+    console.error('Database operation failed in recalculateCategoryUsage:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      fallback: true
+    };
+  }
+};
+
+/**
+ * Clean up category names by removing trailing numbers/counts
+ * Following API_DATABASE_PROTOCOL.md data cleanup patterns
+ */
+export const cleanupCategoryNames = async (): Promise<CategoryServiceResponse<Record<string, string>>> => {
+  try {
+    if (!db || !db.client) {
+      return {
+        success: false,
+        error: 'Database connection unavailable',
+        fallback: true
+      };
+    }
+
+    // Get all categories
+    const allCategories = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.isActive, true));
+
+    const cleanupResults: Record<string, string> = {};
+
+    for (const category of allCategories) {
+      // Remove trailing numbers/counts from category names
+      const cleanedName = category.name.replace(/\d+$/, '').trim();
+      
+      if (cleanedName !== category.name && cleanedName.length > 0) {
+        // Update the category name
+        await db
+          .update(categories)
+          .set({ 
+            name: cleanedName,
+            updatedAt: new Date()
+          })
+          .where(eq(categories.id, category.id));
+        
+        cleanupResults[category.id] = `"${category.name}" → "${cleanedName}"`;
+      }
+    }
+
+    return {
+      success: true,
+      data: cleanupResults
+    };
+
+  } catch (error) {
+    console.error('Database operation failed in cleanupCategoryNames:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      fallback: true
+    };
+  }
+};
+
+/**
  * Initialize default categories if none exist
  * Following API_DATABASE_PROTOCOL.md initialization patterns
  */

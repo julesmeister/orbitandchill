@@ -6,6 +6,7 @@ import { usePeopleStore } from '../store/peopleStore';
 import { useChartTab } from '../store/chartStore';
 import { useNatalChart } from './useNatalChart';
 import { useStatusToast } from './useStatusToast';
+import { usePeopleAPI } from './usePeopleAPI';
 import { Person } from '../types/people';
 import { trackChartGenerated, trackPageView } from '../utils/analytics';
 import { BRAND } from '../config/brand';
@@ -16,13 +17,14 @@ export const useChartPage = () => {
   const { user, isProfileComplete, isLoading: isUserLoading, loadProfile } = useUserStore();
   const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
   const { activeTab, setActiveTab } = useChartTab();
+  const { defaultPerson, selectedPerson: peopleSelectedPerson, loadPeople } = usePeopleAPI();
   
   // Local state
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [sharedChartLoaded, setSharedChartLoaded] = useState(false);
   
-  // Use global selected person if available, otherwise fall back to local state
-  const activeSelectedPerson = globalSelectedPerson || selectedPerson;
+  // Use people system's selected person, or global selected person, or local state, or default person
+  const activeSelectedPerson = peopleSelectedPerson || globalSelectedPerson || selectedPerson || defaultPerson;
   
   // Chart management
   const {
@@ -55,6 +57,13 @@ export const useChartPage = () => {
     }
   }, [user, isUserLoading, loadProfile]);
   
+  // Load people when user is available
+  useEffect(() => {
+    if (user?.id) {
+      loadPeople();
+    }
+  }, [user?.id, loadPeople]);
+  
   // Check for existing charts and auto-generate if needed
   useEffect(() => {
     if (isLoadingCache || cachedChart || isGenerating || !user) {
@@ -73,14 +82,20 @@ export const useChartPage = () => {
         // Continue to generation if loading fails
       }
       
-      if (user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat) {
+      // Use the default person if available, otherwise fall back to user data
+      const chartPerson = defaultPerson || (user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat ? {
+        name: user.username || '',
+        birthData: user.birthData
+      } : null);
+      
+      if (chartPerson?.birthData) {
         try {
           await generateChartRef.current({
-            name: user.username || '',
-            dateOfBirth: user.birthData.dateOfBirth,
-            timeOfBirth: user.birthData.timeOfBirth,
-            locationOfBirth: user.birthData.locationOfBirth || 'Unknown',
-            coordinates: user.birthData.coordinates
+            name: chartPerson.name || '',
+            dateOfBirth: chartPerson.birthData.dateOfBirth,
+            timeOfBirth: chartPerson.birthData.timeOfBirth,
+            locationOfBirth: chartPerson.birthData.locationOfBirth || 'Unknown',
+            coordinates: chartPerson.birthData.coordinates
           });
           
           trackChartGenerated('natal', {
@@ -94,7 +109,7 @@ export const useChartPage = () => {
     };
     
     loadOrGenerateChart();
-  }, [cachedChart, isGenerating, user?.id, user?.birthData?.dateOfBirth, user?.birthData?.timeOfBirth, user?.birthData?.coordinates?.lat]);
+  }, [cachedChart, isGenerating, user?.id, user?.birthData?.dateOfBirth, user?.birthData?.timeOfBirth, user?.birthData?.coordinates?.lat, defaultPerson]);
   
   // Handle share token from URL
   useEffect(() => {
@@ -170,10 +185,7 @@ export const useChartPage = () => {
   };
   
   const handleRegenerateChart = async () => {
-    const personToUse = selectedPerson || (user?.birthData ? {
-      name: user.username || "",
-      birthData: user.birthData
-    } : null);
+    const personToUse = activeSelectedPerson;
     
     if (!personToUse?.birthData) {
       alert("No birth data available. Please select a person or add your birth data.");
@@ -280,10 +292,8 @@ export const useChartPage = () => {
   // Computed values for UI
   const isLoading = isUserLoading || (isLoadingCache && hasExistingChart) || isGenerating || !user;
   
-  const personToShow = selectedPerson || (user?.birthData ? {
-    name: user.username || "",
-    birthData: user.birthData
-  } : null);
+  // Use the activeSelectedPerson which properly includes the default person with relationship: 'self'
+  const personToShow = activeSelectedPerson;
   
   const birthDataToShow = cachedChart?.metadata?.birthData || personToShow?.birthData;
   

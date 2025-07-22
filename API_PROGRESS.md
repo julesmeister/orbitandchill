@@ -11,13 +11,14 @@ This document provides a clean reference for all API endpoints, their status, an
 | **User Management** | 9 | 0 | 0 | 9 |
 | **Analytics** | 8 | 0 | 0 | 8 |
 | **Charts/Natal** | 5 | 0 | 0 | 5 |
+| **People Management** | 4 | 0 | 0 | 4 |
 | **Horary Questions** | 4 | 0 | 0 | 4 |
 | **Premium Features** | 4 | 0 | 0 | 4 |
 | **Events/Electional** | 7 | 0 | 0 | 7 |
 | **Notifications** | 5 | 0 | 0 | 5 |
 | **Newsletter/Marketing** | 2 | 0 | 0 | 2 |
 
-**Total: 66/66 APIs Complete (100%)**
+**Total: 70/70 APIs Complete (100%)**
 
 ## 🎯 Recent Fixes & Improvements
 
@@ -277,6 +278,71 @@ This document provides a clean reference for all API endpoints, their status, an
 - ✅ Chart state management with Zustand store
 - ✅ Draggable interpretation sections
 - ✅ Chart history management
+
+---
+
+## 👥 People Management System
+
+### API Endpoints Reference
+| Endpoint | Method | Status | Description |
+|----------|--------|--------|-------------|
+| `/api/people` | GET | ✅ Complete | Get all people for a user with default person ordering |
+| `/api/people` | POST | ✅ Complete | Create new person with birth data and relationship |
+| `/api/people` | PATCH | ✅ Complete | Update person details with ownership validation |
+| `/api/people` | DELETE | ✅ Complete | Delete person with auto-default reassignment |
+
+### Database Tables
+- ✅ `people` - Complete person storage with birth data and relationships
+
+### Frontend Integration
+- ✅ **Complete People Management System**: Full CRUD operations with state persistence
+  - Multi-person profile creation and management
+  - Relationship categorization (self, family, friend, partner, colleague, other)
+  - Birth data storage with location coordinates
+  - Default person selection for quick chart generation
+  - Automatic duplicate prevention based on birth data
+  - Real-time dropdown updates in chart generation forms
+
+### Key Features
+- ✅ **usePeopleAPI Hook**: React hook providing complete people management functionality
+  - Auto-loading people when user changes
+  - Auto-creation of "self" person from user birth data
+  - Optimistic updates with error rollback
+  - Selected person persistence across sessions
+  - Duplicate prevention and validation
+
+- ✅ **People Store (Zustand)**: Alternative state management with persistence
+  - IndexedDB primary storage via database service
+  - localStorage fallback for development
+  - Comprehensive logging and debugging
+  - Auto-persist selected person ID
+
+- ✅ **Database Integration**: Robust persistence layer
+  - Foreign key constraints with user cascade deletion
+  - Unique constraints prevent duplicate people per user
+  - Optimized indexes for user queries and default person lookups
+  - Proper snake_case ↔ camelCase field mapping
+
+- ✅ **Form Integration**: Seamless integration with chart generation
+  - PeopleSelector component for dropdowns
+  - CompactNatalChartForm for adding/editing people
+  - ChartQuickActions integration for chart subject selection
+  - Automatic form population from selected person data
+
+### Architecture Overview
+- **Person Model**: Complete birth data storage with relationship categorization
+- **Default Person Logic**: Only one default person per user with automatic reassignment
+- **Ownership Validation**: All operations validate person belongs to requesting user
+- **State Synchronization**: Real-time updates across all components using people data
+- **Error Recovery**: Graceful fallbacks for API failures with user feedback
+- **Type Safety**: Complete TypeScript interfaces for Person, PersonStorage, and form data
+
+### Technical Implementation
+- **API Validation**: Comprehensive input validation and error handling
+- **Duplicate Prevention**: Checks existing birth data before allowing creation
+- **Auto-Default Management**: Handles default person switching and reassignment
+- **Optimistic Updates**: Immediate UI updates with server sync
+- **Cross-Component Integration**: People selection works across all chart-related forms
 
 ---
 
@@ -597,6 +663,12 @@ This document provides a clean reference for all API endpoints, their status, an
 - `POST /api/charts/generate` - Generate natal chart
 - `GET /api/charts/[id]` - Get chart by ID
 - `POST /api/charts/[id]/share` - Create share link
+
+### People
+- `GET /api/people` - Get user's people list
+- `POST /api/people` - Create new person
+- `PATCH /api/people` - Update person details
+- `DELETE /api/people` - Delete person
 
 ### Discussions
 - `GET /api/discussions` - List discussions

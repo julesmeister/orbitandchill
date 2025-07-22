@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
 import { AnalyticsService } from '@/db/services/analyticsService';
+import { incrementCategoryUsage } from '@/db/services/categoryService';
 import { initializeDatabase } from '@/db/index';
 
 export async function GET(
@@ -134,6 +135,8 @@ export async function PATCH(
     
     const updates = await request.json();
     
+    // Get the original discussion to check if category changed
+    const originalDiscussion = await DiscussionService.getDiscussionById(discussionId);
     
     // Update the discussion
     const updatedDiscussion = await DiscussionService.updateDiscussion(discussionId, updates, db);
@@ -144,6 +147,15 @@ export async function PATCH(
         { success: false, error: 'Discussion not found' },
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+    
+    // If category changed, increment usage count for the new category
+    if (updates.category && originalDiscussion && updates.category !== originalDiscussion.category) {
+      try {
+        await incrementCategoryUsage(updates.category);
+      } catch (categoryError) {
+        console.warn('Failed to increment category usage:', categoryError);
+      }
     }
 
     return NextResponse.json({

@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   getAllCategories, 
   createCategory, 
-  initializeDefaultCategories 
+  initializeDefaultCategories,
+  recalculateCategoryUsage,
+  cleanupCategoryNames
 } from '@/db/services/categoryService';
 import { CategoryFormData } from '@/types/categories';
 import { z } from 'zod';
@@ -123,6 +125,89 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('API Error in POST /api/categories:', error);
+    
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Internal server error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/categories
+ * Handle category management actions like recalculating usage counts
+ * Following API_DATABASE_PROTOCOL.md action patterns
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { action } = body;
+
+    if (action === 'recalculate-usage') {
+      // Recalculate usage counts for all categories
+      const result = await recalculateCategoryUsage();
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: result.error || 'Failed to recalculate category usage',
+            fallback: result.fallback
+          },
+          { status: result.fallback ? 503 : 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Category usage counts recalculated successfully',
+        data: result.data,
+        meta: {
+          timestamp: new Date().toISOString(),
+          categoriesUpdated: Object.keys(result.data || {}).length
+        }
+      });
+    }
+
+    if (action === 'cleanup-names') {
+      // Clean up category names by removing trailing numbers
+      const result = await cleanupCategoryNames();
+      
+      if (!result.success) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: result.error || 'Failed to cleanup category names',
+            fallback: result.fallback
+          },
+          { status: result.fallback ? 503 : 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Category names cleaned up successfully',
+        data: result.data,
+        meta: {
+          timestamp: new Date().toISOString(),
+          categoriesUpdated: Object.keys(result.data || {}).length
+        }
+      });
+    }
+
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Invalid action specified' 
+      },
+      { status: 400 }
+    );
+
+  } catch (error) {
+    console.error('API Error in PATCH /api/categories:', error);
     
     return NextResponse.json(
       { 

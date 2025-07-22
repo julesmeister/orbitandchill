@@ -131,25 +131,59 @@ export default function ChartQuickActions({
 
   // Handle share chart button click
   const handleShareChart = React.useCallback(async () => {
-    if (!chartId || !user?.id) {
-      showError('Share Failed', 'Chart ID or user not available');
+    if (!user?.id) {
+      showError('Share Failed', 'User not available');
+      return;
+    }
+
+    // Determine which person to use for chart generation
+    const personToShare = selectedPerson || defaultPerson;
+    if (!personToShare) {
+      showError('Share Failed', 'No person selected for chart generation');
       return;
     }
 
     // Log current state for debugging
     console.log('=== SHARE CHART DEBUG ===');
-    console.log('Chart ID being shared:', chartId);
+    console.log('Original Chart ID:', chartId);
     console.log('User ID:', user.id);
-    console.log('Selected person:', selectedPerson);
-    console.log('Default person:', defaultPerson);
+    console.log('Person to share:', personToShare);
     console.log('Selected person ID:', selectedPersonId);
     console.log('=========================');
 
     try {
-      showLoading('Generating Share Link', 'Creating shareable link for your chart...');
+      showLoading('Generating Share Link', 'Creating fresh chart and shareable link...');
 
-      // Generate share token
-      const response = await fetch(`/api/charts/${chartId}/share`, {
+      // Step 1: Generate a fresh chart with current person data
+      const generateResponse = await fetch('/api/charts/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          ...personToShare.birthData,
+          forceRegenerate: true, // Force regeneration to ensure fresh data
+          isPublic: true, // Make it shareable immediately
+          subjectName: personToShare.name,
+        }),
+      });
+
+      if (!generateResponse.ok) {
+        throw new Error(`Failed to generate fresh chart: ${generateResponse.status}`);
+      }
+
+      const generateData = await generateResponse.json();
+      
+      if (!generateData.success || !generateData.chart) {
+        throw new Error('Chart generation failed or returned invalid data');
+      }
+
+      const newChartId = generateData.chart.id;
+      console.log('Generated fresh chart ID:', newChartId);
+
+      // Step 2: Generate share token for the fresh chart
+      const shareResponse = await fetch(`/api/charts/${newChartId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,32 +191,33 @@ export default function ChartQuickActions({
         body: JSON.stringify({ userId: user.id }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to generate share link: ${response.status}`);
+      if (!shareResponse.ok) {
+        throw new Error(`Failed to generate share link: ${shareResponse.status}`);
       }
 
-      const data = await response.json();
+      const shareData = await shareResponse.json();
       
       // Log the response data for debugging
       console.log('=== SHARE RESPONSE DEBUG ===');
-      console.log('Share API response:', data);
-      console.log('Chart data in response:', data.chart);
+      console.log('Share API response:', shareData);
+      console.log('Fresh chart data:', generateData.chart);
+      console.log('Share URL:', shareData.shareUrl);
       console.log('============================');
       
-      if (data.shareUrl) {
+      if (shareData.shareUrl) {
         // Copy to clipboard with proper error handling
         try {
-          await navigator.clipboard.writeText(data.shareUrl);
-          showSuccess('Link Copied!', 'Share link has been copied to your clipboard');
+          await navigator.clipboard.writeText(shareData.shareUrl);
+          showSuccess('Link Copied!', 'Fresh chart share link has been copied to your clipboard');
         } catch (clipboardError) {
           // Fallback: try to focus the document and retry
           try {
             window.focus();
-            await navigator.clipboard.writeText(data.shareUrl);
-            showSuccess('Link Copied!', 'Share link has been copied to your clipboard');
+            await navigator.clipboard.writeText(shareData.shareUrl);
+            showSuccess('Link Copied!', 'Fresh chart share link has been copied to your clipboard');
           } catch (retryError) {
             // Final fallback: show the URL to user
-            showSuccess('Share Link Ready', `Copy this link: ${data.shareUrl}`);
+            showSuccess('Share Link Ready', `Copy this link: ${shareData.shareUrl}`);
           }
         }
       } else {
@@ -192,7 +227,7 @@ export default function ChartQuickActions({
       console.error('Share chart error:', error);
       showError('Share Failed', 'Unable to create share link. Please try again.');
     }
-  }, [chartId, user?.id, showLoading, showSuccess, showError]);
+  }, [user?.id, selectedPerson, defaultPerson, selectedPersonId, showLoading, showSuccess, showError]);
 
   return (
     <div className="bg-white overflow-visible">

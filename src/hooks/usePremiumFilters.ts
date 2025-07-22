@@ -17,8 +17,22 @@ export function usePremiumFilters(features: PremiumFeature[]) {
   const [filterStatus, setFilterStatus] = useState<string>('All Features');
   const [activeSection, setActiveSection] = useState('All Sections');
 
-  const categoryOptions = ['All Categories', 'Chart Display', 'Interpretation', 'Sharing', 'Analysis'];
-  const statusOptions = ['All Features', 'Enabled', 'Disabled', 'Premium Only', 'Free Features'];
+  const categoryOptions = [
+    { value: 'All Categories', label: 'All Categories' },
+    { value: 'Chart Display', label: 'Chart Display' },
+    { value: 'Interpretation', label: 'Interpretation' },
+    { value: 'Sharing', label: 'Sharing' },
+    { value: 'Analysis', label: 'Analysis' }
+  ];
+  
+  const statusOptions = [
+    { value: 'All Features', label: 'All Features' },
+    { value: 'Enabled', label: 'Enabled' },
+    { value: 'Disabled', label: 'Disabled' },
+    { value: 'Premium Only', label: 'Premium Only' },
+    { value: 'Free Features', label: 'Free Features' }
+  ];
+  
   const sectionTabs = ['All Sections', 'Chart Display', 'Interpretations', 'Sharing', 'Analysis', 'Horary', 'Events'];
 
   const filteredFeatures = features.filter(feature => {

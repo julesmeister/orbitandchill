@@ -4,6 +4,7 @@ import NextImage from 'next/image';
 import { useUserStore } from '../../store/userStore';
 import { useChartTab } from '../../store/chartStore';
 import { usePDFGeneration } from '../../hooks/usePDFGeneration';
+import { getAvatarByIdentifier } from '../../utils/avatarUtils';
 import ChartTabs from './ChartTabs';
 import ChartInterpretation from './ChartInterpretation';
 import ChartActions from './ChartActions';
@@ -157,19 +158,15 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
         {/* Content */}
         <div className="relative z-10">
           <div className="flex items-center mb-4">
-            {(personAvatar || user?.profilePictureUrl) ? (
+            <div className="w-8 h-8 mr-3 rounded-full overflow-hidden border-2 border-black bg-white">
               <NextImage
-                src={personAvatar || user?.profilePictureUrl || ''}
+                src={personAvatar || user?.preferredAvatar || user?.profilePictureUrl || getAvatarByIdentifier(personName || user?.username || 'Anonymous')}
                 alt={`${personName || user?.username}'s avatar`}
                 width={32}
                 height={32}
-                className="w-8 h-8 mr-3 border-2 border-black bg-white"
+                className="w-full h-full object-cover"
               />
-            ) : (
-              <div className="w-8 h-8 mr-3 bg-black flex items-center justify-center text-white font-bold text-sm border-2 border-black">
-                {(personName || user?.username)?.[0]?.toUpperCase() || 'A'}
-              </div>
-            )}
+            </div>
             <h3 className="font-space-grotesk text-2xl font-bold text-black">
               {chartName}
             </h3>

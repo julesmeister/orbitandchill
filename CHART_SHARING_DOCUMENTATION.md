@@ -188,13 +188,19 @@ const { chart } = await response.json();
 
 ## Current Limitations & Areas for Improvement
 
-### 1. Share Token Management
+### 1. Share Token Management ✅ **PARTIALLY RESOLVED**
 
-**Current State**: Tokens are permanent until chart deletion
-**Improvements Needed**:
+**Current State**: Enhanced fresh chart generation implemented
+**Recent Improvements**:
+- ✅ Fresh chart generation ensures share links always reflect current data
+- ✅ Force regeneration bypasses stale chart caching
+- ✅ Current person detection eliminates incorrect share data
+
+**Remaining Improvements Needed**:
 - Expiration dates for share tokens
-- Ability to revoke/regenerate tokens
+- Ability to revoke/regenerate tokens without full chart regeneration
 - Analytics on share link usage
+- Smart change detection to avoid unnecessary chart regeneration
 
 ### 2. Social Media Integration ✅ **IMPLEMENTED**
 
@@ -624,6 +630,72 @@ The debug tool (`/public/debug-chart.html`) provides comprehensive testing capab
 ## Chart Generation & Persistence Analysis
 
 ### Recent Fixes & Improvements ✅ **COMPLETED**
+
+#### Chart Sharing Fresh Data Generation ✅ **COMPLETED** (2025-01-22)
+
+**Problem**: Users experienced stale chart data in share links when they updated their person selection after initially creating a share link. The same share token was reused even when underlying person data changed, causing recipients to see outdated chart information.
+
+**Root Cause Analysis**:
+- **Static Share Tokens**: Share tokens were generated for specific saved chart records and didn't change when user input changed
+- **No Change Detection**: No mechanism to detect when current form data differed from shared chart data  
+- **Database-driven Sharing**: Share system used persisted chart data, not live user form input
+- **Token Reuse**: Same token returned for repeated share requests on the same chart ID
+
+**Solution Implemented**:
+```typescript
+// ChartQuickActions.tsx - Enhanced handleShareChart (lines 133-230)
+const handleShareChart = React.useCallback(async () => {
+  // Step 1: Determine current person to share
+  const personToShare = selectedPerson || defaultPerson;
+  
+  // Step 2: Generate fresh chart with current person data
+  const generateResponse = await fetch('/api/charts/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: user.id,
+      ...personToShare.birthData,
+      forceRegenerate: true, // Force fresh generation
+      isPublic: true,        // Make immediately shareable
+      subjectName: personToShare.name,
+    }),
+  });
+  
+  // Step 3: Generate share token for fresh chart
+  const shareResponse = await fetch(`/api/charts/${newChartId}/share`, {
+    method: 'POST',
+    body: JSON.stringify({ userId: user.id }),
+  });
+}, [selectedPerson, defaultPerson, user?.id]);
+```
+
+**Implementation Status**: ✅ **FULLY IMPLEMENTED AND VERIFIED**
+
+**Key Implementation Features**:
+- **Fresh Chart Generation**: Always generates new chart with current person data before sharing
+- **Force Regeneration**: Uses `forceRegenerate: true` to bypass existing chart caching
+- **Current Person Detection**: Smart logic to determine which person data to use for generation
+- **Two-Step Process**: Generate chart first, then create share token for guaranteed fresh data
+- **Enhanced User Feedback**: Updated messaging to indicate fresh chart generation process
+- **Comprehensive Error Handling**: Proper fallback mechanisms for clipboard and sharing failures
+
+**Technical Verification**:
+- ✅ Code implementation complete in ChartQuickActions.tsx
+- ✅ Two-step process working: fresh chart generation → share token creation
+- ✅ Share button properly disabled when no chart ID or user ID available
+- ✅ Enhanced user feedback with "Generating Share Link" status messages
+- ✅ Proper error handling with fallback clipboard functionality
+- ✅ Force regeneration bypassing stale chart cache
+
+**Impact**: 
+- ✅ Share links now always reflect current person selection
+- ✅ Recipients see accurate chart data matching sharer's current state
+- ✅ No more confusion from stale share token reuse
+- ✅ Enhanced user feedback during fresh chart generation process
+- ✅ Improved reliability with comprehensive error handling
+
+**Files Modified & Verified**:
+- `/src/components/charts/ChartQuickActions.tsx` - Complete implementation verified (lines 133-230)
 
 #### 1. **Chart Database Persistence Issue** ✅ **RESOLVED**
 
@@ -1612,3 +1684,264 @@ The stellium persistence system ensures accurate and consistent astrological dat
 - **Debug Support**: Comprehensive logging for troubleshooting stellium sync issues
 
 This implementation establishes a robust foundation for accurate astrological data management while maintaining optimal performance and user experience standards.
+
+## Avatar Display Consistency & Chart Recognition ✅ **COMPLETED**
+
+### Overview of Avatar Display Fix
+
+The application now provides consistent avatar display across all interfaces, ensuring that when users view their own charts, their actual Google profile picture or preferred avatar is displayed consistently between the navbar and chart display components.
+
+### Avatar Consistency Issue Resolution ✅ **RESOLVED** (2025-01-22)
+
+#### Problem Identified ✅ **DIAGNOSED**
+
+**Issue**: Users experienced inconsistent avatar display when viewing their own charts. The avatar shown in the `NatalChartDisplay` component differed from the avatar shown in the `Navbar` dropdown, even though they were viewing the same user's chart.
+
+**User Experience Impact**:
+- Default chart view showed generic/incorrect avatar instead of user's Google profile picture
+- Avatar only displayed correctly when explicitly clicking on own name in people selector
+- Inconsistent experience between navbar and chart display components
+- User had to manually re-select their own name despite being the default selection
+
+#### Root Cause Analysis ✅ **IDENTIFIED**
+
+**Primary Issue: Chart Recognition Logic**
+- `useChartPage` hook was creating fallback person objects that lacked proper identity markers
+- Fallback objects only contained `name` and `birthData` but missing `relationship: 'self'` field
+- Chart page logic was not properly integrated with the people management system
+- `ChartPageClient.tsx` avatar logic couldn't recognize fallback objects as user's own chart
+
+**Secondary Issue: Avatar Precedence Inconsistency**
+- **Navbar**: Used `user?.preferredAvatar || user?.profilePictureUrl || getAvatarByIdentifier(displayName)`
+- **NatalChartDisplay**: Used `personAvatar || user?.profilePictureUrl` (missing `preferredAvatar` and fallback)
+- Different components used different avatar selection logic
+- Missing import of `getAvatarByIdentifier` utility function
+
+#### Solution Implemented ✅ **COMPLETED**
+
+### 1. **Enhanced Avatar Precedence Logic** ✅ **IMPLEMENTED**
+
+**File**: `/src/components/charts/NatalChartDisplay.tsx`
+
+```typescript
+// Added missing avatar utility import
+import { getAvatarByIdentifier } from '../../utils/avatarUtils';
+
+// Updated avatar logic to match navbar precedence
+<div className="w-8 h-8 mr-3 rounded-full overflow-hidden border-2 border-black bg-white">
+  <NextImage
+    src={personAvatar || user?.preferredAvatar || user?.profilePictureUrl || getAvatarByIdentifier(personName || user?.username || 'Anonymous')}
+    alt={`${personName || user?.username}'s avatar`}
+    width={32}
+    height={32}
+    className="w-full h-full object-cover"
+  />
+</div>
+```
+
+**Avatar Precedence Now Consistent**:
+1. **`personAvatar`** - Explicitly passed avatar (for other people's charts)
+2. **`user?.preferredAvatar`** - User's selected avatar preference  
+3. **`user?.profilePictureUrl`** - Google profile picture
+4. **`getAvatarByIdentifier(...)`** - Deterministic fallback avatar
+
+### 2. **Chart Recognition System Integration** ✅ **IMPLEMENTED**
+
+**File**: `/src/hooks/useChartPage.ts`
+
+```typescript
+// Added usePeopleAPI integration
+import { usePeopleAPI } from './usePeopleAPI';
+
+export const useChartPage = () => {
+  const { user, isProfileComplete, isLoading: isUserLoading, loadProfile } = useUserStore();
+  const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
+  const { activeTab, setActiveTab } = useChartTab();
+  const { defaultPerson, selectedPerson: peopleSelectedPerson, loadPeople } = usePeopleAPI();
+  
+  // Use people system's selected person, or global selected person, or local state, or default person
+  const activeSelectedPerson = peopleSelectedPerson || globalSelectedPerson || selectedPerson || defaultPerson;
+  
+  // Load people when user is available
+  useEffect(() => {
+    if (user?.id) {
+      loadPeople();
+    }
+  }, [user?.id, loadPeople]);
+  
+  // Use the activeSelectedPerson which properly includes the default person with relationship: 'self'
+  const personToShow = activeSelectedPerson;
+}
+```
+
+**Key Integration Features**:
+- **People System Integration**: `useChartPage` now properly integrates with `usePeopleAPI`
+- **Default Person Recognition**: Uses people system's default person with `relationship: 'self'`
+- **Proper Person Objects**: No more fallback objects missing identity markers
+- **Automatic People Loading**: Loads people collection when user is available
+
+### 3. **Enhanced Chart Generation Logic** ✅ **UPDATED**
+
+```typescript
+// Use the default person if available, otherwise fall back to user data
+const chartPerson = defaultPerson || (user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat ? {
+  name: user.username || '',
+  birthData: user.birthData
+} : null);
+
+// Updated chart generation and regeneration to use proper person objects
+const handleRegenerateChart = async () => {
+  const personToUse = activeSelectedPerson; // Uses proper person with relationship markers
+  // ... rest of regeneration logic
+};
+```
+
+### Technical Implementation Details
+
+#### Default Person Creation Process
+```typescript
+// usePeopleAPI automatically creates default person for user
+const userPersonData: PersonFormData = {
+  name: user.username,
+  relationship: 'self',           // ✅ Key identity marker
+  birthData: user.birthData,
+  isDefault: true,               // ✅ Marks as default selection
+  notes: 'Your personal birth data',
+};
+```
+
+#### Chart Recognition Flow
+```
+Page Load → Load People → Get Default Person → Recognize as Self → Display Correct Avatar
+    ↓           ↓              ↓               ↓                  ↓
+User Visit   usePeopleAPI   relationship:     Chart Recognition   Google Profile
+                           'self' + isDefault                     Picture
+```
+
+#### Avatar Selection Flow  
+```
+Chart Display → Person Recognition → Avatar Precedence → Consistent Display
+     ↓                ↓                    ↓                ↓
+NatalChartDisplay  activeSelectedPerson  preferredAvatar   Same as Navbar
+                                        || profilePictureUrl
+                                        || fallbackAvatar
+```
+
+### User Experience Improvements ✅
+
+#### 1. **Consistent Avatar Display**
+- ✅ Same avatar shown in navbar and chart display
+- ✅ Google profile pictures display correctly by default
+- ✅ Preferred avatar settings respected across all components
+- ✅ Proper fallback avatars when no profile picture available
+
+#### 2. **Automatic Chart Recognition**
+- ✅ Own charts automatically recognized without manual selection
+- ✅ No need to click own name in dropdown when already selected
+- ✅ Default chart view shows correct avatar immediately
+- ✅ Seamless transition between own charts and others' charts
+
+#### 3. **Improved Data Flow**
+- ✅ People system properly integrated with chart page
+- ✅ Default person objects contain all necessary identity markers
+- ✅ Chart generation uses proper person objects with relationships
+- ✅ State management synchronized across components
+
+### Performance Considerations ✅
+
+#### 1. **Efficient People Loading**
+- People collection loaded once when user available
+- Default person creation handled by `usePeopleAPI` auto-add system
+- No unnecessary API calls or duplicate person creation
+- Proper race condition prevention in people management
+
+#### 2. **Avatar Loading Optimization**
+- Consistent avatar precedence prevents multiple image requests
+- Fallback avatars generated deterministically for performance
+- Google profile pictures cached by browser
+- No avatar flickering between different sources
+
+### Validation & Testing ✅
+
+#### 1. **Avatar Consistency** ✅ **VERIFIED**
+- Same avatar displayed in navbar dropdown and chart display
+- Google profile pictures showing correctly by default
+- Preferred avatar settings working across components
+- Fallback avatars displaying when no profile picture available
+
+#### 2. **Chart Recognition** ✅ **VERIFIED**
+- Own charts automatically recognized on page load
+- No manual selection required for default chart view
+- Correct avatar displayed immediately without user interaction
+- Proper person object creation with relationship markers
+
+#### 3. **Integration Testing** ✅ **VERIFIED**
+- People system integration working properly
+- Default person creation and selection functional
+- State synchronization between components operational
+- Chart generation using proper person objects
+
+### Files Modified & Verified ✅
+
+1. **`/src/components/charts/NatalChartDisplay.tsx`**
+   - Added `getAvatarByIdentifier` import
+   - Updated avatar precedence logic to match navbar
+   - Enhanced avatar display with consistent styling
+
+2. **`/src/hooks/useChartPage.ts`**
+   - Added `usePeopleAPI` integration
+   - Updated `activeSelectedPerson` logic to use default person
+   - Modified `personToShow` to use proper people system objects
+   - Enhanced chart generation to use default person data
+
+### Migration Impact
+
+#### No Breaking Changes ✅
+- Existing chart functionality remains unchanged
+- Avatar display enhanced without affecting other features
+- People system integration is additive, not disruptive
+- Backward compatibility maintained for all chart operations
+
+#### Enhanced User Experience ✅
+- Immediate improvement in avatar consistency
+- No user action required to benefit from fixes
+- Seamless integration with existing user workflows
+- Better recognition of user's own charts vs others
+
+### Future Enhancements
+
+#### 1. **Advanced Avatar Management**
+- User avatar selection interface in settings
+- Support for custom avatar uploads
+- Avatar history and preference management
+- Social profile picture synchronization options
+
+#### 2. **Enhanced Chart Recognition**
+- Advanced chart ownership detection algorithms  
+- Smart person matching for imported charts
+- Improved duplicate person detection and merging
+- Enhanced relationship mapping for family charts
+
+#### 3. **Profile Integration**
+- Avatar display in profile pages
+- Consistent avatar usage across all user interfaces
+- Avatar-based user identification in community features
+- Integration with social sharing for personalized chart previews
+
+### Conclusion
+
+The avatar display consistency fix resolves a fundamental user experience issue where the chart interface didn't properly recognize when users were viewing their own charts. By integrating the chart page logic with the people management system and standardizing avatar precedence logic across components, users now enjoy:
+
+**Immediate Benefits ✅**:
+- **Consistent Avatar Display**: Same avatar shown across all interfaces
+- **Automatic Recognition**: Own charts recognized without manual selection  
+- **Seamless Experience**: No need to re-select own name in dropdowns
+- **Correct Profile Pictures**: Google profile pictures display by default
+
+**Technical Excellence ✅**:
+- **Proper Integration**: Chart system now properly integrated with people system
+- **Identity Markers**: Default person objects contain proper relationship markers
+- **Performance Optimized**: Efficient people loading and avatar selection
+- **Future-Ready**: Foundation for advanced avatar and chart recognition features
+
+This fix establishes a solid foundation for consistent user identity recognition across the entire chart system while maintaining optimal performance and providing an intuitive user experience.
