@@ -113,7 +113,7 @@ export default function OverviewTab({ siteMetrics, healthMetrics, notifications,
         dailyVisitors={realMetrics.dailyVisitors}
         activeUsers={realMetrics.activeUsers}
         monthlyGrowth={realMetrics.monthlyGrowth}
-        eventsCount={siteMetrics.events?.totalEvents || 0}
+        eventsCount={siteMetrics.events?.totalEvents}
         trends={trends}
         isLoading={isLoading}
       />

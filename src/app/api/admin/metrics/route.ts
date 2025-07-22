@@ -76,8 +76,8 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
       };
     }
     
-    // Calculate monthly growth (simplified)
-    const monthlyGrowth = Math.max(0, Math.min(25, Math.floor(totalUsers / 10)));
+    // Monthly growth will be calculated from real user data
+    const monthlyGrowth = 0; // Placeholder - real calculation happens in frontend
     
     const metrics = {
       totalUsers,
