@@ -21,7 +21,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   subtitle,
   className = '',
   centered = true,
-  screenCentered = true,
+  screenCentered = false,
 }) => {
   const sizeClasses = {
     sm: {

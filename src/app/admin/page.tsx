@@ -12,6 +12,7 @@ export default function AdminPage() {
         size="lg"
         title="Loading Admin Dashboard"
         subtitle="Preparing administrative tools and data management interface..."
+        screenCentered={true}
       />
     }>
       <AdminDashboard />
