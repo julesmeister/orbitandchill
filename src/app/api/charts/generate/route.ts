@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       console.warn('🔄 POTENTIAL LOOP DETECTED - Chart generation request:', {
         userId: body.userId?.slice(-8),
         coordinates: body.coordinates,
-        timeSinceLastRequest: Date.now() - global.lastChartRequest.timestamp,
+        timeSinceLastRequest: global.lastChartRequest ? Date.now() - global.lastChartRequest.timestamp : 0,
         callStack: new Error().stack?.split('\n').slice(1, 4).join('\n')
       });
     }
