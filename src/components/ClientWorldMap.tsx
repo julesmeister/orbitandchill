@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import WorldMap from './WorldMap';
+import LoadingSpinner from './reusable/LoadingSpinner';
 
 interface ClientWorldMapProps {
   className?: string;
@@ -20,7 +21,13 @@ export default function ClientWorldMap({ className, onCountryClick, whiteCountri
     return (
       <div className={`w-full ${className || ''}`}>
         <div className="flex items-center justify-center bg-gray-100 h-96">
-          <div className="text-gray-500">Loading world map...</div>
+          <LoadingSpinner 
+            variant="dots" 
+            size="md" 
+            title="Loading world map"
+            centered={true}
+            color="white"
+          />
         </div>
       </div>
     );

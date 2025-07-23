@@ -12,6 +12,7 @@ interface LoadingSpinnerProps {
   className?: string;
   centered?: boolean;
   screenCentered?: boolean; // New prop for full-screen centering
+  color?: 'black' | 'white'; // New prop for dot color
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
@@ -22,6 +23,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className = '',
   centered = true,
   screenCentered = false,
+  color = 'black',
 }) => {
   const sizeClasses = {
     sm: {
@@ -50,13 +52,13 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   const renderDots = () => (
     <div className={`flex items-center justify-center space-x-2 ${screenCentered ? 'mb-8' : 'mb-4'}`}>
       <div 
-        className={`${sizeClasses[size].dots} bg-black animate-bounce [animation-delay:-0.3s]`}
+        className={`${sizeClasses[size].dots} ${color === 'white' ? 'bg-white' : 'bg-black'} animate-bounce [animation-delay:-0.3s]`}
       ></div>
       <div 
-        className={`${sizeClasses[size].dots} bg-black animate-bounce [animation-delay:-0.15s]`}
+        className={`${sizeClasses[size].dots} ${color === 'white' ? 'bg-white' : 'bg-black'} animate-bounce [animation-delay:-0.15s]`}
       ></div>
       <div 
-        className={`${sizeClasses[size].dots} bg-black animate-bounce`}
+        className={`${sizeClasses[size].dots} ${color === 'white' ? 'bg-white' : 'bg-black'} animate-bounce`}
       ></div>
     </div>
   );
@@ -87,13 +89,13 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           {renderAnimation()}
           
           {title && (
-            <h1 className={`font-space-grotesk font-bold text-black mb-6 ${sizeClasses[size].title}`}>
+            <h1 className={`font-space-grotesk font-bold ${color === 'white' ? 'text-white' : 'text-black'} mb-6 ${sizeClasses[size].title}`}>
               {title}
             </h1>
           )}
           
           {subtitle && (
-            <p className={`text-black/80 font-open-sans leading-relaxed max-w-3xl mx-auto ${sizeClasses[size].subtitle}`}>
+            <p className={`${color === 'white' ? 'text-white/80' : 'text-black/80'} font-open-sans leading-relaxed max-w-3xl mx-auto ${sizeClasses[size].subtitle}`}>
               {subtitle}
             </p>
           )}
@@ -114,13 +116,13 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       {renderAnimation()}
       
       {title && (
-        <h2 className={`font-space-grotesk font-bold text-black mb-2 ${sizeClasses[size].title}`}>
+        <h2 className={`font-space-grotesk font-bold ${color === 'white' ? 'text-white' : 'text-black'} mb-2 ${sizeClasses[size].title}`}>
           {title}
         </h2>
       )}
       
       {subtitle && (
-        <p className={`text-black/70 font-open-sans ${sizeClasses[size].subtitle}`}>
+        <p className={`${color === 'white' ? 'text-white/70' : 'text-black/70'} font-open-sans ${sizeClasses[size].subtitle}`}>
           {subtitle}
         </p>
       )}

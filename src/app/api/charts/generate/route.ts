@@ -7,6 +7,14 @@ import { UserService } from '@/db/services/userService';
 import { generateNatalChart } from '@/utils/natalChart';
 import { detectStelliums } from '@/utils/stelliumDetection';
 
+// Global type for loop detection
+declare global {
+  var lastChartRequest: {
+    userId: string;
+    timestamp: number;
+  } | undefined;
+}
+
 interface ChartGenerationRequest {
   userId: string;
   subjectName: string;
@@ -64,15 +72,24 @@ export async function POST(request: NextRequest) {
   try {
     const body: ChartGenerationRequest = await request.json();
 
-    console.log('Chart generation request received:', {
-      userId: !!body.userId,
-      subjectName: !!body.subjectName,
-      dateOfBirth: !!body.dateOfBirth,
-      timeOfBirth: !!body.timeOfBirth,
-      locationOfBirth: !!body.locationOfBirth,
-      coordinates: !!body.coordinates,
-      coordinatesDetails: body.coordinates
-    });
+    // Only log if we detect potential issues or it's a fresh request
+    const isLikelyLoop = global.lastChartRequest && 
+      global.lastChartRequest.userId === body.userId &&
+      global.lastChartRequest.timestamp > Date.now() - 5000; // Within 5 seconds
+    
+    if (isLikelyLoop) {
+      console.warn('🔄 POTENTIAL LOOP DETECTED - Chart generation request:', {
+        userId: body.userId?.slice(-8),
+        coordinates: body.coordinates,
+        timeSinceLastRequest: Date.now() - global.lastChartRequest.timestamp,
+        callStack: new Error().stack?.split('\n').slice(1, 4).join('\n')
+      });
+    }
+    
+    global.lastChartRequest = {
+      userId: body.userId,
+      timestamp: Date.now()
+    };
 
     // Validate required fields
     if (!body.userId || !body.subjectName || !body.dateOfBirth || !body.timeOfBirth || !body.locationOfBirth || !body.coordinates) {
@@ -112,26 +129,28 @@ export async function POST(request: NextRequest) {
       );
 
       if (existingChart) {
-        // Track cached chart analytics
-        try {
-          await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/analytics/track`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              event: 'chart_generated',
-              data: {
-                chartType: body.chartType || 'natal',
-                userId: body.userId,
-                chartId: existingChart.id,
-                title: body.title || 'Natal Chart',
-                theme: body.theme || 'default',
-                cached: true,
-                source: 'api_cache'
-              }
-            })
-          });
-        } catch (analyticsError) {
-          console.debug('Analytics tracking failed (non-critical):', analyticsError);
+        // Track cached chart analytics (only if not in loop)
+        if (!isLikelyLoop) {
+          try {
+            await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/analytics/track`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: 'chart_generated',
+                data: {
+                  chartType: body.chartType || 'natal',
+                  userId: body.userId,
+                  chartId: existingChart.id,
+                  title: body.title || 'Natal Chart',
+                  theme: body.theme || 'default',
+                  cached: true,
+                  source: 'api_cache'
+                }
+              })
+            });
+          } catch (analyticsError) {
+            console.debug('Analytics tracking failed (non-critical):', analyticsError);
+          }
         }
 
         return NextResponse.json({
@@ -181,8 +200,8 @@ export async function POST(request: NextRequest) {
     });
 
 
-    // Track chart generation analytics
-    if (savedChart) {
+    // Track chart generation analytics (only if not in loop)
+    if (savedChart && !isLikelyLoop) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/analytics/track`, {
           method: 'POST',
@@ -209,7 +228,10 @@ export async function POST(request: NextRequest) {
     // Update user stellium data if this is their own chart and we have chart data
     if (savedChart && metadata?.chartData) {
       try {
-        console.log('Detecting stelliums for user chart...');
+        // Only log stellium detection if not in a loop
+        if (!isLikelyLoop) {
+          console.log('🔍 Detecting stelliums for user chart...');
+        }
         const stelliumResult = detectStelliums(metadata.chartData);
         
         // Prepare user update data
@@ -231,12 +253,16 @@ export async function POST(request: NextRequest) {
           userUpdateData.detailedStelliums = stelliumResult.detailedStelliums;
         }
         
-        console.log('Chart data extracted for user update:', userUpdateData);
+        if (!isLikelyLoop) {
+          console.log('📊 Chart data extracted for user update:', userUpdateData);
+        }
         
         // Update user profile with extracted chart data
         await UserService.updateUser(body.userId, userUpdateData);
         
-        console.log('User chart data updated successfully');
+        if (!isLikelyLoop) {
+          console.log('✅ User chart data updated successfully');
+        }
       } catch (stelliumError) {
         console.error('Error detecting/updating stelliums:', stelliumError);
         // Don't fail the chart generation if stellium detection fails
