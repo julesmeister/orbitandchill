@@ -400,7 +400,6 @@ export const recalculateCategoryUsage = async (): Promise<CategoryServiceRespons
         count: sql<number>`count(*)`
       })
       .from(discussions)
-      .where(eq(discussions.isActive, true))
       .groupBy(discussions.category);
 
     // Convert to map for easy lookup
