@@ -124,6 +124,9 @@ function EventChartContent() {
 
     const executeChartGeneration = async () => {
       try {
+        // TypeScript needs explicit assertion since the check is in outer scope
+        if (!user.birthData) return;
+        
         const chartParams = buildChartParameters({
           eventTitle,
           eventDate,
