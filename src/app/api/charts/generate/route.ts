@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
 import { ChartService } from '@/db/services/chartService';
 import { UserService } from '@/db/services/userService';
@@ -9,6 +9,7 @@ import { detectStelliums } from '@/utils/stelliumDetection';
 
 // Global type for loop detection
 declare global {
+  // eslint-disable-next-line no-var
   var lastChartRequest: {
     userId: string;
     timestamp: number;
