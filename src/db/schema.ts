@@ -839,3 +839,18 @@ export const people = sqliteTable('people', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
+
+// Tarot Custom Sentences - user-generated sentences for tarot card learning
+export const tarotCustomSentences = sqliteTable('tarot_custom_sentences', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  cardName: text('card_name').notNull(), // Full card name (e.g., "The Fool", "Eight of Pentacles")
+  isReversed: integer('is_reversed', { mode: 'boolean' }).notNull().default(false),
+  sentence: text('sentence').notNull(),
+  isCustom: integer('is_custom', { mode: 'boolean' }).notNull().default(true),
+  sourceType: text('source_type', {
+    enum: ['user', 'ai_generated', 'migrated']
+  }).notNull().default('user'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});

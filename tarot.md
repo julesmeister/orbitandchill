@@ -1440,4 +1440,837 @@ All endpoints return `{ success: true/false, error?: string }` format for consis
 ---
 
 *Last Updated: July 21, 2025*
-*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed, TypeScript/ESLint Errors Resolved, Level Badge Enhancement Complete, API Documentation Added for Mobile Integration*
+*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed, TypeScript/ESLint Errors Resolved, Level Badge Enhancement Complete, API Documentation Added for Mobile Integration*# Tarot Sentences Cloud Persistence API Documentation
+
+## 🎯 Overview
+This documentation covers the API endpoints needed to persist and sync tarot card learning sentences between the Flutter mobile app and the React web backend. This extends the existing Orbit & Chill tarot API to support user-generated, editable sentences for enhanced learning experiences.
+
+## 🗄️ Database Schema Extension
+
+### New Table: `tarot_custom_sentences`
+```sql
+CREATE TABLE tarot_custom_sentences (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  card_name TEXT NOT NULL,
+  is_reversed INTEGER NOT NULL DEFAULT 0,
+  sentence TEXT NOT NULL,
+  is_custom INTEGER NOT NULL DEFAULT 1,
+  source_type TEXT DEFAULT 'user', -- 'user', 'ai_generated', 'migrated'
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(user_id, card_name, is_reversed, sentence)
+);
+
+CREATE INDEX idx_tarot_sentences_user_card ON tarot_custom_sentences(user_id, card_name, is_reversed);
+CREATE INDEX idx_tarot_sentences_user ON tarot_custom_sentences(user_id);
+```
+
+## 🔌 API Endpoints
+
+### Base URL
+**https://orbitandchill.com/api/tarot/sentences/**
+
+---
+
+## 1. Get User's Custom Sentences for a Card
+
+**GET** `/api/tarot/sentences/card`
+
+**Purpose**: Retrieve all custom sentences for a specific card and orientation for a user.
+
+**Query Parameters:**
+- `userId` (required): User identifier
+- `cardName` (required): Card name (e.g., "The Fool", "Eight of Pentacles")  
+- `isReversed` (optional): `true` for reversed, `false` for upright (default: both)
+- `limit` (optional): Maximum sentences to return (default: 10)
+
+**Example Request:**
+```
+GET https://orbitandchill.com/api/tarot/sentences/card?userId=user_123&cardName=The%20Fool&isReversed=false&limit=5
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "sentences": [
+    {
+      "id": "sent_001",
+      "sentence": "Someone who thinks YOLO is a life philosophy",
+      "sourceType": "user",
+      "createdAt": "2025-07-23T10:30:00Z",
+      "updatedAt": "2025-07-23T10:30:00Z"
+    },
+    {
+      "id": "sent_002", 
+      "sentence": "The friend who books trips without checking their bank account",
+      "sourceType": "ai_generated",
+      "createdAt": "2025-07-23T11:15:00Z",
+      "updatedAt": "2025-07-23T11:15:00Z"
+    }
+  ],
+  "cardInfo": {
+    "cardName": "The Fool",
+    "isReversed": false,
+    "totalSentences": 2,
+    "maxAllowed": 5
+  }
+}
+```
+
+---
+
+## 2. Get All User's Custom Sentences
+
+**GET** `/api/tarot/sentences/user`
+
+**Purpose**: Retrieve all custom sentences for a user across all cards (for backup/sync).
+
+**Query Parameters:**
+- `userId` (required): User identifier
+- `limit` (optional): Maximum sentences to return (default: 1000)
+- `offset` (optional): Pagination offset (default: 0)
+- `cardName` (optional): Filter by specific card name
+- `sourceType` (optional): Filter by source type
+
+**Example Request:**
+```
+GET https://orbitandchill.com/api/tarot/sentences/user?userId=user_123&limit=100
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "sentences": [
+    {
+      "id": "sent_001",
+      "cardName": "The Fool",
+      "isReversed": false,
+      "sentence": "Someone who thinks YOLO is a life philosophy",
+      "sourceType": "user",
+      "createdAt": "2025-07-23T10:30:00Z",
+      "updatedAt": "2025-07-23T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 156,
+    "limit": 100,
+    "offset": 0,
+    "hasMore": true
+  },
+  "stats": {
+    "totalCards": 78,
+    "cardsWithCustomSentences": 23,
+    "totalCustomSentences": 156,
+    "averageSentencesPerCard": 6.8
+  }
+}
+```
+
+---
+
+## 3. Add Custom Sentence
+
+**POST** `/api/tarot/sentences/add`
+
+**Purpose**: Add a new custom sentence for a card.
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "cardName": "The Fool",
+  "isReversed": false,
+  "sentence": "Someone who thinks YOLO is a life philosophy",
+  "sourceType": "user"
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "sentence": {
+    "id": "sent_123",
+    "cardName": "The Fool",
+    "isReversed": false,
+    "sentence": "Someone who thinks YOLO is a life philosophy",
+    "sourceType": "user",
+    "createdAt": "2025-07-23T10:30:00Z",
+    "updatedAt": "2025-07-23T10:30:00Z"
+  },
+  "cardStats": {
+    "totalSentences": 3,
+    "maxAllowed": 5,
+    "canAddMore": true
+  }
+}
+```
+
+---
+
+## 4. Update Custom Sentence
+
+**PUT** `/api/tarot/sentences/update`
+
+**Purpose**: Update an existing custom sentence.
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "sentenceId": "sent_123",
+  "newSentence": "Someone who treats YOLO as their personal motto"
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "sentence": {
+    "id": "sent_123",
+    "cardName": "The Fool",
+    "isReversed": false,
+    "sentence": "Someone who treats YOLO as their personal motto",
+    "sourceType": "user",
+    "createdAt": "2025-07-23T10:30:00Z",
+    "updatedAt": "2025-07-23T12:45:00Z"
+  }
+}
+```
+
+---
+
+## 5. Delete Custom Sentence
+
+**DELETE** `/api/tarot/sentences/delete`
+
+**Purpose**: Delete a custom sentence.
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "sentenceId": "sent_123"
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "message": "Sentence deleted successfully",
+  "cardStats": {
+    "cardName": "The Fool",
+    "isReversed": false,
+    "remainingSentences": 2,
+    "canAddMore": true
+  }
+}
+```
+
+---
+
+## 6. Bulk Upload/Sync Sentences
+
+**POST** `/api/tarot/sentences/bulk-sync`
+
+**Purpose**: Sync multiple sentences from mobile app to cloud (for migration or backup).
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "sentences": [
+    {
+      "cardName": "The Fool",
+      "isReversed": false,
+      "sentence": "Someone who thinks YOLO is a life philosophy",
+      "sourceType": "migrated",
+      "localId": "local_001"
+    },
+    {
+      "cardName": "The Fool",
+      "isReversed": true,
+      "sentence": "That friend whose recklessness needs a reality check",
+      "sourceType": "migrated", 
+      "localId": "local_002"
+    }
+  ],
+  "syncMode": "merge" // "merge", "replace", "add_only"
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "results": {
+    "added": 2,
+    "updated": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "sentenceMap": [
+    {
+      "localId": "local_001",
+      "serverId": "sent_456",
+      "status": "added"
+    },
+    {
+      "localId": "local_002", 
+      "serverId": "sent_457",
+      "status": "added"
+    }
+  ],
+  "stats": {
+    "totalSentences": 156,
+    "cardsAffected": 2,
+    "syncTimestamp": "2025-07-23T12:45:00Z"
+  }
+}
+```
+
+---
+
+## 7. Generate AI Sentences for Card
+
+**POST** `/api/tarot/sentences/generate`
+
+**Purpose**: Generate AI-powered sentences for a card using existing AI integration.
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "cardName": "The Fool",
+  "isReversed": false,
+  "count": 3,
+  "existingSentences": [
+    "Someone who thinks YOLO is a life philosophy"
+  ],
+  "aiConfig": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "temperature": 0.8
+  }
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "generatedSentences": [
+    "The friend who books trips without checking their bank account",
+    "Someone whose spontaneity would make a GPS dizzy",
+    "That person who treats life like it's their personal adventure movie"
+  ],
+  "cardInfo": {
+    "cardName": "The Fool",
+    "isReversed": false,
+    "meaning": "New beginnings, innocence, spontaneity...",
+    "keywords": ["new beginnings", "innocence", "spontaneity", "leap of faith"]
+  }
+}
+```
+
+---
+
+## 8. Get Sentence Statistics
+
+**GET** `/api/tarot/sentences/stats`
+
+**Purpose**: Get statistics about user's custom sentences for analytics.
+
+**Query Parameters:**
+- `userId` (required): User identifier
+- `timeframe` (optional): "all", "week", "month" (default: "all")
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "stats": {
+    "totalSentences": 156,
+    "cardsWithSentences": 45,
+    "averageSentencesPerCard": 3.5,
+    "sentencesBySource": {
+      "user": 120,
+      "ai_generated": 24,
+      "migrated": 12
+    },
+    "recentActivity": {
+      "sentencesAddedThisWeek": 8,
+      "sentencesModifiedThisWeek": 3,
+      "lastActivity": "2025-07-23T10:30:00Z"
+    },
+    "topCards": [
+      {
+        "cardName": "The Fool",
+        "sentenceCount": 5,
+        "isReversed": false
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 9. Get Random Sentence for Card
+
+**GET** `/api/tarot/sentences/random`
+
+**Purpose**: Get a random sentence for a specific card and orientation.
+
+**Query Parameters:**
+- `userId` (required): User identifier
+- `cardName` (required): Card name (e.g., "The Fool", "Eight of Pentacles")
+- `isReversed` (optional): `true` for reversed, `false` for upright (default: false)
+
+**Example Request:**
+```
+GET https://orbitandchill.com/api/tarot/sentences/random?userId=user_123&cardName=The%20Fool&isReversed=false
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "sentence": "Someone who thinks YOLO is a life philosophy",
+  "cardInfo": {
+    "cardName": "The Fool",
+    "isReversed": false,
+    "totalSentences": 8
+  }
+}
+```
+
+---
+
+## 10. Migrate Hardcoded Sentences to Database
+
+**POST** `/api/tarot/sentences/migrate-hardcoded`
+
+**Purpose**: One-time migration of all hardcoded sentences to database for a user.
+
+**Request Body:**
+```json
+{
+  "userId": "user_123",
+  "forceRemigration": false
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "migrationStats": {
+    "totalSentencesMigrated": 1248,
+    "uprightSentencesMigrated": 624,
+    "reversedSentencesMigrated": 624,
+    "cardsProcessed": 78,
+    "skippedCards": 0,
+    "migrationTime": "2025-07-23T12:45:00Z"
+  },
+  "message": "Migration completed successfully"
+}
+```
+
+---
+
+## 11. Clear All User's Custom Sentences
+
+**DELETE** `/api/tarot/sentences/clear-all`
+
+**Purpose**: Clear all custom sentences for a user (for testing/debugging).
+
+**Request Body:**
+```json
+{
+  "userId": "user_123"
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "message": "All custom sentences cleared successfully",
+  "stats": {
+    "deletedCount": 156,
+    "cardsAffected": 45
+  }
+}
+```
+
+---
+
+## 🔄 Flutter Integration Guide
+
+### 1. Migration from Local to Cloud
+
+```dart
+// Example Flutter service for migration
+class TarotSentencesSyncService {
+  static const String baseUrl = 'https://orbitandchill.com/api/tarot/sentences';
+  
+  Future<void> migrateLocalSentencesToCloud(String userId) async {
+    // Get all local sentences
+    final localSentences = await DatabaseHelper().getAllCustomSentences();
+    
+    // Format for bulk upload
+    final sentencesForUpload = <Map<String, dynamic>>[];
+    
+    localSentences.forEach((cardName, orientations) {
+      orientations.forEach((orientation, sentences) {
+        for (final sentence in sentences) {
+          sentencesForUpload.add({
+            'cardName': cardName,
+            'isReversed': orientation == 'reversed',
+            'sentence': sentence,
+            'sourceType': 'migrated',
+            'localId': '${cardName}_${orientation}_${sentence.hashCode}'
+          });
+        }
+      });
+    });
+    
+    // Upload in batches
+    await _bulkSyncSentences(userId, sentencesForUpload);
+  }
+  
+  Future<void> _bulkSyncSentences(String userId, List<Map<String, dynamic>> sentences) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/bulk-sync'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'sentences': sentences,
+        'syncMode': 'merge'
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        print('✅ Migration successful: ${data['results']['added']} sentences added');
+      }
+    }
+  }
+}
+```
+
+### 2. Real-time Sync Operations
+
+```dart
+class TarotSentencesCloudService {
+  static const String baseUrl = 'https://orbitandchill.com/api/tarot/sentences';
+
+  // Add sentence to cloud
+  Future<String?> addSentenceToCloud({
+    required String userId,
+    required String cardName,
+    required bool isReversed,
+    required String sentence,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/add'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'cardName': cardName,
+        'isReversed': isReversed,
+        'sentence': sentence,
+        'sourceType': 'user'
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return data['sentence']['id'];
+      }
+    }
+    return null;
+  }
+  
+  // Get sentences from cloud
+  Future<List<String>> getSentencesFromCloud({
+    required String userId,
+    required String cardName,
+    required bool isReversed,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/card?userId=$userId&cardName=${Uri.encodeComponent(cardName)}&isReversed=$isReversed'),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return (data['sentences'] as List)
+            .map((s) => s['sentence'] as String)
+            .toList();
+      }
+    }
+    return [];
+  }
+
+  // Get random sentence from cloud
+  Future<String?> getRandomSentenceFromCloud({
+    required String userId,
+    required String cardName,
+    required bool isReversed,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/random?userId=$userId&cardName=${Uri.encodeComponent(cardName)}&isReversed=$isReversed'),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return data['sentence'];
+      }
+    }
+    return null;
+  }
+
+  // Update sentence in cloud
+  Future<bool> updateSentenceInCloud({
+    required String userId,
+    required String sentenceId,
+    required String newSentence,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/update'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'sentenceId': sentenceId,
+        'newSentence': newSentence,
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['success'] == true;
+    }
+    return false;
+  }
+
+  // Delete sentence from cloud
+  Future<bool> deleteSentenceFromCloud({
+    required String userId,
+    required String sentenceId,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/delete'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'sentenceId': sentenceId,
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['success'] == true;
+    }
+    return false;
+  }
+
+  // Migrate hardcoded sentences to cloud
+  Future<bool> migrateHardcodedSentencesToCloud(String userId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/migrate-hardcoded'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'userId': userId,
+        'forceRemigration': false,
+      }),
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        print('✅ Migration successful: ${data['migrationStats']['totalSentencesMigrated']} sentences migrated');
+        return true;
+      }
+    }
+    return false;
+  }
+}
+```
+
+---
+
+## 🔐 Authentication Integration
+
+All endpoints use the existing authentication system:
+
+```javascript
+// Example authentication header
+const headers = {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${userToken}`, // If using JWT tokens
+  // OR simply pass userId in request body as shown in examples above
+};
+```
+
+**User Types Supported:**
+- **Anonymous Users**: `anon_${random}_${timestamp}` format
+- **Google OAuth Users**: Google user ID
+- **Admin Users**: `orbitandchill@gmail.com` with override privileges
+
+---
+
+## 📊 Critical Implementation Details from Flutter Code
+
+### Hardcoded Sentence Database (1,734 sentences total)
+The Flutter app contains **1,734 pre-written sentences** across 78 tarot cards:
+- **Upright cards**: 624 sentences (8 per card average)
+- **Reversed cards**: 624 sentences (8 per card average) 
+- **Card naming**: Reversed cards use `"Card Name Reversed"` format in the code
+
+### Auto-Migration Behavior
+From `TarotSentences.getSentencesForCard()`:
+```dart
+// Auto-migrate hardcoded sentences for this card if they exist
+if (isReversed && reversedCardSentences.containsKey(key)) {
+  final sentences = reversedCardSentences[key]!;
+  for (final sentence in sentences) {
+    await _dbHelper.saveCustomSentence(cardName, true, sentence);
+  }
+  return sentences;
+}
+```
+
+**Critical**: The migration happens **per-card on first access**, not all at once.
+
+### Database Table Structure from Flutter
+```sql
+CREATE TABLE custom_sentences (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  card_name TEXT NOT NULL,
+  is_reversed INTEGER NOT NULL DEFAULT 0,
+  sentence TEXT NOT NULL,
+  is_custom INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(card_name, is_reversed, sentence)
+)
+```
+
+### Flutter Functions That Need API Endpoints
+Based on the actual Flutter code:
+1. `getSentencesForCard()` - **Implemented** ✅
+2. `getRandomSentenceForCard()` - **Implemented** ✅
+3. `addCustomSentence()` - **Implemented** ✅
+4. `updateCustomSentence()` - **Implemented** ✅
+5. `deleteCustomSentence()` - **Implemented** ✅
+6. `getCustomSentences()` - **Implemented** ✅
+7. `migrateHardcodedSentencesToDatabase()` - **Implemented** ✅
+8. `clearAllCustomSentences()` - **Implemented** ✅
+
+---
+
+## 📊 Usage Patterns
+
+### For Flutter Mobile App:
+
+1. **Initial Load**: Auto-migrate hardcoded sentences to cloud on first card access
+2. **Add Sentence**: Save to cloud, update local cache
+3. **Edit Sentence**: Update cloud, refresh local cache
+4. **Delete Sentence**: Remove from cloud, refresh local cache
+5. **Random Selection**: Use cloud-based random endpoint for consistent experience
+
+### For React Web App:
+
+1. **Sentence Editor**: Direct cloud operations with real-time updates
+2. **Progress Tracking**: Include sentence stats in user progress
+3. **AI Integration**: Generate sentences using existing AI endpoints
+4. **Migration**: Handle per-user migration of hardcoded sentences to personal collection
+
+---
+
+## 🚀 Implementation Priority
+
+### Phase 1: Core CRUD Operations
+- ✅ GET sentences for card
+- ✅ POST add sentence  
+- ✅ PUT update sentence
+- ✅ DELETE sentence
+
+### Phase 2: Sync & Migration
+- ✅ Bulk upload/sync endpoint
+- ✅ Migration from Flutter local database
+- ✅ Statistics endpoint
+
+### Phase 3: Advanced Features
+- ✅ AI sentence generation
+- ⏳ Sentence sharing between users
+- ⏳ Community sentence ratings
+- ⏳ Sentence templates/suggestions
+
+---
+
+## 🔧 Error Handling
+
+All endpoints follow the existing API error format:
+
+```json
+{
+  "success": false,
+  "error": "Maximum 5 sentences allowed per card orientation",
+  "code": "SENTENCE_LIMIT_EXCEEDED",
+  "details": {
+    "currentCount": 5,
+    "maxAllowed": 5,
+    "cardName": "The Fool",
+    "isReversed": false
+  }
+}
+```
+
+**Common Error Codes:**
+- `SENTENCE_LIMIT_EXCEEDED`: Too many sentences for card
+- `SENTENCE_DUPLICATE`: Sentence already exists  
+- `SENTENCE_NOT_FOUND`: Sentence ID doesn't exist
+- `CARD_NOT_FOUND`: Invalid card name
+- `UNAUTHORIZED`: User doesn't own sentence
+- `VALIDATION_ERROR`: Invalid sentence format
+
+---
+
+## 📈 Performance Considerations
+
+### Caching Strategy:
+- **Redis Cache**: Cache user sentences for 15 minutes
+- **Database Indexing**: Optimized queries by user_id + card_name
+- **Batch Operations**: Bulk sync for mobile migration
+- **Rate Limiting**: 100 requests per minute per user
+
+### Database Optimization:
+```sql
+-- Efficient queries
+SELECT * FROM tarot_custom_sentences 
+WHERE user_id = ? AND card_name = ? AND is_reversed = ?
+ORDER BY updated_at DESC;
+
+-- Bulk operations
+INSERT INTO tarot_custom_sentences (user_id, card_name, is_reversed, sentence, source_type, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING;
+```
+
+---
+
+*This API documentation integrates seamlessly with the existing Orbit & Chill tarot learning system, providing robust sentence persistence and synchronization between Flutter mobile app and React web backend.*
+
+**Status**: Ready for Implementation  
+**Integration**: Full compatibility with existing authentication, database, and AI systems  
+**Migration Path**: Smooth transition from local-only to cloud-synced sentences

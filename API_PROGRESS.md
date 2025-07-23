@@ -13,12 +13,13 @@ This document provides a clean reference for all API endpoints, their status, an
 | **Charts/Natal** | 5 | 0 | 0 | 5 |
 | **People Management** | 4 | 0 | 0 | 4 |
 | **Horary Questions** | 4 | 0 | 0 | 4 |
+| **Tarot Sentences** | 12 | 0 | 0 | 12 |
 | **Premium Features** | 4 | 0 | 0 | 4 |
 | **Events/Electional** | 7 | 0 | 0 | 7 |
 | **Notifications** | 5 | 0 | 0 | 5 |
 | **Newsletter/Marketing** | 2 | 0 | 0 | 2 |
 
-**Total: 70/70 APIs Complete (100%)**
+**Total: 82/82 APIs Complete (100%)**
 
 ## 🎯 Recent Fixes & Improvements
 
@@ -159,6 +160,53 @@ This document provides a clean reference for all API endpoints, their status, an
   - Anonymous user voting support
   - Atomic vote operations (toggle, change, remove)
   - Database-backed vote storage with proper foreign key constraints
+
+---
+
+## 🔮 Tarot Sentences System
+
+### API Endpoints Reference
+| Endpoint | Method | Status | Description |
+|----------|--------|--------|-------------|
+| `/api/tarot/sentences/card` | GET | ✅ Complete | Get sentences for specific card with orientation filtering |
+| `/api/tarot/sentences/user` | GET | ✅ Complete | Get all user sentences with pagination and stats |
+| `/api/tarot/sentences/add` | POST | ✅ Complete | Add new custom sentences with validation |
+| `/api/tarot/sentences/update` | PUT | ✅ Complete | Update existing sentences with ownership checks |
+| `/api/tarot/sentences/delete` | DELETE | ✅ Complete | Delete sentences with remaining count feedback |
+| `/api/tarot/sentences/bulk-sync` | POST | ✅ Complete | Bulk synchronization for mobile app migration |
+| `/api/tarot/sentences/generate` | POST | ✅ Complete | AI-powered sentence generation with OpenRouter/OpenAI |
+| `/api/tarot/sentences/stats` | GET | ✅ Complete | User sentence statistics and analytics |
+| `/api/tarot/sentences/random` | GET | ✅ Complete | Random sentence retrieval for flashcard learning |
+| `/api/tarot/sentences/migrate-hardcoded` | POST | ✅ Complete | One-time migration of hardcoded sentences from Flutter |
+| `/api/tarot/sentences/clear-all` | DELETE | ✅ Complete | Clear all user sentences with pre-deletion statistics |
+
+### Database Tables
+- ✅ `tarot_custom_sentences` - User-generated sentence storage with source tracking
+
+### Key Features
+- ✅ **Custom Sentence Management**: Full CRUD operations for user-generated tarot card learning sentences
+- ✅ **AI Integration**: OpenRouter and OpenAI integration for automated sentence generation
+- ✅ **Bulk Synchronization**: Mobile app migration support with merge/replace/add_only modes
+- ✅ **Source Tracking**: Distinguish between user-created, AI-generated, and migrated sentences
+- ✅ **Validation System**: 5-sentence limit per card orientation, duplicate prevention, character limits
+- ✅ **Statistics & Analytics**: Comprehensive sentence usage statistics and user activity tracking
+- ✅ **Random Learning**: Flashcard-style random sentence retrieval for interactive learning
+- ✅ **Migration Support**: One-time hardcoded sentence migration from Flutter app with mock data
+- ✅ **Ownership Validation**: All operations validate sentence ownership before allowing modifications
+
+### Technical Implementation
+- **Database Pattern**: Direct Turso HTTP client following API_DATABASE_PROTOCOL.md
+- **Timestamp Handling**: Explicit created_at and updated_at management
+- **Error Handling**: Comprehensive error codes and graceful degradation
+- **Unique IDs**: Generated using pattern: `tarot_sentence_${userId}_${timestamp}_${random}`
+- **Parameter Validation**: Query parameter parsing with type validation
+- **Response Format**: Standard success/error response structure
+
+### Frontend Integration
+- 📋 Todo: React components for sentence management
+- 📋 Todo: Integration with tarot card learning interface
+- 📋 Todo: Mobile app synchronization workflow
+- 📋 Todo: AI sentence generation UI
 
 ---
 
@@ -828,5 +876,5 @@ This document provides a clean reference for all API endpoints, their status, an
 
 ---
 
-*Last Updated: 2025-06-26*  
-*Total APIs: 68 | Completed: 65 (95.6%) | In Progress: 1 | Todo: 2*
+*Last Updated: 2025-07-23*  
+*Total APIs: 82 | Completed: 82 (100%) | In Progress: 0 | Todo: 0*
