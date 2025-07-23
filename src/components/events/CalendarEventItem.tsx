@@ -36,7 +36,7 @@ export default function CalendarEventItem({ event }: CalendarEventItemProps) {
             {event.name}
           </p>
           <p className="font-open-sans text-sm text-black/60">
-            {event.type} • {RARITY_BADGES[event.rarity].text}
+            {RARITY_BADGES[event.rarity].text}
             {event.duration && (
               <span>
                 {' • '}
