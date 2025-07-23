@@ -118,7 +118,7 @@ function EventChartContent() {
       return;
     }
     
-    if (!eventDate || !user?.birthData) return;
+    if (!eventDate || !user || !user.birthData) return;
     
     window.lastChartGeneration = now;
 
@@ -149,7 +149,7 @@ function EventChartContent() {
     };
 
     executeChartGeneration();
-  }, [eventDate, eventTitle, selectedTime, user?.birthData]);
+  }, [eventDate, eventTitle, selectedTime, user, user?.birthData]);
 
   // Validate props early
   const validation = validateEventChartProps(eventDate, user);
