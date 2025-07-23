@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 interface AdminDropdownProps {
-  options: string[];
+  options: string[] | Array<{ value: string; label: string }>;
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -28,8 +28,9 @@ export default function AdminDropdown({ options, value, onChange, className = ''
     }
   }, [isOpen]);
 
-  const handleSelect = (option: string) => {
-    onChange(option);
+  const handleSelect = (option: string | { value: string; label: string }) => {
+    const value = typeof option === 'string' ? option : option.value;
+    onChange(value);
     setIsOpen(false);
   };
 
@@ -48,18 +49,22 @@ export default function AdminDropdown({ options, value, onChange, className = ''
       
       {isOpen && (
         <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 z-50 max-height-200 overflow-y-auto mt-1 shadow-lg">
-          {options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => handleSelect(option)}
-              className={`w-full text-left px-4 py-3 text-sm font-medium text-black hover:bg-gray-100 hover:pl-5 transition-all duration-200 border-none cursor-pointer font-open-sans ${
-                value === option ? 'bg-black text-white font-semibold hover:!bg-gray-800 hover:!text-white' : ''
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+          {options.map((option) => {
+            const optionValue = typeof option === 'string' ? option : option.value;
+            const optionLabel = typeof option === 'string' ? option : option.label;
+            return (
+              <button
+                key={optionValue}
+                type="button"
+                onClick={() => handleSelect(option)}
+                className={`w-full text-left px-4 py-3 text-sm font-medium text-black hover:bg-gray-100 hover:pl-5 transition-all duration-200 border-none cursor-pointer font-open-sans ${
+                  value === optionValue ? 'bg-black text-white font-semibold hover:!bg-gray-800 hover:!text-white' : ''
+                }`}
+              >
+                {optionLabel}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

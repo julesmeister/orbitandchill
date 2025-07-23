@@ -18,7 +18,7 @@ interface UseSeedingTabReturn {
   
   // Generation settings
   generationSettings: GenerationSettings;
-  setGenerationSettings: (settings: Partial<GenerationSettings>) => void;
+  setGenerationSettings: (settings: GenerationSettings) => void;
   
   // User management
   selectedUsers: string[];
