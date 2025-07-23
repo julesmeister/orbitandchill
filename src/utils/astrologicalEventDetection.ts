@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 /**
  * Astrological Event Detection Utilities
  * 
@@ -42,46 +42,91 @@ export interface AstrologicalEvent {
 /**
  * Detects planetary retrogrades for a given date
  */
-export const detectRetrogrades = async (date: Date): Promise<AstrologicalEvent[]> => {
+export const detectRetrogrades = async (date: Date, latitude: number = 0, longitude: number = 0): Promise<AstrologicalEvent[]> => {
   const events: AstrologicalEvent[] = [];
-  const positions = await calculatePlanetaryPositions(date, 0, 0); // Use Greenwich for global events
   
-  positions.planets.forEach(planet => {
-    if (planet.retrograde && ['mercury', 'venus', 'mars', 'jupiter', 'saturn'].includes(planet.name.toLowerCase())) {
-      // Retrograde durations vary by planet
+  
+  // Find the actual retrograde start dates by looking backward from current retrograde planets
+  // Use actual location coordinates for proper timezone handling
+  const positions = await calculatePlanetaryPositions(date, latitude, longitude);
+  
+  for (const planet of positions.planets) {
+    if (planet.retrograde && ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'].includes(planet.name.toLowerCase())) {
+      
+      
+      // Find when this planet actually went retrograde (look back up to retrograde duration)
+      const maxLookback = planet.name.toLowerCase() === 'mercury' ? 21 : 
+                         planet.name.toLowerCase() === 'venus' ? 42 :
+                         planet.name.toLowerCase() === 'mars' ? 70 : 140; // days
+      
+      let retrogradeStartDate = new Date(date);
+      
+      // Look backward day by day to find when retrograde started
+      for (let daysBack = 1; daysBack <= maxLookback; daysBack++) {
+        const testDate = new Date(date.getTime() - daysBack * 24 * 60 * 60 * 1000);
+        
+        try {
+          const testPositions = await calculatePlanetaryPositions(testDate, latitude, longitude);
+          const testPlanet = testPositions.planets.find(p => 
+            p.name.toLowerCase() === planet.name.toLowerCase()
+          );
+          
+          if (testPlanet && !testPlanet.retrograde) {
+            // Found the day before retrograde started
+            retrogradeStartDate = new Date(testDate.getTime() + 24 * 60 * 60 * 1000);
+            break;
+          }
+        } catch (error) {
+          // If we can't get data for this date, continue searching
+          continue;
+        }
+      }
+      
       const getDuration = (planetName: string) => {
         switch(planetName.toLowerCase()) {
-          case 'mercury': return { weeks: 3 };
+          case 'mercury': return { days: 24 }; // Mercury retrograde is typically 24-25 days
           case 'venus': return { weeks: 6 };
           case 'mars': return { weeks: 10 };
           case 'jupiter': return { weeks: 16 };
           case 'saturn': return { weeks: 20 };
-          default: return { weeks: 3 };
+          case 'uranus': return { weeks: 20 };
+          case 'neptune': return { weeks: 23 };
+          case 'pluto': return { weeks: 21 };
+          default: return { weeks: 10 };
         }
       };
       
       const duration = getDuration(planet.name);
-      const endDate = new Date(date);
+      const endDate = new Date(retrogradeStartDate);
       if (duration.weeks) {
         endDate.setDate(endDate.getDate() + (duration.weeks * 7));
+      } else if (duration.days) {
+        endDate.setDate(endDate.getDate() + duration.days);
       }
       
-      events.push({
-        id: `retro_${planet.name}_${date.getTime()}`,
+      const rarityValue = planet.name.toLowerCase() === 'mercury' ? 'common' : 
+                      ['jupiter', 'saturn', 'uranus', 'neptune', 'pluto'].includes(planet.name.toLowerCase()) ? 'uncommon' : 'rare';
+      
+      const eventData: AstrologicalEvent = {
+        id: `retro_${planet.name}_${retrogradeStartDate.getTime()}`,
         name: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} Retrograde in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
-        date: new Date(date),
+        date: new Date(date), // Use the current scan date, not the start date
+        startDate: new Date(retrogradeStartDate), // Keep the actual retrograde start date
+        endDate,
         type: 'retrograde',
         description: `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} appears to move backward through ${planet.sign}`,
         emoji: planet.name.toLowerCase() === 'mercury' ? '⏪' : '🌀',
-        rarity: planet.name.toLowerCase() === 'mercury' ? 'common' : 'uncommon',
+        rarity: rarityValue as 'common' | 'uncommon' | 'rare' | 'veryRare',
         impact: planet.name.toLowerCase() === 'mercury' 
           ? 'Review communications, back up data, reconnect with the past'
           : `Reassess ${planet.name.toLowerCase()} themes in your life`,
-        endDate,
         duration: { ...duration, isOngoing: true }
-      });
+      };
+      
+      
+      events.push(eventData);
     }
-  });
+  }
   
   return events;
 };
@@ -112,10 +157,15 @@ export const detectStelliums = async (date: Date): Promise<AstrologicalEvent[]> 
       // Create unique ID based on planets involved
       const planetList = planets.map(p => p.name.toLowerCase()).sort().join('-');
       
+      // For ongoing stelliums, calculate when they actually started
+      const stelliumStartDate = new Date(date);
+      stelliumStartDate.setDate(stelliumStartDate.getDate() - 10); // Estimate started ~10 days ago
+
       events.push({
         id: `stellium_${sign}_${planetList}_${date.getTime()}`,
         name: `Stellium in ${sign.charAt(0).toUpperCase() + sign.slice(1)}`,
         date: new Date(date),
+        startDate: new Date(stelliumStartDate), // Add start date for "Started" badge
         type: 'stellium',
         description: `${planets.length} planets gather in ${sign}: ${planetNames}`,
         emoji: '✨',
@@ -247,10 +297,19 @@ export const detectConjunctions = async (date: Date): Promise<AstrologicalEvent[
           endDate.setDate(endDate.getDate() + duration.days);
         }
         
+        // For ongoing conjunctions, calculate when they actually started
+        const conjunctionStartDate = new Date(date);
+        if (duration.weeks && duration.weeks > 0) {
+          // Estimate start date by going back half the duration
+          const daysBack = Math.floor((duration.weeks * 7) / 2);
+          conjunctionStartDate.setDate(conjunctionStartDate.getDate() - daysBack);
+        }
+
         events.push({
           id: `conj_${i}_${j}_${date.getTime()}`,
           name: `${planets[i].name}-${planets[j].name} Conjunction`,
           date: new Date(date),
+          startDate: new Date(conjunctionStartDate), // Add start date for "Started" badge
           type: 'conjunction',
           description: `${planets[i].name} and ${planets[j].name} unite in ${planets[i].sign}`,
           emoji: '🌊',

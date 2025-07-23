@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 /**
  * EventCard Component
  * 
@@ -13,6 +13,7 @@ import { EVENT_TYPE_COLORS, RARITY_BADGES } from '../../utils/astrological/event
 import { AstrologicalEvent } from '../../utils/astrologicalEventDetection';
 import { hasEventInterpretation } from '../../utils/astrological/eventInterpretations';
 import EventModal from './EventModal';
+import { formatDurationBetweenDates } from '../../utils/dateFormatting';
 
 interface EventCardProps {
   event: AstrologicalEvent;
@@ -53,9 +54,21 @@ export default function EventCard({ event, showCountdown = false, countdown }: E
                   {event.name}
                 </h3>
                 <p className="font-open-sans text-sm text-black/60">
-                  {event.type === 'planetInSign' && event.startDate 
-                    ? format(event.startDate, 'EEEE, MMMM d, yyyy') 
-                    : format(event.date, 'EEEE, MMMM d, yyyy')
+                  {(event.type === 'planetInSign' || event.type === 'retrograde') && event.startDate 
+                    ? event.startDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        timeZone: 'UTC'
+                      })
+                    : event.date.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        timeZone: 'UTC'
+                      })
                   }
                 </p>
               </div>
@@ -90,16 +103,12 @@ export default function EventCard({ event, showCountdown = false, countdown }: E
                 )}
                 
                 {/* Show duration information */}
-                {event.duration && (
+                {event.startDate && event.endDate && (
                   <div className="flex items-center justify-between">
                     <span className="font-open-sans text-sm text-black/60">Duration:</span>
                     <span className="font-space-grotesk font-semibold text-sm text-black/80">
-                      {event.duration.hours && `${event.duration.hours}h`}
-                      {event.duration.days && `${event.duration.days}d`}
-                      {event.duration.weeks && `${event.duration.weeks}w`}
-                      {event.duration.months && `${event.duration.months}m`}
-                      {event.duration.years && `${event.duration.years}y`}
-                      {event.duration.isOngoing && ' (ongoing)'}
+                      {formatDurationBetweenDates(event.startDate, event.endDate)}
+                      {event.duration?.isOngoing && ' (ongoing)'}
                     </span>
                   </div>
                 )}
@@ -115,11 +124,20 @@ export default function EventCard({ event, showCountdown = false, countdown }: E
                         
                         // If end date is this year, don't show year
                         if (endYear === currentYear) {
-                          return format(event.endDate, 'MMM d, h:mm a');
+                          return event.endDate.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            timeZone: 'UTC'
+                          });
                         }
                         // If end date is next year, show year
                         else {
-                          return format(event.endDate, 'MMM d, yyyy');
+                          return event.endDate.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            timeZone: 'UTC'
+                          });
                         }
                       })()}
                     </span>

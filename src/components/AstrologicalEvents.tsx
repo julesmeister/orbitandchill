@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 "use client";
 
 import React, { useState } from 'react';
@@ -60,7 +60,12 @@ export default function AstrologicalEvents() {
     hideLocationToast();
   };
 
-  // Use custom hooks for data management
+  // Use custom hooks for data management with location coordinates
+  const locationCoordinates = locationDisplay?.coordinates ? {
+    latitude: parseFloat(locationDisplay.coordinates.lat),
+    longitude: parseFloat(locationDisplay.coordinates.lon)
+  } : undefined;
+
   const {
     allEvents,
     isLoading,
@@ -69,7 +74,7 @@ export default function AstrologicalEvents() {
     totalEventCount,
     mostCommonEventType,
     nextMajorEvent
-  } = useAstrologicalEvents();
+  } = useAstrologicalEvents(locationCoordinates);
 
   // Use countdown timer hook
   const { countdowns } = useCountdownTimer(upcomingEvents, 60000);
@@ -263,9 +268,34 @@ export default function AstrologicalEvents() {
                     return eventsToShow.length > 0 ? (
                       Array.from({ length: 30 }, (_, i) => {
                         const date = addDays(new Date(), i);
-                        const dayEvents = eventsToShow.filter(event =>
-                          format(event.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-                        );
+                        const dayEvents = eventsToShow.filter(event => {
+                          const eventDateUTC = event.date.toISOString().split('T')[0];
+                          const targetDateUTC = date.toISOString().split('T')[0];
+                          
+                          // For exact date matches
+                          if (eventDateUTC === targetDateUTC) {
+                            return true;
+                          }
+                          
+                          // For ongoing events (retrogrades, stelliums, conjunctions), show them on current day if active
+                          if (event.duration?.isOngoing && event.startDate && event.endDate) {
+                            const startDateUTC = event.startDate.toISOString().split('T')[0];
+                            const endDateUTC = event.endDate.toISOString().split('T')[0];
+                            const today = new Date().toISOString().split('T')[0];
+                            
+                            // Show ongoing events on today's date (not every day in their range)
+                            if (targetDateUTC === today && targetDateUTC >= startDateUTC && targetDateUTC <= endDateUTC) {
+                              return true;
+                            }
+                            
+                            // Also show when ongoing events end
+                            if (targetDateUTC === endDateUTC) {
+                              return true;
+                            }
+                          }
+                          
+                          return false;
+                        });
 
                         if (dayEvents.length === 0) return null;
 
@@ -273,10 +303,17 @@ export default function AstrologicalEvents() {
                           <div key={i} className="flex gap-4 items-start">
                             <div className="flex-shrink-0 w-32 text-right">
                               <p className="font-space-grotesk font-bold text-black">
-                                {format(date, 'MMM d')}
+                                {date.toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  timeZone: 'UTC'
+                                })}
                               </p>
                               <p className="font-open-sans text-sm text-black/60">
-                                {format(date, 'EEEE')}
+                                {date.toLocaleDateString('en-US', { 
+                                  weekday: 'long',
+                                  timeZone: 'UTC'
+                                })}
                               </p>
                             </div>
                             <div className="flex-1 space-y-2">
@@ -330,7 +367,13 @@ export default function AstrologicalEvents() {
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Most Common Event</h4>
                 <p className="font-open-sans text-black/80">
                   {mostCommonEventType
-                    ? `${mostCommonEventType.charAt(0).toUpperCase()}${mostCommonEventType.slice(1)} events`
+                    ? `${mostCommonEventType === 'planetarySigns' 
+                        ? 'Planetary Signs' 
+                        : mostCommonEventType
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase())
+                          .trim()
+                      } events`
                     : 'Stable planetary period'
                   }
                 </p>
@@ -339,7 +382,11 @@ export default function AstrologicalEvents() {
                 <h4 className="font-space-grotesk font-bold text-black mb-2">Next Major Event</h4>
                 <p className="font-open-sans text-black/80">
                   {nextMajorEvent
-                    ? `${nextMajorEvent.name} on ${format(nextMajorEvent.date, 'MMM d')}`
+                    ? `${nextMajorEvent.name} on ${nextMajorEvent.date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        timeZone: 'UTC'
+                      })}`
                     : 'No major events approaching'
                   }
                 </p>

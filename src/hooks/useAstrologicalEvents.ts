@@ -43,7 +43,12 @@ interface UseAstrologicalEventsResult {
   refreshEvents: () => void;
 }
 
-export const useAstrologicalEvents = (): UseAstrologicalEventsResult => {
+interface LocationData {
+  latitude?: number;
+  longitude?: number;
+}
+
+export const useAstrologicalEvents = (location?: LocationData): UseAstrologicalEventsResult => {
   const [realTimeEvents, setRealTimeEvents] = useState<AstrologicalEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,7 +70,7 @@ export const useAstrologicalEvents = (): UseAstrologicalEventsResult => {
       date.setDate(date.getDate() + i);
       
       try {
-        const retrogradeEvents = await detectRetrogrades(date);
+        const retrogradeEvents = await detectRetrogrades(date, location?.latitude || 0, location?.longitude || 0);
         events.push(...retrogradeEvents);
       } catch (error) {
         console.warn(`Error checking retrogrades for ${date.toDateString()}:`, error);
@@ -132,6 +137,14 @@ export const useAstrologicalEvents = (): UseAstrologicalEventsResult => {
     
     // Deduplicate events more intelligently
     const uniqueEvents = events.filter((event, index, array) => {
+      // First check for exact ID duplicates (most strict)
+      const exactIdDuplicate = array.some((e, i) => 
+        i < index && e.id === event.id
+      );
+      if (exactIdDuplicate) {
+        return false;
+      }
+
       // For ongoing events (retrogrades, conjunctions, stelliums), only show the first occurrence
       if (event.type === 'retrograde') {
         // Retrogrades last weeks/months - dedupe within their full duration
@@ -141,6 +154,9 @@ export const useAstrologicalEvents = (): UseAstrologicalEventsResult => {
           if (eventName.toLowerCase().includes('mars')) return 70; // 10 weeks
           if (eventName.toLowerCase().includes('jupiter')) return 112; // 16 weeks
           if (eventName.toLowerCase().includes('saturn')) return 140; // 20 weeks
+          if (eventName.toLowerCase().includes('uranus')) return 140; // 20 weeks
+          if (eventName.toLowerCase().includes('neptune')) return 161; // 23 weeks
+          if (eventName.toLowerCase().includes('pluto')) return 147; // 21 weeks
           return 21; // Default 3 weeks
         };
         

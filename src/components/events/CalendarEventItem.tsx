@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 /**
  * CalendarEventItem Component
  * 
@@ -11,6 +11,7 @@ import { RARITY_BADGES } from '../../utils/astrological/eventData';
 import { AstrologicalEvent } from '../../utils/astrologicalEventDetection';
 import { hasEventInterpretation } from '../../utils/astrological/eventInterpretations';
 import EventModal from './EventModal';
+import { formatDurationBetweenDates } from '../../utils/dateFormatting';
 
 interface CalendarEventItemProps {
   event: AstrologicalEvent;
@@ -37,19 +38,39 @@ export default function CalendarEventItem({ event }: CalendarEventItemProps) {
           </p>
           <p className="font-open-sans text-sm text-black/60">
             {RARITY_BADGES[event.rarity].text}
-            {event.duration && (
+            {event.startDate && event.endDate && (
               <span>
                 {' • '}
-                {event.duration.hours && `${event.duration.hours}h`}
-                {event.duration.days && `${event.duration.days}d`}
-                {event.duration.weeks && `${event.duration.weeks}w`}
-                {event.duration.months && `${event.duration.months}m`}
-                {event.duration.years && `${event.duration.years}y`}
-                {event.duration.isOngoing && ' ongoing'}
+                {formatDurationBetweenDates(event.startDate, event.endDate)}
+                {event.duration?.isOngoing && ' ongoing'}
               </span>
             )}
           </p>
         </div>
+        {event.duration?.isOngoing && (
+          <>
+            {/* Show "Ends" badge if this is the end date */}
+            {event.endDate && 
+             new Date(event.endDate).toDateString() === new Date(event.date).toDateString() && (
+              <span className="px-2 py-1 text-xs bg-red-600 text-white">
+                Ends Today
+              </span>
+            )}
+            
+            {/* Show "Started" badge if this is an ongoing event (not ending today) */}
+            {event.startDate && 
+             new Date(event.startDate).toDateString() !== new Date(event.date).toDateString() &&
+             !(event.endDate && new Date(event.endDate).toDateString() === new Date(event.date).toDateString()) && (
+              <span className="px-2 py-1 text-xs bg-black text-white">
+                Started {new Date(event.startDate).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  timeZone: 'UTC'
+                })}
+              </span>
+            )}
+          </>
+        )}
       </div>
       
       {/* Event Modal */}

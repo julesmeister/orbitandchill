@@ -261,17 +261,25 @@ export const useVoidMoonStatus = () => {
     }
   };
   
-  // Check void status on mount and every 5 minutes (or more frequently if void)
+  // Check void status on mount and when user changes
   useEffect(() => {
     checkVoidStatus();
-    
+  }, [user?.id]); // Only re-run when user ID changes
+  
+  // Separate interval effect that doesn't cause infinite loops
+  useEffect(() => {
     // Check more frequently if moon is void (every 30 seconds)
     // Otherwise check every 5 minutes
     const checkInterval = voidStatus.isVoid ? 30 * 1000 : 5 * 60 * 1000;
-    const interval = setInterval(checkVoidStatus, checkInterval);
+    const interval = setInterval(() => {
+      // Only update if not currently loading to prevent race conditions
+      if (!voidStatus.isLoading) {
+        checkVoidStatus();
+      }
+    }, checkInterval);
     
     return () => clearInterval(interval);
-  }, [voidStatus.isVoid, user?.id]); // Re-run when user becomes available
+  }, [voidStatus.isVoid, voidStatus.isLoading]); // Update interval when void status changes
   
   const showLocationToast = () => {
     setVoidStatus(prev => ({ ...prev, showLocationToast: true }));

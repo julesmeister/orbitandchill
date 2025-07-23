@@ -106,3 +106,30 @@ export function formatCurrentTime(): string {
     minute: '2-digit'
   });
 }
+
+/**
+ * Calculate and format duration between two dates (e.g., "3w", "2m", "1y")
+ * @param startDate - Start date
+ * @param endDate - End date
+ * @returns Formatted duration string
+ */
+export function formatDurationBetweenDates(startDate: Date, endDate: Date): string {
+  const diffMs = endDate.getTime() - startDate.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30.44);
+  const diffYears = Math.floor(diffDays / 365.25);
+  
+  if (diffYears >= 1) {
+    return `${diffYears}y`;
+  } else if (diffMonths >= 1) {
+    return `${diffMonths}m`;
+  } else if (diffWeeks >= 1) {
+    return `${diffWeeks}w`;
+  } else if (diffDays >= 1) {
+    return `${diffDays}d`;
+  } else {
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    return `${diffHours}h`;
+  }
+}
