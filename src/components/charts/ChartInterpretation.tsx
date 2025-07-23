@@ -153,65 +153,79 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
                 switch (section.id) {
                   case 'core-personality':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <CorePersonalitySection 
-                          chartData={chartData}
-                          openModal={openModal}
-                          isFeaturePremium={isFeaturePremium}
-                          userIsPremium={userIsPremium}
-                        />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <CorePersonalitySection 
+                            chartData={chartData}
+                            openModal={openModal}
+                            isFeaturePremium={isFeaturePremium}
+                            userIsPremium={userIsPremium}
+                          />
+                        </div>
                       </div>
                     );
                     
                   case 'stellium-analysis':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <StelliumsSection chartData={chartData} />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <StelliumsSection chartData={chartData} />
+                        </div>
                       </div>
                     );
                     
                   case 'planetary-influences':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <PlanetaryInfluencesSection 
-                          chartData={chartData}
-                          openModal={openModal}
-                        />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <PlanetaryInfluencesSection 
+                            chartData={chartData}
+                            openModal={openModal}
+                          />
+                        </div>
                       </div>
                     );
                     
                   case 'planetary-positions':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <PlanetaryPositionsSection chartData={chartData} />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <PlanetaryPositionsSection chartData={chartData} />
+                        </div>
                       </div>
                     );
                     
                   case 'detailed-aspects':
                     return chartData && (
-                      <MajorAspectsSection 
-                        key={section.id}
-                        id={sectionId}
-                        chartData={chartData}
-                        shouldShowFeature={shouldShowFeature}
-                        userIsPremium={userIsPremium}
-                      />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <MajorAspectsSection 
+                            chartData={chartData}
+                            shouldShowFeature={shouldShowFeature}
+                            userIsPremium={userIsPremium}
+                          />
+                        </div>
+                      </div>
                     );
                     
                   case 'planetary-dignities':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <PlanetaryDignitiesSection 
-                          chartData={chartData}
-                          openModal={openModal}
-                        />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <PlanetaryDignitiesSection 
+                            chartData={chartData}
+                            openModal={openModal}
+                          />
+                        </div>
                       </div>
                     );
                     
                   case 'house-analysis':
                     return chartData && (
-                      <div key={section.id} id={sectionId}>
-                        <HousesSection chartData={chartData} />
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <HousesSection chartData={chartData} />
+                        </div>
                       </div>
                     );
                     
