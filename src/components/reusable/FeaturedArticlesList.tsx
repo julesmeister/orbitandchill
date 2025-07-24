@@ -5,17 +5,20 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { BlogPost } from '@/types/blog';
 import { FeaturedArticlesConfig } from '@/config/sectionConfigs';
+import LoadingSpinner from '@/components/reusable/LoadingSpinner';
 
 interface FeaturedArticlesListProps {
   posts: BlogPost[];
   config: FeaturedArticlesConfig;
   className?: string;
+  isLoading?: boolean;
 }
 
 const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
   posts,
   config,
-  className = ''
+  className = '',
+  isLoading = false
 }) => {
   const router = useRouter();
 
@@ -33,7 +36,15 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
 
       {/* Featured Posts List */}
       <div className="space-y-4">
-        {posts.slice(0, config.maxArticles).map((post) => (
+        {isLoading ? (
+          <LoadingSpinner 
+            size="sm" 
+            title="Loading Articles..."
+            subtitle="Fetching the latest featured articles"
+            className="py-8"
+          />
+        ) : (
+          posts.slice(0, config.maxArticles).map((post) => (
           <div 
             key={post.id} 
             className="border border-black bg-white hover:shadow-lg transition-shadow duration-300 cursor-pointer"
@@ -67,7 +78,8 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* View All Articles Button */}

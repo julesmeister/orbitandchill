@@ -31,7 +31,7 @@ export default function HomePageClient() {
   const { toast: statusToast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
 
   // Get featured blog posts
-  const { featuredPosts } = useBlogData();
+  const { featuredPosts, isLoading: blogPostsLoading } = useBlogData();
 
   // Get astrological events for structured data
   const { upcomingEvents } = useAstrologicalEvents();
@@ -181,6 +181,7 @@ export default function HomePageClient() {
             <FeaturedArticlesList 
               posts={featuredPosts}
               config={featuredArticlesConfig}
+              isLoading={blogPostsLoading}
             />
           </div>
         </div>
