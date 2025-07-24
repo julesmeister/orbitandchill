@@ -7,6 +7,8 @@ export const applyDistributionStrategy = (
   optimalDates: OptimalTimingResult[],
   daysInMonth: number
 ): OptimalTimingResult[] => {
+  console.log(`🎯 DEBUG: Distribution strategy starting with ${optimalDates.length} raw results`);
+  
   const enhancedDistribution: OptimalTimingResult[] = [];
 
   // FIRST PRIORITY: Magic Formula events regardless of score (ultra-permissive threshold)
@@ -115,6 +117,13 @@ export const applyDistributionStrategy = (
     const dateB = new Date(`${b.date}T${b.time}`);
     return dateA.getTime() - dateB.getTime();
   });
+
+  console.log(`🎯 DEBUG: Distribution strategy complete - Final ${enhancedDistribution.length} events`);
+  console.log(`🎯 DEBUG: Final events by day:`, enhancedDistribution.reduce((acc, result) => {
+    const day = new Date(result.date).getDate();
+    acc[day] = (acc[day] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>));
 
   return enhancedDistribution;
 };

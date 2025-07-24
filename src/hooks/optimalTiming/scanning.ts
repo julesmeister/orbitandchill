@@ -57,6 +57,9 @@ export const scanOptimalTiming = async (
   let successfulCalculations = 0;
   let errorCount = 0;
 
+  console.log(`🔍 DEBUG: Starting scan for ${daysInMonth} days in month ${targetMonth + 1}/${targetYear}`);
+  console.log(`🔍 DEBUG: Selected priorities:`, selectedPriorities);
+
   // Scan each day of the month with better error handling
   for (let day = 1; day <= daysInMonth; day++) {
     // Update progress based on day
@@ -65,6 +68,8 @@ export const scanOptimalTiming = async (
       dayProgress,
       `Scanning day ${day}/${daysInMonth} for optimal timing...`
     );
+
+    console.log(`🔍 DEBUG: Scanning day ${day}/${daysInMonth}`);
 
     for (const timeStr of timesToTest) {
       totalCalculations++;
@@ -196,6 +201,7 @@ export const scanOptimalTiming = async (
             };
 
             optimalDates.push(optimalResult);
+            console.log(`✅ DEBUG: Found event on day ${day} at ${timeStr} - Score: ${Math.round(score)} (${method})`);
 
             // Real-time event emission: Create and emit event immediately if callback provided
             if (onEventGenerated) {
@@ -208,6 +214,7 @@ export const scanOptimalTiming = async (
                 );
                 realTimeEvents.push(realTimeEvent);
                 await onEventGenerated(realTimeEvent);
+                console.log(`🎯 DEBUG: Real-time event emitted for day ${day}`);
               } catch (emitError) {
                 console.warn("Real-time event emission failed:", emitError);
                 // Continue generation even if individual emission fails
@@ -228,6 +235,13 @@ export const scanOptimalTiming = async (
     // Add delay between days to prevent memory issues
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
+
+  console.log(`🔍 DEBUG: Scan complete - Found ${optimalDates.length} optimal dates across ${daysInMonth} days`);
+  console.log(`🔍 DEBUG: Events by day:`, optimalDates.reduce((acc, result) => {
+    const day = new Date(result.date).getDate();
+    acc[day] = (acc[day] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>));
 
   return {
     optimalDates,
