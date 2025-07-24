@@ -7,7 +7,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-and-chill.com'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'
   const currentDate = new Date().toISOString().split('T')[0]
 
   // Static pages with updated priorities to reflect new features
