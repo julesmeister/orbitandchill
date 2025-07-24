@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TimingPriority } from '../../hooks/optimalTiming/types';
 import NextBookmarkedEventCountdown from './NextBookmarkedEventCountdown';
 import type { AstrologicalEvent } from '../../types/events';
@@ -11,6 +11,8 @@ import FormInput from '../ui/FormInput';
 import ActionButton from '../ui/ActionButton';
 import ViewToggleButton from '../ui/ViewToggleButton';
 import PriorityButton from '../ui/PriorityButton';
+import VertexCorners from '../ui/VertexCorners';
+import { useSound } from '../../hooks/useSound';
 
 interface LocationDisplay {
   source: 'current' | 'birth' | 'fallback';
@@ -94,6 +96,10 @@ export default function EventsLeftPanel({
   currentDate,
   setCurrentDate
 }: EventsLeftPanelProps) {
+  const { play: playHoverSound } = useSound('/sounds/hover.mp3', 0.3);
+  const [isActionsViewsExpanded, setIsActionsViewsExpanded] = useState(false);
+  const [isElectionalExpanded, setIsElectionalExpanded] = useState(false);
+
   return (
     <div className="xl:col-span-1 space-y-6">
       {/* Generator Form */}
@@ -219,16 +225,46 @@ export default function EventsLeftPanel({
         <>
           {/* Header */}
           <Panel>
-            <h1 className="font-space-grotesk text-2xl font-bold text-black mb-2">
-              Electional Astrology
-            </h1>
+            {/* Desktop Header (always visible) */}
+            <div className="hidden sm:block">
+              <h1 className="font-space-grotesk text-2xl font-bold text-black mb-2">
+                Electional Astrology
+              </h1>
+            </div>
             
-            
+            {/* Mobile Collapsible Header */}
+            <div className={`sm:hidden -m-6 ${isElectionalExpanded ? 'mb-0' : ''}`}>
+              <div className={`flex items-center justify-between px-4 py-3 ${isElectionalExpanded ? 'border-b border-gray-200' : ''}`}>
+                <h1 className="font-space-grotesk text-lg font-bold text-black">
+                  Electional Astrology
+                </h1>
+                <button
+                  onClick={() => setIsElectionalExpanded(!isElectionalExpanded)}
+                  onMouseEnter={playHoverSound}
+                  className="p-1 border border-gray-300 hover:border-black hover:bg-gray-50 transition-all duration-200"
+                >
+                  <svg 
+                    className={`w-4 h-4 text-black transition-transform duration-200 ${
+                      isElectionalExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content - Always visible on desktop, collapsible on mobile */}
+            <div className={`sm:block ${isElectionalExpanded ? 'block pt-4' : 'hidden'}`}>
             {/* Month Selector */}
             <div className="mb-4">
               <div className="bg-white border border-black p-1 flex items-center">
                 <button
                   onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                  onMouseEnter={playHoverSound}
                   className="inline-flex items-center justify-center px-3 py-2 text-black hover:bg-black hover:text-white transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,6 +276,7 @@ export default function EventsLeftPanel({
                 </span>
                 <button
                   onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                  onMouseEnter={playHoverSound}
                   className="inline-flex items-center justify-center px-3 py-2 text-black hover:bg-black hover:text-white transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,6 +308,7 @@ export default function EventsLeftPanel({
                 </div>
                 <button
                   onClick={showLocationToast}
+                  onMouseEnter={playHoverSound}
                   className="p-1 text-black hover:text-gray-600 transition-all duration-200"
                   title="Change location"
                 >
@@ -281,71 +319,142 @@ export default function EventsLeftPanel({
                 Your location is required for precise astrological calculations. We use it to determine planetary house positions, local sunrise/sunset times, and celestial angles specific to your geographic coordinates. This ensures optimal timing recommendations are accurate for your exact location on Earth.
               </p>
             </div>
-          </Panel>
-
-          {/* View Toggle for Calendar */}
-          <Panel>
-            <PanelHeader title="Calendar View" />
-            <div className="space-y-3">
-              <ViewToggleButton
-                onClick={() => {
-                  setSelectedTab('bookmarked');
-                  setViewMode('calendar');
-                }}
-                isActive={selectedTab === 'bookmarked' && viewMode === 'calendar'}
-                icon="⭐"
-              >
-                View Bookmarked Events
-              </ViewToggleButton>
-              
-              <ViewToggleButton
-                onClick={() => {
-                  setSelectedTab('manual');
-                  setViewMode('calendar');
-                }}
-                isActive={selectedTab === 'manual' && viewMode === 'calendar'}
-                icon="✏️"
-              >
-                View Manual Events
-              </ViewToggleButton>
-
-              <ViewToggleButton
-                onClick={() => {
-                  if (viewMode === 'calendar') {
-                    setViewMode('list');
-                  } else {
-                    setSelectedTab('generated');
-                    setViewMode('calendar');
-                  }
-                }}
-                isActive={viewMode === 'calendar'}
-                icon="✨"
-              >
-                {viewMode === 'calendar' ? 'Hide Generated Events Calendar' : 'Generated Events'}
-              </ViewToggleButton>
             </div>
           </Panel>
 
-          {/* Action Buttons */}
+          {/* Combined Actions & Views */}
           <Panel>
-            <PanelHeader title="Quick Actions" />
-            <div className="space-y-3">
-              <ActionButton
-                onClick={() => setShowTimingOptions(true)}
-                disabled={isTimingGenerating}
-                variant="secondary"
-                icon="✨"
-              >
-                Generate Optimal Times
-              </ActionButton>
+            {/* Desktop Header (always visible) */}
+            <div className="hidden sm:block">
+              <PanelHeader title="Actions & Views" />
+            </div>
+            
+            {/* Mobile Collapsible Header */}
+            <div className={`sm:hidden -m-6 ${isActionsViewsExpanded ? 'mb-0' : ''}`}>
+              <div className={`flex items-center justify-between px-4 py-3 ${isActionsViewsExpanded ? 'border-b border-gray-200' : ''}`}>
+                <h3 className="font-space-grotesk text-base font-semibold text-black">
+                  Actions & Views
+                </h3>
+                <button
+                  onClick={() => setIsActionsViewsExpanded(!isActionsViewsExpanded)}
+                  onMouseEnter={playHoverSound}
+                  className="p-1 border border-gray-300 hover:border-black hover:bg-gray-50 transition-all duration-200"
+                >
+                  <svg 
+                    className={`w-4 h-4 text-black transition-transform duration-200 ${
+                      isActionsViewsExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-              <ActionButton
-                onClick={() => setShowAddForm(true)}
-                variant="secondary"
-                icon="📅"
-              >
-                Add Manual Event
-              </ActionButton>
+            {/* Content - Always visible on desktop, collapsible on mobile */}
+            <div className={`sm:block ${isActionsViewsExpanded ? 'block pt-4' : 'hidden'} space-y-4`}>
+              {/* Quick Actions */}
+              <div>
+                <p className="text-xs font-semibold text-black/60 uppercase tracking-wider mb-2">Quick Actions</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setShowTimingOptions(true)}
+                    onMouseEnter={playHoverSound}
+                    disabled={isTimingGenerating}
+                    className="relative group bg-white text-black border border-gray-300 hover:border-transparent px-3 py-2 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <VertexCorners show={!isTimingGenerating} />
+                    <span className="relative z-10 flex items-center justify-center gap-1">
+                      <span className="text-xs">✨</span>
+                      <span>Generate</span>
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    onMouseEnter={playHoverSound}
+                    className="relative group bg-white text-black border border-gray-300 hover:border-transparent px-3 py-2 text-sm font-medium transition-all duration-200"
+                  >
+                    <VertexCorners />
+                    <span className="relative z-10 flex items-center justify-center gap-1">
+                      <span className="text-xs">📅</span>
+                      <span>Add Event</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Calendar Views */}
+              <div>
+                <p className="text-xs font-semibold text-black/60 uppercase tracking-wider mb-2">Calendar Views</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedTab('bookmarked');
+                      setViewMode('calendar');
+                    }}
+                    onMouseEnter={playHoverSound}
+                    className={`relative group border px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                      selectedTab === 'bookmarked' && viewMode === 'calendar'
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white text-black border-gray-300 hover:border-transparent'
+                    }`}
+                  >
+                    <VertexCorners show={!(selectedTab === 'bookmarked' && viewMode === 'calendar')} />
+                    <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-2">
+                      <span>⭐</span>
+                      <span className="hidden sm:inline">Bookmarked</span>
+                      <span className="sm:hidden">⭐</span>
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setSelectedTab('manual');
+                      setViewMode('calendar');
+                    }}
+                    onMouseEnter={playHoverSound}
+                    className={`relative group border px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                      selectedTab === 'manual' && viewMode === 'calendar'
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white text-black border-gray-300 hover:border-transparent'
+                    }`}
+                  >
+                    <VertexCorners show={!(selectedTab === 'manual' && viewMode === 'calendar')} />
+                    <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-2">
+                      <span>✏️</span>
+                      <span className="hidden sm:inline">Manual</span>
+                      <span className="sm:hidden">✏️</span>
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (viewMode === 'calendar') {
+                        setViewMode('list');
+                      } else {
+                        setSelectedTab('generated');
+                        setViewMode('calendar');
+                      }
+                    }}
+                    onMouseEnter={playHoverSound}
+                    className={`relative group border px-3 py-2 text-sm font-medium transition-all duration-200 col-span-1 sm:col-span-2 ${
+                      viewMode === 'calendar'
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white text-black border-gray-300 hover:border-transparent'
+                    }`}
+                  >
+                    <VertexCorners show={viewMode !== 'calendar'} />
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <span>✨</span>
+                      <span>{viewMode === 'calendar' ? 'Hide Calendar' : 'Generated Events'}</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
           </Panel>
         </>
@@ -357,6 +466,7 @@ export default function EventsLeftPanel({
           <p className="text-red-800 font-open-sans text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
+            onMouseEnter={playHoverSound}
             className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
           >
             Dismiss
