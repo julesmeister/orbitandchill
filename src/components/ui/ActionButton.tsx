@@ -6,6 +6,7 @@ import React from 'react';
 interface ActionButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
+  onMouseEnter?: () => void;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'outline';
   type?: 'button' | 'submit';
@@ -17,6 +18,7 @@ interface ActionButtonProps {
 export default function ActionButton({
   children,
   onClick,
+  onMouseEnter,
   disabled = false,
   variant = 'primary',
   type = 'button',
@@ -36,6 +38,7 @@ export default function ActionButton({
     <button
       type={type}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       disabled={disabled || isLoading}
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
     >

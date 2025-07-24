@@ -145,7 +145,8 @@ export default function EventsTable({
     <div className="border border-black bg-white mb-8 relative z-0">
       {/* Tabs */}
       <div className="border-b border-black">
-        <nav className="flex items-stretch justify-between">
+        {/* Desktop Tabs */}
+        <nav className="hidden md:flex items-stretch justify-between">
           <div className="flex">
             <button
               onClick={() => setSelectedTab('all')}
@@ -156,9 +157,12 @@ export default function EventsTable({
               }`}
             >
               All Events
-              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
-                selectedTab === 'all' ? 'bg-white text-black' : 'bg-black text-white'
-              }`}>
+              <span 
+                className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'all' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
                 {events.length}
               </span>
             </button>
@@ -172,9 +176,12 @@ export default function EventsTable({
             >
               <div className="w-3 h-3 bg-blue-500 border border-black inline-block mr-2 -mt-0.5"></div>
               Generated Events
-              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
-                selectedTab === 'generated' ? 'bg-white text-black' : 'bg-black text-white'
-              }`}>
+              <span 
+                className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'generated' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
                 {events.filter(e => e.isGenerated && !e.isBookmarked).length}
               </span>
             </button>
@@ -188,9 +195,12 @@ export default function EventsTable({
             >
               <div className="w-3 h-3 bg-yellow-500 border border-black inline-block mr-2 -mt-0.5"></div>
               Bookmarked
-              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
-                selectedTab === 'bookmarked' ? 'bg-white text-black' : 'bg-black text-white'
-              }`}>
+              <span 
+                className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'bookmarked' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
                 {events.filter(e => e.isBookmarked).length}
               </span>
             </button>
@@ -204,9 +214,12 @@ export default function EventsTable({
             >
               <div className="w-3 h-3 bg-gray-500 border border-black inline-block mr-2 -mt-0.5"></div>
               Manual Events
-              <span className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
-                selectedTab === 'manual' ? 'bg-white text-black' : 'bg-black text-white'
-              }`}>
+              <span 
+                className={`ml-2 px-2 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'manual' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
                 {events.filter(e => !e.isGenerated && !e.isBookmarked).length}
               </span>
             </button>
@@ -225,9 +238,113 @@ export default function EventsTable({
             <span className="text-sm text-black font-open-sans font-medium">per page</span>
           </div>
         </nav>
+
+        {/* Mobile Tabs */}
+        <div className="md:hidden">
+          {/* Mobile Tab Grid */}
+          <div className="grid grid-cols-2 gap-0">
+            <button
+              onClick={() => setSelectedTab('all')}
+              className={`px-3 py-3 flex flex-col items-center font-space-grotesk font-medium text-xs transition-all duration-200 border-r border-black ${
+                selectedTab === 'all'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-gray-50'
+              }`}
+            >
+              <span className="mb-1">All Events</span>
+              <span 
+                className={`px-1.5 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'all' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
+                {events.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setSelectedTab('generated')}
+              className={`px-3 py-3 flex flex-col items-center font-space-grotesk font-medium text-xs transition-all duration-200 ${
+                selectedTab === 'generated'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-2 h-2 bg-blue-500 border border-black"></div>
+                <span>Generated</span>
+              </div>
+              <span 
+                className={`px-1.5 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'generated' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
+                {events.filter(e => e.isGenerated && !e.isBookmarked).length}
+              </span>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-0 border-t border-black">
+            <button
+              onClick={() => setSelectedTab('bookmarked')}
+              className={`px-3 py-3 flex flex-col items-center font-space-grotesk font-medium text-xs transition-all duration-200 border-r border-black ${
+                selectedTab === 'bookmarked'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-2 h-2 bg-yellow-500 border border-black"></div>
+                <span>Bookmarked</span>
+              </div>
+              <span 
+                className={`px-1.5 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'bookmarked' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
+                {events.filter(e => e.isBookmarked).length}
+              </span>
+            </button>
+            <button
+              onClick={() => setSelectedTab('manual')}
+              className={`px-3 py-3 flex flex-col items-center font-space-grotesk font-medium text-xs transition-all duration-200 ${
+                selectedTab === 'manual'
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-2 h-2 bg-gray-500 border border-black"></div>
+                <span>Manual</span>
+              </div>
+              <span 
+                className={`px-1.5 py-0.5 text-xs font-open-sans border border-black ${
+                  selectedTab === 'manual' ? 'bg-white text-black' : 'bg-black text-white'
+                }`}
+                suppressHydrationWarning
+              >
+                {events.filter(e => !e.isGenerated && !e.isBookmarked).length}
+              </span>
+            </button>
+          </div>
+          
+          {/* Mobile Per Page Selector */}
+          <div className="flex items-center justify-center space-x-2 px-4 py-3 border-t border-black bg-gray-50">
+            <span className="text-xs text-black font-open-sans font-medium">Show:</span>
+            <div className="w-16">
+              <SynapsasDropdown
+                options={itemsPerPageOptions}
+                value={itemsPerPage.toString()}
+                onChange={(value) => handleItemsPerPageChange(parseInt(value))}
+              />
+            </div>
+            <span className="text-xs text-black font-open-sans font-medium">per page</span>
+          </div>
+        </div>
       </div>
       
-      <div className="px-8 py-6 border-b border-black">
+      {/* Desktop Header & Filters */}
+      <div className="hidden md:block px-8 py-6 border-b border-black">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
@@ -284,8 +401,77 @@ export default function EventsTable({
           </div>
         </div>
       </div>
+
+      {/* Mobile Header & Filters */}
+      <div className="md:hidden border-b border-black">
+        {/* Mobile Header */}
+        <div className="px-4 py-4 border-b border-black">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-black flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="font-space-grotesk text-base font-bold text-black">
+                {selectedTab === 'bookmarked' ? 'Bookmarked Events' : 
+                 selectedTab === 'manual' ? 'Manual Events' : 
+                 selectedTab === 'generated' ? 'Generated Events' : 'Events Overview'}
+              </h2>
+              <div className="w-12 h-0.5 bg-black mt-1"></div>
+            </div>
+          </div>
+          
+          {/* Mobile Filter Badges */}
+          {(hideChallengingDates || showCombosOnly) && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {hideChallengingDates && (
+                <span className="inline-flex items-center px-2 py-1 text-xs font-open-sans font-semibold bg-orange-50 text-black border border-black">
+                  <div className="w-1.5 h-1.5 bg-orange-500 border border-black mr-1.5"></div>
+                  Challenging Hidden
+                </span>
+              )}
+              {showCombosOnly && (
+                <span className="inline-flex items-center px-2 py-1 text-xs font-open-sans font-semibold bg-indigo-50 text-black border border-black">
+                  <div className="w-1.5 h-1.5 bg-indigo-500 border border-black mr-1.5"></div>
+                  Combos Only
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Type Filters */}
+        <div className="grid grid-cols-2 gap-0">
+          {(['all', 'benefic', 'challenging', 'neutral'] as const).map((type, index) => (
+            <button
+              key={type}
+              onClick={() => setSelectedType(type)}
+              className={`px-3 py-3 flex flex-col items-center font-open-sans font-medium text-xs transition-all duration-200 ${
+                selectedType === type
+                  ? 'bg-black text-white'
+                  : 'text-black hover:bg-gray-50'
+              } ${index === 1 || index === 3 ? '' : 'border-r border-black'} ${index < 2 ? 'border-b border-black' : ''}`}
+            >
+              <div className={`w-2 h-2 mb-1 border border-black ${
+                type === 'all' ? 'bg-gray-500' :
+                type === 'benefic' ? 'bg-emerald-500' :
+                type === 'challenging' ? 'bg-red-500' :
+                'bg-gray-400'
+              }`}></div>
+              <span className="text-center leading-tight">
+                {type === 'all' ? 'All Types' : 
+                 type === 'benefic' ? 'Favorable' :
+                 type === 'challenging' ? 'Challenging' :
+                 'Neutral'}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
       
-      <div className="relative z-10">
+      {/* Desktop Table View (md and up) */}
+      <div className="relative z-10 hidden md:block">
         <table className="min-w-full">
           <thead className="bg-white border-b border-black">
             <tr>
@@ -442,6 +628,164 @@ export default function EventsTable({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile List View (sm and below) */}
+      <div className="block md:hidden divide-y divide-black">
+        {paginatedEvents.map((event) => {
+          const styling = getEventStyling(event);
+          
+          return (
+            <div 
+              key={event.id} 
+              className="p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer relative" 
+              onClick={() => handleEventClick(event)}
+            >
+              <div className="flex items-start space-x-3">
+                {/* Icon */}
+                <div 
+                  className={`w-10 h-10 flex items-center justify-center flex-shrink-0 border border-black`}
+                  style={{ backgroundColor: styling.bgColor }}
+                >
+                  <span className="text-base">
+                    {event.score >= 8 ? '✨' :
+                     event.score >= 6 ? '⭐' :
+                     event.score >= 4 ? '💫' :
+                     '⚡'}
+                  </span>
+                </div>
+
+                {/* Main Content */}
+                <div className="flex-1 min-w-0">
+                  {/* Title and Shared Badge */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <h3 className="font-space-grotesk text-sm font-semibold text-black leading-tight">
+                        {event.title}
+                      </h3>
+                      {event.isGenerated && event.userId !== currentUserId && (
+                        <span 
+                          className="inline-flex items-center px-2 py-0.5 mt-1 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                          title="Shared optimal timing from community"
+                        >
+                          🌐 Shared
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Score */}
+                    <div className="flex items-center space-x-1 flex-shrink-0">
+                      <div className="relative z-[100]">
+                        <ScoreTooltip event={event} position="left" onToggleBookmark={toggleBookmark}>
+                          <div className={`w-6 h-6 flex items-center justify-center text-xs font-bold text-white cursor-help border border-black ${
+                            event.title.includes('⚠️') ? 'bg-red-500' :
+                            event.score >= 8 ? 'bg-emerald-500' :
+                            event.score >= 6 ? 'bg-blue-500' :
+                            'bg-slate-500'
+                          }`}>
+                            {event.score}
+                          </div>
+                        </ScoreTooltip>
+                      </div>
+                      <span className="text-xs text-black/60 font-open-sans font-medium">/10</span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {event.description && (
+                    <p className="font-open-sans text-xs text-black/60 leading-relaxed mb-2 line-clamp-2">
+                      {event.description}
+                    </p>
+                  )}
+
+                  {/* Meta Information */}
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    {/* Date and Time */}
+                    <div className="text-xs">
+                      <div className="font-space-grotesk font-semibold text-black">
+                        {new Date(event.date).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        })}
+                      </div>
+                      {event.time && (
+                        <div className="mt-0.5 font-open-sans font-medium text-black/60">
+                          {new Date(`2000-01-01T${event.time}`).toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Type Badge */}
+                    <div 
+                      className={`inline-flex items-center px-2 py-1 text-xs font-open-sans font-medium border border-black ${styling.text} whitespace-nowrap`}
+                      style={{ backgroundColor: styling.bgColor }}
+                    >
+                      {event.type === 'benefic' ? '✓ Favorable' : 
+                       event.type === 'challenging' ? '⚠ Challenging' : 
+                       '• Neutral'}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end space-x-1">
+                    {/* Only show bookmark button for non-manual events */}
+                    {selectedTab !== 'manual' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(event.id);
+                        }}
+                        className={`inline-flex items-center justify-center w-7 h-7 transition-all duration-200 border border-black ${
+                          event.isBookmarked
+                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                            : 'bg-white text-black hover:bg-gray-50'
+                        }`}
+                        data-bookmarked={event.isBookmarked}
+                        title={event.isBookmarked ? 'Remove bookmark' : 'Bookmark this event'}
+                      >
+                        <div className={`w-2.5 h-2.5 ${event.isBookmarked ? 'bg-white' : 'bg-yellow-500'} border border-black`}></div>
+                      </button>
+                    )}
+                    
+                    {/* Show rename button for bookmarked and manual events */}
+                    {(selectedTab === 'bookmarked' || selectedTab === 'manual') && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRenameEvent(event.id, event.title);
+                        }}
+                        className="inline-flex items-center justify-center w-7 h-7 bg-white text-black hover:bg-blue-500 hover:text-white transition-all duration-200 border border-black"
+                        title="Rename event"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteEvent(event.id);
+                      }}
+                      className="inline-flex items-center justify-center w-7 h-7 bg-white text-black hover:bg-red-500 hover:text-white transition-all duration-200 border border-black"
+                      title="Delete event"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       
       {/* Pagination */}

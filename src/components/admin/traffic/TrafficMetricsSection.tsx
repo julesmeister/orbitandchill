@@ -14,24 +14,34 @@ interface TrafficData {
   };
 }
 
+interface Trend {
+  value: number;
+  isPositive: boolean;
+}
+
 interface TrafficMetricsSectionProps {
+  // Use consolidated real metrics from useRealMetrics hook
+  dailyVisitors: number;
+  totalPageViews: number;
+  chartsGenerated: number;
+  trends: {
+    visitors: number;
+    charts: number;
+  };
   filteredTrafficData: TrafficData[];
   isLoading: boolean;
 }
 
-export default function TrafficMetricsSection({ filteredTrafficData, isLoading }: TrafficMetricsSectionProps) {
-  // Calculate totals based on filtered data
-  const totals = filteredTrafficData.reduce(
-    (acc, day) => ({
-      visitors: acc.visitors + day.visitors,
-      pageViews: acc.pageViews + day.pageViews,
-      chartsGenerated: acc.chartsGenerated + day.chartsGenerated,
-    }),
-    { visitors: 0, pageViews: 0, chartsGenerated: 0 }
-  );
-
-  // Calculate realistic trends based on recent vs older data
-  const calculateTrend = (metricData: number[]) => {
+export default function TrafficMetricsSection({ 
+  dailyVisitors, 
+  totalPageViews, 
+  chartsGenerated, 
+  trends,
+  filteredTrafficData,
+  isLoading 
+}: TrafficMetricsSectionProps) {
+  // Calculate page views trend from filtered data since it's not in main trends
+  const calculatePageViewsTrend = (metricData: number[]): Trend => {
     if (metricData.length < 7) return { value: 0, isPositive: true };
     
     const recentWeek = metricData.slice(-7).reduce((a, b) => a + b, 0);
@@ -46,14 +56,12 @@ export default function TrafficMetricsSection({ filteredTrafficData, isLoading }
     };
   };
 
-  const visitorsTrend = calculateTrend(filteredTrafficData.map(d => d.visitors));
-  const pageViewsTrend = calculateTrend(filteredTrafficData.map(d => d.pageViews));
-  const chartsTrend = calculateTrend(filteredTrafficData.map(d => d.chartsGenerated));
+  const pageViewsTrend = calculatePageViewsTrend(filteredTrafficData.map(d => d.pageViews));
 
   const trafficMetrics = [
     {
-      title: 'Total Visitors',
-      value: totals.visitors,
+      title: 'Daily Visitors',
+      value: dailyVisitors,
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -61,11 +69,11 @@ export default function TrafficMetricsSection({ filteredTrafficData, isLoading }
         </svg>
       ),
       color: 'blue' as const,
-      trend: visitorsTrend
+      trend: { value: trends.visitors, isPositive: trends.visitors > 0 }
     },
     {
-      title: 'Page Views',
-      value: totals.pageViews,
+      title: 'Total Page Views',
+      value: totalPageViews,
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
@@ -76,14 +84,14 @@ export default function TrafficMetricsSection({ filteredTrafficData, isLoading }
     },
     {
       title: 'Charts Generated',
-      value: totals.chartsGenerated,
+      value: chartsGenerated,
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ),
       color: 'purple' as const,
-      trend: chartsTrend
+      trend: { value: trends.charts, isPositive: trends.charts > 0 }
     }
   ];
 

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useAdminStore } from '@/store/adminStore';
+import { useRealMetrics } from '@/hooks/useRealMetrics';
 import TrafficMetricsSection from './traffic/TrafficMetricsSection';
 import DailyAveragesCard from './traffic/DailyAveragesCard';
 import TrafficSourcesCard from './traffic/TrafficSourcesCard';
@@ -14,13 +16,26 @@ interface TrafficTabProps {
 }
 
 export default function TrafficTab({ trafficData, isLoading }: TrafficTabProps) {
+  const { threads, userAnalytics } = useAdminStore();
   const [timeRange, setTimeRange] = useState<TimeRange>('Last 30 days');
   
   const filteredTrafficData = getFilteredTrafficData(trafficData, timeRange);
 
+  // Use the same consolidated real metrics from useRealMetrics
+  const realMetrics = useRealMetrics(userAnalytics, trafficData, threads);
+  
+  const trends = {
+    visitors: realMetrics.dailyVisitors,
+    charts: realMetrics.chartsGenerated
+  };
+
   return (
     <div className="px-4 py-6 sm:px-0">
       <TrafficMetricsSection 
+        dailyVisitors={realMetrics.dailyVisitors}
+        totalPageViews={realMetrics.totalPageViews}
+        chartsGenerated={realMetrics.chartsGenerated}
+        trends={trends}
         filteredTrafficData={filteredTrafficData}
         isLoading={isLoading}
       />

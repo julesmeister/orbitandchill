@@ -6,6 +6,7 @@ import React from 'react';
 interface ViewToggleButtonProps {
   children: React.ReactNode;
   onClick: () => void;
+  onMouseEnter?: () => void;
   isActive: boolean;
   icon?: string;
   className?: string;
@@ -14,6 +15,7 @@ interface ViewToggleButtonProps {
 export default function ViewToggleButton({
   children,
   onClick,
+  onMouseEnter,
   isActive,
   icon,
   className = ""
@@ -21,6 +23,7 @@ export default function ViewToggleButton({
   return (
     <button
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold border transition-all duration-300 hover:-translate-y-0.5 ${
         isActive
           ? 'bg-black text-white border-black'

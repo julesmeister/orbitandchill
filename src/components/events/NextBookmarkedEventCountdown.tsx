@@ -148,10 +148,39 @@ export default function NextBookmarkedEventCountdown({
   };
 
   return (
-    <div className="text-center">
-      <p className="text-sm text-black/60 font-open-sans">
-        Next bookmarked event: <span className="text-black/80">{nextEvent.title}</span> in <span className="font-medium text-black">{getTimeDisplay()}</span>
-      </p>
+    <div className="border border-black p-4" style={{ backgroundColor: '#f0e3ff' }}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">{getEventTypeIcon(nextEvent)}</span>
+        <span className="text-xs font-semibold text-black uppercase tracking-wider">
+          Next Event
+        </span>
+      </div>
+      
+      <div className="text-left">
+        <h4 className="font-space-grotesk font-medium text-black text-sm mb-1">
+          {nextEvent.title}
+        </h4>
+        
+        <div className="flex items-center gap-2 text-xs text-black/70">
+          <span>⏰</span>
+          <span className="font-open-sans">
+            in <span className="font-medium text-black">{getTimeDisplay()}</span>
+          </span>
+        </div>
+        
+        {nextEvent.time && (
+          <div className="flex items-center gap-2 text-xs text-black/60 mt-1">
+            <span>📅</span>
+            <span className="font-open-sans">
+              {new Date(nextEvent.date).toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+              })} at {nextEvent.time}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

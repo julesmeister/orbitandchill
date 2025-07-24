@@ -81,7 +81,9 @@
       "Bash(git checkout:*)",
       "Bash(git rm:*)",
       "Bash(next build)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" next lint)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" next lint)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/reusable/FeaturedArticlesList.tsx src/app/HomePageClient.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .tsx src/components/reusable/FeaturedArticlesList.tsx --quiet)"
     ],
     "deny": []
   }
