@@ -1,98 +1,103 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@libsql/client/http';
+import { createClient } from '@libsql/client';
 
-interface RandomSentenceResponse {
-  success: boolean;
-  sentence?: string;
-  cardInfo?: {
-    cardName: string;
-    isReversed: boolean;
-    totalSentences: number;
-  };
-  error?: string;
-  code?: string;
-}
+// Initialize Turso client
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN!,
+});
 
-export async function GET(request: NextRequest): Promise<NextResponse<RandomSentenceResponse>> {
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const cardName = searchParams.get('cardName');
+  const isReversed = searchParams.get('isReversed');
+
+  if (!cardName) {
+    return NextResponse.json({
+      success: false,
+      error: 'cardName parameter is required'
+    }, { status: 400 });
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const cardName = searchParams.get('cardName');
-    const isReversedParam = searchParams.get('isReversed');
+    console.log(`🎲 Getting random sentence for ${cardName} (reversed: ${isReversed})`);
 
-    // Validate required parameters
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID required', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
-    }
-
-    if (!cardName) {
-      return NextResponse.json(
-        { success: false, error: 'Card name required', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
-    }
-
-    // Parse optional parameters
-    const isReversed = isReversedParam === 'true';
-
-    // Connect to database using Turso HTTP client pattern
-    const databaseUrl = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
+    // Build query for random sentence
+    let sql = `SELECT 
+      id,
+      sentence,
+      source_type,
+      created_at,
+      updated_at
+    FROM tarot_custom_sentences 
+    WHERE card_name = ?`;
     
-    if (!databaseUrl || !authToken) {
-      return NextResponse.json({
-        success: false,
-        error: 'Database not available',
-        code: 'DATABASE_ERROR'
-      }, { status: 503 });
+    const args: any[] = [cardName];
+
+    // Add orientation filter if specified
+    if (isReversed !== null) {
+      sql += ' AND is_reversed = ?';
+      args.push(isReversed === 'true' ? 1 : 0);
     }
 
-    const client = createClient({
-      url: databaseUrl,
-      authToken: authToken,
-    });
+    // SQLite RANDOM() for getting random sentence
+    sql += ' ORDER BY RANDOM() LIMIT 1';
 
-    // Get all sentences for the card and orientation
+    // Execute query
     const result = await client.execute({
-      sql: 'SELECT sentence FROM tarot_custom_sentences WHERE user_id = ? AND card_name = ? AND is_reversed = ?',
-      args: [userId, cardName, isReversed ? 1 : 0]
+      sql,
+      args
     });
 
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'No sentences found for this card',
-        code: 'NO_SENTENCES_FOUND'
+        error: `No sentences found for ${cardName}${isReversed ? ' (reversed)' : ''}`,
+        cardInfo: {
+          cardName,
+          isReversed: isReversed === 'true',
+          totalSentences: 0
+        }
       }, { status: 404 });
     }
 
-    // Select a random sentence
-    const randomIndex = Math.floor(Math.random() * result.rows.length);
-    const randomSentence = (result.rows[randomIndex] as any).sentence;
+    // Get total count for this card/orientation for info
+    let countSql = 'SELECT COUNT(*) as count FROM tarot_custom_sentences WHERE card_name = ?';
+    const countArgs: any[] = [cardName];
+
+    if (isReversed !== null) {
+      countSql += ' AND is_reversed = ?';
+      countArgs.push(isReversed === 'true' ? 1 : 0);
+    }
+
+    const countResult = await client.execute({
+      sql: countSql,
+      args: countArgs
+    });
+
+    const sentence = result.rows[0];
+    const totalSentences = countResult.rows[0]?.count as number || 0;
 
     return NextResponse.json({
       success: true,
-      sentence: randomSentence,
+      sentence: sentence.sentence,
+      sentenceInfo: {
+        id: sentence.id,
+        sourceType: sentence.source_type,
+        createdAt: new Date(sentence.created_at as number).toISOString()
+      },
       cardInfo: {
         cardName,
-        isReversed,
-        totalSentences: result.rows.length
+        isReversed: isReversed === 'true',
+        totalSentences
       }
     });
 
   } catch (error) {
-    console.error('Tarot sentences random API error:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      },
-      { status: 500 }
-    );
+    console.error('Get random sentence error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

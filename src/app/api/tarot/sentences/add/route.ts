@@ -1,209 +1,130 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@libsql/client/http';
+import { createClient } from '@libsql/client';
+import { randomUUID } from 'crypto';
+
+// Initialize Turso client
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN!,
+});
 
 interface AddSentenceRequest {
   userId?: string;
   cardName: string;
   isReversed: boolean;
   sentence: string;
-  sourceType?: 'user' | 'ai_generated' | 'migrated';
+  sourceType?: string;
 }
 
-interface AddSentenceResponse {
-  success: boolean;
-  sentence?: {
-    id: string;
-    cardName: string;
-    isReversed: boolean;
-    sentence: string;
-    sourceType: 'user' | 'ai_generated' | 'migrated';
-    createdAt: string;
-    updatedAt: string;
-  };
-  cardStats?: {
-    totalSentences: number;
-    maxAllowed: number;
-    canAddMore: boolean;
-  };
-  error?: string;
-  code?: string;
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse<AddSentenceResponse>> {
+export async function POST(request: NextRequest) {
   try {
-    const body: AddSentenceRequest = await request.json();
-    const { userId, cardName, isReversed, sentence, sourceType = 'user' } = body;
+    const { userId = 'anonymous_add', cardName, isReversed, sentence, sourceType = 'user' }: AddSentenceRequest = await request.json();
 
-    if (!cardName) {
-      return NextResponse.json(
-        { success: false, error: 'Card name required', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
+    if (!cardName || sentence === undefined || typeof isReversed !== 'boolean') {
+      return NextResponse.json({
+        success: false,
+        error: 'cardName, sentence, and isReversed are required'
+      }, { status: 400 });
     }
 
-    if (!sentence || sentence.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Sentence cannot be empty', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
-    }
+    console.log(`➕ Adding sentence for ${cardName} (reversed: ${isReversed}): "${sentence.substring(0, 50)}..."`);
 
-    // Validate sentence length (reasonable limits)
-    if (sentence.length > 500) {
-      return NextResponse.json(
-        { success: false, error: 'Sentence too long (max 500 characters)', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
-    }
+    // Ensure user exists (create minimal entry if needed for FK constraint)
+    try {
+      const userCheck = await client.execute({
+        sql: 'SELECT id FROM users WHERE id = ?',
+        args: [userId]
+      });
 
-    // Connect to database using Turso HTTP client pattern
-    const databaseUrl = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
-    
-    if (!databaseUrl || !authToken) {
-      return NextResponse.json(
-        { success: false, error: 'Database not available', code: 'DATABASE_ERROR' },
-        { status: 503 }
-      );
-    }
-
-    const client = createClient({
-      url: databaseUrl,
-      authToken: authToken,
-    });
-
-    // Generate anonymous user ID if not provided
-    const effectiveUserId = userId || `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Ensure the user exists in the users table (create if needed)
-    if (!userId) {
-      try {
+      if (userCheck.rows.length === 0) {
+        console.log(`👤 Creating minimal user entry for FK constraint: ${userId}`);
         await client.execute({
-          sql: `INSERT OR IGNORE INTO users (
-            id, username, auth_provider, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?)`,
+          sql: `INSERT INTO users (id, username, auth_provider, subscription_tier, role, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [
-            effectiveUserId,
-            'Anonymous',
+            userId,
+            'Single Add User',
             'anonymous',
+            'free',
+            'user',
+            1,
             Date.now(),
             Date.now()
           ]
         });
-      } catch (userCreationError) {
-        console.warn('User creation failed (non-critical):', userCreationError);
-        // Continue anyway - the FK constraint might not be enforced
       }
+    } catch (error) {
+      console.log(`⚠️ User creation failed, continuing anyway: ${error}`);
     }
 
-    // Check current sentence count for this card orientation (per user)
-    const countResult = await client.execute({
-      sql: 'SELECT COUNT(*) as count FROM tarot_custom_sentences WHERE user_id = ? AND card_name = ? AND is_reversed = ?',
-      args: [effectiveUserId, cardName, isReversed ? 1 : 0]
+    // Check if sentence already exists
+    const existingResult = await client.execute({
+      sql: `SELECT id FROM tarot_custom_sentences 
+            WHERE user_id = ? AND card_name = ? AND is_reversed = ? AND sentence = ?`,
+      args: [userId, cardName, isReversed ? 1 : 0, sentence]
     });
 
-    const currentCount = (countResult.rows[0] as any)?.count || 0;
-    const maxAllowed = 5; // Maximum sentences per card orientation per user
-
-    if (currentCount >= maxAllowed) {
+    if (existingResult.rows.length > 0) {
       return NextResponse.json({
         success: false,
-        error: `Maximum ${maxAllowed} sentences allowed per card orientation`,
-        code: 'SENTENCE_LIMIT_EXCEEDED',
-        cardStats: {
-          totalSentences: currentCount,
-          maxAllowed,
-          canAddMore: false
-        }
-      }, { status: 400 });
+        error: 'Sentence already exists for this card and orientation',
+        existingSentenceId: existingResult.rows[0].id
+      }, { status: 409 });
     }
 
-    // Check for duplicate sentences (per user)
-    const duplicateResult = await client.execute({
-      sql: 'SELECT id FROM tarot_custom_sentences WHERE user_id = ? AND card_name = ? AND is_reversed = ? AND sentence = ?',
-      args: [effectiveUserId, cardName, isReversed ? 1 : 0, sentence.trim()]
-    });
+    // Insert new sentence
+    const sentenceId = randomUUID();
+    const now = Date.now();
 
-    if (duplicateResult.rows.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Sentence already exists for this card',
-        code: 'SENTENCE_DUPLICATE'
-      }, { status: 400 });
-    }
-
-    // Generate unique ID and timestamps
-    const now = new Date();
-    const sentenceId = `tarot_sentence_${effectiveUserId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Insert new sentence without foreign key constraint (following Turso HTTP client pattern)
-    const insertResult = await client.execute({
-      sql: `
-        INSERT INTO tarot_custom_sentences (
-          id, user_id, card_name, is_reversed, sentence, is_custom, source_type, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
+    await client.execute({
+      sql: `INSERT INTO tarot_custom_sentences 
+            (id, user_id, card_name, is_reversed, sentence, is_custom, source_type, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         sentenceId,
-        effectiveUserId,
+        userId,
         cardName,
         isReversed ? 1 : 0,
-        sentence.trim(),
-        1, // is_custom = true
+        sentence,
+        1, // is_custom
         sourceType,
-        now.toISOString(),
-        now.toISOString()
+        now,
+        now
       ]
     });
 
-    // Verify the sentence was created
-    const verifyResult = await client.execute({
-      sql: 'SELECT * FROM tarot_custom_sentences WHERE id = ?',
-      args: [sentenceId]
+    // Get updated count for this card/orientation
+    const countResult = await client.execute({
+      sql: `SELECT COUNT(*) as count FROM tarot_custom_sentences 
+            WHERE card_name = ? AND is_reversed = ?`,
+      args: [cardName, isReversed ? 1 : 0]
     });
 
-    if (verifyResult.rows.length === 0) {
-      throw new Error('Failed to create sentence in database');
-    }
-
-    const createdSentence = verifyResult.rows[0] as any;
-
-    // Get updated count
-    const newCountResult = await client.execute({
-      sql: 'SELECT COUNT(*) as count FROM tarot_custom_sentences WHERE user_id = ? AND card_name = ? AND is_reversed = ?',
-      args: [effectiveUserId, cardName, isReversed ? 1 : 0]
-    });
-
-    const newCount = (newCountResult.rows[0] as any)?.count || 0;
+    const totalSentences = countResult.rows[0]?.count as number || 0;
 
     return NextResponse.json({
       success: true,
       sentence: {
-        id: createdSentence.id,
-        cardName: createdSentence.card_name,
-        isReversed: Boolean(createdSentence.is_reversed),
-        sentence: createdSentence.sentence,
-        sourceType: createdSentence.source_type as 'user' | 'ai_generated' | 'migrated',
-        createdAt: createdSentence.created_at,
-        updatedAt: createdSentence.updated_at
+        id: sentenceId,
+        cardName,
+        isReversed,
+        sentence,
+        sourceType,
+        createdAt: new Date(now).toISOString(),
+        updatedAt: new Date(now).toISOString()
       },
       cardStats: {
-        totalSentences: newCount,
-        maxAllowed,
-        canAddMore: newCount < maxAllowed
+        cardName,
+        isReversed,
+        totalSentences
       }
     });
 
   } catch (error) {
-    console.error('Tarot sentences add API error:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      },
-      { status: 500 }
-    );
+    console.error('Add sentence error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

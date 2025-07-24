@@ -1,13 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@libsql/client/http';
+import { createClient } from '@libsql/client';
+import { randomUUID } from 'crypto';
+
+// Initialize Turso client
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN!,
+});
 
 interface BulkSentence {
   cardName: string;
   isReversed: boolean;
   sentence: string;
-  sourceType: 'user' | 'ai_generated' | 'migrated';
-  localId?: string; // For tracking mapping from local to server IDs
+  sourceType: string;
+  localId?: string;
 }
 
 interface BulkSyncRequest {
@@ -16,211 +22,180 @@ interface BulkSyncRequest {
   syncMode: 'merge' | 'replace' | 'add_only';
 }
 
-interface SentenceMapping {
-  localId?: string;
-  serverId: string;
-  status: 'added' | 'updated' | 'skipped' | 'error';
-  error?: string;
-}
-
-interface BulkSyncResponse {
-  success: boolean;
-  results?: {
-    added: number;
-    updated: number;
-    skipped: number;
-    errors: number;
-  };
-  sentenceMap?: SentenceMapping[];
-  stats?: {
-    totalSentences: number;
-    cardsAffected: number;
-    syncTimestamp: string;
-  };
-  error?: string;
-  code?: string;
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse<BulkSyncResponse>> {
+export async function POST(request: NextRequest) {
   try {
-    const body: BulkSyncRequest = await request.json();
-    const { userId, sentences, syncMode = 'merge' } = body;
+    const { userId, sentences, syncMode = 'merge' }: BulkSyncRequest = await request.json();
 
-    // Validate required fields
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID required', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
+    if (!userId || !sentences || !Array.isArray(sentences)) {
+      return NextResponse.json({
+        success: false,
+        error: 'userId and sentences array are required'
+      }, { status: 400 });
     }
 
-    if (!sentences || !Array.isArray(sentences)) {
-      return NextResponse.json(
-        { success: false, error: 'Sentences array required', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
-    }
+    console.log(`🔄 Starting bulk sync for user ${userId}: ${sentences.length} sentences, mode: ${syncMode}`);
 
-    if (sentences.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'At least one sentence required', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
-    }
+    // Ensure user exists in users table (create minimal entry if needed for FK constraint)
+    try {
+      const userCheck = await client.execute({
+        sql: 'SELECT id FROM users WHERE id = ?',
+        args: [userId]
+      });
 
-    // Validate sentences
-    for (let i = 0; i < sentences.length; i++) {
-      const sentence = sentences[i];
-      if (!sentence.cardName || !sentence.sentence || sentence.sentence.trim().length === 0) {
-        return NextResponse.json(
-          { success: false, error: `Invalid sentence at index ${i}`, code: 'VALIDATION_ERROR' },
-          { status: 400 }
-        );
+      if (userCheck.rows.length === 0) {
+        console.log(`👤 Creating minimal user entry for FK constraint: ${userId}`);
+        await client.execute({
+          sql: `INSERT INTO users (id, username, auth_provider, subscription_tier, role, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            userId,
+            'Bulk Upload User',
+            'anonymous', 
+            'free',
+            'user',
+            1,
+            Date.now(),
+            Date.now()
+          ]
+        });
       }
-      if (sentence.sentence.length > 500) {
-        return NextResponse.json(
-          { success: false, error: `Sentence at index ${i} too long (max 500 characters)`, code: 'VALIDATION_ERROR' },
-          { status: 400 }
-        );
+    } catch (error) {
+      console.log(`⚠️ User creation failed, continuing anyway: ${error}`);
+    }
+
+    // Validate sentences format
+    for (const sentence of sentences) {
+      if (!sentence.cardName || sentence.sentence === undefined || typeof sentence.isReversed !== 'boolean') {
+        return NextResponse.json({
+          success: false,
+          error: 'Each sentence must have cardName, sentence, and isReversed fields'
+        }, { status: 400 });
       }
     }
 
-    // Connect to database using Turso HTTP client pattern
-    const databaseUrl = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
-    
-    if (!databaseUrl || !authToken) {
-      return NextResponse.json(
-        { success: false, error: 'Database not available', code: 'DATABASE_ERROR' },
-        { status: 503 }
-      );
-    }
-
-    const client = createClient({
-      url: databaseUrl,
-      authToken: authToken,
-    });
-
-    // If replace mode, clear existing sentences first
+    // Handle replace mode - clear existing sentences first
     if (syncMode === 'replace') {
+      console.log(`🗑️ Replace mode: Clearing existing sentences for user ${userId}`);
       await client.execute({
         sql: 'DELETE FROM tarot_custom_sentences WHERE user_id = ?',
         args: [userId]
       });
     }
 
-    // Process sentences
-    const results = { added: 0, updated: 0, skipped: 0, errors: 0 };
-    const sentenceMap: SentenceMapping[] = [];
+    const results = {
+      added: 0,
+      updated: 0,
+      skipped: 0,
+      errors: 0
+    };
+
+    const sentenceMap: Array<{
+      localId?: string;
+      serverId?: string;
+      status: 'added' | 'updated' | 'skipped' | 'error';
+      error?: string;
+    }> = [];
+
     const cardsAffected = new Set<string>();
-    const now = new Date();
+    const now = Date.now();
 
-    for (const sentence of sentences) {
-      try {
-        cardsAffected.add(`${sentence.cardName}_${sentence.isReversed}`);
-        
-        // Check if sentence already exists
-        const existingResult = await client.execute({
-          sql: `
-            SELECT id FROM tarot_custom_sentences 
-            WHERE user_id = ? AND card_name = ? AND is_reversed = ? AND sentence = ?
-          `,
-          args: [userId, sentence.cardName, sentence.isReversed ? 1 : 0, sentence.sentence.trim()]
-        });
+    // Process sentences in batches to avoid overwhelming the database
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < sentences.length; i += BATCH_SIZE) {
+      const batch = sentences.slice(i, i + BATCH_SIZE);
+      console.log(`📦 Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(sentences.length / BATCH_SIZE)} (${batch.length} sentences)`);
 
-        if (existingResult.rows.length > 0) {
-          // Sentence already exists
-          if (syncMode === 'add_only') {
-            results.skipped++;
-            sentenceMap.push({
-              localId: sentence.localId,
-              serverId: (existingResult.rows[0] as any).id,
-              status: 'skipped'
+      for (const sentence of batch) {
+        try {
+          const { cardName, isReversed, sentence: sentenceText, sourceType = 'migrated', localId } = sentence;
+          
+          cardsAffected.add(`${cardName}_${isReversed ? 'reversed' : 'upright'}`);
+
+          // Check if sentence already exists (for merge and add_only modes)
+          if (syncMode !== 'replace') {
+            const existingResult = await client.execute({
+              sql: `SELECT id FROM tarot_custom_sentences 
+                    WHERE user_id = ? AND card_name = ? AND is_reversed = ? AND sentence = ?`,
+              args: [userId, cardName, isReversed ? 1 : 0, sentenceText]
             });
-            continue;
+
+            if (existingResult.rows.length > 0) {
+              if (syncMode === 'add_only') {
+                results.skipped++;
+                sentenceMap.push({
+                  localId,
+                  serverId: existingResult.rows[0].id as string,
+                  status: 'skipped'
+                });
+                continue;
+              } else if (syncMode === 'merge') {
+                // Update existing sentence with new metadata
+                const serverId = existingResult.rows[0].id as string;
+                await client.execute({
+                  sql: `UPDATE tarot_custom_sentences 
+                        SET source_type = ?, updated_at = ? 
+                        WHERE id = ?`,
+                  args: [sourceType, now, serverId]
+                });
+                
+                results.updated++;
+                sentenceMap.push({
+                  localId,
+                  serverId,
+                  status: 'updated'
+                });
+                continue;
+              }
+            }
           }
-          
-          // Update existing sentence in merge mode
-          const existingId = (existingResult.rows[0] as any).id;
+
+          // Insert new sentence
+          const serverId = randomUUID();
           await client.execute({
-            sql: 'UPDATE tarot_custom_sentences SET source_type = ?, updated_at = ? WHERE id = ?',
-            args: [sentence.sourceType, now.toISOString(), existingId]
+            sql: `INSERT INTO tarot_custom_sentences 
+                  (id, user_id, card_name, is_reversed, sentence, is_custom, source_type, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+              serverId,
+              userId,
+              cardName,
+              isReversed ? 1 : 0,
+              sentenceText,
+              1, // is_custom
+              sourceType,
+              now,
+              now
+            ]
           });
-          
-          results.updated++;
+
+          results.added++;
           sentenceMap.push({
-            localId: sentence.localId,
-            serverId: existingId,
-            status: 'updated'
+            localId,
+            serverId,
+            status: 'added'
           });
-          continue;
-        }
 
-        // Check sentence limit per card orientation
-        const countResult = await client.execute({
-          sql: 'SELECT COUNT(*) as count FROM tarot_custom_sentences WHERE user_id = ? AND card_name = ? AND is_reversed = ?',
-          args: [userId, sentence.cardName, sentence.isReversed ? 1 : 0]
-        });
-
-        const currentCount = (countResult.rows[0] as any)?.count || 0;
-        if (currentCount >= 5) {
+        } catch (error) {
+          console.error(`❌ Error processing sentence for ${sentence.cardName}:`, error);
           results.errors++;
           sentenceMap.push({
             localId: sentence.localId,
-            serverId: '',
             status: 'error',
-            error: 'Maximum 5 sentences per card orientation exceeded'
+            error: error instanceof Error ? error.message : 'Unknown error'
           });
-          continue;
         }
-
-        // Add new sentence
-        const sentenceId = `tarot_sentence_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        await client.execute({
-          sql: `
-            INSERT INTO tarot_custom_sentences (
-              id, user_id, card_name, is_reversed, sentence, is_custom, source_type, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `,
-          args: [
-            sentenceId,
-            userId,
-            sentence.cardName,
-            sentence.isReversed ? 1 : 0,
-            sentence.sentence.trim(),
-            1, // is_custom = true
-            sentence.sourceType || 'migrated',
-            now.toISOString(),
-            now.toISOString()
-          ]
-        });
-
-        results.added++;
-        sentenceMap.push({
-          localId: sentence.localId,
-          serverId: sentenceId,
-          status: 'added'
-        });
-
-      } catch (error) {
-        results.errors++;
-        sentenceMap.push({
-          localId: sentence.localId,
-          serverId: '',
-          status: 'error',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
       }
     }
 
-    // Get final count
-    const finalCountResult = await client.execute({
+    // Get final stats
+    const totalSentencesResult = await client.execute({
       sql: 'SELECT COUNT(*) as count FROM tarot_custom_sentences WHERE user_id = ?',
       args: [userId]
     });
 
-    const totalSentences = (finalCountResult.rows[0] as any)?.count || 0;
+    const totalSentences = totalSentencesResult.rows[0]?.count as number || 0;
+
+    console.log(`✅ Bulk sync completed for user ${userId}:`, results);
 
     return NextResponse.json({
       success: true,
@@ -229,19 +204,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<BulkSyncR
       stats: {
         totalSentences,
         cardsAffected: cardsAffected.size,
-        syncTimestamp: now.toISOString()
+        syncTimestamp: new Date(now).toISOString(),
+        expectedTotal: 1734, // From tarot.md line 2134
+        completionPercentage: Math.round((totalSentences / 1734) * 100)
       }
     });
 
   } catch (error) {
-    console.error('Tarot sentences bulk-sync API error:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      },
-      { status: 500 }
-    );
+    console.error('Bulk sync error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

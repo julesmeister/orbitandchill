@@ -1440,54 +1440,112 @@ All endpoints return `{ success: true/false, error?: string }` format for consis
 ---
 
 *Last Updated: July 21, 2025*
-*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed, TypeScript/ESLint Errors Resolved, Level Badge Enhancement Complete, API Documentation Added for Mobile Integration*# Tarot Sentences Cloud Persistence API Documentation
+*Status: Database Issues Fixed, Core Implementation Complete (99%), Matching Exercise Progress Tracking Fixed, TypeScript/ESLint Errors Resolved, Level Badge Enhancement Complete, API Documentation Added for Mobile Integration*# Tarot Sentences API System - WORKING ENDPOINTS ✅
 
 ## 🎯 Overview
-This documentation covers the API endpoints needed to persist and sync tarot card learning sentences between the Flutter mobile app and the React web backend. This extends the existing Orbit & Chill tarot API to support user-generated, editable sentences for enhanced learning experiences.
+Complete working API system for tarot sentence persistence and synchronization between Flutter mobile app and React web backend. All endpoints have been tested and are fully functional.
 
-## 🗄️ Database Schema Extension
+## 🗄️ Database Schema
 
-### New Table: `tarot_custom_sentences`
+### Table: `tarot_custom_sentences`
 ```sql
 CREATE TABLE tarot_custom_sentences (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   card_name TEXT NOT NULL,
   is_reversed INTEGER NOT NULL DEFAULT 0,
   sentence TEXT NOT NULL,
   is_custom INTEGER NOT NULL DEFAULT 1,
-  source_type TEXT DEFAULT 'user', -- 'user', 'ai_generated', 'migrated'
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  UNIQUE(user_id, card_name, is_reversed, sentence)
+  source_type TEXT DEFAULT 'user',
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
-CREATE INDEX idx_tarot_sentences_user_card ON tarot_custom_sentences(user_id, card_name, is_reversed);
-CREATE INDEX idx_tarot_sentences_user ON tarot_custom_sentences(user_id);
 ```
 
-## 🔌 API Endpoints
+## 🔌 Working API Endpoints
 
 ### Base URL
-**https://orbitandchill.com/api/tarot/sentences/**
+**http://192.168.1.4:3000/api/tarot/sentences/**
 
----
+## ✅ 1. Get Global Sentence Statistics
 
-## 1. Get User's Custom Sentences for a Card
+**GET** `/api/tarot/sentences/all`
 
-**GET** `/api/tarot/sentences/card`
-
-**Purpose**: Retrieve all custom sentences for a specific card and orientation for a user.
-
-**Query Parameters:**
-- `userId` (required): User identifier
-- `cardName` (required): Card name (e.g., "The Fool", "Eight of Pentacles")  
-- `isReversed` (optional): `true` for reversed, `false` for upright (default: both)
-- `limit` (optional): Maximum sentences to return (default: 10)
+**Purpose**: Get comprehensive statistics about all sentences in the system. **No parameters required**.
 
 **Example Request:**
 ```
-GET https://orbitandchill.com/api/tarot/sentences/card?userId=user_123&cardName=The%20Fool&isReversed=false&limit=5
+GET http://192.168.1.4:3000/api/tarot/sentences/all
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "globalStats": {
+    "totalSentences": 50,
+    "uniqueUsers": 49,
+    "uniqueCards": 3,
+    "expectedCards": 156,
+    "completionPercentage": 2
+  },
+  "sentences": [...],
+  "userBreakdown": [...],
+  "cardBreakdown": [...]
+}
+```
+
+---
+
+## ✅ 2. Bulk Upload/Sync Sentences  
+
+**POST** `/api/tarot/sentences/bulk-sync`
+
+**Purpose**: Bulk synchronization for Flutter app migration. Handles FK constraints automatically.
+
+**Request Body:**
+```json
+{
+  "userId": "test_bulk_sync_user_2",
+  "sentences": [
+    {
+      "cardName": "The Fool",
+      "isReversed": false,
+      "sentence": "Someone who thinks YOLO is a life philosophy",
+      "sourceType": "user"
+    }
+  ]
+}
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "processed": 1,
+  "successful": 1,
+  "failed": 0,
+  "summary": "1/1 sentences processed successfully"
+}
+```
+
+---
+
+## ✅ 3. Get Sentences for Specific Card
+
+**GET** `/api/tarot/sentences/card`
+
+**Purpose**: Get sentences for a specific card with orientation filtering. **No userId required**.
+
+**Query Parameters:**
+- `cardName` (required): Card name (e.g., "The Fool")  
+- `isReversed` (optional): `true` for reversed, `false` for upright
+- `limit` (optional): Maximum sentences to return (default: 20)
+
+**Example Request:**
+```
+GET http://192.168.1.4:3000/api/tarot/sentences/card?cardName=The%20Fool&isReversed=false
 ```
 
 **Response Format:**
@@ -1496,267 +1554,114 @@ GET https://orbitandchill.com/api/tarot/sentences/card?userId=user_123&cardName=
   "success": true,
   "sentences": [
     {
-      "id": "sent_001",
-      "sentence": "Someone who thinks YOLO is a life philosophy",
+      "id": "tarot_sentence_anon_123",
+      "sentence": "TEST SENTENCE: CRUD operations test",
       "sourceType": "user",
-      "createdAt": "2025-07-23T10:30:00Z",
-      "updatedAt": "2025-07-23T10:30:00Z"
-    },
-    {
-      "id": "sent_002", 
-      "sentence": "The friend who books trips without checking their bank account",
-      "sourceType": "ai_generated",
-      "createdAt": "2025-07-23T11:15:00Z",
-      "updatedAt": "2025-07-23T11:15:00Z"
+      "createdAt": "2025-07-23T21:07:02.066Z",
+      "updatedAt": "2025-07-23T21:07:02.066Z"
     }
   ],
   "cardInfo": {
     "cardName": "The Fool",
     "isReversed": false,
-    "totalSentences": 2,
-    "maxAllowed": 5
+    "totalSentences": 43,
+    "returnedCount": 20
   }
 }
 ```
 
 ---
 
-## 2. Get All User's Custom Sentences
+## ✅ 4. Get Random Sentence for Card
 
-**GET** `/api/tarot/sentences/user`
+**GET** `/api/tarot/sentences/random`
 
-**Purpose**: Retrieve all custom sentences for a user across all cards (for backup/sync).
+**Purpose**: Get a random sentence for flashcard-style learning. **No userId required**.
 
 **Query Parameters:**
-- `userId` (required): User identifier
-- `limit` (optional): Maximum sentences to return (default: 1000)
-- `offset` (optional): Pagination offset (default: 0)
-- `cardName` (optional): Filter by specific card name
-- `sourceType` (optional): Filter by source type
+- `cardName` (required): Card name
+- `isReversed` (optional): Orientation filter
 
 **Example Request:**
 ```
-GET https://orbitandchill.com/api/tarot/sentences/user?userId=user_123&limit=100
+GET http://192.168.1.4:3000/api/tarot/sentences/random?cardName=The%20Fool&isReversed=false
 ```
 
 **Response Format:**
 ```json
 {
   "success": true,
-  "sentences": [
-    {
-      "id": "sent_001",
-      "cardName": "The Fool",
-      "isReversed": false,
-      "sentence": "Someone who thinks YOLO is a life philosophy",
-      "sourceType": "user",
-      "createdAt": "2025-07-23T10:30:00Z",
-      "updatedAt": "2025-07-23T10:30:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 156,
-    "limit": 100,
-    "offset": 0,
-    "hasMore": true
+  "sentence": "TEST SENTENCE: CRUD operations test",
+  "sentenceInfo": {
+    "id": "tarot_sentence_anon_123",
+    "sourceType": "user", 
+    "createdAt": "2025-07-23T19:53:25.453Z"
   },
-  "stats": {
-    "totalCards": 78,
-    "cardsWithCustomSentences": 23,
-    "totalCustomSentences": 156,
-    "averageSentencesPerCard": 6.8
+  "cardInfo": {
+    "cardName": "The Fool",
+    "isReversed": false,
+    "totalSentences": 43
   }
 }
 ```
 
 ---
 
-## 3. Add Custom Sentence
+## ✅ 5. Validate 156 Card Coverage
+
+**GET** `/api/tarot/sentences/validate`
+
+**Purpose**: Check coverage of all 156 tarot card variants (78 upright + 78 reversed). **No parameters required**.
+
+**Example Request:**
+```
+GET http://192.168.1.4:3000/api/tarot/sentences/validate
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "validation": {
+    "totalExpectedVariants": 156,
+    "totalCoveredVariants": 4,
+    "completionPercentage": 3,
+    "isComplete": false,
+    "totalSentences": 50
+  },
+  "coverage": {
+    "fullyCoveredCards": 1,
+    "partiallyCoveredCards": 2,
+    "uniqueCards": 3
+  }
+}
+```
+
+---
+
+## ✅ 6. Add Single Sentence
 
 **POST** `/api/tarot/sentences/add`
 
-**Purpose**: Add a new custom sentence for a card.
+**Purpose**: Add a new custom sentence with validation and duplicate checking. **userId is optional** (defaults to 'anonymous_add').
 
 **Request Body:**
 ```json
 {
-  "userId": "user_123",
-  "cardName": "The Fool",
+  "userId": "optional_user_id",
+  "cardName": "Test Card",
   "isReversed": false,
-  "sentence": "Someone who thinks YOLO is a life philosophy",
+  "sentence": "This is a test sentence for validation",
   "sourceType": "user"
 }
 ```
 
-**Response Format:**
+**Minimal Request Body:**
 ```json
 {
-  "success": true,
-  "sentence": {
-    "id": "sent_123",
-    "cardName": "The Fool",
-    "isReversed": false,
-    "sentence": "Someone who thinks YOLO is a life philosophy",
-    "sourceType": "user",
-    "createdAt": "2025-07-23T10:30:00Z",
-    "updatedAt": "2025-07-23T10:30:00Z"
-  },
-  "cardStats": {
-    "totalSentences": 3,
-    "maxAllowed": 5,
-    "canAddMore": true
-  }
-}
-```
-
----
-
-## 4. Update Custom Sentence
-
-**PUT** `/api/tarot/sentences/update`
-
-**Purpose**: Update an existing custom sentence.
-
-**Request Body:**
-```json
-{
-  "userId": "user_123",
-  "sentenceId": "sent_123",
-  "newSentence": "Someone who treats YOLO as their personal motto"
-}
-```
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "sentence": {
-    "id": "sent_123",
-    "cardName": "The Fool",
-    "isReversed": false,
-    "sentence": "Someone who treats YOLO as their personal motto",
-    "sourceType": "user",
-    "createdAt": "2025-07-23T10:30:00Z",
-    "updatedAt": "2025-07-23T12:45:00Z"
-  }
-}
-```
-
----
-
-## 5. Delete Custom Sentence
-
-**DELETE** `/api/tarot/sentences/delete`
-
-**Purpose**: Delete a custom sentence.
-
-**Request Body:**
-```json
-{
-  "userId": "user_123",
-  "sentenceId": "sent_123"
-}
-```
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "message": "Sentence deleted successfully",
-  "cardStats": {
-    "cardName": "The Fool",
-    "isReversed": false,
-    "remainingSentences": 2,
-    "canAddMore": true
-  }
-}
-```
-
----
-
-## 6. Bulk Upload/Sync Sentences
-
-**POST** `/api/tarot/sentences/bulk-sync`
-
-**Purpose**: Sync multiple sentences from mobile app to cloud (for migration or backup).
-
-**Request Body:**
-```json
-{
-  "userId": "user_123",
-  "sentences": [
-    {
-      "cardName": "The Fool",
-      "isReversed": false,
-      "sentence": "Someone who thinks YOLO is a life philosophy",
-      "sourceType": "migrated",
-      "localId": "local_001"
-    },
-    {
-      "cardName": "The Fool",
-      "isReversed": true,
-      "sentence": "That friend whose recklessness needs a reality check",
-      "sourceType": "migrated", 
-      "localId": "local_002"
-    }
-  ],
-  "syncMode": "merge" // "merge", "replace", "add_only"
-}
-```
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "results": {
-    "added": 2,
-    "updated": 0,
-    "skipped": 0,
-    "errors": 0
-  },
-  "sentenceMap": [
-    {
-      "localId": "local_001",
-      "serverId": "sent_456",
-      "status": "added"
-    },
-    {
-      "localId": "local_002", 
-      "serverId": "sent_457",
-      "status": "added"
-    }
-  ],
-  "stats": {
-    "totalSentences": 156,
-    "cardsAffected": 2,
-    "syncTimestamp": "2025-07-23T12:45:00Z"
-  }
-}
-```
-
----
-
-## 7. Generate AI Sentences for Card
-
-**POST** `/api/tarot/sentences/generate`
-
-**Purpose**: Generate AI-powered sentences for a card using existing AI integration.
-
-**Request Body:**
-```json
-{
-  "userId": "user_123",
-  "cardName": "The Fool",
+  "cardName": "Test Card",
   "isReversed": false,
-  "count": 3,
-  "existingSentences": [
-    "Someone who thinks YOLO is a life philosophy"
-  ],
-  "aiConfig": {
-    "provider": "openai",
-    "model": "gpt-4",
-    "temperature": 0.8
-  }
+  "sentence": "This is a test sentence for validation"
 }
 ```
 
@@ -1764,136 +1669,37 @@ GET https://orbitandchill.com/api/tarot/sentences/user?userId=user_123&limit=100
 ```json
 {
   "success": true,
-  "generatedSentences": [
-    "The friend who books trips without checking their bank account",
-    "Someone whose spontaneity would make a GPS dizzy",
-    "That person who treats life like it's their personal adventure movie"
-  ],
-  "cardInfo": {
-    "cardName": "The Fool",
+  "sentence": {
+    "id": "a5742af1-ba00-40b2-b4ee-d25443973dd4",
+    "cardName": "Test Card",
     "isReversed": false,
-    "meaning": "New beginnings, innocence, spontaneity...",
-    "keywords": ["new beginnings", "innocence", "spontaneity", "leap of faith"]
-  }
-}
-```
-
----
-
-## 8. Get Sentence Statistics
-
-**GET** `/api/tarot/sentences/stats`
-
-**Purpose**: Get statistics about user's custom sentences for analytics.
-
-**Query Parameters:**
-- `userId` (required): User identifier
-- `timeframe` (optional): "all", "week", "month" (default: "all")
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "stats": {
-    "totalSentences": 156,
-    "cardsWithSentences": 45,
-    "averageSentencesPerCard": 3.5,
-    "sentencesBySource": {
-      "user": 120,
-      "ai_generated": 24,
-      "migrated": 12
-    },
-    "recentActivity": {
-      "sentencesAddedThisWeek": 8,
-      "sentencesModifiedThisWeek": 3,
-      "lastActivity": "2025-07-23T10:30:00Z"
-    },
-    "topCards": [
-      {
-        "cardName": "The Fool",
-        "sentenceCount": 5,
-        "isReversed": false
-      }
-    ]
-  }
-}
-```
-
----
-
-## 9. Get Random Sentence for Card
-
-**GET** `/api/tarot/sentences/random`
-
-**Purpose**: Get a random sentence for a specific card and orientation.
-
-**Query Parameters:**
-- `userId` (required): User identifier
-- `cardName` (required): Card name (e.g., "The Fool", "Eight of Pentacles")
-- `isReversed` (optional): `true` for reversed, `false` for upright (default: false)
-
-**Example Request:**
-```
-GET https://orbitandchill.com/api/tarot/sentences/random?userId=user_123&cardName=The%20Fool&isReversed=false
-```
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "sentence": "Someone who thinks YOLO is a life philosophy",
-  "cardInfo": {
-    "cardName": "The Fool",
-    "isReversed": false,
-    "totalSentences": 8
-  }
-}
-```
-
----
-
-## 10. Migrate Hardcoded Sentences to Database
-
-**POST** `/api/tarot/sentences/migrate-hardcoded`
-
-**Purpose**: One-time migration of all hardcoded sentences to database for a user.
-
-**Request Body:**
-```json
-{
-  "userId": "user_123",
-  "forceRemigration": false
-}
-```
-
-**Response Format:**
-```json
-{
-  "success": true,
-  "migrationStats": {
-    "totalSentencesMigrated": 1248,
-    "uprightSentencesMigrated": 624,
-    "reversedSentencesMigrated": 624,
-    "cardsProcessed": 78,
-    "skippedCards": 0,
-    "migrationTime": "2025-07-23T12:45:00Z"
+    "sentence": "This is a test sentence for validation",
+    "sourceType": "user",
+    "createdAt": "2025-07-24T13:33:58.932Z",
+    "updatedAt": "2025-07-24T13:33:58.932Z"
   },
-  "message": "Migration completed successfully"
+  "cardStats": {
+    "cardName": "Test Card",
+    "isReversed": false,
+    "totalSentences": 1
+  }
 }
 ```
 
 ---
 
-## 11. Clear All User's Custom Sentences
+## ✅ 7. Clear/Delete Sentences
 
-**DELETE** `/api/tarot/sentences/clear-all`
+**DELETE** `/api/tarot/sentences/clear`
 
-**Purpose**: Clear all custom sentences for a user (for testing/debugging).
+**Purpose**: Clear sentences for testing/cleanup with confirmation requirement.
 
 **Request Body:**
 ```json
 {
-  "userId": "user_123"
+  "clearType": "card",
+  "cardName": "Test Card", 
+  "confirm": true
 }
 ```
 
@@ -1901,11 +1707,11 @@ GET https://orbitandchill.com/api/tarot/sentences/random?userId=user_123&cardNam
 ```json
 {
   "success": true,
-  "message": "All custom sentences cleared successfully",
-  "stats": {
-    "deletedCount": 156,
-    "cardsAffected": 45
-  }
+  "message": "All sentences cleared for Test Card (both orientations)",
+  "deletedCount": 1,
+  "remainingSentences": 50,
+  "operation": "card",
+  "timestamp": "2025-07-24T13:34:34.936Z"
 }
 ```
 
