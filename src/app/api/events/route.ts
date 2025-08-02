@@ -272,6 +272,13 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, userId, ...updateData } = body;
+    
+    console.log('📥 API PUT /events received:', {
+      id,
+      userId,
+      updateDataKeys: Object.keys(updateData),
+      updateData
+    });
 
     if (!id) {
       return NextResponse.json(
@@ -287,6 +294,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    console.log('🔄 API calling EventService.updateEvent with:', { id, updateData });
     const updatedEvent = await EventService.updateEvent(id, updateData);
 
     if (!updatedEvent) {

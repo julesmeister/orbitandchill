@@ -100,6 +100,55 @@ export class EventServiceImpl implements EventService {
   }
 
   /**
+   * Update an existing event via API
+   */
+  async updateEvent(event: AstrologicalEvent): Promise<void> {
+    console.log(`✏️ EventService: Updating event ${event.id}`);
+    
+    try {
+      // Extract id and userId, send the rest as updateData
+      const { id, userId, ...updateData } = event;
+      
+      const requestBody = {
+        id,
+        userId,
+        ...updateData
+      };
+      
+      console.log(`📤 EventService: Sending PUT request with data:`, {
+        id,
+        userId,
+        updateDataKeys: Object.keys(updateData),
+        fullBody: requestBody
+      });
+      
+      const response = await fetch(`${this.baseUrl}/events`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update event: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update event');
+      }
+      
+      console.log(`✅ EventService: Event ${event.id} updated successfully`);
+      
+    } catch (error) {
+      console.error('❌ EventService: Failed to update event:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Toggle bookmark status via API
    */
   async toggleBookmark(eventId: string, userId: string): Promise<void> {

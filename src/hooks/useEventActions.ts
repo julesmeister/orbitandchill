@@ -143,7 +143,32 @@ export const useEventActions = (options: UseEventActionsOptions) => {
   };
 
   const handleRenameEvent = async (id: string, newTitle: string) => {
-    await updateEvent(id, { title: newTitle });
+    if (!user?.id) {
+      showError("No User", "Please ensure you have a valid user session before renaming events.");
+      return;
+    }
+
+    try {
+      console.log('✏️ useEventActions: Starting event rename for:', id, 'new title:', newTitle);
+      
+      await updateEvent(id, { title: newTitle });
+      
+      console.log('✏️ useEventActions: Event rename completed successfully');
+
+      // Show success feedback
+      showSuccess(
+        "Event Renamed",
+        `Event has been renamed to "${newTitle}".`,
+        3000
+      );
+    } catch (error) {
+      console.error('❌ Error renaming event:', error);
+      showError(
+        "Rename Failed",
+        `Unable to rename this event: ${error instanceof Error ? error.message : 'Please try again.'}`,
+        4000
+      );
+    }
   };
 
   const handleClearAllEvents = (currentDate: Date) => {

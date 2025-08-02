@@ -126,12 +126,17 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           throw new Error(`Event ${id} not found`);
         }
         
-        // Merge updates
+        // Convert updates to UnifiedEvent format, separating bookmark status
+        const { isBookmarked, ...eventUpdates } = updates;
+        
+        // Merge updates properly, preserving metadata structure
         const updatedEvent: UnifiedEvent = {
           ...existingEvent,
-          ...updates,
+          ...eventUpdates,
           metadata: {
             ...existingEvent.metadata,
+            // Only update isBookmarked if it was explicitly provided in updates
+            ...(isBookmarked !== undefined && { isBookmarked }),
             lastModified: new Date().toISOString(),
             syncStatus: 'pending'
           }
@@ -163,11 +168,44 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         // Sync to API if not local
         if (!isLocalEvent(id)) {
           try {
-            await eventService.saveEvent(astroEvent);
-            console.log(`🌐 UnifiedStore: Event ${id} update synced to API`);
+            // Only send the actual updates to the API, not the entire event
+            const apiUpdateData = {
+              id: astroEvent.id,
+              userId: astroEvent.userId,
+              ...updates,  // Only the fields that were actually updated
+              isBookmarked: updatedEvent.metadata.isBookmarked  // Ensure bookmark status is included
+            };
+            
+            console.log(`🌐 UnifiedStore: Attempting API sync for event ${id}`, { 
+              isLocalEvent: isLocalEvent(id), 
+              apiUpdateData,
+              originalUpdates: updates 
+            });
+            
+            await eventService.updateEvent(apiUpdateData as AstrologicalEvent);
+            console.log(`✅ UnifiedStore: Event ${id} update synced to API successfully`);
+            
+            // Invalidate cache for the event's month so other browsers fetch fresh data
+            const eventDate = new Date(updatedEvent.date);
+            const monthKey = EventCacheImpl.generateMonthKey(
+              updatedEvent.metadata.userId,
+              eventDate.getMonth(),
+              eventDate.getFullYear()
+            );
+            eventCache.invalidate(monthKey);
+            console.log(`🧹 UnifiedStore: Invalidated cache for ${monthKey} after event update`);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to sync event update ${id}:`, error);
+            console.error(`❌ UnifiedStore: Failed to sync event update ${id}:`, {
+              error,
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+              errorStack: error instanceof Error ? error.stack : undefined,
+              eventId: id,
+              eventData: astroEvent
+            });
+            // Don't throw - we still want the local update to succeed
           }
+        } else {
+          console.log(`📍 UnifiedStore: Event ${id} is local, skipping API sync`, { isLocalEvent: isLocalEvent(id) });
         }
       },
 
@@ -207,6 +245,16 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           try {
             await eventService.deleteEvent(id, event.metadata.userId);
             console.log(`🌐 UnifiedStore: Event ${id} removed from API`);
+            
+            // Invalidate cache for the event's month
+            const eventDate = new Date(event.date);
+            const monthKey = EventCacheImpl.generateMonthKey(
+              event.metadata.userId,
+              eventDate.getMonth(),
+              eventDate.getFullYear()
+            );
+            eventCache.invalidate(monthKey);
+            console.log(`🧹 UnifiedStore: Invalidated cache for ${monthKey} after event deletion`);
           } catch (error) {
             console.error(`❌ UnifiedStore: Failed to remove event ${id} from API:`, error);
           }
@@ -257,6 +305,16 @@ export const useUnifiedEventsStore = create<EventsStore>()(
             set({ allEvents: syncedEvents });
             
             console.log(`🌐 UnifiedStore: Bookmark change synced to API for ${id}`);
+            
+            // Invalidate cache for the event's month
+            const eventDate = new Date(event.date);
+            const monthKey = EventCacheImpl.generateMonthKey(
+              event.metadata.userId,
+              eventDate.getMonth(),
+              eventDate.getFullYear()
+            );
+            eventCache.invalidate(monthKey);
+            console.log(`🧹 UnifiedStore: Invalidated cache for ${monthKey} after bookmark toggle`);
           } catch (error) {
             console.error(`❌ UnifiedStore: Failed to sync bookmark change for ${id}:`, error);
           }
@@ -284,6 +342,8 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           
           // Load from API
           const apiEvents = await eventService.loadMonthEvents(userId, month, year);
+          console.log(`📥 UnifiedStore: Loaded ${apiEvents.length} events from API for ${monthKey}`, 
+            apiEvents.map(e => ({ id: e.id, title: e.title, isBookmarked: e.isBookmarked })));
           const unifiedEvents = apiEvents.map(event => toUnifiedEvent(event, 'api', event.isBookmarked));
           
           // Merge with existing events
