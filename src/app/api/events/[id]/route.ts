@@ -75,6 +75,15 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     const success = await EventService.deleteEvent(id, userId);
 
     if (!success) {
+      // Check if the event ID looks like a local event that was never persisted
+      if (id.startsWith('local_') || id.startsWith('astro_') || id.startsWith('manual_') || id.startsWith('bookmark_')) {
+        // Local event that was never saved to database - return success
+        return NextResponse.json({ 
+          success: true,
+          message: 'Local event removed successfully' 
+        });
+      }
+      
       return NextResponse.json(
         { success: false, error: 'Event not found or not authorized' },
         { status: 404 }

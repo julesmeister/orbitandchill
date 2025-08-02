@@ -74,10 +74,12 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         const source = event.isGenerated ? 'generated' : 'manual';
         const unifiedEvent = toUnifiedEvent(event, source, event.isBookmarked || false);
         
-        // Validate event
-        const errors = validateEvent(event);
-        if (errors.length > 0) {
-          throw new Error(`Invalid event: ${errors.join(', ')}`);
+        // Skip validation for manual events - users should be able to save whatever they want
+        if (event.isGenerated) {
+          const errors = validateEvent(event);
+          if (errors.length > 0) {
+            throw new Error(`Invalid event: ${errors.join(', ')}`);
+          }
         }
         
         // Update store
