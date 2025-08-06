@@ -336,7 +336,7 @@ The platform now provides comprehensive SEO coverage for astrology content, real
 9. **Pagination Meta Tags** - Proper prev/next links for paginated content
 10. **Enhanced Category SEO** - Better descriptions and breadcrumbs for category pages
 11. **RSS Feed Generation** - `/blog/rss.xml` with real data fetching
-12. **Blog Sitemap Generation** - `/blog/sitemap.xml` with real data fetching
+12. **Blog Sitemap Generation** - ~~`/blog/sitemap.xml` with real data fetching~~ (Removed - consolidated into main sitemap)
 13. **Improved Main Blog SEO** - Enhanced pagination support
 
 ### ✅ **Major SEO Overhaul (Round 3):**
@@ -580,5 +580,17 @@ All requirements from SEO.md have been successfully implemented across the entir
 2. Verify sitemap is accessible and valid
 3. Monitor crawl stats and indexing progress
 4. Track organic traffic improvements
+
+### ✅ **Latest SEO Fixes (Round 12 - Structured Data & Sitemap Cleanup):**
+66. **Fixed Duplicate FAQ Schema** - Resolved critical "Duplicate field FAQPage" errors in Google Search Console
+67. **Consolidated FAQ Content** - Merged all FAQ schemas into single HomePageStructuredData component
+68. **Removed Redundant Blog Sitemap** - Eliminated `/blog/sitemap.xml` that was causing GSC "Couldn't fetch" errors
+69. **Sitemap Architecture Optimization** - Single sitemap approach for <50k URLs following Google best practices
+
+### 🔧 **Critical SEO Error Resolutions:**
+- **Structured Data Validation**: Fixed duplicate FAQPage schema markup causing validation errors
+- **Sitemap Error Elimination**: Removed non-functional blog sitemap preventing GSC errors
+- **Content Deduplication**: Ensured single source of truth for all FAQ content
+- **Best Practice Compliance**: Aligned with Google's recommended single sitemap approach for sites under 50,000 URLs
 
 The SEO implementation is now enterprise-grade and buttery smooth! 🧈✨
