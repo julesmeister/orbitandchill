@@ -389,7 +389,6 @@ export class EventService {
 
   // Update an existing event
   static async updateEvent(id: string, updateData: UpdateEventData): Promise<AstrologicalEvent | null> {
-    console.log('📝 EventService.updateEvent called with:', { id, updateDataKeys: Object.keys(updateData), updateData });
     
     return resilient.item(db, 'updateEvent', async () => {
       // Use raw SQL for update to avoid Drizzle ORM WHERE clause issues and column naming problems
@@ -465,7 +464,6 @@ export class EventService {
       
       const sql = `UPDATE astrological_events SET ${updateFields.join(', ')} WHERE id = ? RETURNING *`;
       
-      console.log('🔧 EventService: Executing SQL update:', { 
         sql, 
         args: updateValues,
         updateFieldsCount: updateFields.length 
@@ -476,7 +474,6 @@ export class EventService {
         args: updateValues
       });
       
-      console.log('📊 EventService: SQL update result:', {
         rowsAffected: updateResult.rowsAffected,
         rowsReturned: updateResult.rows?.length || 0,
         firstRow: updateResult.rows?.[0]
@@ -484,7 +481,6 @@ export class EventService {
       
       if (updateResult.rows.length > 0) {
         const updatedEvent = dbRowToEvent(updateResult.rows[0]);
-        console.log('✅ EventService: Event updated successfully:', { id: updatedEvent.id, title: updatedEvent.title });
         return updatedEvent;
       }
       
