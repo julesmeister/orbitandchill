@@ -198,6 +198,7 @@ export const useEventsStore = create<EventsState>()(
       loadMonthEvents: async (userId: string, month: number, year: number) => {
         // Prevent multiple simultaneous loads
         if (get().isLoading) {
+          console.log('⏳ Already loading events, skipping month load...');
           return;
         }
         
@@ -209,6 +210,7 @@ export const useEventsStore = create<EventsState>()(
         const cacheExpiry = 10 * 60 * 1000; // 10 minutes cache
         
         if (cached && (Date.now() - cached.loadedAt < cacheExpiry)) {
+          console.log(`📋 Using cached events for ${monthKey} (${cached.eventIds.length} events)`);
           
           // Preserve ALL generated events AND existing persistent events when loading cached data
           const currentState = get();
@@ -230,6 +232,7 @@ export const useEventsStore = create<EventsState>()(
           const mergedCachedEvents = { ...existingPersistentEvents, ...cachedEventsById };
           const mergedCachedEventIds = [...existingPersistentEventIds.filter(id => !cached.eventIds.includes(id)), ...cached.eventIds];
           
+          console.log(`🔄 CACHE: Preserving ${Object.keys(existingPersistentEvents).length} persistent events, loading ${cached.eventIds.length} cached events`);
           
           // Keep generated events separate from regular events
           set({ 
@@ -238,11 +241,13 @@ export const useEventsStore = create<EventsState>()(
             generatedEvents: allGeneratedEvents,
             generatedEventIds: allGeneratedEventIds
           });
+          console.log(`📊 State after cached load: ${cached.eventIds.length} regular, ${allGeneratedEventIds?.length || 0} generated`);
           return;
         }
 
         try {
           set({ isLoading: true, error: null });
+          console.log(`🔄 Loading events for ${monthKey} (month: ${month}, year: ${year})`);
           
           const params = new URLSearchParams({
             userId,
@@ -285,6 +290,7 @@ export const useEventsStore = create<EventsState>()(
             const uniqueGeneratedEventIds = allGeneratedEventIds.filter(eventId => !apiEventIds.has(eventId));
             
             if (uniqueGeneratedEventIds.length > 0) {
+              console.log(`🔄 Merged ${uniqueGeneratedEventIds.length} generated events with API data`);
             }
             
             // Cache the loaded data (tabs are just UI filters, not server data)
@@ -304,6 +310,7 @@ export const useEventsStore = create<EventsState>()(
             const apiEventIdArray = data.events.map((e: AstrologicalEvent) => e.id);
             const mergedEventIds = [...existingPersistentEventIds.filter(id => !apiEventIdArray.includes(id)), ...apiEventIdArray];
             
+            console.log(`🔄 Preserving ${Object.keys(existingPersistentEvents).length} existing persistent events, adding ${apiEventIdArray.length} API events`);
             
             set({ 
               events: mergedEvents, // Merge existing persistent + API events
@@ -315,6 +322,8 @@ export const useEventsStore = create<EventsState>()(
               loadedMonths: new Set([...get().loadedMonths, monthKey])
             });
             
+            console.log(`✅ Loaded and cached ${data.events.length} events for ${monthKey}, total generated: ${allGeneratedEvents.length}`);
+            console.log(`📊 State after API load: ${data.events.length} regular, ${allGeneratedEvents.length} generated`);
           } else {
             throw new Error(data.error || 'Failed to load month events');
           }
@@ -331,6 +340,7 @@ export const useEventsStore = create<EventsState>()(
       loadEvents: async (userId: string, tab?: string, filters = {}) => {
         // Prevent multiple simultaneous loads
         if (get().isLoading) {
+          console.log('⏳ Already loading events, skipping...');
           return;
         }
         
@@ -400,6 +410,7 @@ export const useEventsStore = create<EventsState>()(
               generatedEventIds: allGeneratedEventIds,
               isLoading: false 
             });
+            console.log(`📊 LoadEvents - State after load: ${apiEvents.length} regular, ${allGeneratedEventIds.length} generated`);
           } else {
             throw new Error(data.error || 'Failed to load events');
           }
@@ -496,9 +507,11 @@ export const useEventsStore = create<EventsState>()(
         
         const duplicateCount = newEvents.length - uniqueNewEvents.length;
         if (duplicateCount > 0) {
+          console.log(`🔄 Deduplicated ${duplicateCount} duplicate events out of ${newEvents.length}`);
         }
         
         if (uniqueNewEvents.length === 0) {
+          console.log('✅ No new unique events to add locally');
           return;
         }
         
@@ -539,6 +552,8 @@ export const useEventsStore = create<EventsState>()(
           };
         });
         
+        console.log(`✅ Added ${eventsWithLocalIds.length} events to local state (no database save)`);
+        console.log(`📊 Total events in store after local add: ${get().getAllEvents().length} (${get().eventIds?.length || 0} regular + ${get().generatedEventIds?.length || 0} generated)`);
       },
 
       // Add multiple events via API using bulk endpoint
@@ -563,9 +578,11 @@ export const useEventsStore = create<EventsState>()(
           
           const duplicateCount = newEvents.length - uniqueNewEvents.length;
           if (duplicateCount > 0) {
+            console.log(`🔄 Deduplicated ${duplicateCount} duplicate events out of ${newEvents.length}`);
           }
           
           if (uniqueNewEvents.length === 0) {
+            console.log('✅ No new unique events to add');
             return;
           }
           
@@ -601,6 +618,9 @@ export const useEventsStore = create<EventsState>()(
           }
           
           // Debug: Log events being sent to API
+          console.log(`📤 Sending ${uniqueNewEvents.length} validated unique events to bulk API:`);
+          console.log('First event sample:', JSON.stringify(uniqueNewEvents[0], null, 2));
+          console.log('Event structure check:', {
             hasUserId: !!uniqueNewEvents[0]?.userId,
             hasTitle: !!uniqueNewEvents[0]?.title,
             hasDate: !!uniqueNewEvents[0]?.date,
@@ -633,11 +653,13 @@ export const useEventsStore = create<EventsState>()(
               }));
               
               if (data.localOnly) {
+                console.log(`⚠️ Events created as local-only: ${data.events.length} events (database unavailable)`);
                 // Set a warning that will be handled by the UI
                 set({ 
                   error: `Events generated successfully but database is unavailable. ${data.events.length} events are stored locally and may not persist between sessions.`
                 });
               } else {
+                console.log(`✅ Successfully saved ${data.events.length} events to database`);
               }
             } else {
               throw new Error(data.error || 'Bulk creation failed');
@@ -753,6 +775,7 @@ export const useEventsStore = create<EventsState>()(
       
       // Toggle bookmark via API
       toggleBookmark: async (id: string, userId?: string) => {
+        console.log('🚀 toggleBookmark START:', { id, userId });
         try {
           set({ error: null });
           
@@ -762,10 +785,13 @@ export const useEventsStore = create<EventsState>()(
           
           // Check if this is a local/generated event that doesn't exist in the database
           const isLocalEvent = id.startsWith('astro_') || id.startsWith('local_') || id.startsWith('bookmark_');
+          console.log('🔍 Event type check:', { id, isLocalEvent });
           
           if (isLocalEvent) {
+            console.log('📍 Handling LOCAL event bookmark toggle');
             // Handle local events without API call
             set((state) => {
+              console.log('🗂️ BEFORE - Store state:', {
                 totalEvents: Object.keys(state.events).length,
                 totalGenerated: Object.keys(state.generatedEvents).length,
                 eventInEvents: !!state.events[id],
@@ -774,6 +800,7 @@ export const useEventsStore = create<EventsState>()(
               
               // Check both regular events and generated events
               const event = state.events[id] || state.generatedEvents[id];
+              console.log('🎯 Event lookup result:', {
                 eventFound: !!event,
                 currentBookmarkState: event?.isBookmarked,
                 eventTitle: event?.title?.substring(0, 50) + '...'
@@ -786,6 +813,7 @@ export const useEventsStore = create<EventsState>()(
               
               // Update the event in the correct location
               const willBeBookmarked = !event.isBookmarked;
+              console.log('🔄 About to toggle bookmark:', {
                 from: event.isBookmarked,
                 to: willBeBookmarked,
                 isInEventsStore: !!state.events[id],
@@ -793,18 +821,21 @@ export const useEventsStore = create<EventsState>()(
               });
               
               if (state.events[id]) {
+                console.log('📝 Updating event in persistent events store');
                 const result = {
                   events: {
                     ...state.events,
                     [id]: { ...event, isBookmarked: willBeBookmarked }
                   }
                 };
+                console.log('✅ Updated in events store, new bookmark state:', willBeBookmarked);
                 return result;
               } else {
                 // For generated events, when bookmarking move them to persistent events store
                 const updatedEvent = { ...event, isBookmarked: willBeBookmarked };
                 
                 if (updatedEvent.isBookmarked) {
+                  console.log('📦 BOOKMARKING: Moving from generatedEvents to events (persistent)');
                   const newGeneratedEvents = { ...state.generatedEvents };
                   const newGeneratedEventIds = state.generatedEventIds.filter(eid => eid !== id);
                   delete newGeneratedEvents[id];
@@ -819,6 +850,7 @@ export const useEventsStore = create<EventsState>()(
                     generatedEventIds: newGeneratedEventIds
                   };
                   
+                  console.log('✅ MIGRATION COMPLETE - Event moved to persistent store:', {
                     newEventsCount: Object.keys(result.events).length,
                     newGeneratedCount: Object.keys(result.generatedEvents).length,
                     eventNowInEvents: !!result.events[id],
@@ -827,6 +859,7 @@ export const useEventsStore = create<EventsState>()(
                   
                   return result;
                 } else {
+                  console.log('📤 UNBOOKMARKING: Moving from events back to generatedEvents');
                   const newEvents = { ...state.events };
                   const newEventIds = state.eventIds.filter(eid => eid !== id);
                   delete newEvents[id];
@@ -841,6 +874,7 @@ export const useEventsStore = create<EventsState>()(
                     generatedEventIds: [id, ...state.generatedEventIds] // Add to front
                   };
                   
+                  console.log('✅ REVERSE MIGRATION COMPLETE - Event moved back to generated store:', {
                     newEventsCount: Object.keys(result.events).length,
                     newGeneratedCount: Object.keys(result.generatedEvents).length,
                     eventNowInGenerated: !!result.generatedEvents[id],
@@ -855,6 +889,7 @@ export const useEventsStore = create<EventsState>()(
             // Final state check
             const finalState = get();
             const finalEvent = finalState.events[id] || finalState.generatedEvents[id];
+            console.log('🏁 FINAL STATE after bookmark toggle:', {
               eventFound: !!finalEvent,
               finalBookmarkState: finalEvent?.isBookmarked,
               nowInEventsStore: !!finalState.events[id],
@@ -869,13 +904,16 @@ export const useEventsStore = create<EventsState>()(
               const eventDate = new Date(updatedEvent.date);
               const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
               
+              console.log('🗑️ INVALIDATING CACHE for month:', monthKey, 'to prevent bookmark override');
               
               // Remove the cached month to force fresh load that includes our migration
               get().cachedMonths.delete(monthKey);
               get().loadedMonths.delete(monthKey);
               
+              console.log('✅ Cache invalidated - future loads will see our migrated bookmark');
             }
             
+            console.log('✨ toggleBookmark LOCAL COMPLETE for:', id);
             return;
           }
           
@@ -977,6 +1015,7 @@ export const useEventsStore = create<EventsState>()(
             const eventDate = new Date(updatedEvent.date);
             const monthKey = get().getMonthKey(eventDate.getMonth(), eventDate.getFullYear());
             
+            console.log('🗑️ FALLBACK: Invalidating cache for month:', monthKey);
             
             // Remove the cached month to force fresh load that includes our migration
             get().cachedMonths.delete(monthKey);
@@ -993,6 +1032,7 @@ export const useEventsStore = create<EventsState>()(
           if (storedData) {
             const parsedData = JSON.parse(storedData);
             if (parsedData.state && parsedData.state.events) {
+              console.log('🧹 Clearing persisted events from localStorage...');
               delete parsedData.state.events;
               localStorage.setItem('luckstrology-events-storage', JSON.stringify(parsedData));
             }
@@ -1006,6 +1046,7 @@ export const useEventsStore = create<EventsState>()(
         try {
           set({ error: null });
           
+          console.log(`🗑️ Clearing generated events for user ${userId}${targetDate ? ` for ${targetDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : ' (all months)'}...`);
           
           // Clear any persisted events from localStorage first
           const { clearPersistedEvents } = get();
@@ -1075,8 +1116,10 @@ export const useEventsStore = create<EventsState>()(
             }
             
             const data = await response.json();
+            console.log(`🔄 API Response:`, data);
             
             if (data.success) {
+              console.log(`✅ Successfully cleared ${data.deletedCount} generated events from database`);
               
               // Get current state for before/after comparison
               const currentState = get();
@@ -1138,8 +1181,10 @@ export const useEventsStore = create<EventsState>()(
               const afterCount = afterState.eventIds?.length || 0;
               const localRemovedCount = beforeCount - afterCount;
               
+              console.log(`🔄 Local state updated: ${beforeCount} → ${afterCount} events (removed ${localRemovedCount} locally)`);
               
               // Reload events from database to ensure consistency
+              console.log('🔄 Reloading events from database to ensure consistency...');
               const { loadEvents } = get();
               await loadEvents(userId);
               

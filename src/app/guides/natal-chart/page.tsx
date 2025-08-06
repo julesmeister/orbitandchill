@@ -1,9 +1,35 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
-
 import React from 'react';
+import { Metadata } from 'next';
+import { BRAND } from '@/config/brand';
 import GuideTemplate from '@/components/guides/GuideTemplate';
 import { renderNatalChartContent } from './content';
+import HowToStructuredData, { natalChartGuideSteps } from '@/components/SEO/HowToStructuredData';
+
+export const metadata: Metadata = {
+  title: `Your First Natal Chart: A Complete Beginner's Guide | ${BRAND.name}`,
+  description: 'Learn how to create and interpret your natal chart with this comprehensive beginner\'s guide. Discover your Sun, Moon, and Rising signs and understand your cosmic blueprint.',
+  keywords: 'natal chart guide, birth chart tutorial, astrology for beginners, how to read natal chart, sun moon rising signs',
+  openGraph: {
+    title: `Natal Chart Guide | ${BRAND.name}`,
+    description: 'Learn how to create and interpret your natal chart with this comprehensive beginner\'s guide.',
+    type: 'article',
+    url: `${BRAND.domain}/guides/natal-chart`,
+    siteName: BRAND.name,
+    images: [{
+      url: `${BRAND.domain}/images/logo.png`,
+      width: 1200,
+      height: 630,
+      alt: 'Natal Chart Guide'
+    }]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Natal Chart Guide | ${BRAND.name}`,
+    description: 'Learn how to create and interpret your natal chart with this comprehensive beginner\'s guide.',
+    site: BRAND.socialHandles.twitter,
+    creator: BRAND.socialHandles.twitter,
+  },
+};
 
 export default function NatalChartGuidePage() {
   const guide = {
@@ -68,10 +94,20 @@ export default function NatalChartGuidePage() {
   };
 
   return (
-    <GuideTemplate 
-      guide={guide} 
-      renderSectionContent={renderSectionContent}
-      quickActions={quickActions}
-    />
+    <>
+      <HowToStructuredData
+        name="How to Create and Read Your Natal Chart"
+        description="Learn how to generate your personalized natal chart and understand the key elements that make up your astrological blueprint."
+        steps={natalChartGuideSteps}
+        totalTime="PT30M"
+        supply={["Birth date", "Birth time (exact if possible)", "Birth location"]}
+        tool={["Natal Chart Generator", "Computer or mobile device", "Internet connection"]}
+      />
+      <GuideTemplate 
+        guide={guide} 
+        renderSectionContent={renderSectionContent}
+        quickActions={quickActions}
+      />
+    </>
   );
 }

@@ -6,23 +6,23 @@
 
 import { MetadataRoute } from 'next'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'
-  const currentDate = new Date().toISOString().split('T')[0]
+  const currentDate = new Date()
 
   // Static pages with updated priorities to reflect new features
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: currentDate,
-      changeFrequency: 'daily', // Updated more frequently due to Astrological Events
+      changeFrequency: 'daily',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/chart`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
-      priority: 0.9, // Increased priority for main feature
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/astrocartography`,
@@ -60,32 +60,123 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    // Add specific section anchors for main page features
     {
-      url: `${baseUrl}/#natal-chart-section`,
+      url: `${baseUrl}/guides/matrix-of-destiny`,
       lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.8,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
     {
-      url: `${baseUrl}/#astrological-events-section`,
+      url: `${baseUrl}/guides/astrocartography`,
       lastModified: currentDate,
-      changeFrequency: 'daily', // High frequency due to changing events
-      priority: 0.8,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
     {
-      url: `${baseUrl}/#astrocartography-section`,
+      url: `${baseUrl}/guides/horary-astrology`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/guides/electional-astrology`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/events`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/#electional-astrology-section`,
+      url: `${baseUrl}/privacy-policy`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/terms-of-service`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/profile`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
-      priority: 0.7,
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/settings`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/about`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: currentDate,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
   ]
 
-  return staticPages
+  // Fetch dynamic content
+  let dynamicPages: MetadataRoute.Sitemap = []
+
+  try {
+    // Fetch blog posts and discussions
+    const response = await fetch(`${baseUrl}/api/discussions`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    })
+    
+    if (response.ok) {
+      const discussions = await response.json()
+      
+      // Add individual discussion/blog pages
+      dynamicPages = discussions.map((post: any) => ({
+        url: `${baseUrl}/discussions/${post.id}`,
+        lastModified: new Date(post.updatedAt || post.createdAt),
+        changeFrequency: 'monthly' as const,
+        priority: post.isPinned ? 0.8 : 0.6,
+      }))
+    }
+  } catch (error) {
+    // If API fails, continue with static pages only
+    console.error('Failed to fetch dynamic content for sitemap:', error)
+  }
+
+  // Fetch blog categories
+  const categories = [
+    'natal-chart-analysis',
+    'transits-predictions',
+    'synastry-compatibility',
+    'mundane-astrology',
+    'learning-resources',
+    'chart-reading-help',
+    'general-discussion'
+  ]
+
+  const categoryPages: MetadataRoute.Sitemap = categories.map(category => ({
+    url: `${baseUrl}/blog/category/${category}`,
+    lastModified: currentDate,
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  // Combine all pages
+  return [...staticPages, ...dynamicPages, ...categoryPages]
 }

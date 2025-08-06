@@ -100,7 +100,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           try {
             await eventPersistence.saveEvent(unifiedEvent);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to persist event ${event.id}:`, error);
+            console.error(`Failed to persist event ${event.id}:`, error);
           }
         }
         
@@ -109,7 +109,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           try {
             await eventService.saveEvent(event);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to sync event ${event.id}:`, error);
+            console.error(`Failed to sync event ${event.id}:`, error);
           }
         }
       },
@@ -124,17 +124,12 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           throw new Error(`Event ${id} not found`);
         }
         
-        // Convert updates to UnifiedEvent format, separating bookmark status
-        const { isBookmarked, ...eventUpdates } = updates;
-        
-        // Merge updates properly, preserving metadata structure
+        // Merge updates
         const updatedEvent: UnifiedEvent = {
           ...existingEvent,
-          ...eventUpdates,
+          ...updates,
           metadata: {
             ...existingEvent.metadata,
-            // Only update isBookmarked if it was explicitly provided in updates
-            ...(isBookmarked !== undefined && { isBookmarked }),
             lastModified: new Date().toISOString(),
             syncStatus: 'pending'
           }
@@ -158,47 +153,17 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           try {
             await eventPersistence.saveEvent(updatedEvent);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to persist event update ${id}:`, error);
+            console.error(`Failed to persist event update ${id}:`, error);
           }
         }
         
         // Sync to API if not local
         if (!isLocalEvent(id)) {
           try {
-            // Only send the actual updates to the API, not the entire event
-            const apiUpdateData = {
-              id: astroEvent.id,
-              userId: astroEvent.userId,
-              ...updates,  // Only the fields that were actually updated
-              isBookmarked: updatedEvent.metadata.isBookmarked  // Ensure bookmark status is included
-            };
-            
-              isLocalEvent: isLocalEvent(id), 
-              apiUpdateData,
-              originalUpdates: updates 
-            });
-            
-            await eventService.updateEvent(apiUpdateData as AstrologicalEvent);
-            
-            // Invalidate cache for the event's month so other browsers fetch fresh data
-            const eventDate = new Date(updatedEvent.date);
-            const monthKey = EventCacheImpl.generateMonthKey(
-              updatedEvent.metadata.userId,
-              eventDate.getMonth(),
-              eventDate.getFullYear()
-            );
-            eventCache.invalidate(monthKey);
+            await eventService.saveEvent(astroEvent);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to sync event update ${id}:`, {
-              error,
-              errorMessage: error instanceof Error ? error.message : 'Unknown error',
-              errorStack: error instanceof Error ? error.stack : undefined,
-              eventId: id,
-              eventData: astroEvent
-            });
-            // Don't throw - we still want the local update to succeed
+            console.error(`Failed to sync event update ${id}:`, error);
           }
-        } else {
         }
       },
 
@@ -209,7 +174,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         const event = state.allEvents[id];
         
         if (!event) {
-          console.warn(`Event ${id} not found for removal`);
+          // Event not found for removal
           return;
         }
         
@@ -228,24 +193,15 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         try {
           await eventPersistence.removeEvent(id);
         } catch (error) {
-          console.error(`❌ UnifiedStore: Failed to remove event ${id} from persistence:`, error);
+          console.error(`Failed to remove event ${id} from persistence:`, error);
         }
         
         // Remove from API if not local
         if (!isLocalEvent(id)) {
           try {
             await eventService.deleteEvent(id, event.metadata.userId);
-            
-            // Invalidate cache for the event's month
-            const eventDate = new Date(event.date);
-            const monthKey = EventCacheImpl.generateMonthKey(
-              event.metadata.userId,
-              eventDate.getMonth(),
-              eventDate.getFullYear()
-            );
-            eventCache.invalidate(monthKey);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to remove event ${id} from API:`, error);
+            console.error(`Failed to remove event ${id} from API:`, error);
           }
         }
       },
@@ -269,12 +225,11 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         
         set({ allEvents: newEvents });
         
-        
         // Persist the change
         try {
           await eventPersistence.saveEvent(updatedEvent);
         } catch (error) {
-          console.error(`❌ UnifiedStore: Failed to persist bookmark change for ${id}:`, error);
+          console.error(`Failed to persist bookmark change for ${id}:`, error);
         }
         
         // Sync to API if not local
@@ -290,17 +245,8 @@ export const useUnifiedEventsStore = create<EventsStore>()(
             syncedEvents[id] = finalEvent;
             set({ allEvents: syncedEvents });
             
-            
-            // Invalidate cache for the event's month
-            const eventDate = new Date(event.date);
-            const monthKey = EventCacheImpl.generateMonthKey(
-              event.metadata.userId,
-              eventDate.getMonth(),
-              eventDate.getFullYear()
-            );
-            eventCache.invalidate(monthKey);
           } catch (error) {
-            console.error(`❌ UnifiedStore: Failed to sync bookmark change for ${id}:`, error);
+            console.error(`Failed to sync bookmark change for ${id}:`, error);
           }
         }
       },
@@ -308,13 +254,13 @@ export const useUnifiedEventsStore = create<EventsStore>()(
       // Load events for a specific month
       loadMonthEvents: async (userId: string, month: number, year: number) => {
         const monthKey = EventCacheImpl.generateMonthKey(userId, month, year);
-        
         set({ isLoading: true });
         
         try {
           // Check cache first
           const cached = eventCache.get(monthKey);
           if (cached) {
+            // Using cached events for better performance
             set({ 
               isLoading: false,
               loadedMonths: new Set(Array.from(get().loadedMonths).concat([monthKey]))
@@ -324,7 +270,6 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           
           // Load from API
           const apiEvents = await eventService.loadMonthEvents(userId, month, year);
-            apiEvents.map(e => ({ id: e.id, title: e.title, isBookmarked: e.isBookmarked })));
           const unifiedEvents = apiEvents.map(event => toUnifiedEvent(event, 'api', event.isBookmarked));
           
           // Merge with existing events
@@ -357,7 +302,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           
           
         } catch (error) {
-          console.error(`❌ UnifiedStore: Failed to load events for ${monthKey}:`, error);
+          console.error(`Failed to load events for ${monthKey}:`, error);
           set({ isLoading: false });
           throw error;
         }
@@ -369,6 +314,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         
         // Prevent multiple simultaneous loads
         if (state.isLoadingPersisted) {
+          // Already loading persisted events, skip
           return;
         }
         
@@ -378,6 +324,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           const persistedEvents = await eventPersistence.loadEvents();
           
           if (persistedEvents.length === 0) {
+            // No persisted events found
             set({ isLoadingPersisted: false });
             return;
           }
@@ -401,9 +348,10 @@ export const useUnifiedEventsStore = create<EventsStore>()(
             isLoadingPersisted: false
           });
           
+          // Successfully loaded persisted events
           
         } catch (error) {
-          console.error('❌ UnifiedStore: Failed to load persisted events:', error);
+          console.error('Failed to load persisted events:', error);
           set({ isLoadingPersisted: false });
         }
       },
@@ -443,6 +391,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           cache: new Map(),
           loadedMonths: new Set()
         });
+        // Cache cleared successfully
       },
 
       // Invalidate specific month
@@ -455,6 +404,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         newLoadedMonths.delete(monthKey);
         
         set({ loadedMonths: newLoadedMonths });
+        // Cache invalidated for specific month
       },
 
       // Get event by ID

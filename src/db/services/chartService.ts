@@ -84,10 +84,8 @@ export class ChartService {
     };
 
     
-    // Bypass resilience wrapper and go directly to database
-    // The resilience wrapper is incorrectly detecting database as unavailable
+    // Direct database access for chart creation
     try {
-      
       const insertResult = await db.insert(natalCharts).values(newChart).returning();
       
       // Verify the chart was actually saved
@@ -98,14 +96,7 @@ export class ChartService {
         .limit(1);
       
       if (!savedChart) {
-        console.error('ChartService.createChart: Chart was not saved to database!');
-        
-        // Try to debug by checking all charts for this user
-        const allUserCharts = await db
-          .select()
-          .from(natalCharts)
-          .where(eq(natalCharts.userId, data.userId));
-        
+        console.error('Chart was not saved to database');
         throw new Error('Chart was not saved to database');
       }
       
@@ -121,7 +112,7 @@ export class ChartService {
       if (error && typeof error === 'object' && 'message' in error) {
         const message = (error as Error).message;
         if (message.includes('Database not available') || message.includes('Connection failed')) {
-          console.warn('ChartService.createChart: Database unavailable, returning null');
+          // Database unavailable, return null
           return null;
         }
       }
@@ -137,7 +128,7 @@ export class ChartService {
   static async getChartById(id: string, userId?: string): Promise<ChartData | null> {
     // Bypass resilience wrapper - direct database access
     try {
-      // Use the same database approach as createChart for consistency
+      // Use consistent database approach
       const whereConditions = userId 
         ? and(eq(natalCharts.id, id), eq(natalCharts.userId, userId))
         : eq(natalCharts.id, id);
@@ -164,7 +155,7 @@ export class ChartService {
       if (error && typeof error === 'object' && 'message' in error) {
         const message = (error as Error).message;
         if (message.includes('Database not available') || message.includes('Connection failed')) {
-          console.warn('ChartService.getChartById: Database unavailable, returning null');
+          // Database unavailable, return null
           return null;
         }
       }
@@ -189,7 +180,7 @@ export class ChartService {
         throw new Error('Database connection is not available');
       }
       
-      // Use the same database approach as createChart for consistency
+      // Use consistent database approach
       const [chart] = await db
         .select()
         .from(natalCharts)
@@ -217,7 +208,7 @@ export class ChartService {
       if (error && typeof error === 'object' && 'message' in error) {
         const message = (error as Error).message;
         if (message.includes('Database not available') || message.includes('Connection failed')) {
-          console.warn('ChartService.getChartByShareToken: Database unavailable, returning null');
+          // Database unavailable, return null
           return null;
         }
       }
@@ -253,7 +244,7 @@ export class ChartService {
       if (error && typeof error === 'object' && 'message' in error) {
         const message = (error as Error).message;
         if (message.includes('Database not available') || message.includes('Connection failed')) {
-          console.warn('ChartService.getUserCharts: Database unavailable, returning empty array');
+          // Database unavailable, return empty array
           return [];
         }
       }
@@ -278,7 +269,7 @@ export class ChartService {
         updateData.metadata = JSON.stringify(updates.metadata);
       }
 
-      // Use the same database approach as createChart for consistency
+      // Use consistent database approach
       await db
         .update(natalCharts)
         .set(updateData)
@@ -298,7 +289,7 @@ export class ChartService {
    */
   static async deleteChart(id: string, userId: string): Promise<boolean> {
     return resilient.boolean(db, 'deleteChart', async () => {
-      // Use the same database approach as createChart for consistency
+      // Use consistent database approach
       await db
         .delete(natalCharts)
         .where(
@@ -371,7 +362,7 @@ export class ChartService {
       // Generate new share token
       const shareToken = generateId();
       
-      // Use the same database approach as createChart for consistency
+      // Use consistent database approach
       // Use a simpler approach for the UPDATE query to avoid WHERE clause parsing issues
       await db
         .update(natalCharts)
@@ -390,7 +381,7 @@ export class ChartService {
       if (error && typeof error === 'object' && 'message' in error) {
         const message = (error as Error).message;
         if (message.includes('Database not available') || message.includes('Connection failed')) {
-          console.warn('ChartService.generateShareToken: Database unavailable, returning null');
+          // Database unavailable, return null
           return null;
         }
       }
@@ -405,7 +396,7 @@ export class ChartService {
    */
   static async getRecentSharedCharts(limit: number = 10): Promise<ChartData[]> {
     return resilient.array(db, 'getRecentSharedCharts', async () => {
-      // Use the same database approach as createChart for consistency
+      // Use consistent database approach
       const charts = await db
         .select()
         .from(natalCharts)
