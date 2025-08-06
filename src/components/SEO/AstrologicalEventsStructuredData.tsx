@@ -70,39 +70,8 @@ export default function AstrologicalEventsStructuredData({
     ]
   }));
 
-  // Generate FAQ schema for common astrological questions
-  const faqSchema = {
-    '@type': 'FAQPage',
-    'mainEntity': [
-      {
-        '@type': 'Question',
-        'name': 'What are astrological events?',
-        'acceptedAnswer': {
-          '@type': 'Answer',
-          'text': 'Astrological events are significant celestial occurrences such as planetary conjunctions, retrogrades, eclipses, and rare alignments that astrologers believe influence human experiences and energies.'
-        }
-      },
-      {
-        '@type': 'Question',
-        'name': 'How rare are these astronomical events?',
-        'acceptedAnswer': {
-          '@type': 'Answer',
-          'text': 'Astronomical events vary in rarity from common monthly occurrences like moon phases to very rare events like outer planet conjunctions that happen every 100+ years. We classify events as common, uncommon, rare, or very rare based on their astronomical frequency.'
-        }
-      },
-      {
-        '@type': 'Question',
-        'name': 'When is the next significant astrological event?',
-        'acceptedAnswer': {
-          '@type': 'Answer',
-          'text': `${significantEvents.length > 0 
-            ? `The next significant astrological event is ${significantEvents[0].name} on ${significantEvents[0].date.toLocaleDateString()}.` 
-            : 'Check our real-time astrological events tracker for the latest upcoming celestial events.'
-          }`
-        }
-      }
-    ]
-  };
+  // Note: FAQ schema removed to prevent duplicate FAQPage markup
+  // FAQ content is consolidated into HomePageStructuredData component
 
   // Generate WebApplication schema for our astrology tool
   const webAppSchema = {
@@ -127,14 +96,12 @@ export default function AstrologicalEventsStructuredData({
     ]
   };
 
-  // Combine all schemas
+  // Combine all schemas (FAQ schema removed to prevent duplicates)
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
       // Events
       ...eventSchemas,
-      // FAQ
-      faqSchema,
       // Web Application
       webAppSchema
     ]

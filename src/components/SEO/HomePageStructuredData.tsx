@@ -96,7 +96,7 @@ export default function HomePageStructuredData() {
     ]
   };
 
-  // FAQ Schema for Common Astrology Questions
+  // Consolidated FAQ Schema for All Common Astrology Questions
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -139,6 +139,30 @@ export default function HomePageStructuredData() {
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "To generate an accurate natal chart, you need your exact birth date, birth time (to the minute), and birth location (city/town). The birth time is crucial for determining your rising sign and house positions."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What are astrological events?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Astrological events are significant celestial occurrences such as planetary conjunctions, retrogrades, eclipses, and rare alignments that astrologers believe influence human experiences and energies."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How rare are these astronomical events?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Astronomical events vary in rarity from common monthly occurrences like moon phases to very rare events like outer planet conjunctions that happen every 100+ years. We classify events as common, uncommon, rare, or very rare based on their astronomical frequency."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When is the next significant astrological event?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Check our real-time astrological events tracker for the latest upcoming celestial events."
         }
       }
     ]
