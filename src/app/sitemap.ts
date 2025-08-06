@@ -7,7 +7,8 @@
 import { MetadataRoute } from 'next'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'
+  // Always use production URL for sitemap to prevent localhost issues
+  const baseUrl = 'https://orbitandchill.com'
   const currentDate = new Date()
 
   // Static pages with updated priorities to reflect new features
@@ -138,25 +139,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let dynamicPages: MetadataRoute.Sitemap = []
 
   try {
-    // Fetch blog posts and discussions
-    const response = await fetch(`${baseUrl}/api/discussions`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
+    // Only fetch dynamic content if we have a valid API endpoint
+    // Skip localhost fetching during build to prevent localhost URLs in production sitemap
+    if (process.env.NODE_ENV === 'production' && process.env.VERCEL_URL) {
+      // Use Vercel's internal URL for API calls during build
+      const apiUrl = `https://${process.env.VERCEL_URL}/api/discussions`
+      const response = await fetch(apiUrl, {
+        next: { revalidate: 3600 } // Cache for 1 hour
+      })
       
-      // Handle both direct array and wrapped response formats
-      const discussions = Array.isArray(data) ? data : (data.discussions || [])
-      
-      // Add individual discussion/blog pages
-      dynamicPages = discussions.map((post: any) => ({
-        url: `${baseUrl}/discussions/${post.id}`,
-        lastModified: new Date(post.updatedAt || post.createdAt),
-        changeFrequency: 'monthly' as const,
-        priority: post.isPinned ? 0.8 : 0.6,
-      }))
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Handle both direct array and wrapped response formats
+        const discussions = Array.isArray(data) ? data : (data.discussions || [])
+        
+        // Add individual discussion/blog pages
+        dynamicPages = discussions.map((post: any) => ({
+          url: `${baseUrl}/discussions/${post.id}`,
+          lastModified: new Date(post.updatedAt || post.createdAt),
+          changeFrequency: 'monthly' as const,
+          priority: post.isPinned ? 0.8 : 0.6,
+        }))
+      }
     }
+    // For development/local builds, skip API calls to prevent localhost URLs in production
   } catch (error) {
     // If API fails, continue with static pages only
     console.error('Failed to fetch dynamic content for sitemap:', error)
