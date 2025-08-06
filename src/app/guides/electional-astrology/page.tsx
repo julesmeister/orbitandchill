@@ -70,7 +70,6 @@ export default function ElectionalAstrologyGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

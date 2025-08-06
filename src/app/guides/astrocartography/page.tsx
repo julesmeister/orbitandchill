@@ -407,7 +407,6 @@ export default function AstrocartographyGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

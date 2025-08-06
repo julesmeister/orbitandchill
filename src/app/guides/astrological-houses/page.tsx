@@ -514,7 +514,6 @@ export default function AstrologicalHousesGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

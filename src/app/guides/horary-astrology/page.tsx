@@ -64,7 +64,6 @@ export default function HoraryAstrologyGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

@@ -689,7 +689,6 @@ export default function TarotFundamentalsGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

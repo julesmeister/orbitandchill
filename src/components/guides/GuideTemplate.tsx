@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BRAND } from '../../config/brand';
+import { renderNatalChartContent } from '../../app/guides/natal-chart/content';
 
 interface GuideSection {
   id: string;
@@ -23,7 +24,6 @@ interface GuideData {
 
 interface GuideTemplateProps {
   guide: GuideData;
-  renderSectionContent: (currentSection: number, guide: GuideData) => React.ReactNode;
   quickActions?: {
     primary: {
       title: string;
@@ -42,7 +42,7 @@ interface GuideTemplateProps {
   };
 }
 
-export default function GuideTemplate({ guide, renderSectionContent, quickActions }: GuideTemplateProps) {
+export default function GuideTemplate({ guide, quickActions }: GuideTemplateProps) {
   const [currentSection, setCurrentSection] = useState(0);
   const [completedSections, setCompletedSections] = useState<Set<number>>(new Set([0]));
 
@@ -116,6 +116,21 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
   };
 
   const actions = quickActions || defaultQuickActions;
+
+  // Content renderer based on guide type
+  const renderSectionContent = (currentSection: number) => {
+    switch (guide.id) {
+      case 'natal-chart':
+        return renderNatalChartContent(currentSection);
+      case 'astrocartography':
+        return <div className="text-black">
+          <p className="mb-4">This guide covers astrocartography - the practice of using your birth chart to understand how different locations around the world might affect your life experience.</p>
+          <p>Detailed content is being migrated to our new guide system. Please check back soon for the complete interactive guide.</p>
+        </div>;
+      default:
+        return <div className="text-black">Content for this guide is being developed.</div>;
+    }
+  };
 
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
@@ -226,7 +241,7 @@ export default function GuideTemplate({ guide, renderSectionContent, quickAction
                 </h2>
                 
                 <div className="max-w-none">
-                  {renderSectionContent(currentSection, guide)}
+                  {renderSectionContent(currentSection)}
                 </div>
 
                 {/* Navigation */}

@@ -624,7 +624,6 @@ export default function RetrogradePlanetsGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

@@ -144,7 +144,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     
     if (response.ok) {
-      const discussions = await response.json()
+      const data = await response.json()
+      
+      // Handle both direct array and wrapped response formats
+      const discussions = Array.isArray(data) ? data : (data.discussions || [])
       
       // Add individual discussion/blog pages
       dynamicPages = discussions.map((post: any) => ({

@@ -701,7 +701,6 @@ export default function ElementsAndModalitiesGuidePage() {
   return (
     <GuideTemplate 
       guide={guide} 
-      renderSectionContent={renderSectionContent}
       quickActions={quickActions}
     />
   );

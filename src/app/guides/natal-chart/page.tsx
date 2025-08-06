@@ -2,7 +2,6 @@ import React from 'react';
 import { Metadata } from 'next';
 import { BRAND } from '@/config/brand';
 import GuideTemplate from '@/components/guides/GuideTemplate';
-import { renderNatalChartContent } from './content';
 import HowToStructuredData, { natalChartGuideSteps } from '@/components/SEO/HowToStructuredData';
 
 export const metadata: Metadata = {
@@ -72,10 +71,6 @@ export default function NatalChartGuidePage() {
     ]
   };
 
-  const renderSectionContent = (currentSection: number) => {
-    return renderNatalChartContent(currentSection);
-  };
-
   const quickActions = {
     primary: {
       title: "Generate Your Chart",
@@ -105,7 +100,6 @@ export default function NatalChartGuidePage() {
       />
       <GuideTemplate 
         guide={guide} 
-        renderSectionContent={renderSectionContent}
         quickActions={quickActions}
       />
     </>
