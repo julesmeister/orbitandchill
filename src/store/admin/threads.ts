@@ -112,8 +112,8 @@ export const createThreadsSlice = (set: any, get: any) => ({
       });
       
       if (data.success && data.discussion) {
-        // After successful creation, reload threads to get fresh data from API
-        await get().loadThreads();
+        // After successful creation, reload threads with force refresh to get fresh data from API
+        await get().loadThreads({ forceRefresh: true });
       } else {
         throw new Error(data.error || 'Failed to create discussion');
       }
@@ -146,8 +146,8 @@ export const createThreadsSlice = (set: any, get: any) => ({
       const data = await threadsApi.update(id, updates);
       
       if (data.success && data.discussion) {
-        // After successful update, reload threads to get fresh data from API
-        await get().loadThreads();
+        // After successful update, reload threads with force refresh to get fresh data from API
+        await get().loadThreads({ forceRefresh: true });
       } else {
         throw new Error(data.error || 'Failed to update discussion');
       }

@@ -42,6 +42,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   const [isEditingSlug, setIsEditingSlug] = useState(false);
   const [hasManuallyEditedSlug, setHasManuallyEditedSlug] = useState(false);
   const [isEditingAuthor, setIsEditingAuthor] = useState(false);
+  const [lastUserInteraction, setLastUserInteraction] = useState<number>(0);
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -53,7 +54,23 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
           return initialData[key as keyof DiscussionFormData] !== prev[key as keyof DiscussionFormData];
         });
         
+        // Don't override user changes that happened in the last 10 seconds
+        const timeSinceLastInteraction = Date.now() - lastUserInteraction;
+        const recentUserInteraction = lastUserInteraction > 0 && timeSinceLastInteraction < 10000; // 10 seconds
+        
         if (hasChanges) {
+          console.log('🔍 initialData changed - updating form data');
+          console.log('🔍 Previous category:', prev.category);
+          console.log('🔍 New initialData category:', initialData.category);
+          console.log('🔍 Time since last user interaction:', timeSinceLastInteraction, 'ms');
+          console.log('🔍 lastUserInteraction timestamp:', lastUserInteraction);
+          console.log('🔍 Recent user interaction detected:', recentUserInteraction);
+          
+          if (recentUserInteraction) {
+            console.log('🔍 Skipping initialData update due to recent user interaction');
+            return prev;
+          }
+          
           return {
             ...prev,
             ...initialData
@@ -66,6 +83,10 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     (initialData as any)?.id,
     initialData?.title,
     initialData?.content,
+    initialData?.category,
+    initialData?.excerpt,
+    initialData?.tags,
+    initialData?.slug,
     initialData?.authorName,
     initialData?.isBlogPost,
     initialData?.isPublished,
@@ -89,6 +110,7 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
     const { name, value } = e.target;
     
     console.log('🔍 handleInputChange called:', { name, value });
+    setLastUserInteraction(Date.now()); // Track user interaction
     
     if (name === 'slug') {
       // Mark slug as manually edited when user types in it
@@ -105,12 +127,14 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
         };
         console.log('🔍 Form data updated:', newData);
         console.log('🔍 New authorName value:', newData.authorName);
+        console.log('🔍 handleInputChange - Updated lastUserInteraction timestamp');
         return newData;
       });
     }
   };
 
   const handleContentChange = (content: string) => {
+    setLastUserInteraction(Date.now()); // Track user interaction
     setFormData({
       ...formData,
       content
@@ -148,11 +172,13 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   };
 
   const updateFormData = (updates: Partial<DiscussionFormData>) => {
-    // console.log('🔍 updateFormData called with:', updates);
+    console.log('🔍 updateFormData called with:', updates);
+    setLastUserInteraction(Date.now()); // Track user interaction
     setFormData(prev => {
       const newData = { ...prev, ...updates };
-      // console.log('🔍 updateFormData - New form data:', newData);
-      // console.log('🔍 updateFormData - New authorName:', newData.authorName);
+      console.log('🔍 updateFormData - Previous category:', prev.category);
+      console.log('🔍 updateFormData - New category:', newData.category);
+      console.log('🔍 updateFormData - Updated lastUserInteraction timestamp');
       return newData;
     });
   };

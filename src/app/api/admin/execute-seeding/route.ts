@@ -7,6 +7,7 @@ import {
   createVote,
   getAllSeedUserConfigs 
 } from '@/db/services/seedUserService';
+import { getAllCategories } from '@/db/services/categoryService';
 
 // POST - Execute seeding by creating discussions and replies in the database
 export async function POST(request: NextRequest) {
@@ -152,6 +153,36 @@ async function executeDatabaseSeeding(
   const maxNestingDepth = generationSettings?.maxNestingDepth || 4;
   const temporalSpreadDays = 30; // Spread content across 30 days
   
+  // Fetch existing categories from database to ensure we only use valid ones
+  console.log('🔍 Fetching existing categories from database...');
+  const categoriesResult = await getAllCategories();
+  const validCategories = categoriesResult.success ? categoriesResult.data || [] : [];
+  const validCategoryNames = validCategories.map((cat: any) => cat.name);
+  
+  console.log('✅ Valid categories from database:', validCategoryNames);
+  
+  // Create a mapping function to match AI-generated categories to valid ones
+  const mapToValidCategory = (aiCategory: string): string => {
+    if (!aiCategory) return validCategoryNames[0] || 'General Discussion';
+    
+    // Direct match (case-insensitive)
+    const directMatch = validCategories.find((cat: any) => 
+      cat.name.toLowerCase() === aiCategory.toLowerCase()
+    );
+    if (directMatch) return directMatch.name;
+    
+    // Partial match for common variations
+    const partialMatch = validCategories.find((cat: any) => {
+      const aiCat = aiCategory.toLowerCase();
+      const validCat = cat.name.toLowerCase();
+      return aiCat.includes(validCat) || validCat.includes(aiCat);
+    });
+    if (partialMatch) return partialMatch.name;
+    
+    // Default fallback to first category or General Discussion
+    return validCategoryNames[0] || 'General Discussion';
+  };
+  
   console.log(`🔍 Processing ${transformedContent.length} items for seeding`);
   console.log(`🔍 Full transformedContent structure:`, transformedContent.map(item => ({
     title: item.transformedTitle,
@@ -191,6 +222,10 @@ async function executeDatabaseSeeding(
       const authorConfig = seedConfigs.find(config => config.userId === item.assignedAuthorId);
       const authorAvatar = authorConfig?.preferredAvatar || authorConfig?.profilePictureUrl || '';
       
+      // Map AI-generated category to a valid database category
+      const validCategory = mapToValidCategory(item.category);
+      console.log(`🔍 Category mapping: "${item.category}" → "${validCategory}"`);
+      
       // Create the main discussion in the database
       const discussionData = {
         title: item.transformedTitle,
@@ -199,7 +234,7 @@ async function executeDatabaseSeeding(
         authorName: item.assignedAuthor,
         authorId: item.assignedAuthorId,
         authorAvatar: authorAvatar,
-        category: item.category,
+        category: validCategory, // Use mapped valid category instead of AI-generated one
         tags: item.tags,
         upvotes: Math.floor(Math.random() * 50) + 10,
         downvotes: Math.floor(Math.random() * 5),

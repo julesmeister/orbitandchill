@@ -1090,8 +1090,13 @@ async function createTablesIfNeeded() {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL UNIQUE,
           description TEXT,
+          color TEXT NOT NULL DEFAULT '#6bdbff',
+          icon TEXT,
           sort_order INTEGER DEFAULT 0,
-          discussion_count INTEGER DEFAULT 0,
+          is_active INTEGER DEFAULT 1 NOT NULL,
+          is_default INTEGER DEFAULT 0 NOT NULL,
+          usage_count INTEGER DEFAULT 0 NOT NULL,
+          discussion_count INTEGER DEFAULT 0 NOT NULL,
           created_at INTEGER NOT NULL,
           updated_at INTEGER NOT NULL
         )

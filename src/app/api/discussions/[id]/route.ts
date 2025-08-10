@@ -152,7 +152,9 @@ export async function PATCH(
     // If category changed, increment usage count for the new category
     if (updates.category && originalDiscussion && updates.category !== originalDiscussion.category) {
       try {
-        await incrementCategoryUsage(updates.category);
+        console.log('🔍 Category changed from', originalDiscussion.category, 'to', updates.category);
+        // Temporarily disabled due to SQL parsing error - TODO: Fix incrementCategoryUsage
+        // await incrementCategoryUsage(updates.category);
       } catch (categoryError) {
         console.warn('Failed to increment category usage:', categoryError);
       }

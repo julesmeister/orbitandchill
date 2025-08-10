@@ -59,7 +59,7 @@ interface ToastState {
 }
 
 export function usePostsManagement() {
-  const { threads, createThread, updateThread, deleteThread } = useAdminStore();
+  const { threads, createThread, updateThread, deleteThread, loadThreads } = useAdminStore();
   const { user } = useUserStore();
   
   // Form state

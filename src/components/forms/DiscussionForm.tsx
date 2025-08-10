@@ -734,7 +734,7 @@ export default function DiscussionForm({
                   <button
                     key={category.id}
                     type="button"
-                    onClick={() => updateFormData({ category: category.name })}
+                    onClick={() => handleAdminOptionChange({ category: category.name })}
                     className={`px-4 py-2 text-sm font-medium border border-black transition-all duration-300 font-open-sans ${formData.category === category.name
                       ? 'bg-black text-white'
                       : 'bg-white text-black hover:bg-black hover:text-white'

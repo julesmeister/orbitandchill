@@ -103,14 +103,17 @@ export const getAllCategories = async (): Promise<CategoryServiceResponse<Catego
     }
 
     // Query database with proper error handling
-    const result = await db
+    // Get all categories and filter in JavaScript since Turso HTTP client has issues with WHERE clauses
+    const allResult = await db
       .select()
       .from(categories)
-      .where(eq(categories.isActive, true))
       .orderBy(asc(categories.sortOrder), asc(categories.name));
 
+    // Filter for active categories in JavaScript (more reliable than SQL with Turso HTTP client)
+    const activeResult = allResult.filter((category: any) => category.isActive === 1 || category.isActive === true);
+
     // Convert database records to frontend format
-    const categoriesData = result.map(dbToFrontend);
+    const categoriesData = activeResult.map(dbToFrontend);
 
     return {
       success: true,
@@ -148,7 +151,7 @@ export const getCategoryById = async (categoryId: string): Promise<CategoryServi
     const result = await db
       .select()
       .from(categories)
-      .where(and(eq(categories.id, categoryId), eq(categories.isActive, true)))
+      .where(and(eq(categories.id, categoryId), eq(categories.isActive, 1)))
       .limit(1);
 
     if (result.length === 0) {
@@ -195,7 +198,59 @@ export const createCategory = async (categoryData: CategoryFormData): Promise<Ca
       };
     }
 
-    // Convert to database format with explicit timestamps (required for Turso HTTP client)
+    // Check if a category with this name already exists (including soft-deleted ones)
+    // Get all categories and filter in JavaScript due to Turso HTTP client WHERE clause issues
+    const allCategories = await db
+      .select()
+      .from(categories);
+    
+    const existingCategories = allCategories.filter((cat: any) => 
+      cat.name.toLowerCase().trim() === categoryData.name.toLowerCase().trim()
+    );
+
+
+    // If category exists but is inactive, reactivate it instead of creating a new one
+    if (existingCategories.length > 0) {
+      const existingCategory = existingCategories[0];
+      
+      if (existingCategory.isActive === 0 || existingCategory.isActive === false) {
+        // Reactivate the soft-deleted category with updated data
+        const updateData = {
+          description: categoryData.description,
+          color: categoryData.color,
+          sortOrder: categoryData.sortOrder ?? 0,
+          isActive: 1, // Reactivate
+          updatedAt: new Date()
+        };
+
+        await db
+          .update(categories)
+          .set(updateData)
+          .where(eq(categories.id, existingCategory.id));
+
+        // Get the updated category to return it
+        const updatedCategories = await db
+          .select()
+          .from(categories);
+        
+        const updatedCategory = updatedCategories.find((cat: any) => cat.id === existingCategory.id);
+        
+        if (updatedCategory) {
+          return {
+            success: true,
+            data: dbToFrontend(updatedCategory)
+          };
+        }
+      } else {
+        // Category already exists and is active
+        return {
+          success: false,
+          error: `Category "${categoryData.name}" already exists`
+        };
+      }
+    }
+
+    // Create new category if no existing category found
     const dbData = frontendToDb(categoryData);
     const now = new Date();
     
@@ -317,18 +372,24 @@ export const deleteCategory = async (categoryId: string): Promise<CategoryServic
     }
 
     // Soft delete by setting isActive = false
-    const result = await db
+    await db
       .update(categories)
       .set({ 
         isActive: false, 
         updatedAt: new Date() 
       })
-      .where(eq(categories.id, categoryId))
-      .returning();
+      .where(eq(categories.id, categoryId));
+
+    // Verify the soft delete worked by checking if the record was updated
+    const verifyResult = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(and(eq(categories.id, categoryId), eq(categories.isActive, false)))
+      .limit(1);
 
     return {
-      success: result.length > 0,
-      data: result.length > 0
+      success: verifyResult.length > 0,
+      data: verifyResult.length > 0
     };
 
   } catch (error) {
@@ -347,8 +408,16 @@ export const deleteCategory = async (categoryId: string): Promise<CategoryServic
  */
 export const incrementCategoryUsage = async (categoryName: string): Promise<CategoryServiceResponse<boolean>> => {
   try {
+    console.log('🔍 incrementCategoryUsage called with category:', categoryName);
+    
     if (!db || !db.client) {
       // Silently fail for usage tracking - not critical
+      return { success: true, data: true, fallback: true };
+    }
+
+    // Validate category name
+    if (!categoryName || typeof categoryName !== 'string') {
+      console.warn('❌ Invalid category name provided to incrementCategoryUsage:', categoryName);
       return { success: true, data: true, fallback: true };
     }
 
@@ -356,7 +425,7 @@ export const incrementCategoryUsage = async (categoryName: string): Promise<Cate
     const currentCategory = await db
       .select({ usageCount: categories.usageCount })
       .from(categories)
-      .where(and(eq(categories.name, categoryName), eq(categories.isActive, true)))
+      .where(and(eq(categories.name, categoryName), eq(categories.isActive, 1)))
       .limit(1);
 
     if (currentCategory.length > 0) {
@@ -366,7 +435,7 @@ export const incrementCategoryUsage = async (categoryName: string): Promise<Cate
           usageCount: (currentCategory[0].usageCount || 0) + 1,
           updatedAt: new Date()
         })
-        .where(and(eq(categories.name, categoryName), eq(categories.isActive, true)));
+        .where(and(eq(categories.name, categoryName), eq(categories.isActive, 1)));
     }
 
     return { success: true, data: true };
@@ -423,7 +492,7 @@ export const recalculateCategoryUsage = async (): Promise<CategoryServiceRespons
     const unusedCategories = await db
       .select({ name: categories.name })
       .from(categories)
-      .where(eq(categories.isActive, true));
+      .where(eq(categories.isActive, 1));
 
     for (const category of unusedCategories) {
       if (!usageCounts[category.name]) {
@@ -470,7 +539,7 @@ export const cleanupCategoryNames = async (): Promise<CategoryServiceResponse<Re
     const allCategories = await db
       .select()
       .from(categories)
-      .where(eq(categories.isActive, true));
+      .where(eq(categories.isActive, 1));
 
     const cleanupResults: Record<string, string> = {};
 
@@ -525,7 +594,7 @@ export const initializeDefaultCategories = async (): Promise<CategoryServiceResp
     const existingCount = await db
       .select()
       .from(categories)
-      .where(eq(categories.isActive, true));
+      .where(eq(categories.isActive, 1));
 
     if (existingCount.length > 0) {
       return { success: true, data: true }; // Already initialized

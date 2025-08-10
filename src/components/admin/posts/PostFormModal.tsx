@@ -111,6 +111,12 @@ export default function PostFormModal({
                 return {};
               }
               
+              console.log('🔍 PostFormModal - Constructing initialData from thread:', {
+                threadId: thread.id,
+                threadCategory: thread.category,
+                title: thread.title
+              });
+              
               const formData = {
                 title: thread.title || '',
                 content: thread.content || '',
