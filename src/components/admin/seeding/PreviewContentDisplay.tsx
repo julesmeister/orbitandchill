@@ -55,10 +55,6 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
     setEditContent('');
   };
   
-  // Debug: Log when content is available
-  if (previewContent && previewContent.length > 0) {
-    console.log('🔄 PreviewContentDisplay rendering', previewContent.length, 'discussions');
-  }
   
   if (!previewContent || previewContent.length === 0) {
     return null;
@@ -235,13 +231,6 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
                       // Ensure absolutely unique key by combining multiple identifiers
                       const uniqueKey = `${index}-${replyIdx}-${reply.id || Date.now()}-${reply.authorName || 'unknown'}`;
                       
-                      // Debug: Log reply data to see what's available
-                      console.log('🖼️ Reply data for avatar:', {
-                        authorName: reply.authorName,
-                        avatar: reply.avatar,
-                        authorAvatar: reply.authorAvatar,
-                        allKeys: Object.keys(reply)
-                      });
                       
                       return (
                         <div key={uniqueKey} className="bg-white p-4 rounded border border-blue-200 relative group hover:border-blue-300 transition-colors duration-200">

@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbAsync } from '@/db/index-turso-http';
-import { discussionReplies } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { DiscussionService as discussionService } from '@/db/services/discussionService';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { discussionId, newReplies } = body;
+    const { discussionId, comment } = body;
 
     if (!discussionId) {
       return NextResponse.json(
@@ -16,55 +14,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!newReplies || !Array.isArray(newReplies)) {
+    if (!comment || !comment.trim()) {
       return NextResponse.json(
-        { success: false, error: 'New replies array is required' },
+        { success: false, error: 'Comment text is required' },
         { status: 400 }
       );
     }
 
-    const dbInstance = await getDbAsync();
-    if (!dbInstance) {
-      throw new Error('Database not available');
-    }
-    const db = dbInstance.db;
+    // Create a single custom reply using discussionService
+    const replyData = {
+      discussionId: discussionId,
+      authorId: null, // No foreign key constraint issue
+      content: comment.trim(),
+      parentReplyId: undefined,
+    };
 
-    // Start a transaction to ensure data consistency
-    await db.transaction(async (tx: any) => {
-      // Delete existing replies for this discussion
-      await tx.delete(discussionReplies).where(eq(discussionReplies.discussionId, discussionId));
-
-      // Insert new replies
-      if (newReplies.length > 0) {
-        const repliesToInsert = newReplies.map((reply: any) => ({
-          id: `reply_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-          discussionId: discussionId,
-          content: reply.content,
-          authorId: reply.authorId,
-          authorName: reply.authorName,
-          parentReplyId: reply.parentReplyId || null,
-          createdAt: Math.floor(Date.now() / 1000),
-          updatedAt: Math.floor(Date.now() / 1000),
-          upvotes: reply.upvotes || 0,
-          downvotes: reply.downvotes || 0,
-        }));
-
-        await tx.insert(discussionReplies).values(repliesToInsert);
-      }
-    });
+    // Use the discussionService to add the reply
+    const createdReply = await discussionService.createReply(replyData);
 
     return NextResponse.json({
       success: true,
-      message: `Successfully replaced ${newReplies.length} comments for discussion`,
-      repliesCount: newReplies.length,
+      message: 'Custom comment added successfully',
+      reply: createdReply,
     });
 
   } catch (error) {
-    console.error('Error replacing discussion comments:', error);
+    console.error('Error adding custom comment:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to replace discussion comments',
+        error: error instanceof Error ? error.message : 'Failed to add custom comment',
       },
       { status: 500 }
     );

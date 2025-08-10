@@ -1151,4 +1151,204 @@ Application Routes:
 
 ---
 
+## Discussion Management System
+
+### Architecture Overview
+
+The Discussion Management system is part of the Admin Dashboard's seeding functionality, providing comprehensive tools for managing forum discussions, generating AI comments, and handling discussion replies.
+
+### Component Structure
+
+```
+/src/components/admin/seeding/
+├── DiscussionBrowser.tsx (Main Container - 125 lines, down from 325)
+├── discussion/
+│   ├── DiscussionFilters.tsx (Search and filtering)
+│   ├── DiscussionList.tsx (Paginated discussion display)
+│   ├── DiscussionActions.tsx (Comment generation and actions)
+│   └── hooks/ (Custom hooks for business logic)
+│       ├── useDiscussionFetching.ts (API calls, caching, loading states)
+│       ├── useDiscussionNavigation.ts (Filter, search, pagination logic)
+│       ├── useDiscussionActions.ts (Reply actions and mood selection)
+│       ├── useDiscussionReplies.ts (Reply management)
+│       └── useDiscussionComments.ts (AI comment generation)
+```
+
+### Hook-Based Architecture Refactor
+
+**Problem Solved**: The original DiscussionBrowser component was 325+ lines with mixed concerns, making it difficult to maintain and test.
+
+**Solution**: Extracted functionality into focused custom hooks:
+
+#### 1. **useDiscussionFetching Hook**
+- **Purpose**: Handles API calls, caching, and loading states
+- **Features**: 30-second cache, memory management, error handling
+- **Returns**: `threads`, `totalThreads`, `totalPages`, `isLoading`, `fetchDiscussions`
+
+```tsx
+// Automatic caching prevents unnecessary API calls
+const cached = cacheRef.current.get(cacheKey);
+if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+  // Instant loading from cache
+  setThreads(cached.data.discussions || []);
+  setIsLoading(false);
+  return;
+}
+```
+
+#### 2. **useDiscussionNavigation Hook**
+- **Purpose**: Manages filter changes, search, pagination, refresh
+- **Features**: Debounced search (500ms), automatic page reset
+- **Returns**: Navigation state and handler functions
+
+```tsx
+// Debounced search prevents excessive API calls
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchDiscussions({ page: 1, filter, search: searchQuery });
+  }, 500);
+  return () => clearTimeout(timer);
+}, [searchQuery, filter]);
+```
+
+#### 3. **useDiscussionActions Hook**
+- **Purpose**: Handles reply actions, mood selection, comment operations
+- **Features**: Centralized reply management with toast notifications
+- **Returns**: Action handlers and mood state
+
+### Performance Optimizations
+
+#### Smart Caching System
+```tsx
+// 30-second cache with automatic cleanup
+const CACHE_DURATION = 30000; // 30 seconds
+const cacheRef = useRef<Map<string, { data: any; timestamp: number }>>(new Map());
+
+// Cache key based on page, filter, and search parameters
+const cacheKey = `${page}-${filterParam}-${search}`;
+```
+
+**Cache Benefits**:
+- **First Load**: API call takes ~549ms, cached for 30 seconds
+- **Subsequent Loads**: Instant loading from cache (0ms)
+- **Memory Management**: Automatically cleans old cache entries
+- **Smart Invalidation**: Refresh button bypasses cache
+
+#### Loading State Management
+```tsx
+// Proper loading states prevent "No discussions found" flash
+if (isLoading && discussions.length === 0) {
+  return <LoadingSpinner />; // Shows spinner instead of empty message
+}
+
+if (discussions.length === 0 && !isLoading) {
+  return <EmptyState />; // Only shows empty state when actually empty
+}
+```
+
+### AI Comment Integration
+
+#### Comment Processing Flow
+```
+Custom Comment Input → AI Processing → Seed User Assignment → Database Save
+         ↓                   ↓                ↓                    ↓
+User Types Comment → process-comments API → Random Persona → Reply Saved
+```
+
+#### AI-Powered Features
+- **Comment Rephrasing**: Uses AI to rephrase user input with different personalities
+- **Seed User Assignment**: Randomly assigns comments to database seed users
+- **Mood Selection**: 6 different personality moods (supportive, analytical, questioning, etc.)
+- **Realistic Timestamps**: Comments scheduled with natural delays
+
+#### Reply Management Interface
+Reuses the existing `PreviewContentDisplay` component from content generation tab:
+- **Add AI Reply**: Generate new comments with mood selection
+- **Delete Replies**: Hover-over delete buttons for individual replies
+- **Edit Replies**: Inline editing with save/cancel functionality
+- **Clear All**: Mass delete all replies from a discussion
+- **Visual Consistency**: Same UI as content generation for familiar workflow
+
+### Database Integration
+
+#### Turso HTTP Client Usage
+```tsx
+// Uses existing DiscussionService with error handling
+const replyData = {
+  discussionId: discussionId,
+  authorId: null, // Avoids foreign key constraints
+  content: comment.trim(),
+  parentReplyId: undefined,
+};
+
+const createdReply = await discussionService.createReply(replyData);
+```
+
+#### Error Handling Strategy
+- **Foreign Key Issues**: Uses `authorId: null` to avoid user table constraints
+- **Database Schema Compliance**: Matches actual table columns (not schema.ts definitions)
+- **Graceful Degradation**: Falls back to error messages with actionable guidance
+
+### API Endpoints
+
+#### Discussion Management APIs
+- **GET `/api/discussions`**: Paginated discussion list with filtering
+- **POST `/api/admin/process-comments`**: AI comment processing (shared with content generation)
+- **POST `/api/admin/add-discussion-replies`**: Save processed comments to discussion
+
+#### Caching Performance
+- **API Response Time**: ~549ms for initial load
+- **Cache Hit Time**: 0ms (instant)
+- **Cache Duration**: 30 seconds
+- **Memory Management**: Keeps 8 most recent cache entries
+
+### Development Benefits
+
+#### Before Refactor (Original DiscussionBrowser)
+- **325+ lines** of mixed concerns
+- **15+ state variables** in single component
+- **Complex fetchDiscussions function** (100+ lines)
+- **6+ handler functions** with duplicated logic
+- **Difficult to test** individual pieces
+
+#### After Refactor (Hook-Based Architecture)
+- **125 lines** focused on UI composition
+- **Clean hook composition** with single responsibilities
+- **Testable hooks** that can be used independently
+- **Reusable logic** across other components
+- **Better separation of concerns**
+
+### Integration Points
+
+#### Content Generation Consistency
+- **Shared PreviewContentDisplay**: Same reply interface across both tabs
+- **Unified AI Processing**: Uses same `/api/admin/process-comments` endpoint
+- **Consistent Seed Users**: Same user assignment system
+- **Visual Parity**: Identical styling and functionality
+
+#### Admin Dashboard Integration
+- **Part of SeedingTab**: Available under "Discussion Management" tab
+- **Toast Notifications**: Integrates with admin dashboard notification system
+- **Loading States**: Consistent with other admin operations
+- **Error Handling**: Follows admin dashboard error patterns
+
+### Future Enhancements
+
+#### Planned Improvements
+- **Reply Update API**: Currently TODO - implement actual reply editing
+- **Reply Delete API**: Currently TODO - implement actual reply deletion
+- **Batch Operations**: Mass operations on multiple discussions
+- **Advanced Filtering**: Filter by author, date range, engagement metrics
+
+#### Technical Debt
+- **API Consolidation**: Merge similar endpoints for consistency
+- **Schema Alignment**: Align database schema with TypeScript interfaces
+- **Test Coverage**: Add comprehensive tests for extracted hooks
+
+---
+
+This discussion management system demonstrates modern React patterns with custom hooks, providing a maintainable and performant interface for forum content management while maintaining consistency with the broader admin dashboard architecture.
+
+---
+
 This admin dashboard provides a comprehensive, modern interface for managing all aspects of the Luckstrology application while maintaining the distinctive Synapsas design aesthetic throughout.

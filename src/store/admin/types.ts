@@ -152,6 +152,9 @@ export interface AdminState {
   userAnalytics: UserAnalytics[];
   trafficData: TrafficData[];
   threads: Thread[];
+  totalThreads: number;
+  totalPages: number;
+  currentPage: number;
 
   // System monitoring
   healthMetrics: HealthMetrics | null;
@@ -179,7 +182,7 @@ export interface AdminState {
   loadNotifications: () => Promise<void>;
 
   // Thread actions
-  loadThreads: () => Promise<void>;
+  loadThreads: (options?: any) => Promise<void>;
   createThread: (thread: Omit<Thread, "id" | "createdAt" | "updatedAt" | "views" | "likes" | "comments" | "upvotes" | "downvotes" | "replies">) => Promise<void>;
   updateThread: (id: string, updates: Partial<Thread>) => Promise<void>;
   deleteThread: (id: string) => Promise<void>;

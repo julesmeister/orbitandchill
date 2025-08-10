@@ -168,8 +168,43 @@ export const analyticsApi = {
 
 // Threads API
 export const threadsApi = {
-  async getAll(): Promise<any> {
-    const response = await fetch('/api/discussions?limit=100&sortBy=recent');
+  async getAll(options: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    sortBy?: string;
+    filter?: string;
+    search?: string;
+    cacheBuster?: string;
+  } = {}): Promise<any> {
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      sortBy = 'recent',
+      filter,
+      search,
+      cacheBuster = ''
+    } = options;
+    
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sortBy,
+      drafts: 'false'
+    });
+    
+    if (category && category !== 'All Categories') {
+      params.append('category', category);
+    }
+    
+    if (filter === 'forum') {
+      params.append('isBlogPost', 'false');
+    } else if (filter === 'blog') {
+      params.append('isBlogPost', 'true');
+    }
+    
+    const response = await fetch(`/api/discussions?${params.toString()}${cacheBuster}`);
     return response.json();
   },
 

@@ -21,7 +21,7 @@ export interface CreateDiscussionData {
 
 export interface CreateReplyData {
   discussionId: string;
-  authorId: string;
+  authorId: string | null;
   content: string;
   parentReplyId?: string;
 }
@@ -234,6 +234,68 @@ export class DiscussionService {
     console.log('⚡ Skipping votes lookup for performance - returning discussions without user votes');
     
     return finalResults;
+  }
+
+  /**
+   * Get total count of discussions with filters
+   */
+  static async getDiscussionCount(options: {
+    category?: string;
+    isBlogPost?: boolean;
+    isPublished?: boolean;
+    authorId?: string;
+  } = {}, dbInstance?: any): Promise<number> {
+    const db = dbInstance || (await import('../index')).db;
+    if (!db) {
+      return 0;
+    }
+    
+    const {
+      category,
+      isBlogPost,
+      isPublished = true,
+      authorId,
+    } = options;
+
+    // Use raw SQL for better performance and compatibility
+    const dbObj = db as any;
+    const client = dbObj.client;
+    
+    let sql = 'SELECT COUNT(*) as count FROM discussions';
+    const sqlParams: any[] = [];
+    const sqlConditions: string[] = [];
+    
+    if (category && category !== 'All Categories') {
+      sqlConditions.push('category = ?');
+      sqlParams.push(category);
+    }
+    
+    if (isBlogPost !== undefined) {
+      sqlConditions.push('is_blog_post = ?');
+      sqlParams.push(isBlogPost ? 1 : 0);
+    }
+    
+    if (isPublished !== undefined) {
+      sqlConditions.push('is_published = ?');
+      sqlParams.push(isPublished ? 1 : 0);
+    }
+    
+    if (authorId) {
+      sqlConditions.push('author_id = ?');
+      sqlParams.push(authorId);
+    }
+    
+    if (sqlConditions.length > 0) {
+      sql += ' WHERE ' + sqlConditions.join(' AND ');
+    }
+    
+    const rawResult = await client.execute({
+      sql,
+      args: sqlParams
+    });
+    
+    const count = rawResult.rows?.[0]?.count || 0;
+    return Number(count);
   }
 
   /**

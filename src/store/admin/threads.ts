@@ -44,19 +44,38 @@ const transformDiscussionToThread = (discussion: any): Thread => {
 export const createThreadsSlice = (set: any, get: any) => ({
   // Threads state
   threads: [] as Thread[],
+  totalThreads: 0,
+  totalPages: 0,
+  currentPage: 1,
 
   // Threads actions
-  loadThreads: async (): Promise<void> => {
+  loadThreads: async (options: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    sortBy?: string;
+    filter?: string;
+    search?: string;
+    forceRefresh?: boolean;
+  } = {}): Promise<void> => {
     set({ isLoading: true });
 
     try {
-      const data = await threadsApi.getAll();
+      // Add cache-busting timestamp when force refresh is requested
+      const cacheBuster = options.forceRefresh ? `&_t=${Date.now()}` : '';
+      const data = await threadsApi.getAll({
+        ...options,
+        cacheBuster
+      });
       
       if (data.success && data.discussions) {
         const threads: Thread[] = data.discussions.map(transformDiscussionToThread);
 
         set({
           threads,
+          totalThreads: data.totalCount || 0,
+          totalPages: data.totalPages || 0,
+          currentPage: data.currentPage || 1,
           isLoading: false,
         });
       } else {
@@ -66,6 +85,9 @@ export const createThreadsSlice = (set: any, get: any) => ({
       // Fall back to empty array if API fails
       set({
         threads: [],
+        totalThreads: 0,
+        totalPages: 0,
+        currentPage: 1,
         isLoading: false,
       });
     }

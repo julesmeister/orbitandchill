@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
       const category = searchParams.get('category') || undefined;
       const sortBy = searchParams.get('sortBy') as 'recent' | 'popular' | 'replies' | 'views' || 'recent';
       const limit = parseInt(searchParams.get('limit') || '20');
+      const page = parseInt(searchParams.get('page') || '1');
+      const offset = (page - 1) * limit;
       const isBlogPostParam = searchParams.get('isBlogPost');
       const isBlogPost = isBlogPostParam === 'true' ? true : (isBlogPostParam === 'false' ? false : undefined);
       const drafts = searchParams.get('drafts') === 'true';
@@ -23,22 +25,32 @@ export async function GET(request: NextRequest) {
       const isPublished = !drafts;
 
       // Fetch discussions from database with increased timeout
-      console.log('🔍 Fetching discussions with params:', { category, isBlogPost, isPublished, drafts, userId, limit, sortBy });
+      console.log('🔍 Fetching discussions with params:', { category, isBlogPost, isPublished, drafts, userId, limit, offset, sortBy, page });
       
-      const discussions = await Promise.race([
-        DiscussionService.getAllDiscussions({
+      // Fetch both discussions and total count in parallel
+      const [discussions, totalCount] = await Promise.all([
+        Promise.race([
+          DiscussionService.getAllDiscussions({
+            category: category && category !== 'All Categories' ? category : undefined,
+            isBlogPost,
+            isPublished,
+            authorId: drafts ? userId : undefined, // Only filter by user for drafts
+            currentUserId: userId, // Pass userId to get vote data (but now skipped for performance)
+            limit,
+            offset,
+            sortBy
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Database query timeout')), 10000)
+          )
+        ]) as Promise<any[]>,
+        DiscussionService.getDiscussionCount({
           category: category && category !== 'All Categories' ? category : undefined,
           isBlogPost,
           isPublished,
-          authorId: drafts ? userId : undefined, // Only filter by user for drafts
-          currentUserId: userId, // Pass userId to get vote data (but now skipped for performance)
-          limit,
-          sortBy
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Database query timeout')), 10000)
-        )
-      ]) as any[];
+          authorId: drafts ? userId : undefined,
+        })
+      ]);
       
       console.log('✅ Successfully fetched', discussions.length, 'discussions');
 
@@ -95,7 +107,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         discussions: enhancedDiscussions,
-        count: enhancedDiscussions.length
+        count: enhancedDiscussions.length,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: page,
+        hasMore: page * limit < totalCount
       }, {
         headers: {
           'Content-Type': 'application/json',
