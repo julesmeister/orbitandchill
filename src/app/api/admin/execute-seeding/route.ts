@@ -14,6 +14,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { batchId, transformedContent, generationSettings } = body;
     
+    console.log(`🔍 API received payload with ${transformedContent?.length || 0} items`);
+    if (transformedContent && transformedContent.length > 0) {
+      console.log(`🔍 First item structure check:`, {
+        title: transformedContent[0].transformedTitle,
+        hasReplies: !!transformedContent[0].replies,
+        repliesCount: transformedContent[0].replies?.length || 0,
+        itemKeys: Object.keys(transformedContent[0])
+      });
+    }
+    
     if (!batchId) {
       return NextResponse.json(
         { success: false, error: 'Batch ID is required' },
@@ -142,8 +152,41 @@ async function executeDatabaseSeeding(
   const maxNestingDepth = generationSettings?.maxNestingDepth || 4;
   const temporalSpreadDays = 30; // Spread content across 30 days
   
+  console.log(`🔍 Processing ${transformedContent.length} items for seeding`);
+  console.log(`🔍 Full transformedContent structure:`, transformedContent.map(item => ({
+    title: item.transformedTitle,
+    hasReplies: !!item.replies,
+    repliesCount: item.replies?.length || 0,
+    itemKeys: Object.keys(item),
+    repliesStructure: item.replies ? item.replies.slice(0, 1).map((r: any) => ({
+      id: r.id,
+      hasAuthorName: !!r.authorName,
+      hasContent: !!r.content,
+      keys: Object.keys(r)
+    })) : []
+  })));
+  
   for (const item of transformedContent) {
     try {
+      console.log(`🔍 Processing item: "${item.transformedTitle}"`);
+      console.log(`🔍 Item structure:`, {
+        title: item.transformedTitle,
+        hasReplies: !!item.replies,
+        repliesCount: item.replies?.length || 0,
+        itemKeys: Object.keys(item)
+      });
+      
+      if (item.replies && item.replies.length > 0) {
+        console.log(`🔍 Sample reply structure:`, {
+          id: item.replies[0].id,
+          authorName: item.replies[0].authorName,
+          authorId: item.replies[0].authorId,
+          hasContent: !!item.replies[0].content,
+          contentLength: item.replies[0].content?.length || 0,
+          hasCreatedAt: !!item.replies[0].createdAt,
+          replyKeys: Object.keys(item.replies[0])
+        });
+      }
       // Look up avatar data for the assigned author
       const authorConfig = seedConfigs.find(config => config.userId === item.assignedAuthorId);
       const authorAvatar = authorConfig?.preferredAvatar || authorConfig?.profilePictureUrl || '';
@@ -159,7 +202,9 @@ async function executeDatabaseSeeding(
         category: item.category,
         tags: item.tags,
         upvotes: Math.floor(Math.random() * 50) + 10,
-        downvotes: Math.floor(Math.random() * 5)
+        downvotes: Math.floor(Math.random() * 5),
+        // Generate realistic initial views (some base interest)
+        views: Math.floor(Math.random() * 25) + 5 // 5-30 initial views
       };
       
       const discussionId = await createDiscussion(discussionData);
@@ -172,7 +217,17 @@ async function executeDatabaseSeeding(
       results.discussionsCreated++;
       
       // If AI generated replies, create them in the database with staggered timing
+      console.log(`🔍 Checking replies for "${item.transformedTitle}": ${item.replies ? item.replies.length : 'no replies property'}`);
+      
+      if (!item.replies) {
+        console.log(`❌ No replies property found for "${item.transformedTitle}"`);
+      } else if (item.replies.length === 0) {
+        console.log(`📭 Replies array is empty for "${item.transformedTitle}"`);
+      } else {
+        console.log(`✅ Found ${item.replies.length} replies for "${item.transformedTitle}" - will create them in database`);
+      }
       if (item.replies && item.replies.length > 0) {
+        console.log(`✅ Creating ${item.replies.length} replies in database`);
         // Sort replies by their scheduled time to maintain chronological order
         const sortedReplies = [...item.replies].sort((a, b) => {
           const timeA = new Date(a.createdAt || new Date()).getTime();
@@ -227,6 +282,32 @@ async function executeDatabaseSeeding(
       
       // Add votes for the main discussion
       results.votesCreated += discussionData.upvotes + discussionData.downvotes;
+
+      // Update views based on engagement after all replies are created
+      // More replies and votes = more views (simulates organic engagement)
+      const replyCount = item.replies ? item.replies.length : 0;
+      const totalVotes = discussionData.upvotes + discussionData.downvotes;
+      
+      // Calculate additional views based on engagement
+      // Formula: base views + (replies * 3-8 views per reply) + (votes * 1-3 views per vote)
+      const additionalViewsFromReplies = replyCount * (Math.floor(Math.random() * 6) + 3); // 3-8 views per reply
+      const additionalViewsFromVotes = totalVotes * (Math.floor(Math.random() * 3) + 1); // 1-3 views per vote
+      
+      const finalViews = discussionData.views + additionalViewsFromReplies + additionalViewsFromVotes;
+      
+      // Update the discussion with realistic view count
+      try {
+        const db = await (await import('@/db/index')).getDbAsync();
+        if (db) {
+          await db.client.execute({
+            sql: 'UPDATE discussions SET views = ? WHERE id = ?',
+            args: [finalViews, discussionId]
+          });
+          console.log(`📊 Updated views for "${discussionData.title}": ${finalViews} (${replyCount} replies, ${totalVotes} votes)`);
+        }
+      } catch (viewError) {
+        console.error('Failed to update discussion views:', viewError);
+      }
       
     } catch (error) {
       results.errors.push(`Failed to create discussion "${item.transformedTitle}": ${(error as Error).message}`);

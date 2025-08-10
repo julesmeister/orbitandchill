@@ -238,16 +238,36 @@ export const useSeedingOperations = () => {
     setSeedingProgress(0);
 
     try {
+      // Debug: Log what we're sending to the API
+      console.log(`🚀 Frontend: Sending ${previewContent.length} items to execute-seeding API`);
+      console.log(`🚀 Frontend: Preview content structure:`, previewContent.map(item => ({
+        title: item.transformedTitle,
+        hasReplies: !!item.replies,
+        repliesCount: item.replies?.length || 0,
+        itemKeys: Object.keys(item),
+        firstReplyPreview: item.replies && item.replies.length > 0 ? {
+          id: item.replies[0].id,
+          authorName: item.replies[0].authorName,
+          hasContent: !!item.replies[0].content,
+          keys: Object.keys(item.replies[0])
+        } : null
+      })));
+      
+      const payload = {
+        batchId: finalBatchId,
+        transformedContent: previewContent,
+        generationSettings
+      };
+      
+      console.log(`🚀 Frontend: Payload batchId:`, finalBatchId);
+      console.log(`🚀 Frontend: GenerationSettings:`, generationSettings);
+      
       const response = await fetch('/api/admin/execute-seeding', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          batchId: finalBatchId,
-          transformedContent: previewContent,
-          generationSettings
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -412,6 +432,16 @@ export const useSeedingOperations = () => {
               // Create new array instead of mutating existing one
               updatedItem.replies = [...updatedItem.replies, replyWithTiming];
               updatedItem.actualReplyCount = updatedItem.replies.length;
+              console.log(`✅ Added reply to preview content. Discussion: "${updatedItem.transformedTitle}", Total replies: ${updatedItem.replies.length}`);
+              console.log(`✅ Reply details:`, {
+                id: replyWithTiming.id,
+                authorName: replyWithTiming.authorName,
+                authorId: replyWithTiming.authorId,
+                hasContent: !!replyWithTiming.content,
+                contentLength: replyWithTiming.content?.length || 0
+              });
+            } else {
+              console.log(`⚠️ Reply already exists, skipping duplicate for discussion: "${updatedItem.transformedTitle}"`);
             }
             return updatedItem;
           }
@@ -472,6 +502,34 @@ export const useSeedingOperations = () => {
     };
   };
 
+  // Debug function to check current preview content structure
+  const debugPreviewContent = (previewContent: any[]) => {
+    console.log(`🔍 DEBUG: Current preview content structure:`);
+    console.log(`🔍 Total discussions: ${previewContent.length}`);
+    
+    previewContent.forEach((item, index) => {
+      console.log(`🔍 Discussion ${index}:`, {
+        title: item.transformedTitle,
+        hasReplies: !!item.replies,
+        repliesCount: item.replies?.length || 0,
+        actualReplyCount: item.actualReplyCount || 0,
+        itemKeys: Object.keys(item)
+      });
+      
+      if (item.replies && item.replies.length > 0) {
+        console.log(`  🔍 Replies:`, item.replies.map((reply: any, replyIndex: number) => ({
+          index: replyIndex,
+          id: reply.id,
+          authorName: reply.authorName,
+          hasContent: !!reply.content,
+          contentLength: reply.content?.length || 0,
+          hasCreatedAt: !!reply.createdAt,
+          isTemporary: reply.isTemporary
+        })));
+      }
+    });
+  };
+
   return {
     // State
     seedingInProgress,
@@ -494,5 +552,8 @@ export const useSeedingOperations = () => {
     handleExecuteSeeding,
     handleAddReply,
     handleDeleteReplyById,
+    
+    // Debug utilities
+    debugPreviewContent,
   };
 };

@@ -32,6 +32,51 @@ const ReplyCard: React.FC<ReplyCardProps> = ({
   const scheduledHours = reply.scheduledDelay ? Math.round(reply.scheduledDelay / 60) : 0;
   const scheduledDate = reply.createdAt ? new Date(reply.createdAt) : new Date();
 
+  // Format the timestamp for display
+  const formatTimestamp = (timestamp: string) => {
+    if (!timestamp) return 'Unknown time';
+    
+    // If it's already formatted (like "2h ago"), use it as is
+    if (timestamp.includes('ago') || timestamp.includes('at ')) {
+      return timestamp;
+    }
+    
+    // If it's an ISO string, format it nicely
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return timestamp; // Return original if invalid
+      
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = diffInMs / (1000 * 60);
+      const diffInHours = diffInMinutes / 60;
+      const diffInDays = diffInHours / 24;
+      
+      if (diffInMinutes < 1) {
+        return 'just now';
+      } else if (diffInMinutes < 60) {
+        return `${Math.floor(diffInMinutes)}m ago`;
+      } else if (diffInHours < 24) {
+        return `${Math.floor(diffInHours)}h ago`;
+      } else if (diffInDays < 7) {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+      } else {
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        });
+      }
+    } catch (error) {
+      return timestamp; // Return original if formatting fails
+    }
+  };
+
   return (
     <div className="bg-white p-4 rounded border border-blue-200 relative group hover:border-blue-300 transition-colors duration-200">
       {/* Delete Button */}
@@ -128,7 +173,7 @@ const ReplyCard: React.FC<ReplyCardProps> = ({
             <span>↓ {reply.downvotes || 0}</span>
             {reply.addingValue && <span className="italic">• {reply.addingValue}</span>}
             {isExistingReply ? (
-              <span className="text-blue-600">• From Database • {reply.timestamp}</span>
+              <span className="text-blue-600">• From Database • {formatTimestamp(reply.timestamp || reply.createdAt)}</span>
             ) : (
               <span className="text-green-600">• AI Generated</span>
             )}

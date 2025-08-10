@@ -290,11 +290,29 @@ export const useSeedingPersistence = () => {
     if (typeof newContent === 'function') {
       setPreviewContent(prev => {
         const result = newContent(prev);
-        // console.log('🔄 setPreviewContent updated:', prev.length, '→', result.length, 'discussions');
+        console.log('🔄 setPreviewContent updated:', prev.length, '→', result.length, 'discussions');
+        
+        // Debug: Log reply counts for each discussion
+        if (result.length > 0) {
+          console.log('🔄 Reply counts per discussion:');
+          result.forEach((item, index) => {
+            console.log(`  ${index}: "${item.transformedTitle}" - ${item.replies?.length || 0} replies`);
+          });
+        }
+        
         return result;
       });
     } else {
-      // console.log('🔄 setPreviewContent set to:', newContent?.length || 0, 'discussions');
+      console.log('🔄 setPreviewContent set to:', newContent?.length || 0, 'discussions');
+      
+      // Debug: Log reply counts for each discussion
+      if (newContent && newContent.length > 0) {
+        console.log('🔄 Reply counts per discussion:');
+        newContent.forEach((item, index) => {
+          console.log(`  ${index}: "${item.transformedTitle}" - ${item.replies?.length || 0} replies`);
+        });
+      }
+      
       setPreviewContent(newContent);
     }
   };

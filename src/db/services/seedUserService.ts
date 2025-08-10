@@ -534,7 +534,7 @@ export const createDiscussion = async (discussionData: any): Promise<string | nu
         discussionData.authorId,
         discussionData.category || 'General Discussion',
         0, // initial replies count
-        0, // initial views count
+        discussionData.views || 0, // views count
         Math.floor(Date.now() / 1000),
         Math.floor(Date.now() / 1000),
         Math.floor(Date.now() / 1000),
@@ -569,14 +569,13 @@ export const createReply = async (replyData: any): Promise<string | null> => {
 
     await db.client.execute({
       sql: `INSERT INTO discussion_replies (
-        id, discussion_id, content, author_name, author_id,
+        id, discussion_id, content, author_id,
         upvotes, downvotes, parent_reply_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         replyId,
         replyData.discussionId,
         replyData.content,
-        replyData.authorName,
         replyData.authorId,
         replyData.upvotes || 0,
         replyData.downvotes || 0,
