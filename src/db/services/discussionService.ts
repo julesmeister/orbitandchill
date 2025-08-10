@@ -804,14 +804,14 @@ export class DiscussionService {
     }
     
     try {
-      console.log('🔍 Fetching replies for discussion:', discussionId);
+      // Fetching replies for discussion
       
       const rawResult = await client.execute({
         sql: 'SELECT * FROM discussion_replies WHERE discussion_id = ? ORDER BY created_at ASC',
         args: [discussionId]
       });
       
-      console.log('🔍 Raw SQL result rows for replies:', rawResult.rows?.length || 0);
+      // Raw SQL result for replies
       
       if (rawResult.rows && rawResult.rows.length > 0) {
         const replies = rawResult.rows.map((row: any) => ({
@@ -826,15 +826,60 @@ export class DiscussionService {
           downvotes: row.downvotes || 0
         }));
         
-        console.log('🔍 Mapped replies:', replies.length);
+        // Mapped replies successfully
+        
         return replies;
+      } else {
+        // No replies found for discussion
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Failed to get replies:', error);
+      return [];
+    }
+  }
+
+  static async deleteReply(replyId: string, dbInstance?: any) {
+    const db = dbInstance || (await import('../index')).db;
+    if (!db) {
+      return null;
+    }
+    
+    const dbObj = db as any;
+    const client = dbObj.client;
+    
+    if (!client) throw new Error('Database client not available');
+    
+    try {
+      // First, get the reply to find the discussion ID for updating the count
+      const replyResult = await client.execute({
+        sql: 'SELECT discussion_id FROM discussion_replies WHERE id = ?',
+        args: [replyId]
+      });
+      
+      if (!replyResult.rows || replyResult.rows.length === 0) {
+        throw new Error('Reply not found');
       }
       
-      console.log('🔍 No replies found for discussion:', discussionId);
-      return [];
+      const discussionId = replyResult.rows[0].discussion_id;
+      
+      // Delete the reply
+      await client.execute({
+        sql: 'DELETE FROM discussion_replies WHERE id = ?',
+        args: [replyId]
+      });
+      
+      // Update discussion reply count and last activity
+      const timestamp = Math.floor(Date.now() / 1000);
+      await client.execute({
+        sql: 'UPDATE discussions SET replies = replies - 1, last_activity = ? WHERE id = ?',
+        args: [timestamp, discussionId]
+      });
+      
+      return true;
     } catch (error) {
-      console.error('❌ Raw SQL query failed for replies:', error);
-      return [];
+      console.error('❌ Reply deletion failed:', error);
+      throw error;
     }
   }
 
@@ -857,7 +902,7 @@ export class DiscussionService {
     }
     
     try {
-      console.log('🔍 Fetching replies with authors for discussion:', discussionId);
+      // Fetching replies with authors
       
       // Single optimized query with LEFT JOIN to get replies and author info
       const rawResult = await client.execute({
@@ -901,7 +946,7 @@ export class DiscussionService {
           authorAvatar: row.author_avatar
         }));
         
-        console.log('🔍 Mapped replies with authors:', replies.length);
+        // Mapped replies with authors
         return replies;
       }
       

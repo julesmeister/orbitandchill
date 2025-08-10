@@ -11,6 +11,8 @@ interface Reply {
   downvotes: number;
   createdAt: string;
   parentId?: string;
+  isFromDatabase?: boolean;
+  timestamp?: string;
 }
 
 interface ToastHandlers {
@@ -37,7 +39,10 @@ export function useDiscussionReplies(toastHandlers: ToastHandlers) {
         upvotes: reply.upvotes || 0,
         downvotes: reply.downvotes || 0,
         createdAt: reply.timestamp,
-        parentId: reply.parentId
+        parentId: reply.parentId,
+        // Add flag to distinguish database replies from preview replies
+        isFromDatabase: true,
+        timestamp: reply.timestamp  // Keep formatted timestamp for display
       });
       if (reply.children && reply.children.length > 0) {
         flat.push(...flattenReplies(reply.children));
@@ -98,7 +103,7 @@ export function useDiscussionReplies(toastHandlers: ToastHandlers) {
 
   // Randomize reply timestamps for a discussion
   const randomizeReplyTimes = useCallback(async (discussionId: string) => {
-    showLoadingToast('Randomizing Times', 'Updating reply timestamps to look more natural...');
+    showLoadingToast('Randomizing Times & Likes', 'Updating reply timestamps and vote counts to look more natural...');
 
     try {
       const response = await fetch('/api/admin/randomize-reply-times', {
@@ -112,14 +117,14 @@ export function useDiscussionReplies(toastHandlers: ToastHandlers) {
       const result = await response.json();
       
       if (result.success) {
-        showSuccessToast('Times Randomized', `Updated timestamps for ${result.updatedCount} replies.`);
+        showSuccessToast('Times & Likes Randomized', `Updated timestamps and vote counts for ${result.updatedCount} replies.`);
         // Refresh existing replies display
         await fetchExistingReplies(discussionId);
       } else {
-        showErrorToast('Randomization Failed', result.error || 'Failed to randomize reply times.');
+        showErrorToast('Randomization Failed', result.error || 'Failed to randomize reply times and likes.');
       }
     } catch (error) {
-      showErrorToast('Randomization Error', 'Failed to randomize times: ' + (error as Error).message);
+      showErrorToast('Randomization Error', 'Failed to randomize times and likes: ' + (error as Error).message);
     }
   }, [fetchExistingReplies, showLoadingToast, showSuccessToast, showErrorToast]);
 

@@ -44,9 +44,7 @@ export async function POST(request: NextRequest) {
       args: [discussionId]
     });
 
-    console.log(`🕐 Randomizing timestamps for ${repliesResult.rows.length} replies in discussion: ${discussionId}`);
-    console.log(`📅 Discussion created: ${discussionDate.toISOString()}`);
-    console.log(`📅 Current time: ${now.toISOString()}`);
+    // Randomizing timestamps for replies
 
     if (repliesResult.rows.length === 0) {
       return NextResponse.json({
@@ -77,15 +75,20 @@ export async function POST(request: NextRequest) {
       
       updates.push({ id: replyId, newTimestamp });
       
-      console.log(`  Reply ${index + 1}: ${new Date(newTimestamp * 1000).toISOString()}`);
+      // Processing reply timestamps
     });
 
-    // Update all replies with their new timestamps
+    // Update all replies with their new timestamps and random likes
     let updatedCount = 0;
     for (const update of updates) {
+      // Generate random upvotes (0-15, weighted toward lower numbers)
+      const randomUpvotes = Math.floor(Math.random() * Math.random() * 15);
+      // Generate random downvotes (0-3, weighted toward 0-1)
+      const randomDownvotes = Math.floor(Math.random() * Math.random() * 3);
+      
       await db.client.execute({
-        sql: 'UPDATE discussion_replies SET created_at = ?, updated_at = ? WHERE id = ?',
-        args: [update.newTimestamp, update.newTimestamp, update.id]
+        sql: 'UPDATE discussion_replies SET created_at = ?, updated_at = ?, upvotes = ?, downvotes = ? WHERE id = ?',
+        args: [update.newTimestamp, update.newTimestamp, randomUpvotes, randomDownvotes, update.id]
       });
       updatedCount++;
     }
@@ -97,11 +100,11 @@ export async function POST(request: NextRequest) {
       args: [latestReplyTimestamp, discussionId]
     });
 
-    console.log(`✅ Successfully randomized timestamps for ${updatedCount} replies`);
+    // Successfully randomized timestamps and likes
 
     return NextResponse.json({
       success: true,
-      message: `Randomized timestamps for ${updatedCount} replies`,
+      message: `Randomized timestamps and likes for ${updatedCount} replies`,
       updatedCount,
       discussionId,
       timeRange: {

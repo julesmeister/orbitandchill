@@ -118,14 +118,7 @@ export async function GET(
     const rawReplies = await DiscussionService.getRepliesWithAuthors(discussionId, limit, offset);
     
     // Debug logging to understand avatar data
-    console.log(`🔍 Fetched ${rawReplies.length} replies for discussion ${discussionId}`);
-    if (rawReplies.length > 0) {
-      console.log('🖼️ Sample reply avatar data:', {
-        authorName: rawReplies[0].authorName,
-        authorAvatar: rawReplies[0].authorAvatar,
-        authorId: rawReplies[0].authorId
-      });
-    }
+    // Debug: Fetched replies for discussion
     
     // PERFORMANCE: Early return if no replies to avoid unnecessary processing
     if (!rawReplies || rawReplies.length === 0) {

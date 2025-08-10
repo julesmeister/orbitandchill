@@ -103,12 +103,10 @@ export default function DiscussionBrowser({
     handleDeleteReply,
     handleClearReplies,
     handleUpdateReply,
-    handleGenerateComments,
     handleAddCustomComment
   } = useDiscussionActions({
     selectedDiscussion,
     fetchExistingReplies,
-    generateAIComments,
     addCustomComment,
     showLoadingToast,
     showSuccessToast,
@@ -150,11 +148,6 @@ export default function DiscussionBrowser({
       {selectedDiscussion && (
         <DiscussionActions
           selectedDiscussion={selectedDiscussion}
-          aiApiKey={aiApiKey}
-          aiProvider={aiProvider}
-          aiModel={aiModel}
-          temperature={temperature}
-          onGenerateComments={handleGenerateComments}
           onAddCustomComment={handleAddCustomComment}
           onRandomizeTimes={randomizeReplyTimes}
           onFixAvatars={fixDiscussionAvatars}
@@ -182,7 +175,7 @@ export default function DiscussionBrowser({
           generatingReplyForIndex={isGenerating ? 0 : null}
           expandedReplies={{ 0: true }}
           aiApiKey={aiApiKey}
-          onAddReply={(discussionIndex) => handleGenerateComments(selectedDiscussion.id, 1, { type: 'random', maxRandomHours: 24 })}
+          onAddReply={(discussionIndex) => {}}
           onDeleteReply={(discussionIndex, replyId) => handleDeleteReply(replyId)}
           onMoodSelect={(discussionIndex, mood) => handleMoodSelect(mood)}
           onToggleExpandReplies={(discussionIndex) => {}}

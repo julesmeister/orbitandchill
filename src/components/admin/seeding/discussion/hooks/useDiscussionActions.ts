@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
 interface UseDiscussionActionsProps {
   selectedDiscussion: any;
   fetchExistingReplies: (discussionId: string) => Promise<void>;
-  generateAIComments: (discussion: any, count: number, timing: any) => Promise<void>;
   addCustomComment: (discussionId: string, comment: string) => Promise<void>;
   showLoadingToast: (title: string, message: string) => void;
   showSuccessToast: (title: string, message: string) => void;
@@ -14,7 +13,6 @@ interface UseDiscussionActionsProps {
 export function useDiscussionActions({
   selectedDiscussion,
   fetchExistingReplies,
-  generateAIComments,
   addCustomComment,
   showLoadingToast,
   showSuccessToast,
@@ -29,14 +27,28 @@ export function useDiscussionActions({
   }, []);
 
   const handleDeleteReply = useCallback(async (replyId: string) => {
-    // TODO: Implement reply deletion API
     showLoadingToast('Deleting Reply', 'Removing reply from discussion...');
     try {
-      // For now, just refresh replies
-      // In the future, add API call to delete from database
+      // Call delete API
+      const response = await fetch('/api/admin/delete-discussion-reply', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ replyId }),
+      });
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete reply');
+      }
+
+      // Refresh replies to show updated list
       await fetchExistingReplies(selectedDiscussion.id);
       showSuccessToast('Reply Deleted', 'Reply has been removed from the discussion.');
     } catch (error) {
+      console.error('Delete reply error:', error);
       showErrorToast('Delete Failed', 'Failed to delete reply: ' + (error as Error).message);
     }
   }, [selectedDiscussion, fetchExistingReplies, showLoadingToast, showSuccessToast, showErrorToast]);
@@ -65,15 +77,7 @@ export function useDiscussionActions({
     }
   }, [selectedDiscussion, fetchExistingReplies, showLoadingToast, showSuccessToast, showErrorToast]);
 
-  // Wrapper functions for comment operations
-  const handleGenerateComments = useCallback(async (
-    discussionId: string,
-    count: number,
-    timing: any
-  ) => {
-    await generateAIComments(selectedDiscussion, count, timing);
-  }, [selectedDiscussion, generateAIComments]);
-
+  // Wrapper function for custom comments
   const handleAddCustomComment = useCallback(async (
     discussionId: string,
     comment: string
@@ -87,7 +91,6 @@ export function useDiscussionActions({
     handleDeleteReply,
     handleClearReplies,
     handleUpdateReply,
-    handleGenerateComments,
     handleAddCustomComment
   };
 }

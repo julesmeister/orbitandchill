@@ -10,7 +10,8 @@ When the user types `do @LINT_AND_TSX_ERROR_HANDLING.md`:
 
 1. Run TypeScript check and fix all errors
 2. Run ESLint check and fix all errors
-3. No commentary - just fix everything silently
+3. Commit changes with appropriate message
+4. No commentary - just fix everything silently
 
 ## Core Principles
 

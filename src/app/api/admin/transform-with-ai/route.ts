@@ -120,7 +120,7 @@ async function transformWithAI(parsedContent: any[], seedConfigs: any[], generat
         return username.charAt(0).toUpperCase() + username.slice(1);
       }).filter(Boolean);
       
-      console.log('Available authors for AI:', availableAuthors);
+      // console.log('Available authors for AI:', availableAuthors);
 
       // Limit replies to avoid token overflow
       const maxReplies = Math.min(15, generationSettings.repliesPerDiscussion.max);
@@ -167,9 +167,8 @@ Return ONLY valid JSON:
 
       // Use the correct content field from process-pasted-content API
       const contentToTransform = originalPost.originalContent || originalPost.fullContent || 'No content provided';
-      console.log('Content being sent to AI - Length:', contentToTransform.length);
-      console.log('Content being sent to AI - First 200:', contentToTransform.substring(0, 200) + '...');
-      console.log('Content being sent to AI - Last 200:', contentToTransform.substring(contentToTransform.length - 200));
+      // Debug: Content being sent to AI
+      // console.log('Content being sent to AI - Length:', contentToTransform.length);
       
       // If content seems truncated, let's see what we have
       if (contentToTransform.length < 5000) {
@@ -180,8 +179,7 @@ Return ONLY valid JSON:
 
       // Debug: Log the model being used
       const modelToUse = aiConfig.model || 'deepseek/deepseek-r1-distill-llama-70b:free';
-      console.log('🤖 Using AI model for content transformation:', modelToUse);
-      console.log('🤖 Full aiConfig received:', aiConfig);
+      // console.log('🤖 Using AI model for content transformation:', modelToUse);
 
       // Determine if model supports system prompts
       const supportsSystemPrompts = !modelToUse.includes('gemma') && !modelToUse.includes('google/');
@@ -196,8 +194,7 @@ Return ONLY valid JSON:
             { role: 'user', content: `${systemPrompt}\n\n${userPrompt}` }
           ];
 
-      console.log('🤖 Model supports system prompts:', supportsSystemPrompts);
-      console.log('🤖 Using message format:', messages.length === 1 ? 'Combined user prompt' : 'System + user prompts');
+      // console.log('🤖 Model supports system prompts:', supportsSystemPrompts);
 
       // Call OpenRouter API
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -223,7 +220,7 @@ Return ONLY valid JSON:
       }
 
       const result = await response.json();
-      console.log('OpenRouter API result:', JSON.stringify(result, null, 2));
+      // console.log('OpenRouter API result:', JSON.stringify(result, null, 2));
       
       const aiOutput = result.choices?.[0]?.message?.content;
 
@@ -235,15 +232,38 @@ Return ONLY valid JSON:
       // Parse the JSON response
       let transformedData;
       try {
-        console.log('Raw AI output:', aiOutput);
+        // console.log('Raw AI output:', aiOutput);
         
-        // Remove markdown code blocks if present
-        let cleanedOutput = aiOutput.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+        // Remove markdown code blocks if present (handle both ```json and plain ```)
+        // First check if the output starts with backticks
+        let cleanedOutput = aiOutput.trim();
+        
+        // Remove opening code block markers
+        if (cleanedOutput.startsWith('```')) {
+          // Find the end of the first line (after ```)
+          const firstNewline = cleanedOutput.indexOf('\n');
+          if (firstNewline !== -1) {
+            cleanedOutput = cleanedOutput.substring(firstNewline + 1);
+          } else {
+            // If no newline, just remove the backticks
+            cleanedOutput = cleanedOutput.substring(3);
+          }
+        }
+        
+        // Remove closing code block markers
+        if (cleanedOutput.endsWith('```')) {
+          cleanedOutput = cleanedOutput.substring(0, cleanedOutput.length - 3);
+        }
+        
+        cleanedOutput = cleanedOutput.trim();
+        
+        // Log the cleaned output for debugging
+        // console.log('Cleaned AI output (first 200 chars):', cleanedOutput.substring(0, 200));
         
         // Try to parse the cleaned response
         try {
           transformedData = JSON.parse(cleanedOutput);
-          console.log('Successfully parsed AI JSON response');
+          // Successfully parsed AI JSON response
         } catch (parseError) {
           console.warn('Direct JSON parse failed, attempting content field fix:', parseError);
           
@@ -270,11 +290,11 @@ Return ONLY valid JSON:
                 `"content": "${escapedContent}",\n    "category"`
               );
               
-              console.log('Fixed content field with proper escaping');
+              // Fixed content field with proper escaping
             }
             
             transformedData = JSON.parse(fixedOutput);
-            console.log('Successfully parsed AI JSON after content fix');
+            // Successfully parsed AI JSON after content fix
           } catch (fixError) {
             console.warn('Content field fix failed, using manual field extraction:', fixError);
             
@@ -295,7 +315,7 @@ Return ONLY valid JSON:
                 .replace(/\\"/g, '"')
                 .replace(/\\\*/g, '*')
                 .replace(/\\\\/g, '\\');
-              console.log('Successfully extracted content manually');
+              // Successfully extracted content manually
             }
             
             // Extract tags
@@ -319,7 +339,7 @@ Return ONLY valid JSON:
                   summary: summaryMatch ? summaryMatch[1] : 'AI-transformed discussion content'
                 }
               };
-              console.log('Created transformed data from manually extracted fields');
+              // Created transformed data from manually extracted fields
             } else {
               throw new Error('Could not extract title from AI response');
             }
@@ -351,7 +371,7 @@ Return ONLY valid JSON:
             const jsonMatch = fixedJson.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
               transformedData = JSON.parse(jsonMatch[0]);
-              console.log('Successfully fixed truncated JSON!');
+              // Successfully fixed truncated JSON!
             } else {
               throw new Error('Could not fix JSON');
             }

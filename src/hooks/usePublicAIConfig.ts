@@ -33,30 +33,30 @@ export const usePublicAIConfig = (): UsePublicAIConfigReturn => {
     setIsLoading(true);
     setError(null);
     
-    console.log('🔍 Loading AI configuration from database...');
+    // Loading AI configuration from database
     
     try {
       // Fetch from database only
       const response = await fetch('/api/admin/ai-config?type=public');
       const result = await response.json();
       
-      console.log('🔍 Database response:', { success: result.success, hasConfig: !!result.config, hasApiKey: result.config?.apiKey ? '***' : 'empty' });
+      // Database response received
       
       if (result.success && result.config) {
         // Use database configuration if available and has API key
         if (result.config.apiKey && result.config.apiKey.trim()) {
-          console.log('✅ Using database AI configuration');
+          // Using database AI configuration
           setConfig(result.config);
           return;
         } else {
-          console.log('⚠️ Database config found but no API key');
+          // Database config found but no API key
         }
       } else {
-        console.log('⚠️ No database config found');
+        // No database config found
       }
       
       // Fallback to default configuration (no API key)
-      console.log('⚠️ No valid AI configuration found, using default without API key');
+      // No valid AI configuration found, using default without API key
       setConfig({
         provider: 'openrouter',
         model: 'deepseek/deepseek-r1-distill-llama-70b:free',
@@ -72,7 +72,7 @@ export const usePublicAIConfig = (): UsePublicAIConfigReturn => {
       setError('Failed to load AI configuration from database');
       
       // Default config without API key
-      console.log('❌ Database error, using default configuration without API key');
+      // Database error, using default configuration without API key
       setConfig({
         provider: 'openrouter',
         model: 'deepseek/deepseek-r1-distill-llama-70b:free',
