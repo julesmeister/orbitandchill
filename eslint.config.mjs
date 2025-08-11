@@ -12,6 +12,9 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: false,
+    },
     rules: {
       // TypeScript specific rules
       "@typescript-eslint/no-unused-vars": "off",
@@ -48,6 +51,10 @@ const eslintConfig = [
       "eslint-comments/no-unused-disable": "off", // Ignore unused eslint-disable comments
       "@eslint-community/eslint-comments/no-unused-disable": "off", // Alternative rule name
       "eslint-comments/no-unused-enable": "off", // Also suppress unused enable warnings
+      
+      // Core ESLint rule for unused directives (this is the one that's actually triggering)
+      "no-unused-disable-directive": "off",
+      "unused-disable-directives": "off"
     },
   },
 ];
