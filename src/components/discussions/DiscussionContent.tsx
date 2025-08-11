@@ -171,6 +171,8 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
             <div 
               className={`
                 text-black leading-relaxed text-base sm:text-lg
+                /* Preserve newlines when no block elements exist */
+                whitespace-pre-wrap
                 /* Headings - Mobile Responsive */
                 [&_h1]:font-space-grotesk [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-black [&_h1]:mt-6 sm:[&_h1]:mt-8 [&_h1]:mb-4 sm:[&_h1]:mb-6 [&_h1]:border-b [&_h1]:border-black [&_h1]:pb-2 sm:[&_h1]:pb-3
                 [&_h2]:font-space-grotesk [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-black [&_h2]:mt-6 sm:[&_h2]:mt-8 [&_h2]:mb-3 sm:[&_h2]:mb-4 [&_h2]:border-b [&_h2]:border-black [&_h2]:pb-2
