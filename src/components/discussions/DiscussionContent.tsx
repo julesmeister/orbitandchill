@@ -95,6 +95,20 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
   const firstImageUrl = extractFirstImage(discussion.content || '');
   const contentWithoutFirstImage = firstImageUrl ? removeFirstImage(discussion.content || '') : discussion.content;
 
+  // DEBUG: Log the actual content structure
+  console.log('🔍 DiscussionContent DEBUG:', {
+    hasFirstImage: !!firstImageUrl,
+    contentLength: contentWithoutFirstImage?.length,
+    isHTML: contentWithoutFirstImage?.includes('<'),
+    hasBR: contentWithoutFirstImage?.includes('<br'),
+    hasP: contentWithoutFirstImage?.includes('<p>'),
+    hasDIV: contentWithoutFirstImage?.includes('<div>'),
+    contentPreview: contentWithoutFirstImage?.substring(0, 300),
+    rawContent: discussion.content?.substring(0, 300),
+    // Show actual HTML structure
+    htmlStructure: contentWithoutFirstImage?.match(/<[^>]+>/g)?.slice(0, 10)
+  });
+
   // Notify parent component about the first image
   React.useEffect(() => {
     if (onFirstImageExtracted) {
@@ -146,48 +160,60 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
       >
         {contentWithoutFirstImage?.includes('<') ? (
           // Render HTML content with enhanced styling
-          <div 
-            className={`
-              text-black leading-relaxed text-base sm:text-lg
-              /* Headings - Mobile Responsive */
-              [&_h1]:font-space-grotesk [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-black [&_h1]:mt-6 sm:[&_h1]:mt-8 [&_h1]:mb-4 sm:[&_h1]:mb-6 [&_h1]:border-b [&_h1]:border-black [&_h1]:pb-2 sm:[&_h1]:pb-3
-              [&_h2]:font-space-grotesk [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-black [&_h2]:mt-6 sm:[&_h2]:mt-8 [&_h2]:mb-3 sm:[&_h2]:mb-4 [&_h2]:border-b [&_h2]:border-black [&_h2]:pb-2
-              [&_h3]:font-space-grotesk [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-black [&_h3]:mt-4 sm:[&_h3]:mt-6 [&_h3]:mb-2 sm:[&_h3]:mb-3 [&_h3]:text-right [&_h3]:relative
-              [&_h3::after]:content-[""] [&_h3::after]:absolute [&_h3::after]:right-0 [&_h3::after]:bottom-[-8px] [&_h3::after]:w-[100px] [&_h3::after]:h-[4px] [&_h3::after]:bg-black
-              /* Paragraphs - Mobile Responsive with proper line break handling */
-              [&_p]:text-black [&_p]:leading-relaxed [&_p]:mb-2 sm:[&_p]:mb-3 [&_p]:text-base sm:[&_p]:text-lg
-              /* Line breaks - match TipTap editor styling */
-              [&_br]:block [&_br]:mb-2
-              /* Empty paragraphs */
-              [&_p:empty]:h-2 [&_p:empty]:mb-1
-              [&_p:has(br:only-child)]:h-2 [&_p:has(br:only-child)]:mb-1
-              /* Text formatting */
-              [&_strong]:text-black [&_strong]:font-bold
-              [&_em]:text-black [&_em]:italic
-              [&_mark]:bg-yellow-200 [&_mark]:px-1 [&_mark]:py-0.5
-              /* Lists - Mobile Responsive */
-              [&_ul]:list-disc [&_ul]:ml-4 sm:[&_ul]:ml-6 [&_ul]:pl-2 [&_ul]:mb-2 sm:[&_ul]:mb-3 [&_ul]:space-y-1 sm:[&_ul]:space-y-2
-              [&_ol]:list-decimal [&_ol]:ml-4 sm:[&_ol]:ml-6 [&_ol]:pl-2 [&_ol]:mb-2 sm:[&_ol]:mb-3 [&_ol]:space-y-1 sm:[&_ol]:space-y-2
-              [&_li]:text-black [&_li]:leading-relaxed [&_li]:text-base sm:[&_li]:text-lg [&_li]:ml-0 [&_li]:pl-1
-              /* Blockquotes - Mobile Responsive */
-              [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-gray-50 [&_blockquote]:pl-3 sm:[&_blockquote]:pl-6 [&_blockquote]:pr-3 sm:[&_blockquote]:pr-4 [&_blockquote]:py-3 sm:[&_blockquote]:py-4 [&_blockquote]:italic [&_blockquote]:mb-2 sm:[&_blockquote]:mb-3 [&_blockquote]:text-black/80
-              /* Code - Mobile Responsive */
-              [&_code]:bg-gray-100 [&_code]:px-1 sm:[&_code]:px-2 [&_code]:py-0.5 sm:[&_code]:py-1 [&_code]:font-mono [&_code]:text-xs sm:[&_code]:text-sm [&_code]:border [&_code]:border-gray-300 [&_code]:rounded [&_code]:break-words
-              [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-3 sm:[&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs sm:[&_pre]:text-sm [&_pre]:border [&_pre]:border-black [&_pre]:rounded [&_pre]:mb-2 sm:[&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:-mx-2 sm:[&_pre]:mx-0
-              [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:border-0 [&_pre_code]:text-white [&_pre_code]:text-xs sm:[&_pre_code]:text-sm
-              /* Links - Mobile Touch Friendly */
-              [&_a]:text-black [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:bg-black hover:[&_a]:text-white [&_a]:transition-colors [&_a]:px-1 [&_a]:py-1 [&_a]:min-h-[44px] [&_a]:inline-flex [&_a]:items-center
-              /* Images - Mobile Responsive */
-              [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:mb-2 sm:[&_img]:mb-3 [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_img]:object-contain
-              /* Tables - Mobile Responsive */
-              [&_table]:border-collapse [&_table]:border [&_table]:border-black [&_table]:mb-2 sm:[&_table]:mb-3 [&_table]:w-full [&_table]:text-sm [&_table]:overflow-x-auto [&_table]:block sm:[&_table]:table
-              [&_th]:border [&_th]:border-black [&_th]:bg-gray-100 [&_th]:px-2 sm:[&_th]:px-4 [&_th]:py-2 [&_th]:font-space-grotesk [&_th]:font-bold [&_th]:text-left [&_th]:text-xs sm:[&_th]:text-sm
-              [&_td]:border [&_td]:border-black [&_td]:px-2 sm:[&_td]:px-4 [&_td]:py-2 [&_td]:text-black [&_td]:text-xs sm:[&_td]:text-sm
-              /* Horizontal rules */
-              [&_hr]:border-black [&_hr]:my-6 sm:[&_hr]:my-8
-            `}
-            dangerouslySetInnerHTML={{ __html: contentWithoutFirstImage }}
-          />
+          <>
+            {/* DEBUG: Show raw HTML for debugging */}
+            {process.env.NODE_ENV === 'development' && (
+              <details className="mb-4 p-2 bg-yellow-100 border border-yellow-400 text-xs">
+                <summary>🐛 DEBUG: Raw HTML Structure</summary>
+                <pre className="mt-2 whitespace-pre-wrap">{contentWithoutFirstImage}</pre>
+              </details>
+            )}
+            <div 
+              className={`
+                text-black leading-relaxed text-base sm:text-lg
+                /* Headings - Mobile Responsive */
+                [&_h1]:font-space-grotesk [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-black [&_h1]:mt-6 sm:[&_h1]:mt-8 [&_h1]:mb-4 sm:[&_h1]:mb-6 [&_h1]:border-b [&_h1]:border-black [&_h1]:pb-2 sm:[&_h1]:pb-3
+                [&_h2]:font-space-grotesk [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-black [&_h2]:mt-6 sm:[&_h2]:mt-8 [&_h2]:mb-3 sm:[&_h2]:mb-4 [&_h2]:border-b [&_h2]:border-black [&_h2]:pb-2
+                [&_h3]:font-space-grotesk [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-black [&_h3]:mt-4 sm:[&_h3]:mt-6 [&_h3]:mb-2 sm:[&_h3]:mb-3 [&_h3]:text-right [&_h3]:relative
+                [&_h3::after]:content-[""] [&_h3::after]:absolute [&_h3::after]:right-0 [&_h3::after]:bottom-[-8px] [&_h3::after]:w-[100px] [&_h3::after]:h-[4px] [&_h3::after]:bg-black
+                /* Paragraphs - Mobile Responsive with proper line break handling */
+                [&_p]:text-black [&_p]:leading-relaxed [&_p]:mb-2 sm:[&_p]:mb-3 [&_p]:text-base sm:[&_p]:text-lg
+                /* Line breaks - match TipTap editor styling */
+                [&_br]:block [&_br]:mb-2
+                /* DIV handling for contenteditable output */
+                [&_div]:text-black [&_div]:leading-relaxed [&_div]:mb-2 sm:[&_div]:mb-3 [&_div]:text-base sm:[&_div]:text-lg
+                /* Empty paragraphs */
+                [&_p:empty]:h-2 [&_p:empty]:mb-1
+                [&_p:has(br:only-child)]:h-2 [&_p:has(br:only-child)]:mb-1
+                [&_div:empty]:h-2 [&_div:empty]:mb-1
+                /* Text formatting */
+                [&_strong]:text-black [&_strong]:font-bold
+                [&_em]:text-black [&_em]:italic
+                [&_mark]:bg-yellow-200 [&_mark]:px-1 [&_mark]:py-0.5
+                /* Lists - Mobile Responsive */
+                [&_ul]:list-disc [&_ul]:ml-4 sm:[&_ul]:ml-6 [&_ul]:pl-2 [&_ul]:mb-2 sm:[&_ul]:mb-3 [&_ul]:space-y-1 sm:[&_ul]:space-y-2
+                [&_ol]:list-decimal [&_ol]:ml-4 sm:[&_ol]:ml-6 [&_ol]:pl-2 [&_ol]:mb-2 sm:[&_ol]:mb-3 [&_ol]:space-y-1 sm:[&_ol]:space-y-2
+                [&_li]:text-black [&_li]:leading-relaxed [&_li]:text-base sm:[&_li]:text-lg [&_li]:ml-0 [&_li]:pl-1
+                /* Blockquotes - Mobile Responsive */
+                [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-gray-50 [&_blockquote]:pl-3 sm:[&_blockquote]:pl-6 [&_blockquote]:pr-3 sm:[&_blockquote]:pr-4 [&_blockquote]:py-3 sm:[&_blockquote]:py-4 [&_blockquote]:italic [&_blockquote]:mb-2 sm:[&_blockquote]:mb-3 [&_blockquote]:text-black/80
+                /* Code - Mobile Responsive */
+                [&_code]:bg-gray-100 [&_code]:px-1 sm:[&_code]:px-2 [&_code]:py-0.5 sm:[&_code]:py-1 [&_code]:font-mono [&_code]:text-xs sm:[&_code]:text-sm [&_code]:border [&_code]:border-gray-300 [&_code]:rounded [&_code]:break-words
+                [&_pre]:bg-gray-900 [&_pre]:text-white [&_pre]:p-3 sm:[&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs sm:[&_pre]:text-sm [&_pre]:border [&_pre]:border-black [&_pre]:rounded [&_pre]:mb-2 sm:[&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:-mx-2 sm:[&_pre]:mx-0
+                [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:border-0 [&_pre_code]:text-white [&_pre_code]:text-xs sm:[&_pre_code]:text-sm
+                /* Links - Mobile Touch Friendly */
+                [&_a]:text-black [&_a]:underline [&_a]:underline-offset-4 [&_a]:font-medium hover:[&_a]:bg-black hover:[&_a]:text-white [&_a]:transition-colors [&_a]:px-1 [&_a]:py-1 [&_a]:min-h-[44px] [&_a]:inline-flex [&_a]:items-center
+                /* Images - Mobile Responsive */
+                [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:mb-2 sm:[&_img]:mb-3 [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_img]:object-contain
+                /* Tables - Mobile Responsive */
+                [&_table]:border-collapse [&_table]:border [&_table]:border-black [&_table]:mb-2 sm:[&_table]:mb-3 [&_table]:w-full [&_table]:text-sm [&_table]:overflow-x-auto [&_table]:block sm:[&_table]:table
+                [&_th]:border [&_th]:border-black [&_th]:bg-gray-100 [&_th]:px-2 sm:[&_th]:px-4 [&_th]:py-2 [&_th]:font-space-grotesk [&_th]:font-bold [&_th]:text-left [&_th]:text-xs sm:[&_th]:text-sm
+                [&_td]:border [&_td]:border-black [&_td]:px-2 sm:[&_td]:px-4 [&_td]:py-2 [&_td]:text-black [&_td]:text-xs sm:[&_td]:text-sm
+                /* Horizontal rules */
+                [&_hr]:border-black [&_hr]:my-6 sm:[&_hr]:my-8
+              `}
+              dangerouslySetInnerHTML={{ __html: contentWithoutFirstImage }}
+            />
+          </>
         ) : (
           // Render plain text with enhanced markdown-like parsing
           <div className="space-y-3">

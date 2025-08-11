@@ -29,10 +29,20 @@ const EditorContent: React.FC<EditorContentProps> = ({
         <div className={`p-3 sm:p-6 ${isFullscreen ? 'h-full overflow-y-auto' : 'min-h-[300px] sm:min-h-[400px]'} bg-gray-50`}>
           <div className="max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl font-open-sans">
             {content ? (
-              <div 
-                className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1"
-                dangerouslySetInnerHTML={{ __html: content }}
-              />
+              <>
+                {/* DEBUG: Log editor preview content */}
+                {console.log('🔍 TipTap Editor Preview DEBUG:', {
+                  contentLength: content.length,
+                  contentPreview: content.substring(0, 200),
+                  hasHTML: content.includes('<'),
+                  hasBR: content.includes('<br'),
+                  hasP: content.includes('<p>')
+                })}
+                <div 
+                  className="text-black leading-relaxed [&_h1]:font-space-grotesk [&_h1]:font-bold [&_h1]:text-black [&_h2]:font-space-grotesk [&_h2]:font-bold [&_h2]:text-black [&_h3]:font-space-grotesk [&_h3]:font-bold [&_h3]:text-black [&_p]:text-black [&_p]:leading-relaxed [&_strong]:text-black [&_strong]:font-bold [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:bg-white [&_blockquote]:italic [&_blockquote]:pl-4 [&_a]:text-black [&_a]:underline [&_img]:rounded [&_img]:border [&_img]:border-black [&_img]:max-w-full [&_img]:h-auto [&_img]:block [&_img]:mx-auto [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:pl-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:pl-2 [&_li]:ml-0 [&_li]:pl-1"
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              </>
             ) : (
               <div className="text-black/50 font-open-sans italic">
                 {placeholder}
