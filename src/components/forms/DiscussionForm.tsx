@@ -105,6 +105,14 @@ export default function DiscussionForm({
       // Only clear thumbnail if we previously had one from content extraction
       updateFormData({ thumbnailUrl: undefined });
     }
+
+    // Auto-save content changes for edit mode (similar to handleAdminOptionChange)
+    if (mode === 'edit' && onAdminOptionsChange) {
+      setTimeout(() => {
+        const updatedFormData = { ...formData, content };
+        onAdminOptionsChange(updatedFormData);
+      }, 500); // Debounce content changes with a longer delay
+    }
   };
 
   // Fallback data in case API fails - now using centralized categories
