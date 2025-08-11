@@ -3,94 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
 import { UserService } from '@/db/services/userService';
 import { initializeDatabase } from '@/db/index';
-import { createDiscussionReplyNotification, createDiscussionMentionNotification } from '@/utils/notificationHelpers';
-import { processMentions } from '@/utils/mentionUtils';
-
-// Helper function to format timestamp for display
-const formatTimestamp = (date: Date | string | number) => {
-  let d: Date;
-  
-  // Handle Unix timestamps (integers from database)
-  if (typeof date === 'number') {
-    // If it looks like a Unix timestamp (less than year 3000), convert from seconds
-    d = date < 32503680000 ? new Date(date * 1000) : new Date(date);
-  } else {
-    d = new Date(date);
-  }
-  
-  // Fallback for invalid dates
-  if (isNaN(d.getTime())) {
-    return 'just now';
-  }
-  
-  const now = new Date();
-  const diffInMs = now.getTime() - d.getTime();
-  const diffInMinutes = diffInMs / (1000 * 60);
-  const diffInHours = diffInMinutes / 60;
-  const diffInDays = diffInHours / 24;
-  
-  if (diffInMinutes < 1) {
-    return 'just now';
-  } else if (diffInMinutes < 60) {
-    return `${Math.floor(diffInMinutes)}m ago`;
-  } else if (diffInHours < 24) {
-    return `${Math.floor(diffInHours)}h ago`;
-  } else if (diffInDays < 2) {
-    // For replies from yesterday, show the actual time
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (d.toDateString() === yesterday.toDateString()) {
-      return `Yesterday at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-    }
-    return `${Math.floor(diffInHours)}h ago`;
-  } else if (diffInDays < 7) {
-    // For recent days, show day and time
-    return d.toLocaleDateString('en-US', {
-      weekday: 'short',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  } else {
-    return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
-  }
-};
-
-// Helper function to generate avatar from name
-const generateAvatarFromName = (name: string) => {
-  if (!name) return 'AN';
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-};
-
-// Helper function to organize replies into threaded structure
-const organizeReplies = (replies: any[]): any[] => {
-  const replyMap = new Map<string, any>();
-  const rootReplies: any[] = [];
-  
-  // First pass: create map and identify root replies
-  replies.forEach(reply => {
-    replyMap.set(reply.id, { ...reply, children: [] });
-    if (!reply.parentId) {
-      rootReplies.push(replyMap.get(reply.id)!);
-    }
-  });
-  
-  // Second pass: build tree structure
-  replies.forEach(reply => {
-    if (reply.parentId) {
-      const parent = replyMap.get(reply.parentId);
-      if (parent) {
-        parent.children.push(replyMap.get(reply.id)!);
-      }
-    }
-  });
-  
-  return rootReplies;
-};
+import { ReplyTransformationService } from '@/services/replyTransformationService';
+import { DiscussionNotificationService } from '@/services/discussionNotificationService';
+import { HttpResponseUtils } from '@/utils/httpResponseUtils';
+import { generateAvatarFromName } from '@/utils/timestampFormatting';
 
 export async function GET(
   request: NextRequest,
@@ -100,107 +16,50 @@ export async function GET(
     const resolvedParams = await params;
     const discussionId = resolvedParams.id;
 
-    if (!discussionId) {
-      return NextResponse.json(
-        { success: false, error: 'Discussion ID is required' },
-        { status: 400 }
-      );
+    // Validate discussion ID
+    const validationError = HttpResponseUtils.validateRequiredParams({ discussionId });
+    if (validationError) {
+      return HttpResponseUtils.validationError(validationError);
     }
 
-    // Parse pagination parameters
-    const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    // Parse and validate pagination parameters
+    const { limit, offset } = HttpResponseUtils.parsePaginationParams(new URL(request.url));
 
     await initializeDatabase();
     
-    // PERFORMANCE: Optimized fetch with connection reuse and caching
+    // Fetch replies with optimized database query
     const rawReplies = await DiscussionService.getRepliesWithAuthors(discussionId, limit, offset);
     
-    // Debug logging to understand avatar data
-    // Debug: Fetched replies for discussion
-    
-    // PERFORMANCE: Early return if no replies to avoid unnecessary processing
+    // Early return for empty results with optimized caching
     if (!rawReplies || rawReplies.length === 0) {
-      return NextResponse.json({
-        success: true,
-        replies: [],
-        total: 0,
-        pagination: {
-          limit,
-          offset,
-          hasMore: false
-        }
-      }, {
-        headers: {
-          'Cache-Control': 'public, max-age=300, s-maxage=600', // Cache empty results longer
-          'ETag': `"empty-replies-${discussionId}"`,
-        }
-      });
+      return HttpResponseUtils.emptyRepliesResponse(discussionId, limit, offset);
     }
     
-    // Transform replies to expected format (no more N+1 queries!)
-    const enhancedReplies = rawReplies.map((reply: any) => {
-      const authorName = reply.authorName || 'Anonymous User';
-      
-      // For the avatar, if we have a valid path, use it; otherwise generate initials
-      const hasValidAvatar = reply.authorAvatar && reply.authorAvatar.startsWith('/');
-      const avatarInitials = generateAvatarFromName(authorName);
-      
-      return {
-        id: reply.id,
-        author: authorName,
-        // The avatar field should contain either the path or the initials
-        avatar: hasValidAvatar ? reply.authorAvatar : avatarInitials,
-        // Also provide it as profilePictureUrl for the useUserAvatar hook
-        profilePictureUrl: hasValidAvatar ? reply.authorAvatar : null,
-        preferredAvatar: hasValidAvatar ? reply.authorAvatar : null,
-        content: reply.content,
-        timestamp: formatTimestamp(reply.createdAt),
-        upvotes: reply.upvotes || 0,
-        downvotes: reply.downvotes || 0,
-        userVote: null, // TODO: Get user's vote status
-        parentId: reply.parentReplyId, // Use parentId to match Reply interface
-        replyToAuthor: reply.parentReplyId ? 'Unknown' : undefined, // TODO: Get parent author name
-        children: [] as any[]
-      };
-    });
+    // Transform and organize replies using optimized service
+    const organizedReplies = ReplyTransformationService.transformRawReplies(rawReplies);
     
-    // Organize into threaded structure
-    const organizedReplies = organizeReplies(enhancedReplies);
-    
-    return NextResponse.json({
-      success: true,
-      replies: organizedReplies,
-      total: rawReplies.length,
-      pagination: {
-        limit,
-        offset,
-        hasMore: rawReplies.length === limit
-      }
-    }, {
-      // PERFORMANCE: Enhanced caching headers with stale-while-revalidate
-      headers: {
-        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=900', // 1min browser, 5min CDN, 15min stale
-        'ETag': `"replies-${discussionId}-${offset}-${limit}-${Math.floor(Date.now() / 60000)}"`, // ETag changes every minute
-        'Last-Modified': new Date().toUTCString(),
-        'Vary': 'Accept-Encoding',
-        // PERFORMANCE: Add prefetch hints for pagination
-        'Link': offset > 0 ? `</api/discussions/${discussionId}/replies?offset=${Math.max(0, offset - limit)}&limit=${limit}>; rel=prev` : ''
-      }
-    });
+    // Generate pagination metadata
+    const pagination = ReplyTransformationService.getPaginationMetadata(
+      organizedReplies,
+      limit,
+      offset,
+      rawReplies.length
+    );
+
+    return HttpResponseUtils.repliesFetchResponse(
+      organizedReplies,
+      rawReplies.length,
+      pagination,
+      discussionId
+    );
 
   } catch (error) {
     console.error('Error fetching replies:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch replies',
-        replies: [],
-        total: 0
-      },
-      { status: 500 }
+    return HttpResponseUtils.error(
+      'Failed to fetch replies',
+      error instanceof Error ? error.message : 'Unknown error',
+      500,
+      { replies: [], total: 0 }
     );
   }
 }
@@ -212,28 +71,22 @@ export async function POST(
   try {
     const resolvedParams = await params;
     const discussionId = resolvedParams.id;
-
-    if (!discussionId) {
-      return NextResponse.json(
-        { success: false, error: 'Discussion ID is required' },
-        { status: 400 }
-      );
-    }
-
     const body = await request.json();
     const { content, authorId, parentReplyId } = body;
 
-    // Validate required fields
-    if (!content || !authorId) {
-      return NextResponse.json(
-        { success: false, error: 'Content and authorId are required' },
-        { status: 400 }
-      );
+    // Validate required parameters
+    const validationError = HttpResponseUtils.validateRequiredParams({ 
+      discussionId, 
+      content, 
+      authorId 
+    });
+    if (validationError) {
+      return HttpResponseUtils.validationError(validationError);
     }
 
     await initializeDatabase();
     
-    // Create reply
+    // Create reply in database
     const reply = await DiscussionService.createReply({
       discussionId,
       authorId,
@@ -242,114 +95,46 @@ export async function POST(
     });
     
     if (!reply) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to create reply' },
-        { status: 500 }
-      );
+      return HttpResponseUtils.error('Failed to create reply', 'Database operation failed');
     }
     
-    // Get author information
+    // Get author information for response
     let authorName = 'Anonymous User';
-    let avatar = 'AN';
     
     try {
       const author = await UserService.getUserById(authorId);
       if (author) {
         authorName = author.username || 'Anonymous User';
-        avatar = generateAvatarFromName(authorName);
       }
     } catch (error) {
       console.warn(`Could not fetch author for new reply:`, error);
     }
     
-    // Return enhanced reply data
-    const enhancedReply = {
-      id: reply.id,
-      author: authorName,
-      avatar: avatar,
-      content: reply.content,
-      timestamp: formatTimestamp(reply.createdAt),
-      upvotes: reply.upvotes || 0,
-      downvotes: reply.downvotes || 0,
-      userVote: null,
-      parentId: reply.parentReplyId,
-      replyToAuthor: parentReplyId ? 'Unknown' : undefined, // TODO: Get parent author name
-      children: []
-    };
+    // Transform reply for response
+    const enhancedReply = ReplyTransformationService.transformSingleReply(reply, authorName);
     
-    // Create notifications (async, don't block response)
-    try {
-      const discussion = await DiscussionService.getDiscussionById(discussionId);
-      
-      // 1. Create reply notification for discussion author
-      if (discussion && discussion.authorId !== authorId) {
-        // Don't notify if replying to your own discussion
-        await createDiscussionReplyNotification(
-          discussion.authorId,
-          authorName,
-          discussion.title,
-          discussionId
-        );
-        console.log('✅ Discussion reply notification created');
-      }
-      
-      // 2. Create reply notification for parent reply author
-      if (parentReplyId) {
-        const parentReply = await DiscussionService.getReplyById(parentReplyId);
-        if (parentReply && parentReply.authorId !== authorId && parentReply.authorId !== discussion?.authorId) {
-          // Don't notify if replying to yourself or if parent is discussion author (already notified)
-          await createDiscussionReplyNotification(
-            parentReply.authorId,
-            authorName,
-            discussion?.title || 'Discussion',
-            discussionId
-          );
-          console.log('✅ Parent reply notification created');
-        }
-      }
+    // Process notifications asynchronously (don't block response)
+    const notificationContext = DiscussionNotificationService.createNotificationContext(
+      discussionId,
+      authorId,
+      authorName,
+      content,
+      parentReplyId
+    );
+    
+    // Fire and forget notification processing
+    DiscussionNotificationService.processReplyNotifications(notificationContext)
+      .catch(error => {
+        console.error('Background notification processing failed:', error);
+      });
 
-      // 3. Create mention notifications for @mentioned users
-      const mentionedUserIds = await processMentions(content);
-      if (mentionedUserIds.length > 0) {
-        // Filter out self-mentions and users already notified
-        const alreadyNotified = new Set([
-          authorId, // Don't notify self
-          discussion?.authorId, // Discussion author already notified
-          ...(parentReplyId ? [await DiscussionService.getReplyById(parentReplyId)?.then(r => r?.authorId)].filter(Boolean) : [])
-        ]);
-
-        const usersToNotify = mentionedUserIds.filter(userId => !alreadyNotified.has(userId));
-        
-        for (const userId of usersToNotify) {
-          await createDiscussionMentionNotification(
-            userId,
-            authorName,
-            discussion?.title || 'Discussion',
-            discussionId
-          );
-          console.log(`✅ Mention notification created for user: ${userId}`);
-        }
-      }
-    } catch (notificationError) {
-      // Don't fail the request if notification fails
-      console.error('Failed to create notifications:', notificationError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      reply: enhancedReply
-    });
+    return HttpResponseUtils.replyCreatedResponse(enhancedReply);
 
   } catch (error) {
     console.error('Error creating reply:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create reply',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
+    return HttpResponseUtils.error(
+      'Failed to create reply',
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }

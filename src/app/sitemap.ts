@@ -171,11 +171,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch blog categories
   const categories = [
-    'natal-chart-analysis',
-    'transits-predictions',
-    'synastry-compatibility',
-    'mundane-astrology',
+    'astrocartography',
     'learning-resources',
+    'transits',
+    'mundane-astrology',
     'chart-reading-help',
     'general-discussion'
   ]

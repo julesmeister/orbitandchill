@@ -88,7 +88,22 @@
       "Bash(for:*)",
       "Bash(do)",
       "Bash(done)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npm run build --no-lint)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npm run build --no-lint)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/services/seedingExecutionService.ts src/db/services/replyGenerationService.ts src/db/services/seedingBatchService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/seedingExecutionService.ts src/db/services/replyGenerationService.ts src/db/services/seedingBatchService.ts src/app/api/admin/execute-seeding/route.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/ --max-warnings 0)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/seedingExecutionService.ts src/db/services/replyGenerationService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/services/seedingExecutionService.ts src/db/services/replyGenerationService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/services/seedingExecutionService.ts src/db/services/replyGenerationService.ts src/db/services/seedingBatchService.ts src/app/api/admin/execute-seeding/route.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/seedingExecutionService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/api/discussions/[id]/replies/route.ts src/services/replyTransformationService.ts src/services/discussionNotificationService.ts src/utils/timestampFormatting.ts src/utils/replyThreading.ts src/utils/httpResponseUtils.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/api/people/route.ts src/types/person.ts src/utils/personDataTransformers.ts src/services/databaseConnectionService.ts src/services/personValidationService.ts src/utils/sqlQueryBuilder.ts src/repositories/PersonRepository.ts src/services/PersonService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/tarot/evaluate/route.ts src/services/tarotEvaluationService.ts src/services/tarotEvaluationDatabase.ts src/services/tarotAIEvaluationService.ts src/utils/tarotEvaluationValidation.ts src/utils/tarotScoringUtils.ts src/types/tarotEvaluation.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/app/api/tarot/evaluate/route.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/discussions/page-db.tsx src/components/discussions/DiscussionsPageContent.tsx src/utils/discussionsUtils.ts src/hooks/useDiscussionsFilters.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/discussionsUtils.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useDiscussionsFilters.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/app/chart/shared/[token]/SharedChartClient.tsx --quiet)"
     ],
     "deny": []
   }
