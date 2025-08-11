@@ -1,6 +1,65 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Redirect configuration for SEO
+  async redirects() {
+    return [
+      // Redirect /index to home
+      {
+        source: '/index',
+        destination: '/',
+        permanent: true,
+      },
+      // Redirect old blog URLs to discussions
+      {
+        source: '/blog/:slug',
+        destination: '/discussions/:slug',
+        permanent: true,
+      },
+      // Redirect trailing slashes
+      {
+        source: '/:path+/',
+        destination: '/:path+',
+        permanent: true,
+      },
+    ];
+  },
+  
+  // Headers for SEO and security
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          },
+        ],
+      },
+    ];
+  },
+  
   // No need for external packages with Turso - it's pure JavaScript
   images: {
     remotePatterns: [

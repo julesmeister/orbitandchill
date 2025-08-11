@@ -40,7 +40,22 @@ async function trackPageView(data: any) {
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, hostname } = request.nextUrl;
+  
+  // Handle WWW vs non-WWW redirect (choose non-WWW as canonical)
+  // This will redirect www.orbitandchill.com to orbitandchill.com
+  if (hostname === 'www.orbitandchill.com' || hostname === 'www.orbit-and-chill.com') {
+    const url = request.nextUrl.clone();
+    url.hostname = hostname.replace('www.', '');
+    return NextResponse.redirect(url, 301);
+  }
+  
+  // Alternative: If you want WWW as canonical, uncomment this instead:
+  // if ((hostname === 'orbitandchill.com' || hostname === 'orbit-and-chill.com') && !hostname.startsWith('www.')) {
+  //   const url = request.nextUrl.clone();
+  //   url.hostname = `www.${hostname}`;
+  //   return NextResponse.redirect(url, 301);
+  // }
   
   // Skip tracking for API routes, static files, and internal Next.js routes
   if (

@@ -61,9 +61,9 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-and-chill.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'),
   alternates: {
-    canonical: '/',
+    canonical: 'https://orbitandchill.com/',
   },
   icons: {
     icon: '/favicon.ico',
