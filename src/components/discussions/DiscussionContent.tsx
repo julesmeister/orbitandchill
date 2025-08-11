@@ -157,6 +157,10 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
               [&_p]:text-black [&_p]:leading-relaxed [&_p]:mb-2 sm:[&_p]:mb-3 [&_p]:text-base sm:[&_p]:text-lg
               /* Empty paragraphs with just line breaks */
               [&_p:has(br:only-child)]:h-2 [&_p:has(br:only-child)]:mb-1
+              /* Empty paragraphs */
+              [&_p:empty]:h-2 [&_p:empty]:mb-1
+              /* Line breaks */
+              [&_br]:block [&_br]:my-1
               /* Text formatting */
               [&_strong]:text-black [&_strong]:font-bold
               [&_em]:text-black [&_em]:italic
