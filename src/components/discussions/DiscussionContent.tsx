@@ -152,18 +152,15 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
               /* Headings - Mobile Responsive */
               [&_h1]:font-space-grotesk [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:text-black [&_h1]:mt-6 sm:[&_h1]:mt-8 [&_h1]:mb-4 sm:[&_h1]:mb-6 [&_h1]:border-b [&_h1]:border-black [&_h1]:pb-2 sm:[&_h1]:pb-3
               [&_h2]:font-space-grotesk [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-black [&_h2]:mt-6 sm:[&_h2]:mt-8 [&_h2]:mb-3 sm:[&_h2]:mb-4 [&_h2]:border-b [&_h2]:border-black [&_h2]:pb-2
-              [&_h3]:font-space-grotesk [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-black [&_h3]:mt-4 sm:[&_h3]:mt-6 [&_h3]:mb-2 sm:[&_h3]:mb-3 [&_h3]:text-right
-              [&_h3]:relative [&_h3]:after:content-[""] [&_h3]:after:absolute [&_h3]:after:right-0 [&_h3]:after:bottom-[-8px] [&_h3]:after:w-[100px] [&_h3]:after:h-[4px] [&_h3]:after:bg-black [&_h3]:after:z-[-1]
-              /* Ensure h3 doesn't interfere with subsequent content */
-              [&_h3+*]:clear-both [&_h3+*]:mt-4
-              /* Paragraphs - Mobile Responsive */
+              [&_h3]:font-space-grotesk [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-black [&_h3]:mt-4 sm:[&_h3]:mt-6 [&_h3]:mb-2 sm:[&_h3]:mb-3 [&_h3]:text-right [&_h3]:relative
+              [&_h3::after]:content-[""] [&_h3::after]:absolute [&_h3::after]:right-0 [&_h3::after]:bottom-[-8px] [&_h3::after]:w-[100px] [&_h3::after]:h-[4px] [&_h3::after]:bg-black
+              /* Paragraphs - Mobile Responsive with proper line break handling */
               [&_p]:text-black [&_p]:leading-relaxed [&_p]:mb-2 sm:[&_p]:mb-3 [&_p]:text-base sm:[&_p]:text-lg
-              /* Empty paragraphs with just line breaks */
-              [&_p:has(br:only-child)]:h-2 [&_p:has(br:only-child)]:mb-1
+              /* Line breaks - match TipTap editor styling */
+              [&_br]:block [&_br]:mb-2
               /* Empty paragraphs */
               [&_p:empty]:h-2 [&_p:empty]:mb-1
-              /* Line breaks */
-              [&_br]:block [&_br]:my-1
+              [&_p:has(br:only-child)]:h-2 [&_p:has(br:only-child)]:mb-1
               /* Text formatting */
               [&_strong]:text-black [&_strong]:font-bold
               [&_em]:text-black [&_em]:italic
