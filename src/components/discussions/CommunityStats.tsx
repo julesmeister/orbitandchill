@@ -173,13 +173,16 @@ export default function CommunityStats({
       </div>
       
       <div className="grid grid-cols-2">
-        {stats.map((stat, index) => (
-          <div key={`${stat.label}-${index}`} className="group relative">
-            <div className={`flex flex-col items-center justify-center px-3 py-4 border-r border-b border-black transition-all duration-200 hover:pl-5 ${loading ? 'animate-pulse' : ''} ${
-              index % 2 === 1 ? 'border-r-0' : ''
-            } ${
-              index >= stats.length - 2 ? 'border-b-0' : ''
-            }`}>
+        {stats.map((stat, index) => {
+          const isLastItem = index === stats.length - 1;
+          const isOddCount = stats.length % 2 === 1;
+          const shouldSpanTwoColumns = isLastItem && isOddCount;
+          
+          return (
+            <div key={`${stat.label}-${index}`} className={`group relative ${shouldSpanTwoColumns ? 'col-span-2' : ''}`}>
+              <div className={`flex flex-col items-center justify-center px-3 py-4 border-b border-black transition-all duration-200 hover:pl-5 ${loading ? 'animate-pulse' : ''} ${
+                shouldSpanTwoColumns ? 'border-r-0' : index % 2 === 1 ? 'border-r-0' : 'border-r'
+              }`}>
               {/* Animated accent bar on hover */}
               <div
                 className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300"
@@ -195,7 +198,8 @@ export default function CommunityStats({
               </span>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

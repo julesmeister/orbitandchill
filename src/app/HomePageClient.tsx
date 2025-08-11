@@ -14,6 +14,7 @@ import { BRAND } from '@/config/brand';
 import { useUserStore } from '@/store/userStore';
 import { useNatalChart } from '@/hooks/useNatalChart';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useStatusToast } from '@/hooks/useStatusToast';
 import StatusToast from '@/components/reusable/StatusToast';
 import { useBlogData } from '@/hooks/useBlogData';
@@ -209,6 +210,14 @@ export default function HomePageClient() {
             Imagine if different places around the world could change how you feel and act!
             That's what astrocartography is - it shows you where on Earth your stars would make you the happiest, luckiest, or most creative.
           </p>
+          <div className="mt-6">
+            <Link href="/astrocartography" className="inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+              Explore Your Power Places
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
         <div className="relative">

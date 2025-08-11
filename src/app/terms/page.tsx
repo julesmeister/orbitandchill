@@ -35,7 +35,7 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-open-sans font-semibold text-black">Free to Use</h3>
+                    <div className="font-open-sans font-semibold text-black">Free to Use</div>
                     <p className="font-open-sans text-sm text-black/70">Core features are always free</p>
                   </div>
                 </div>
@@ -46,7 +46,7 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-open-sans font-semibold text-black">Be Respectful</h3>
+                    <div className="font-open-sans font-semibold text-black">Be Respectful</div>
                     <p className="font-open-sans text-sm text-black/70">Treat others kindly in our community</p>
                   </div>
                 </div>
@@ -57,7 +57,7 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-open-sans font-semibold text-black">Entertainment Only</h3>
+                    <div className="font-open-sans font-semibold text-black">Entertainment Only</div>
                     <p className="font-open-sans text-sm text-black/70">Astrology is for guidance, not life decisions</p>
                   </div>
                 </div>
@@ -68,7 +68,7 @@ export default function TermsPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-open-sans font-semibold text-black">Your Data is Safe</h3>
+                    <div className="font-open-sans font-semibold text-black">Your Data is Safe</div>
                     <p className="font-open-sans text-sm text-black/70">We protect your privacy and information</p>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export default function TermsPage() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Important Disclaimer</h3>
+                      <div className="font-semibold text-gray-900 mb-1">Important Disclaimer</div>
                       <p className="text-sm text-gray-700">
                         Our service is provided for entertainment and educational purposes only. 
                         Astrological information should not be used as a substitute for professional advice.
@@ -133,7 +133,7 @@ export default function TermsPage() {
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">3. User Responsibilities</h2>
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Account Security</h3>
+                  <div className="text-lg font-semibold text-gray-900 mb-3">Account Security</div>
                   <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                     <li>Keep your login credentials secure if you create an account</li>
                     <li>Notify us immediately of any unauthorized access</li>
@@ -142,7 +142,7 @@ export default function TermsPage() {
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Community Guidelines</h3>
+                  <div className="text-lg font-semibold text-gray-900 mb-3">Community Guidelines</div>
                   <p className="text-gray-600 mb-3">When participating in discussions, you agree to:</p>
                   <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                     <li>Be respectful and kind to other users</li>
@@ -154,7 +154,7 @@ export default function TermsPage() {
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Prohibited Uses</h3>
+                  <div className="text-lg font-semibold text-gray-900 mb-3">Prohibited Uses</div>
                   <p className="text-gray-600 mb-3">You may not use our service to:</p>
                   <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                     <li>Violate any laws or regulations</li>
@@ -176,7 +176,7 @@ export default function TermsPage() {
                   how we collect, use, and protect your information.
                 </p>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Key Privacy Points:</h3>
+                  <div className="font-semibold text-gray-900 mb-2">Key Privacy Points:</div>
                   <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                     <li>Birth data is stored locally in your browser when possible</li>
                     <li>We never sell your personal information</li>
@@ -196,7 +196,7 @@ export default function TermsPage() {
               <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6">5. Disclaimers and Limitations</h2>
               <div className="space-y-6">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">⚠️ Important Disclaimers</h3>
+                  <div className="font-semibold text-gray-900 mb-3">⚠️ Important Disclaimers</div>
                   <div className="space-y-3 text-gray-700">
                     <p>
                       <strong>Entertainment Purpose:</strong> {BRAND.name} is provided for entertainment 
@@ -216,7 +216,7 @@ export default function TermsPage() {
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Service Availability</h3>
+                  <div className="text-lg font-semibold text-gray-900 mb-3">Service Availability</div>
                   <p className="text-gray-600">
                     We strive to keep our service available 24/7, but we cannot guarantee uninterrupted 
                     access. We may temporarily suspend the service for maintenance, updates, or due to 
@@ -225,7 +225,7 @@ export default function TermsPage() {
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Limitation of Liability</h3>
+                  <div className="text-lg font-semibold text-gray-900 mb-3">Limitation of Liability</div>
                   <p className="text-gray-600">
                     To the fullest extent permitted by law, {BRAND.name} shall not be liable for any 
                     indirect, incidental, special, or consequential damages arising from your use of 
@@ -246,7 +246,7 @@ export default function TermsPage() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">What You Can Do:</h3>
+                    <div className="font-semibold text-gray-900 mb-2">What You Can Do:</div>
                     <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                       <li>Use our service for personal purposes</li>
                       <li>Share your own chart interpretations</li>
@@ -254,7 +254,7 @@ export default function TermsPage() {
                     </ul>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">What You Cannot Do:</h3>
+                    <div className="font-semibold text-gray-900 mb-2">What You Cannot Do:</div>
                     <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                       <li>Copy or redistribute our platform</li>
                       <li>Reverse engineer our code</li>
@@ -278,7 +278,7 @@ export default function TermsPage() {
                   who violate these terms or engage in harmful behavior.
                 </p>
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Upon Termination:</h3>
+                  <div className="font-semibold text-gray-900 mb-2">Upon Termination:</div>
                   <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                     <li>Your access to the service will be revoked</li>
                     <li>Your data will be deleted according to our privacy policy</li>

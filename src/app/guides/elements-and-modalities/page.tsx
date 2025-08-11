@@ -96,10 +96,10 @@ export default function ElementsAndModalitiesGuidePage() {
             />
 
             <div className="border border-black p-8" style={{ backgroundColor: '#f2e356' }}>
-              <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">The Sacred Geometry of Astrology</h3>
+              <div className="font-space-grotesk text-xl font-bold text-black mb-4">The Sacred Geometry of Astrology</div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Four Elements (Triplicities)</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Four Elements (Triplicities)</div>
                   <p className="text-black text-sm mb-2">Each element contains three signs</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• <strong>Fire:</strong> Aries, Leo, Sagittarius</li>
@@ -109,7 +109,7 @@ export default function ElementsAndModalitiesGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Three Modalities (Quadruplicities)</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Three Modalities (Quadruplicities)</div>
                   <p className="text-black text-sm mb-2">Each modality contains four signs</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• <strong>Cardinal:</strong> Aries, Cancer, Libra, Capricorn</li>

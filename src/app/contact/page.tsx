@@ -142,7 +142,7 @@ export default function ContactPage() {
                 <div className="space-y-8">
                   {/* Quick Contact */}
                   <div>
-                    <h3 className="font-space-grotesk text-2xl font-bold text-black mb-6">Quick Contact</h3>
+                    <div className="font-space-grotesk text-2xl font-bold text-black mb-6">Quick Contact</div>
                     <div className="space-y-4">
                       <div className="flex items-start space-x-4">
                         <div className="w-10 h-10 bg-black flex items-center justify-center">
@@ -151,7 +151,7 @@ export default function ContactPage() {
                           </svg>
                         </div>
                         <div>
-                          <h4 className="font-open-sans font-semibold text-black">Email Support</h4>
+                          <div className="font-open-sans font-semibold text-black">Email Support</div>
                           <p className="font-open-sans text-black/80">{BRAND.email}</p>
                           <p className="font-open-sans text-sm text-black/60">We typically respond within 24 hours</p>
                         </div>
@@ -164,7 +164,7 @@ export default function ContactPage() {
                           </svg>
                         </div>
                         <div>
-                          <h4 className="font-open-sans font-semibold text-black">Community Forum</h4>
+                          <div className="font-open-sans font-semibold text-black">Community Forum</div>
                           <p className="font-open-sans text-black/80">Join our discussions</p>
                           <Link href="/discussions" className="font-open-sans text-sm text-black hover:text-black/70 font-medium">
                             Visit Discussions →
@@ -176,21 +176,40 @@ export default function ContactPage() {
 
                   {/* FAQ Section */}
                   <div className="bg-white border border-black p-6">
-                    <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Quick Answers</h3>
+                    <div className="font-space-grotesk text-xl font-bold text-black mb-4">Quick Answers</div>
                     <div className="space-y-3">
                       <div>
-                        <h4 className="font-open-sans font-semibold text-black text-sm mb-1">Is {BRAND.name} free to use?</h4>
+                        <div className="font-open-sans font-semibold text-black text-sm mb-1">Is {BRAND.name} free to use?</div>
                         <p className="font-open-sans text-xs text-black/70">Yes! Our core features including natal chart generation are completely free.</p>
                       </div>
                       
                       <div>
-                        <h4 className="font-open-sans font-semibold text-black text-sm mb-1">How accurate are the calculations?</h4>
+                        <div className="font-open-sans font-semibold text-black text-sm mb-1">How accurate are the calculations?</div>
                         <p className="font-open-sans text-xs text-black/70">We use astronomy-engine for professional-grade precision (±1 arcminute).</p>
                       </div>
                       
                       <div>
-                        <h4 className="font-open-sans font-semibold text-black text-sm mb-1">Do I need to create an account?</h4>
+                        <div className="font-open-sans font-semibold text-black text-sm mb-1">Do I need to create an account?</div>
                         <p className="font-open-sans text-xs text-black/70">No account required! Your data is automatically saved in your browser.</p>
+                      </div>
+                    </div>
+                    
+                    {/* Internal Links Section */}
+                    <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="font-space-grotesk text-lg font-bold text-black mb-4">Helpful Resources</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Link href="/learning-center" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                          📚 Learning Center
+                        </Link>
+                        <Link href="/guides" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                          📖 Astrology Guides
+                        </Link>
+                        <Link href="/discussions" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                          💬 Community Forum
+                        </Link>
+                        <Link href="/privacy" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                          🔒 Privacy Policy
+                        </Link>
                       </div>
                     </div>
                   </div>

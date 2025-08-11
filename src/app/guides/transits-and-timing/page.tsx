@@ -96,10 +96,10 @@ export default function TransitsAndTimingGuidePage() {
             />
 
             <div className="border border-black p-8" style={{ backgroundColor: '#6bdbff' }}>
-              <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Types of Transit Aspects</h3>
+              <div className="font-space-grotesk text-xl font-bold text-black mb-4">Types of Transit Aspects</div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Harmonious Aspects</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Harmonious Aspects</div>
                   <p className="text-black text-sm mb-2">Supportive, flowing energy</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• <strong>Conjunction (0°):</strong> New beginnings, intensification</li>
@@ -109,7 +109,7 @@ export default function TransitsAndTimingGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Challenging Aspects</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Challenging Aspects</div>
                   <p className="text-black text-sm mb-2">Growth-oriented, dynamic tension</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• <strong>Square (90°):</strong> Tension, action required</li>
@@ -204,7 +204,7 @@ export default function TransitsAndTimingGuidePage() {
             </div>
 
             <div className="border border-black p-8" style={{ backgroundColor: '#f2e356' }}>
-              <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Working with Personal Planet Transits</h3>
+              <div className="font-space-grotesk text-xl font-bold text-black mb-4">Working with Personal Planet Transits</div>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs mt-1">☽</div>
@@ -278,10 +278,10 @@ export default function TransitsAndTimingGuidePage() {
             </div>
 
             <div className="border border-black p-8" style={{ backgroundColor: '#ff91e9' }}>
-              <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Major Life Cycle Transits</h3>
+              <div className="font-space-grotesk text-xl font-bold text-black mb-4">Major Life Cycle Transits</div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Saturn Return (Ages 29, 58, 87)</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Saturn Return (Ages 29, 58, 87)</div>
                   <p className="text-black text-sm mb-2">Major life restructuring and maturation</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• Taking on adult responsibilities</li>
@@ -291,7 +291,7 @@ export default function TransitsAndTimingGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Uranus Opposition (Age 42)</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Uranus Opposition (Age 42)</div>
                   <p className="text-black text-sm mb-2">Midlife awakening and liberation</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• Questioning established patterns</li>
@@ -301,7 +301,7 @@ export default function TransitsAndTimingGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Neptune Square (Age 42)</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Neptune Square (Age 42)</div>
                   <p className="text-black text-sm mb-2">Spiritual crisis and dissolution</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• Disillusionment with material success</li>
@@ -311,7 +311,7 @@ export default function TransitsAndTimingGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Pluto Square (Ages 36-45)</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Pluto Square (Ages 36-45)</div>
                   <p className="text-black text-sm mb-2">Deep transformation and empowerment</p>
                   <ul className="text-black text-sm space-y-1">
                     <li>• Confronting shadow aspects</li>
@@ -467,10 +467,10 @@ export default function TransitsAndTimingGuidePage() {
             />
 
             <div className="border border-black p-8" style={{ backgroundColor: '#6bdbff' }}>
-              <h3 className="font-space-grotesk text-xl font-bold text-black mb-4">Transit Tracking Priorities</h3>
+              <div className="font-space-grotesk text-xl font-bold text-black mb-4">Transit Tracking Priorities</div>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Daily Tracking</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Daily Tracking</div>
                   <ul className="text-black text-sm space-y-1">
                     <li>• Moon phases and sign changes</li>
                     <li>• Mercury, Venus, Mars movements</li>
@@ -479,7 +479,7 @@ export default function TransitsAndTimingGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Monthly Tracking</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Monthly Tracking</div>
                   <ul className="text-black text-sm space-y-1">
                     <li>• New and Full Moon themes</li>
                     <li>• Sun's journey through houses</li>
@@ -488,7 +488,7 @@ export default function TransitsAndTimingGuidePage() {
                   </ul>
                 </div>
                 <div className="bg-white border border-black p-4">
-                  <h4 className="font-space-grotesk font-bold text-black mb-2">Yearly Tracking</h4>
+                  <div className="font-space-grotesk font-bold text-black mb-2">Yearly Tracking</div>
                   <ul className="text-black text-sm space-y-1">
                     <li>• Jupiter and Saturn major aspects</li>
                     <li>• Outer planet transits to natal chart</li>
