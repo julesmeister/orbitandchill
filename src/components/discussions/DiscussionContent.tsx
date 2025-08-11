@@ -95,18 +95,32 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
   const firstImageUrl = extractFirstImage(discussion.content || '');
   const contentWithoutFirstImage = firstImageUrl ? removeFirstImage(discussion.content || '') : discussion.content;
 
+  // Simple normalization: just reduce excessive consecutive newlines
+  const normalizeContent = (content: string) => {
+    if (!content) return content;
+    
+    // Only reduce excessive newlines, don't touch HTML structure
+    return content
+      // Replace 3+ consecutive newlines with just 2 (paragraph break)
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  };
+
+  const normalizedContent = normalizeContent(contentWithoutFirstImage || '');
+
   // DEBUG: Log the actual content structure
   console.log('🔍 DiscussionContent DEBUG:', {
     hasFirstImage: !!firstImageUrl,
-    contentLength: contentWithoutFirstImage?.length,
-    isHTML: contentWithoutFirstImage?.includes('<'),
-    hasBR: contentWithoutFirstImage?.includes('<br'),
-    hasP: contentWithoutFirstImage?.includes('<p>'),
-    hasDIV: contentWithoutFirstImage?.includes('<div>'),
-    contentPreview: contentWithoutFirstImage?.substring(0, 300),
-    rawContent: discussion.content?.substring(0, 300),
+    originalLength: contentWithoutFirstImage?.length,
+    normalizedLength: normalizedContent?.length,
+    isHTML: normalizedContent?.includes('<'),
+    hasBR: normalizedContent?.includes('<br'),
+    hasP: normalizedContent?.includes('<p>'),
+    hasDIV: normalizedContent?.includes('<div>'),
+    originalPreview: contentWithoutFirstImage?.substring(0, 200),
+    normalizedPreview: normalizedContent?.substring(0, 200),
     // Show actual HTML structure
-    htmlStructure: contentWithoutFirstImage?.match(/<[^>]+>/g)?.slice(0, 10)
+    htmlStructure: normalizedContent?.match(/<[^>]+>/g)?.slice(0, 10)
   });
 
   // Notify parent component about the first image
@@ -158,14 +172,14 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
         className="prose prose-black max-w-none font-open-sans"
         itemProp="text"
       >
-        {contentWithoutFirstImage?.includes('<') ? (
+        {normalizedContent?.includes('<') ? (
           // Render HTML content with enhanced styling
           <>
             {/* DEBUG: Show raw HTML for debugging */}
             {process.env.NODE_ENV === 'development' && (
               <details className="mb-4 p-2 bg-yellow-100 border border-yellow-400 text-xs">
                 <summary>🐛 DEBUG: Raw HTML Structure</summary>
-                <pre className="mt-2 whitespace-pre-wrap">{contentWithoutFirstImage}</pre>
+                <pre className="mt-2 whitespace-pre-wrap">{normalizedContent}</pre>
               </details>
             )}
             <div 
@@ -213,13 +227,13 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
                 /* Horizontal rules */
                 [&_hr]:border-black [&_hr]:my-6 sm:[&_hr]:my-8
               `}
-              dangerouslySetInnerHTML={{ __html: contentWithoutFirstImage }}
+              dangerouslySetInnerHTML={{ __html: normalizedContent }}
             />
           </>
         ) : (
           // Render plain text with enhanced markdown-like parsing
           <div className="space-y-3">
-            {contentWithoutFirstImage?.split('\n').map((paragraph, index) => {
+            {normalizedContent?.split('\n').map((paragraph, index) => {
               // Skip empty lines
               if (!paragraph.trim()) {
                 return <div key={index} className="h-4" />;
