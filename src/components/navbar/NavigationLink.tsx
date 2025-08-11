@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+import Link from 'next/link';
 import VertexCorners from '@/components/ui/VertexCorners';
 
 interface NavigationLinkProps {
@@ -25,21 +26,26 @@ const NavigationLink = React.memo(({
   onNavigate,
   onHoverSound
 }: NavigationLinkProps) => {
-  const handleClick = () => {
-    if (onClick) onClick();
-    onNavigate(href);
+  const handleClick = (e: React.MouseEvent) => {
+    // Only prevent default and use custom navigation for left clicks
+    // Allow right-click, middle-click, and cmd/ctrl+click to work normally
+    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      if (onClick) onClick();
+      onNavigate(href);
+    }
   };
 
   return (
-    <button
+    <Link
+      href={href}
       onClick={handleClick}
       onMouseEnter={onHoverSound}
-      disabled={isLoading}
-      className={`relative overflow-hidden group ${className} ${
+      className={`relative overflow-hidden group inline-block ${className} ${
         isActive
           ? 'bg-black text-white font-medium'
           : isLoading 
-            ? 'bg-transparent text-black cursor-wait' 
+            ? 'bg-transparent text-black cursor-wait pointer-events-none' 
             : 'text-black font-medium transition-colors duration-200'
       } font-space-grotesk text-sm xl:text-base px-3 py-1`}
     >
@@ -72,7 +78,7 @@ const NavigationLink = React.memo(({
           children
         )}
       </span>
-    </button>
+    </Link>
   );
 });
 

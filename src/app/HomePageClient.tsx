@@ -108,8 +108,8 @@ export default function HomePageClient() {
               <div className="text-left relative overflow-hidden">
                 <div className="relative z-10">
                   <h1 className="font-space-grotesk text-4xl lg:text-6xl xl:text-6xl 2xl:text-7xl font-bold text-black mb-4 xl:mb-3">
-                    Welcome to
-                    <span className="block text-blue-600">{BRAND.name}</span>
+                    Free Natal Chart Calculator &
+                    <span className="block text-blue-600">Astrology Tools</span>
                   </h1>
                   <p className="font-open-sans text-lg lg:text-xl xl:text-xl 2xl:text-2xl text-black/80 leading-relaxed mb-6 xl:mb-4">
                     {BRAND.tagline} {BRAND.description}

@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     default: `${BRAND.name} - Free Natal Chart Generator & Astrology Community`,
     template: `%s | ${BRAND.name}`
   },
-  description: "Generate your free natal chart and track rare astrological events. Discover your cosmic blueprint with our real-time astronomical event tracker, birth chart generator, and astrology community.",
+  description: "Free natal chart calculator & astrology tools. Generate birth charts, track planetary transits, and explore your cosmic blueprint with our comprehensive astrology platform.",
   keywords: ["natal chart", "astrology", "birth chart", "horoscope", "zodiac", "planetary positions", "astrological calculator", "free birth chart", "astrological events", "planetary conjunctions", "retrograde planets", "moon phases", "astronomical events", "celestial alignments", "rare astrological events"],
   authors: [{ name: BRAND.name }],
   creator: BRAND.name,
@@ -64,6 +64,17 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-and-chill.com'),
   alternates: {
     canonical: '/',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+    other: [
+      {
+        rel: 'apple-touch-icon',
+        url: '/apple-touch-icon.png',
+        sizes: '180x180',
+      },
+    ],
   },
   openGraph: {
     type: 'website',

@@ -4,6 +4,7 @@ import NatalChartDisplay from './NatalChartDisplay';
 import ChartQuickActions from './ChartQuickActions';
 import BirthDataSummary from './BirthDataSummary';
 import InterpretationSidebar from './InterpretationSidebar';
+import SocialShareButtons from '@/components/social/SocialShareButtons';
 
 interface BirthData {
   dateOfBirth: string;
@@ -116,6 +117,16 @@ export default function ChartDisplayContainer({
             />
           </div>
         )}
+        
+        {/* Social Share Buttons */}
+        <div className="p-4 border-t border-black">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Share Your Chart</h3>
+          <SocialShareButtons 
+            title={`Check out my natal chart for ${personToShow?.name || 'my cosmic blueprint'}`}
+            description="Generated with free astrology tools at Orbit and Chill"
+            variant="horizontal"
+          />
+        </div>
       </div>
     </div>
   );

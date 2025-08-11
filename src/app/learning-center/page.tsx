@@ -8,6 +8,7 @@ import FeatureCard from '@/components/learning-center/FeatureCard';
 import AdditionalFeatureCard from '@/components/learning-center/AdditionalFeatureCard';
 import QuickStartStep from '@/components/learning-center/QuickStartStep';
 import CTAButton from '@/components/learning-center/CTAButton';
+import AstrologyResources from '@/components/reusable/AstrologyResources';
 
 export default function LearningCenterPage() {
   return (
@@ -193,6 +194,13 @@ export default function LearningCenterPage() {
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* External Resources Section */}
+      <section className="px-[5%] py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <AstrologyResources />
         </div>
       </section>
 
