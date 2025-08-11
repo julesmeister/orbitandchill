@@ -44,8 +44,10 @@ const eslintConfig = [
       // Accessibility rules (be careful with these)
       "@next/next/no-img-element": "off", // Allows <img> instead of Next.js Image
       
-      // ESLint directives
+      // ESLint directives - suppress warnings about unused disable comments
       "eslint-comments/no-unused-disable": "off", // Ignore unused eslint-disable comments
+      "@eslint-community/eslint-comments/no-unused-disable": "off", // Alternative rule name
+      "eslint-comments/no-unused-enable": "off", // Also suppress unused enable warnings
     },
   },
 ];
