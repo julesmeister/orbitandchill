@@ -105,7 +105,9 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useDiscussionsFilters.ts --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/app/chart/shared/[token]/SharedChartClient.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .tsx src/components/navbar/NavigationLink.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .tsx src/components/discussions/CommunityStats.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .tsx src/components/discussions/CommunityStats.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint --ext .ts,.tsx src/utils/personDataTransformers.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/personDataTransformers.ts)"
     ],
     "deny": []
   }

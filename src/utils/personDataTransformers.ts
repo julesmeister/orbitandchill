@@ -97,6 +97,10 @@ export class PersonDataTransformers {
   static sanitizePersonData(data: any): Partial<Person> {
     const sanitized: any = {};
 
+    if (typeof data.userId === 'string' && data.userId.trim()) {
+      sanitized.userId = data.userId.trim();
+    }
+
     if (typeof data.name === 'string' && data.name.trim()) {
       sanitized.name = data.name.trim();
     }
