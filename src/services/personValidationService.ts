@@ -32,19 +32,29 @@ export class PersonValidationService {
   static validateCreateRequest(data: any): ValidationResult {
     const errors: string[] = [];
 
-    // Required field validation
-    if (!data.userId || typeof data.userId !== 'string') {
-      errors.push('User ID is required and must be a string');
+    // Required field validation with more specific messages
+    if (!data.userId) {
+      errors.push('User ID is missing from request. Please ensure you are logged in.');
+    } else if (typeof data.userId !== 'string') {
+      errors.push(`User ID must be a string, received: ${typeof data.userId}`);
+    } else if (!data.userId.trim()) {
+      errors.push('User ID cannot be empty');
     }
 
-    if (!data.name || typeof data.name !== 'string' || !data.name.trim()) {
-      errors.push('Name is required and must be a non-empty string');
+    if (!data.name) {
+      errors.push('Name is required');
+    } else if (typeof data.name !== 'string') {
+      errors.push(`Name must be a string, received: ${typeof data.name}`);
+    } else if (!data.name.trim()) {
+      errors.push('Name cannot be empty');
     }
 
-    if (!data.relationship || typeof data.relationship !== 'string') {
-      errors.push('Relationship is required and must be a string');
+    if (!data.relationship) {
+      errors.push('Relationship is required');
+    } else if (typeof data.relationship !== 'string') {
+      errors.push(`Relationship must be a string, received: ${typeof data.relationship}`);
     } else if (!this.RELATIONSHIPS.includes(data.relationship.toLowerCase())) {
-      errors.push(`Relationship must be one of: ${this.RELATIONSHIPS.join(', ')}`);
+      errors.push(`Invalid relationship "${data.relationship}". Must be one of: ${this.RELATIONSHIPS.join(', ')}`);
     }
 
     if (!data.birthData) {

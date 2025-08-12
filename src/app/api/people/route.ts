@@ -59,6 +59,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Enhanced logging for debugging
+    console.log('POST /api/people - Request received:', {
+      userId: body.userId ? `${body.userId.substring(0, 8)}...` : 'MISSING',
+      name: body.name || 'MISSING',
+      relationship: body.relationship || 'MISSING',
+      hasBirthData: !!body.birthData
+    });
+    
     // Create and process person through service layer
     const result = await PersonService.createPerson(body);
     

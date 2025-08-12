@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStatusToast } from '@/hooks/useStatusToast';
 import StatusToast from '@/components/reusable/StatusToast';
-import { useBlogData } from '@/hooks/useBlogData';
+import { useFeaturedArticlesCached } from '@/hooks/useBlogDataCached';
 import AstrologicalEventsStructuredData from '@/components/SEO/AstrologicalEventsStructuredData';
 import { useAstrologicalEvents } from '@/hooks/useAstrologicalEvents';
 import HomePageStructuredData from '@/components/SEO/HomePageStructuredData';
@@ -31,11 +31,13 @@ export default function HomePageClient() {
   // Use status toast hook
   const { toast: statusToast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
 
-  // Get featured blog posts
-  const { featuredPosts, isLoading: blogPostsLoading } = useBlogData();
+  // Get featured blog posts (cached for faster loading)
+  const { featuredPosts, isLoading: blogPostsLoading } = useFeaturedArticlesCached();
 
   // Get astrological events for structured data
   const { upcomingEvents } = useAstrologicalEvents();
+
+  // Note: Background sync is already handled by useFeaturedArticlesCached hook
 
   // Auto-generate chart if user has complete data but no cached chart
   useEffect(() => {

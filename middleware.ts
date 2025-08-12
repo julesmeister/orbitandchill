@@ -14,30 +14,7 @@ function generateVisitorHash(ip: string, userAgent: string): string {
   return Math.abs(hash).toString(36);
 }
 
-// Non-blocking analytics tracking function
-async function trackPageView(data: any) {
-  try {
-    // Use absolute URL for internal API call
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://orbitandchill.com';
-    
-    await fetch(`${baseUrl}/api/analytics/track`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'User-Agent': 'Internal-Middleware/1.0'
-      },
-      body: JSON.stringify({
-        event: 'page_view',
-        data
-      }),
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(3000)
-    });
-  } catch (error) {
-    // Silently fail - don't break page loading for analytics
-    console.error('Middleware analytics tracking failed:', error);
-  }
-}
+// Edge Runtime compatible middleware for redirects and headers
 
 export async function middleware(request: NextRequest) {
   const { pathname, hostname } = request.nextUrl;
@@ -79,49 +56,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Get visitor information for tracking
+  // Generate visitor hash for analytics
   const ip = (request as any).ip || 
              request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
              request.headers.get('x-real-ip') || 
              'unknown';
   
   const userAgent = request.headers.get('user-agent') || 'unknown';
-  const referrer = request.headers.get('referer') || 'direct';
-  
-  // Generate consistent visitor hash for unique visitor tracking
   const visitorHash = generateVisitorHash(ip, userAgent);
   
-  // Prepare tracking data
-  const trackingData = {
-    ip,
-    userAgent,
-    referrer,
-    page: pathname, // Changed from pathname to page for analytics API compatibility
-    timestamp: new Date().toISOString(),
-    visitorHash,
-    // Extract useful metadata
-    country: (request as any).geo?.country || request.headers.get('cf-ipcountry') || 'unknown',
-    city: (request as any).geo?.city || 'unknown',
-    // Session tracking (simplified)
-    sessionId: `${visitorHash}-${Date.now()}`,
-    // Page metadata
-    isHomePage: pathname === '/',
-    isChartPage: pathname === '/chart' || pathname.startsWith('/chart/'),
-    isDiscussionPage: pathname.startsWith('/discussions'),
-    isAdminPage: pathname.startsWith('/admin'),
-    isAPIRoute: false, // Already filtered out above
-    // User experience tracking
-    loadTime: Date.now(), // Will be completed in client-side tracking
-  };
-  
-  // Track page view asynchronously (non-blocking)
-  // Use process.nextTick to ensure this doesn't delay the response
-  process.nextTick(() => {
-    trackPageView(trackingData);
-  });
-  
   // Continue with the request immediately
-  return NextResponse.next();
+  const response = NextResponse.next();
+  
+  // Add tracking headers for client-side analytics
+  response.headers.set('x-visitor-hash', visitorHash);
+  response.headers.set('x-page-tracked', pathname);
+  
+  return response;
 }
 
 // Configure which routes the middleware should run on

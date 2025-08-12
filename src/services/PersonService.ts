@@ -4,6 +4,7 @@ import { Person, CreatePersonRequest, UpdatePersonRequest, DeletePersonRequest }
 import { PersonRepository } from '@/repositories/PersonRepository';
 import { PersonDataTransformers } from '@/utils/personDataTransformers';
 import { PersonValidationService } from '@/services/personValidationService';
+import { checkAndHandleMemoryPressure } from '@/utils/memoryPressure';
 
 export interface ServiceResult<T = any> {
   success: boolean;
@@ -52,6 +53,9 @@ export class PersonService {
    */
   static async createPerson(request: CreatePersonRequest): Promise<ServiceResult<Person>> {
     try {
+      // Check memory pressure before heavy operations
+      await checkAndHandleMemoryPressure();
+      
       // Validate request
       const validation = PersonValidationService.validateCreateRequest(request);
       if (!validation.isValid) {

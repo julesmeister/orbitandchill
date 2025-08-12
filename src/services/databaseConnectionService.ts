@@ -53,24 +53,48 @@ export class DatabaseConnectionService {
   }
 
   /**
-   * Execute a query with automatic connection management
+   * Execute a query with automatic connection management and retry logic
    */
   static async executeQuery(
     sql: string, 
     args: any[] = []
   ): Promise<{ rows: any[]; rowsAffected: number }> {
-    const client = await this.createDirectConnection();
-    
-    try {
-      const result = await client.execute({ sql, args });
-      return {
-        rows: result.rows,
-        rowsAffected: result.rowsAffected
-      };
-    } catch (error) {
-      console.error('Database query failed:', { sql, args, error });
-      throw error;
-    }
+    return this.executeWithRetry(async () => {
+      // Validate parameters before execution
+      this.validateQueryParameters(sql, args);
+      
+      const client = await this.createDirectConnection();
+      
+      try {
+        const result = await client.execute({ sql, args });
+        return {
+          rows: result.rows,
+          rowsAffected: result.rowsAffected
+        };
+      } catch (error) {
+        // Enhanced error logging with more context
+        const errorContext = {
+          sql: sql,
+          args: args,
+          argsTypes: args.map(arg => typeof arg),
+          undefinedArgs: args.map((arg, index) => arg === undefined ? index : null).filter(i => i !== null),
+          error: error
+        };
+        
+        console.error('Database query failed:', errorContext);
+        
+        // Provide more user-friendly error messages
+        if (error instanceof Error && error.message.includes('Unsupported type of value')) {
+          const undefinedArgIndex = args.findIndex(arg => arg === undefined);
+          if (undefinedArgIndex !== -1) {
+            throw new Error(`Database parameter at index ${undefinedArgIndex} is undefined. SQL: ${sql}`);
+          }
+          throw new Error(`Database parameter validation failed. Check that all required fields are provided.`);
+        }
+        
+        throw error;
+      }
+    });
   }
 
   /**
@@ -143,5 +167,85 @@ export class DatabaseConnectionService {
       maxSize: this.MAX_POOL_SIZE,
       usage: this.connectionPool.size / this.MAX_POOL_SIZE
     };
+  }
+
+  /**
+   * Execute operation with retry logic
+   */
+  private static async executeWithRetry<T>(
+    operation: () => Promise<T>, 
+    maxRetries: number = 3, 
+    delayMs: number = 1000
+  ): Promise<T> {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        // Don't retry validation errors or parameter errors
+        if (lastError.message.includes('undefined') || 
+            lastError.message.includes('validation') ||
+            lastError.message.includes('Parameter count mismatch')) {
+          throw lastError;
+        }
+        
+        // Log retry attempt
+        if (attempt < maxRetries) {
+          console.warn(`Database operation failed (attempt ${attempt}/${maxRetries}), retrying in ${delayMs}ms:`, lastError.message);
+          await this.sleep(delayMs * attempt); // Exponential backoff
+        }
+      }
+    }
+    
+    throw new Error(`Database operation failed after ${maxRetries} attempts. Last error: ${lastError!.message}`);
+  }
+
+  /**
+   * Sleep utility for retry delays
+   */
+  private static sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Validate query parameters before execution
+   */
+  private static validateQueryParameters(sql: string, args: any[]): void {
+    if (!sql || typeof sql !== 'string') {
+      throw new Error('SQL query must be a non-empty string');
+    }
+
+    if (!Array.isArray(args)) {
+      throw new Error('Query arguments must be an array');
+    }
+
+    // Check for undefined parameters
+    const undefinedArgs = args.map((arg, index) => arg === undefined ? index : null).filter(i => i !== null);
+    if (undefinedArgs.length > 0) {
+      throw new Error(`Database parameters at indices [${undefinedArgs.join(', ')}] are undefined. SQL: ${sql}`);
+    }
+
+    // Check parameter count vs placeholders
+    const placeholderCount = (sql.match(/\?/g) || []).length;
+    if (args.length !== placeholderCount) {
+      throw new Error(`Parameter count mismatch: SQL has ${placeholderCount} placeholders but ${args.length} arguments provided. SQL: ${sql}`);
+    }
+
+    // Validate parameter types
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      const argType = typeof arg;
+      
+      // Allow null but not undefined
+      if (arg === null) continue;
+      
+      // Check for supported types
+      if (!['string', 'number', 'boolean'].includes(argType) && !(arg instanceof Date)) {
+        console.warn(`Parameter at index ${i} has potentially unsupported type "${argType}":`, arg);
+      }
+    }
   }
 }
