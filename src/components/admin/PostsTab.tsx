@@ -79,7 +79,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     });
     
     try {
-      await loadThreads();
+      await loadThreads({ forceRefresh: true });
       setToast({
         show: true,
         title: 'Posts Refreshed',

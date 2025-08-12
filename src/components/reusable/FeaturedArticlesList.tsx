@@ -5,7 +5,8 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { BlogPost } from '@/types/blog';
 import { FeaturedArticlesConfig } from '@/config/sectionConfigs';
-import LoadingSpinner from '@/components/reusable/LoadingSpinner';
+import ArticleSkeleton from '@/components/reusable/ArticleSkeleton';
+import { useSkeletonLoading, useStaggeredLoading } from '@/hooks/useOptimizedLoading';
 
 interface FeaturedArticlesListProps {
   posts: BlogPost[];
@@ -21,6 +22,10 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = React.memo(({
   isLoading = false
 }) => {
   const router = useRouter();
+  
+  // Use optimized loading for smooth UX
+  const showSkeleton = useSkeletonLoading(posts.length > 0 && !isLoading);
+  const { isItemVisible } = useStaggeredLoading(posts.length, 100);
 
   return (
     <div className={`space-y-6 xl:space-y-4 2xl:space-y-10 ${className}`}>
@@ -36,41 +41,15 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = React.memo(({
 
       {/* Featured Posts List */}
       <div className="space-y-4">
-        {isLoading ? (
-          // Skeleton loading state that matches the actual article layout
-          Array.from({ length: 3 }).map((_, index) => (
-            <div 
-              key={`skeleton-${index}`} 
-              className="border border-black bg-white animate-pulse"
-            >
-              <div className="p-4 xl:p-5 2xl:p-8">
-                <div className="flex items-start gap-4">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="flex-shrink-0 w-2 h-2 bg-gray-300 rounded-full mt-2"></div>
-                    <div className="flex-1 space-y-2">
-                      {/* Title skeleton */}
-                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-                      {/* Excerpt skeleton */}
-                      <div className="space-y-1">
-                        <div className="h-3 bg-gray-200 rounded w-full"></div>
-                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                      </div>
-                      {/* Author skeleton */}
-                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                    </div>
-                  </div>
-                  {/* Image skeleton */}
-                  <div className="w-20 h-20 xl:w-24 xl:h-24 2xl:w-28 2xl:h-28 bg-gray-300 flex-shrink-0"></div>
-                </div>
-              </div>
-            </div>
-          ))
+        {showSkeleton ? (
+          <ArticleSkeleton count={config.maxArticles} showImage={true} />
         ) : (
-          posts.slice(0, config.maxArticles).map((post) => (
+          posts.slice(0, config.maxArticles).map((post, index) => (
           <div 
             key={post.id} 
-            className="border border-black bg-white hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+            className={`border border-black bg-white hover:shadow-lg transition-all duration-300 cursor-pointer ${
+              isItemVisible(index) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            }`}
             onClick={() => router.push(`/discussions/${post.slug}`)}
           >
             <div className="p-4 xl:p-5 2xl:p-8">

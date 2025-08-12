@@ -204,7 +204,11 @@ export const threadsApi = {
       params.append('isBlogPost', 'true');
     }
     
-    const response = await fetch(`/api/discussions?${params.toString()}${cacheBuster}`);
+    if (cacheBuster) {
+      params.append('_t', Date.now().toString());
+    }
+    
+    const response = await fetch(`/api/discussions?${params.toString()}`);
     return response.json();
   },
 

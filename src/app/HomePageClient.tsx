@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { NatalChartFormData } from '@/components/forms/NatalChartForm';
-import ClientWorldMap from '@/components/ClientWorldMap';
-import ElectionalAstrologyShowcase from '@/components/ElectionalAstrologyShowcase';
-import AstrologicalEvents from '@/components/AstrologicalEvents';
+
+// Lazy load heavy components for better initial load performance
+const ClientWorldMap = lazy(() => import('@/components/ClientWorldMap'));
+const ElectionalAstrologyShowcase = lazy(() => import('@/components/ElectionalAstrologyShowcase'));
+const AstrologicalEvents = lazy(() => import('@/components/AstrologicalEvents'));
 import SectionButton from '@/components/reusable/SectionButton';
 import FeaturedArticlesList from '@/components/reusable/FeaturedArticlesList';
 import NatalChartSection from '@/components/reusable/NatalChartSection';
@@ -226,22 +228,51 @@ export default function HomePageClient() {
         </div>
 
         <div className="relative">
-          <ClientWorldMap
-            className="w-full"
-            onCountryClick={handleCountryClick}
-            whiteCountries={true}
-          />
+          <Suspense fallback={
+            <div className="w-full h-96 bg-gradient-to-r from-blue-100 to-blue-50 animate-pulse flex items-center justify-center">
+              <div className="text-blue-600 font-semibold">Loading Interactive Map...</div>
+            </div>
+          }>
+            <ClientWorldMap
+              className="w-full"
+              onCountryClick={handleCountryClick}
+              whiteCountries={true}
+            />
+          </Suspense>
         </div>
       </section>
 
 
       <div id="electional-astrology-section" className="mt-12 scroll-mt-20">
-        <ElectionalAstrologyShowcase />
+        <Suspense fallback={
+          <div className="container mx-auto px-4 py-12">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-300 rounded w-1/3 mx-auto"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+              <div className="h-64 bg-gray-100 rounded"></div>
+            </div>
+          </div>
+        }>
+          <ElectionalAstrologyShowcase />
+        </Suspense>
       </div>
 
       {/* Astrological Events Section */}
       <div id="astrological-events-section" className="scroll-mt-20">
-        <AstrologicalEvents />
+        <Suspense fallback={
+          <div className="container mx-auto px-4 py-12">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-300 rounded w-1/2 mx-auto"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        }>
+          <AstrologicalEvents />
+        </Suspense>
       </div>
 
       {/* Status Toast */}

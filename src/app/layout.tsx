@@ -130,6 +130,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Preload critical resources for better performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://nominatim.openstreetmap.org" />
+        <link rel="dns-prefetch" href="https://accounts.google.com" />
+        
         <StructuredData type="website" />
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
