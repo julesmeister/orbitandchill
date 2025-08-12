@@ -96,8 +96,8 @@ const UserProfile = ({
       { type: "divider" as const },
     ];
 
-    // Show admin dashboard to users with admin role
-    if (user?.role === "admin") {
+    // Show admin dashboard to users with admin role or master admin email
+    if (user?.role === "admin" || user?.email === 'orbitandchill@gmail.com') {
       items.push({
         type: "link" as const,
         label: "Admin Dashboard",

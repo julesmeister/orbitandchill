@@ -20,6 +20,7 @@ interface DesktopNavProps {
   onGoogleSignIn: () => void;
   onSignOut: () => void;
   onHoverSound?: () => void;
+  forceUpdate?: number;
 }
 
 const NAVIGATION_LINKS = [
@@ -42,7 +43,8 @@ const DesktopNav = React.memo(({
   onNavigate,
   onGoogleSignIn,
   onSignOut,
-  onHoverSound
+  onHoverSound,
+  forceUpdate = 0
 }: DesktopNavProps) => {
   return (
     <div className="hidden lg:block">
@@ -91,6 +93,7 @@ const DesktopNav = React.memo(({
             )}
 
             <UserProfile
+              key={`desktop-profile-${user?.id}-${forceUpdate}`}
               user={user}
               isLoading={isAuthLoading}
               displayName={displayName}

@@ -23,6 +23,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showGooglePrompt, setShowGooglePrompt] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0); // Force re-render when auth changes
   
   // Toast state
   const [toast, setToast] = useState<{
@@ -32,23 +33,97 @@ export default function Navbar() {
     status: 'loading' | 'success' | 'error' | 'info';
   }>({ isVisible: false, title: '', message: '', status: 'info' });
   
-  // Custom hooks
-  const { user, updateUser, loadProfile, ensureAnonymousUser, clearProfile } = useUserStore();
+  // Custom hooks - use selector pattern for better reactivity
+  const user = useUserStore((state) => state.user);
+  const isAuthenticating = useUserStore((state) => state.isAuthenticating);
+  const { updateUser, loadProfile, ensureAnonymousUser, clearProfile } = useUserStore();
   const { signInWithGoogle, signOut, isLoading: isAuthLoading } = useGoogleAuth();
   const { loadingLink, progressWidth, isActiveLink, handleNavigation } = useNavigation();
   const { play: playHoverSound } = useSound('/sounds/hover.mp3', 0.3);
 
   // User display information
   const displayName = user?.username || "Anonymous User";
+  
+  // Debug logging for user state
+  useEffect(() => {
+    console.log('🔍 Navbar user state:', {
+      user,
+      displayName,
+      authProvider: user?.authProvider,
+      isAnonymous: user?.authProvider === 'anonymous',
+      isGoogle: user?.authProvider === 'google'
+    });
+  }, [user, displayName]);
 
   // Initialize user on mount - run only once
   useEffect(() => {
     const initializeUser = async () => {
+      // Don't run if authentication is in progress
+      if (isAuthenticating) {
+        console.log('🔐 Authentication in progress, skipping initialization');
+        return;
+      }
+      
+      // Check localStorage directly to debug
+      const storedData = localStorage.getItem('luckstrology-user-storage');
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          const storedUser = parsed?.state?.user;
+          
+          console.log('🔍 localStorage data:', {
+            hasUser: !!storedUser,
+            authProvider: storedUser?.authProvider,
+            username: storedUser?.username,
+            email: storedUser?.email
+          });
+          
+          // CRITICAL: Fix corrupted data - Google email with anonymous authProvider
+          if (storedUser && 
+              storedUser.email && 
+              storedUser.email.includes('@gmail.com') && 
+              storedUser.authProvider === 'anonymous') {
+            console.log('🔧 FIXING corrupted localStorage: Google email with anonymous authProvider');
+            
+            // Fix the authProvider
+            storedUser.authProvider = 'google';
+            
+            // Save back to localStorage
+            const fixedData = {
+              ...parsed,
+              state: {
+                ...parsed.state,
+                user: storedUser
+              }
+            };
+            
+            localStorage.setItem('luckstrology-user-storage', JSON.stringify(fixedData));
+            console.log('✅ Fixed localStorage authProvider to "google"');
+            
+            // Force Zustand to rehydrate with the fixed data
+            await useUserStore.persist.rehydrate();
+          }
+        } catch (e) {
+          console.error('Failed to parse localStorage:', e);
+        }
+      }
+      
       // First, wait for Zustand to rehydrate from localStorage
       await useUserStore.persist.rehydrate();
       
       // Check if we have a user from localStorage rehydration
       let currentUser = useUserStore.getState().user;
+      console.log('🔍 User after rehydration:', {
+        hasUser: !!currentUser,
+        authProvider: currentUser?.authProvider,
+        username: currentUser?.username
+      });
+      
+      // IMPORTANT: If we already have a Google user, don't mess with it!
+      if (currentUser?.authProvider === 'google') {
+        console.log('🔐 Google user already authenticated, skipping initialization');
+        return;
+      }
       
       // If we have a user from rehydration, try to sync with server
       if (currentUser) {
@@ -89,8 +164,13 @@ export default function Navbar() {
     
     if (googleUser) {
       showToast('Welcome!', `Successfully signed in as ${googleUser.name}`, 'success');
-      // Auto-hide success message after 3 seconds
-      setTimeout(() => hideToast(), 3000);
+      // Force a reload of the user profile to ensure UI updates
+      setTimeout(async () => {
+        await loadProfile();
+        // Force component re-render to reflect new auth state
+        setForceUpdate(prev => prev + 1);
+        hideToast();
+      }, 1000);
     } else {
       // Graceful degradation - show error but don't crash
       showToast('Sign-In Unavailable', 'Google sign-in is not available. You can continue using the site anonymously.', 'error');
@@ -163,6 +243,7 @@ export default function Navbar() {
         onGoogleSignIn={handleGoogleSignIn}
         onSignOut={handleSignOut}
         onHoverSound={playHoverSound}
+        forceUpdate={forceUpdate}
       />
 
       {/* Mobile/Tablet Layout */}
@@ -189,6 +270,7 @@ export default function Navbar() {
               
               {/* User Profile - Mobile */}
               <UserProfile
+                key={`mobile-profile-${user?.id}-${forceUpdate}`}
                 user={user}
                 isLoading={isAuthLoading}
                 displayName={displayName}

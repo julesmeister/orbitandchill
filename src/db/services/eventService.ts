@@ -318,7 +318,7 @@ export class EventService {
       // BYPASS DRIZZLE ORM - Use raw SQL for INSERT to avoid Turso HTTP client issues
       const client = (database as any).client;
       if (!client) {
-        console.error('❌ Database client not available');
+        console.error('Database client not available');
         throw new Error('Database client not available');
       }
         
@@ -395,7 +395,7 @@ export class EventService {
       // Use raw SQL for update to avoid Drizzle ORM WHERE clause issues and column naming problems
       const client = (db as any).client;
       if (!client) {
-        console.error('❌ Database client not available');
+        console.error('Database client not available');
         throw new Error('Database client not available');
       }
       
@@ -511,7 +511,7 @@ export class EventService {
       // Use raw SQL for delete to avoid Drizzle ORM WHERE clause issues
       const client = (db as any).client;
       if (!client) {
-        console.error('❌ Database client not available');
+        console.error('Database client not available');
         throw new Error('Database client not available');
       }
       
@@ -544,7 +544,7 @@ export class EventService {
       // Use raw SQL for update to avoid Drizzle ORM WHERE clause issues
       const client = (db as any).client;
       if (!client) {
-        console.error('❌ Database client not available');
+        console.error('Database client not available');
         throw new Error('Database client not available');
       }
       
@@ -629,7 +629,7 @@ export class EventService {
           }
         }
       } catch (tableError) {
-        console.error('⚠️ Error checking/creating table:', tableError);
+        console.error('Error checking/creating table:', tableError);
         // Continue with the insert attempt - might work anyway
       }
       
@@ -669,7 +669,7 @@ export class EventService {
             }
           }
         } catch (userError) {
-          console.error('⚠️ Error ensuring user exists:', userError);
+          console.error('Error ensuring user exists:', userError);
           // Continue anyway - maybe the foreign key constraint is disabled
         }
       }
@@ -897,7 +897,7 @@ export class EventService {
         return 0;
         
       } else {
-        console.error('❌ Database client not available');
+        console.error('Database client not available');
         throw new Error('Database client not available');
       }
       

@@ -54,29 +54,35 @@ export async function POST(request: NextRequest) {
         ? await transformWithAI(parsedContent, seedConfigs, generationSettings, aiConfig)
         : await simulateAITransformation(parsedContent, seedConfigs, generationSettings);
       
-      // Update batch status to completed
-      const totalReplies = transformedContent.reduce((sum: any, item: any) => sum + (item.actualReplyCount || 0), 0);
-      await updateSeedingBatch(batchId, {
-        status: 'completed',
-        processedContent: JSON.stringify(transformedContent),
-        discussionsCreated: transformedContent.length,
-        repliesCreated: totalReplies,
-        votesCreated: transformedContent.length * 15 + totalReplies * 5 // Estimated votes
-      });
-      
-      return NextResponse.json({
-        success: true,
-        batchId,
-        data: transformedContent,
-        summary: {
+      // Check if transformedContent is an array (success case)
+      if (Array.isArray(transformedContent)) {
+        // Update batch status to completed
+        const totalReplies = transformedContent.reduce((sum: any, item: any) => sum + (item.actualReplyCount || 0), 0);
+        await updateSeedingBatch(batchId, {
+          status: 'completed',
+          processedContent: JSON.stringify(transformedContent),
           discussionsCreated: transformedContent.length,
-          totalReplies: transformedContent.reduce((sum: any, item: any) => sum + (item.actualReplyCount || 0), 0),
-          mainAuthor: (transformedContent[0] as any)?.assignedAuthor,
-          category: (transformedContent[0] as any)?.category,
-          replyAuthors: (transformedContent[0] as any)?.replies?.map((r: any) => r.authorName) || []
-        },
-        message: `Successfully created ${transformedContent.length} discussion(s) with ${(transformedContent[0] as any)?.actualReplyCount || 0} replies`
-      });
+          repliesCreated: totalReplies,
+          votesCreated: transformedContent.length * 15 + totalReplies * 5 // Estimated votes
+        });
+        
+        return NextResponse.json({
+          success: true,
+          batchId,
+          data: transformedContent,
+          summary: {
+            discussionsCreated: transformedContent.length,
+            totalReplies: transformedContent.reduce((sum: any, item: any) => sum + (item.actualReplyCount || 0), 0),
+            mainAuthor: (transformedContent[0] as any)?.assignedAuthor,
+            category: (transformedContent[0] as any)?.category,
+            replyAuthors: (transformedContent[0] as any)?.replies?.map((r: any) => r.authorName) || []
+          },
+          message: `Successfully created ${transformedContent.length} discussion(s) with ${(transformedContent[0] as any)?.actualReplyCount || 0} replies`
+        });
+      } else {
+        // transformedContent is an error response, return it directly
+        return transformedContent;
+      }
     } catch (aiError) {
       // Update batch status to failed
       await updateSeedingBatch(batchId, {
@@ -406,6 +412,23 @@ Return ONLY valid JSON:
 
       // Process the main discussion post only
       const mainPost = transformedData.mainPost;
+      
+      // Check if parsing actually failed
+      const parsingFailed = mainPost.content === 'AI-transformed content (parsing failed)' || 
+                           mainPost.content.includes('(parsing failed)');
+      
+      if (parsingFailed) {
+        // Return error immediately if parsing failed
+        return NextResponse.json({
+          success: false,
+          error: 'AI response parsing failed. The AI model returned content in an unexpected format. Please try again or use a different model.',
+          partialData: [{
+            originalTitle: originalPost.originalTitle,
+            transformedTitle: mainPost.title,
+            error: 'Content parsing failed'
+          }]
+        }, { status: 422 }); // 422 Unprocessable Entity
+      }
       
       transformedContent.push({
         originalContent: originalPost.originalContent || originalPost.fullContent,

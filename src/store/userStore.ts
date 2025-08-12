@@ -7,6 +7,7 @@ interface UserState {
   // State
   user: User | null;
   isLoading: boolean;
+  isAuthenticating: boolean; // Lock to prevent race conditions
 
   // Computed values
   isProfileComplete: boolean;
@@ -20,6 +21,8 @@ interface UserState {
   clearProfile: () => Promise<void>;
   ensureAnonymousUser: (customName?: string) => Promise<void>;
   generateAnonymousId: () => string;
+  setAuthenticating: (value: boolean) => void;
+  forceSetUser: (user: User) => void;
 }
 
 const generateAnonymousId = (): string => {
@@ -56,6 +59,7 @@ export const useUserStore = create<UserState>()(
       // Initial state - will be overridden by persisted data if it exists
       user: null,
       isLoading: false,
+      isAuthenticating: false,
 
       // Computed values
       get isProfileComplete() {
@@ -76,6 +80,13 @@ export const useUserStore = create<UserState>()(
       // Actions
       updateUser: async (data) => {
         const currentUser = get().user;
+        
+        // IMPORTANT: Preserve authProvider if we're updating a Google user
+        // Don't let anonymous overwrites happen after Google auth
+        if (currentUser?.authProvider === 'google' && !data.authProvider) {
+          console.warn('⚠️ Attempted to update Google user without authProvider, preserving Google auth');
+          data = { ...data, authProvider: 'google' };
+        }
 
         const updatedUser: User = currentUser
           ? {
@@ -419,6 +430,47 @@ export const useUserStore = create<UserState>()(
       },
 
       generateAnonymousId,
+      
+      // Lock mechanism to prevent race conditions
+      setAuthenticating: (value: boolean) => {
+        set({ isAuthenticating: value });
+      },
+      
+      // Force set user (bypasses any checks - used for Google auth)
+      forceSetUser: (user: User) => {
+        console.log('🔐 Force setting user:', user.authProvider, user.username);
+        set({ user, isAuthenticating: false });
+        
+        // Manually trigger persistence with the full user object
+        const storage = window.localStorage;
+        // Use the same partialize function to ensure consistency
+        const persistedUser = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          profilePictureUrl: user.profilePictureUrl,
+          preferredAvatar: user.preferredAvatar,
+          authProvider: user.authProvider, // CRITICAL: Must persist authProvider
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          birthData: user.birthData,
+          hasNatalChart: user.hasNatalChart,
+          subscriptionTier: user.subscriptionTier,
+          privacy: user.privacy,
+        };
+        
+        const stateToStore = {
+          state: { user: persistedUser },
+          version: 0
+        };
+        
+        console.log('🔐 Persisting to localStorage:', { 
+          authProvider: persistedUser.authProvider,
+          username: persistedUser.username 
+        });
+        
+        storage.setItem('luckstrology-user-storage', JSON.stringify(stateToStore));
+      },
     }),
     {
       name: "luckstrology-user-storage",

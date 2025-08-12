@@ -30,11 +30,15 @@ const getUserIP = async (): Promise<string | undefined> => {
 export function useGoogleAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { updateUser } = useUserStore();
+  const { updateUser, setAuthenticating, forceSetUser } = useUserStore();
 
   const signInWithGoogle = useCallback(async (): Promise<GoogleUser | null> => {
+    console.log('🔐 Starting Google sign-in process...');
     setIsLoading(true);
     setError(null);
+    
+    // Set authentication lock to prevent race conditions
+    setAuthenticating(true);
 
     try {
       // Check if Google OAuth is ready - use graceful degradation instead of throwing
@@ -45,6 +49,9 @@ export function useGoogleAuth() {
         return null; // Return null instead of throwing to allow graceful degradation
       }
 
+      console.log('🔐 Mock mode enabled:', AUTH_CONFIG.features.mockMode);
+      console.log('🔐 Google Client ID:', AUTH_CONFIG.google.clientId?.substring(0, 20) + '...');
+      
       let googleUser: GoogleUser;
 
       if (AUTH_CONFIG.features.mockMode) {
@@ -121,6 +128,8 @@ export function useGoogleAuth() {
         googleUser = response;
       }
 
+      console.log('🔐 Google user obtained:', googleUser ? { id: googleUser.id, name: googleUser.name } : null);
+
       // Persist user to server database first, then update store
       try {
         const response = await fetch('/api/users/profile', {
@@ -163,16 +172,27 @@ export function useGoogleAuth() {
               createdAt: result.user.createdAt ? new Date(result.user.createdAt) : new Date(),
               updatedAt: result.user.updatedAt ? new Date(result.user.updatedAt) : new Date(),
             };
-            await updateUser(serverUser);
+            console.log('🔐 Updating user store with server user:', serverUser);
+            // Use forceSetUser to ensure no anonymous data persists
+            forceSetUser(serverUser as any);
             
             // Force Zustand to persist to localStorage immediately
-            setTimeout(() => {
-              const currentState = useUserStore.getState();
-              if (currentState.user) {
-                console.log('✅ Local store updated with server user data, user persisted to localStorage');
-              }
-            }, 100);
-            console.log('✅ Local store updated with server user data');
+            await useUserStore.persist.rehydrate();
+            
+            // Verify the update actually happened
+            const updatedState = useUserStore.getState();
+            console.log('🔐 Updated state after updateUser:', updatedState.user);
+            
+            if (updatedState.user?.authProvider === 'google') {
+              console.log('✅ Local store updated with server user data, verified Google auth');
+            } else {
+              console.warn('⚠️ User state update may have failed, retrying...');
+              console.log('⚠️ Current user auth provider:', updatedState.user?.authProvider);
+              // Retry the update
+              await updateUser(serverUser);
+              const retryState = useUserStore.getState();
+              console.log('🔐 State after retry:', retryState.user);
+            }
           } else {
             // Fallback to local user data if server doesn't return user
             await updateUser({
@@ -242,8 +262,10 @@ export function useGoogleAuth() {
       return null; // Return null instead of throwing to allow graceful degradation
     } finally {
       setIsLoading(false);
+      // Release authentication lock
+      setAuthenticating(false);
     }
-  }, [updateUser]);
+  }, [updateUser, setAuthenticating, forceSetUser]);
 
   const signOut = useCallback(async () => {
     setIsLoading(true);

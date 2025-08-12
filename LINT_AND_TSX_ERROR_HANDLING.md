@@ -1,6 +1,157 @@
-# Lint and TypeScript Error Handling Guide
+# Lint and TypeScript Error Handling System
 
-This guide establishes rules for fixing linting and TypeScript errors in the codebase.
+## 🏗️ Complete Lint & TypeScript Error Handling Tree
+
+```
+Error Handling System Architecture
+├── 📁 Configuration & Rules
+│   ├── Core Principles
+│   │   ├── ❌ NEVER auto-fix without review
+│   │   ├── 🔒 Preserve intentional eslint-disable comments
+│   │   ├── 🎯 Fix root cause, not symptoms
+│   │   └── 📊 Warnings vs Errors distinction
+│   └── File-Level Disable Comments (INTENTIONAL - DO NOT REMOVE)
+│       ├── /* eslint-disable @typescript-eslint/no-unused-vars */
+│       ├── /* eslint-disable @typescript-eslint/no-explicit-any */
+│       └── Added per CLAUDE.md to reduce development noise
+│
+├── 🔧 Error Resolution Workflow Tree
+│   ├── 1️⃣ TypeScript Error Detection
+│   │   ├── Command: NODE_OPTIONS="--max-old-space-size=1024" npx tsc --noEmit --skipLibCheck
+│   │   ├── Priority: Fix BEFORE ESLint (TypeScript errors block builds)
+│   │   └── Focus Areas:
+│   │       ├── Import/export mismatches
+│   │       ├── Interface compatibility issues
+│   │       ├── Missing required properties
+│   │       └── Function signature mismatches
+│   │
+│   ├── 2️⃣ TypeScript Error Classification Tree
+│   │   ├── Import Errors
+│   │   │   ├── Pattern: "No exported member 'X'"
+│   │   │   ├── Solution: Check correct export name in target file
+│   │   │   └── Fix: Update import to match actual export
+│   │   ├── Interface Compatibility
+│   │   │   ├── Pattern: "Type 'X' is not assignable to type 'Y'"
+│   │   │   ├── Root Cause Analysis Tree:
+│   │   │   │   ├── Multiple interface definitions (use: grep -r "interface Name" src/)
+│   │   │   │   ├── Optional vs required properties (? vs non-?)
+│   │   │   │   ├── Union type differences ('a'|'b' vs 'a'|'b'|'c')
+│   │   │   │   └── Import path targeting wrong definition
+│   │   │   └── Solution Strategy:
+│   │   │       ├── Consolidate to single source of truth in src/types/
+│   │   │       ├── Update all imports to canonical version
+│   │   │       └── Align required/optional properties with usage
+│   │   ├── Missing Properties
+│   │   │   ├── Pattern: "Property 'X' is missing in type 'Y'"
+│   │   │   ├── Mock Object Issues:
+│   │   │   │   ├── Add ALL required properties to mock objects
+│   │   │   │   └── Use empty strings/defaults for unused props
+│   │   │   └── Nested Interface Requirements:
+│   │   │       ├── Check complete interface tree structure
+│   │   │       └── Include all nested required properties
+│   │   └── Function Signature Mismatches
+│   │       ├── Generic strings vs literal types
+│   │       ├── Solution: Use specific union types
+│   │       └── Example: (tab: string) → (tab: 'all' | 'bookmarked')
+│   │
+│   ├── 3️⃣ ESLint Error Detection
+│   │   ├── Command: NODE_OPTIONS="--max-old-space-size=1024" npx eslint --ext .ts,.tsx src/ --quiet
+│   │   ├── Flag: --quiet (errors only, NOT warnings)
+│   │   └── Priority: Fix AFTER TypeScript errors resolved
+│   │
+│   ├── 4️⃣ ESLint Error Resolution Tree
+│   │   ├── @typescript-eslint/no-require-imports
+│   │   │   ├── Solution: Add eslint-disable-next-line above require()
+│   │   │   └── Pattern: // eslint-disable-next-line @typescript-eslint/no-require-imports
+│   │   ├── prefer-const
+│   │   │   ├── Solution: Change let → const for unmodified variables
+│   │   │   └── Check: Variable never gets reassigned after declaration
+│   │   ├── @typescript-eslint/no-explicit-any
+│   │   │   ├── Preferred: Add proper type definitions
+│   │   │   └── Fallback: eslint-disable-next-line with justification
+│   │   └── React Hook Dependencies (WARNINGS - Handle Carefully)
+│   │       ├── ✅ Fix if represents actual bug
+│   │       ├── ❌ Don't auto-fix without understanding
+│   │       └── ✅ Leave as-is if intentional design decision
+│   │
+│   └── 5️⃣ Systematic Resolution Process
+│       ├── Dependency Order (Fix in this sequence):
+│       │   ├── 1. src/types/ → Interface definitions
+│       │   ├── 2. src/store/ → State management
+│       │   ├── 3. src/hooks/ → Custom hooks  
+│       │   └── 4. src/components/ → UI components
+│       ├── Verification After Each Major Fix:
+│       │   └── NODE_OPTIONS="--max-old-space-size=1024" npx tsc --noEmit --skipLibCheck src/types/ src/store/
+│       └── Final Build Verification:
+│           ├── TypeScript: npx tsc --noEmit --skipLibCheck  
+│           └── Build Test: npm run build --no-lint (if memory allows)
+│
+├── ⚡ Quick Fix Command Handler
+│   ├── Trigger: When user types "do @LINT_AND_TSX_ERROR_HANDLING.md"
+│   ├── Action Sequence (NO commentary, just execute):
+│   │   ├── 1. Run TypeScript check and fix all errors
+│   │   ├── 2. Run ESLint check and fix all errors  
+│   │   └── 3. Commit changes with appropriate message
+│   └── Mode: Silent execution (no explanations or summaries)
+│
+├── 🚫 Anti-Patterns (What NOT to Do)
+│   ├── ❌ Run eslint --fix on entire codebase
+│   ├── ❌ Remove eslint-disable comments at file tops
+│   ├── ❌ Add eslint-disable for entire files
+│   ├── ❌ Cast everything to 'any' to suppress TypeScript errors
+│   ├── ❌ Suppress errors without understanding root cause
+│   ├── ❌ Change interface to match wrong usage
+│   ├── ❌ Remove required properties to silence errors
+│   └── ❌ Assume similar interfaces are identical
+│
+├── ✅ Best Practices Tree
+│   ├── Root Cause Resolution
+│   │   ├── Fix source of error, not symptoms
+│   │   ├── Add proper type definitions instead of 'any'
+│   │   └── Use targeted eslint-disable-next-line only
+│   ├── Interface Management
+│   │   ├── Single source of truth for each interface
+│   │   ├── Consolidate duplicate definitions
+│   │   └── Complete mock objects with all required properties
+│   ├── Memory Management
+│   │   ├── All commands use NODE_OPTIONS="--max-old-space-size=1024"
+│   │   ├── TypeScript: --skipLibCheck for performance
+│   │   └── ESLint: --max-warnings flag for controlled output
+│   └── Documentation
+│       ├── Document why suppressions are necessary
+│       ├── Preserve CLAUDE.md specified disable comments
+│       └── Comment complex type bridges/workarounds
+│
+├── 🔄 Build vs TypeScript Check Differences
+│   ├── Issue: tsc passes but npm run build fails
+│   ├── Causes:
+│   │   ├── Next.js includes additional type checking
+│   │   ├── Different tsconfig.json settings in build
+│   │   └── Build process includes more files than standalone tsc
+│   └── Best Practice: Test both tsc AND build
+│
+├── 🆘 Emergency Fallback Patterns
+│   ├── Complex Interface Dependencies (Circular Issues)
+│   │   ├── Create bridge interfaces with Omit<> and intersection types
+│   │   ├── Pattern: BridgeType extends Omit<Original, 'prop'> { prop: Extended }
+│   │   └── Use converter functions to bridge incompatible types
+│   ├── Memory Constraints
+│   │   ├── Split large type checks into smaller batches
+│   │   ├── Use --max-old-space-size=1024 minimum
+│   │   └── Skip build verification if memory insufficient
+│   └── Circular Dependency Breaking
+│       ├── Move shared types to separate files
+│       ├── Use dynamic imports for heavy dependencies
+│       └── Split large interfaces into smaller, composable parts
+│
+└── 📊 Error Categories & Resolution Patterns
+    ├── Import/Export Issues → Check actual exports, fix import names
+    ├── Interface Compatibility → Consolidate definitions, fix properties
+    ├── Missing Properties → Add to mocks, ensure complete interfaces
+    ├── Function Signatures → Use literal types instead of generic strings
+    ├── Build Failures → Test both tsc and npm run build
+    └── Memory Issues → Use NODE_OPTIONS and batch processing
+```
 
 ## Quick Fix Command
 

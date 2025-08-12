@@ -116,12 +116,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     },
     {
-      url: `${baseUrl}/privacy`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
-      priority: 0.3,
-    },
-    {
       url: `${baseUrl}/about`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
@@ -171,10 +165,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch blog categories
   const categories = [
-    'astrocartography',
-    'learning-resources',
-    'transits',
+    'natal-chart-analysis',
+    'transits-predictions',
+    'synastry-compatibility',
     'mundane-astrology',
+    'learning-resources',
     'chart-reading-help',
     'general-discussion'
   ]

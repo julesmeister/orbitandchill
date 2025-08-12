@@ -4,7 +4,423 @@
 
 This document outlines the Google OAuth integration implemented in the Luckstrology application. The system provides seamless Google Sign-In functionality with fallback to anonymous users, activity tracking, and session management.
 
+## Complete File Tree Map
+
+### Authentication System Files
+
+```
+src/
+├── config/
+│   └── auth.ts                    # Main authentication configuration
+│
+├── types/
+│   ├── google.d.ts                # Google Identity Services TypeScript definitions
+│   └── user.ts                    # User interface and types
+│
+├── hooks/
+│   └── useGoogleAuth.ts           # Google authentication hook with OAuth flow
+│
+├── store/
+│   ├── userStore.ts               # Zustand store for user state management
+│   └── admin/
+│       ├── auth.ts                # Admin authentication store
+│       └── types.ts               # Admin types including auth
+│
+├── middleware/
+│   └── adminAuth.ts               # Admin authentication middleware
+│
+├── components/
+│   ├── Navbar.tsx                 # Main navbar with auth integration
+│   └── navbar/
+│       ├── UserProfile.tsx        # User profile dropdown with auth options
+│       ├── DesktopNav.tsx         # Desktop navigation with user profile
+│       ├── MobileNav.tsx           # Mobile navigation
+│       └── GoogleSignInPrompt.tsx # Auto-prompt for Google sign-in
+│
+├── app/
+│   ├── layout.tsx                 # Root layout with Google Identity Services script
+│   └── api/
+│       ├── auth/
+│       │   ├── logout/
+│       │   │   └── route.ts      # Web logout endpoint
+│       │   └── mobile/
+│       │       └── route.ts      # Mobile authentication endpoint
+│       ├── admin/
+│       │   └── auth/
+│       │       ├── login/
+│       │       │   └── route.ts  # Admin login endpoint
+│       │       ├── logout/
+│       │       │   └── route.ts  # Admin logout endpoint
+│       │       ├── verify/
+│       │       │   └── route.ts  # Admin session verification
+│       │       └── master-login/
+│       │           └── route.ts  # Master admin login
+│       └── users/
+│           ├── profile/
+│           │   └── route.ts      # User profile CRUD operations
+│           ├── account/
+│           │   └── route.ts      # Account management
+│           ├── activity/
+│           │   └── route.ts      # User activity tracking
+│           ├── preferences/
+│           │   └── route.ts      # User preferences
+│           ├── location/
+│           │   └── route.ts      # Location data
+│           ├── delete/
+│           │   └── route.ts      # Account deletion
+│           └── by-username/
+│               └── [username]/
+│                   └── route.ts  # Fetch user by username
+│
+├── db/
+│   ├── services/
+│   │   ├── userService.ts        # User database operations
+│   │   ├── userActivityService.ts # Activity logging service
+│   │   └── seedUserService.ts    # Seed user creation
+│   └── integration/
+│       └── userStoreIntegration.ts # Zustand-DB integration
+│
+├── repositories/
+│   └── UserRepository.ts         # User data repository pattern
+│
+├── utils/
+│   ├── usernameGenerator.ts      # Anonymous username generation
+│   ├── userHelpers.ts             # User utility functions
+│   └── userTransformations.ts    # User data transformations
+│
+└── lib/
+    └── analytics.ts               # User registration tracking
+```
+
+### Related Support Files
+
+```
+├── components/admin/
+│   ├── UsersTab.tsx               # Admin user management interface
+│   ├── UserActivityTimeline.tsx   # User activity visualization
+│   └── modals/
+│       ├── UserEditModal.tsx      # User editing interface
+│       ├── UserActivityModal.tsx  # Activity details modal
+│       └── UserDeletionModal.tsx  # User deletion confirmation
+│
+├── components/profile/
+│   ├── UserActivitySection.tsx    # User activity display
+│   └── UserDiscussionsSection.tsx # User discussions list
+│
+├── components/settings/
+│   └── UserPreferences.tsx        # User preference management
+│
+└── hooks/
+    ├── useUserActions.ts          # User action handlers
+    ├── useUserEdit.ts             # User editing logic
+    ├── useUsersData.ts            # User data fetching
+    ├── useUsersFilters.ts         # User filtering logic
+    └── useUserAvatar.ts           # Avatar management
+```
+
+## Authentication Flow Tree
+
+```
+User Interaction
+│
+├── Anonymous User Flow
+│   ├── Page Load
+│   │   └── Navbar.tsx
+│   │       └── useEffect (initializeUser)
+│   │           └── loadProfile()
+│   │               └── ensureAnonymousUser()
+│   │                   └── generateAnonymousName()
+│   │                       └── userStore.updateUser()
+│   │
+│   └── Google Sign-In Prompt
+│       └── GoogleSignInPrompt.tsx
+│           └── Shows after 2s delay
+│               └── User clicks "Sign in with Google"
+│                   └── Triggers Google OAuth flow
+│
+└── Google OAuth Flow
+    ├── User clicks "Sign in with Google"
+    │   └── UserProfile.tsx
+    │       └── onGoogleSignIn()
+    │           └── Navbar.handleGoogleSignIn()
+    │               └── useGoogleAuth.signInWithGoogle()
+    │
+    ├── OAuth Implementation
+    │   └── useGoogleAuth.ts
+    │       ├── Check isGoogleOAuthReady()
+    │       │   └── Verify client ID exists
+    │       ├── Initialize Google Identity Services
+    │       │   └── window.google.accounts.oauth2.initTokenClient()
+    │       ├── Request Access Token
+    │       │   └── tokenClient.requestAccessToken()
+    │       ├── OAuth Popup
+    │       │   └── User authorizes
+    │       └── Token Callback
+    │           ├── Fetch user info from Google API
+    │           │   └── googleapis.com/oauth2/v2/userinfo
+    │           └── Return GoogleUser object
+    │
+    ├── User Persistence
+    │   └── useGoogleAuth.ts (continued)
+    │       ├── POST /api/users/profile
+    │       │   ├── Create/update user in Turso DB
+    │       │   └── Return user data
+    │       ├── updateUser() in userStore
+    │       │   └── Update Zustand state
+    │       ├── Persist to localStorage
+    │       │   └── useUserStore.persist.rehydrate()
+    │       └── Verify update
+    │           └── Check user.authProvider === 'google'
+    │
+    └── UI Update
+        └── Navbar.tsx
+            ├── loadProfile() (forced refresh)
+            ├── setForceUpdate() (trigger re-render)
+            └── UserProfile re-renders
+                └── Shows user name & avatar
+```
+
+## State Management Flow
+
+```
+Zustand Store (userStore.ts)
+│
+├── State Structure
+│   ├── user: User | null
+│   ├── isLoading: boolean
+│   ├── isProfileComplete: boolean
+│   └── hasStoredData: boolean
+│
+├── Actions
+│   ├── updateUser()
+│   │   ├── Update local state
+│   │   ├── PATCH /api/users/profile
+│   │   └── Sync with server
+│   ├── loadProfile()
+│   │   ├── Check localStorage
+│   │   ├── GET /api/users/profile
+│   │   └── Update state
+│   ├── ensureAnonymousUser()
+│   │   └── Create anonymous user
+│   └── clearProfile()
+│       └── Reset to anonymous
+│
+└── Persistence
+    ├── localStorage (primary)
+    │   └── Key: "luckstrology-user-storage"
+    └── Turso Database (backup)
+        └── Table: users
+```
+
+## API Endpoints Tree
+
+```
+/api/
+├── auth/
+│   ├── logout/              # POST - End user session
+│   └── mobile/              # POST/PATCH - Mobile auth
+│
+├── admin/auth/
+│   ├── login/               # POST - Admin login
+│   ├── logout/              # POST - Admin logout
+│   ├── verify/              # GET - Verify admin session
+│   └── master-login/        # POST - Master admin access
+│
+└── users/
+    ├── profile/             # GET/POST/PATCH - User CRUD
+    ├── account/             # PATCH - Account updates
+    ├── activity/            # GET/POST - Activity logs
+    ├── preferences/         # PATCH - User preferences
+    ├── location/            # POST - Save location
+    ├── delete/              # DELETE - Account deletion
+    └── by-username/[name]/  # GET - Fetch by username
+```
+
 ## Current Implementation Status
+
+### 🏗️ Complete Authentication System Tree
+
+```
+Authentication System Architecture
+├── 📁 Core Configuration
+│   ├── src/config/auth.ts
+│   │   ├── AUTH_CONFIG (Google OAuth settings)
+│   │   ├── isGoogleOAuthReady() validation
+│   │   ├── DEFAULT_USER_PREFERENCES
+│   │   └── Mock mode vs Production toggles
+│   └── src/types/
+│       ├── google.d.ts (Google Identity Services types)
+│       └── user.ts (User, BirthData, UserPrivacySettings interfaces)
+│
+├── 🔐 Authentication Flow
+│   ├── Google OAuth Integration
+│   │   ├── src/hooks/useGoogleAuth.ts
+│   │   │   ├── signInWithGoogle() - Main OAuth flow
+│   │   │   ├── signOut() - Logout with activity logging
+│   │   │   ├── Mock mode support for development
+│   │   │   └── Real Google Identity Services integration
+│   │   ├── src/app/layout.tsx
+│   │   │   └── Google Identity Services script loading
+│   │   └── OAuth Flow Steps:
+│   │       ├── 1. User clicks "Sign in with Google"
+│   │       ├── 2. Google Identity Services popup
+│   │       ├── 3. Token verification with Google API
+│   │       ├── 4. User info extraction from token
+│   │       ├── 5. Server persistence via /api/users/profile
+│   │       └── 6. Local state update via forceSetUser()
+│   │
+│   └── Anonymous User System
+│       ├── src/utils/usernameGenerator.ts
+│       │   ├── generateAnonymousName() - Creative names
+│       │   └── getUserInitials() - Avatar initials
+│       ├── Auto-creation on first visit
+│       ├── Persistent anonymous IDs in localStorage
+│       └── Smooth upgrade path to Google auth
+│
+├── 💾 State Management & Persistence
+│   ├── Zustand Store (src/store/userStore.ts)
+│   │   ├── State Structure:
+│   │   │   ├── user: User | null
+│   │   │   ├── isLoading: boolean
+│   │   │   ├── isAuthenticating: boolean (race condition lock)
+│   │   │   ├── isProfileComplete: boolean (computed)
+│   │   │   └── hasStoredData: boolean (computed)
+│   │   ├── Core Actions:
+│   │   │   ├── updateUser() - Standard user updates
+│   │   │   ├── forceSetUser() - Bypass checks for Google auth
+│   │   │   ├── updateBirthData() - Astrological data
+│   │   │   ├── updatePrivacySettings() - Privacy controls
+│   │   │   ├── loadProfile() - Sync with server
+│   │   │   ├── ensureAnonymousUser() - Create anonymous user
+│   │   │   ├── clearProfile() - Reset session
+│   │   │   └── setAuthenticating() - Lock mechanism
+│   │   └── Persistence Strategy:
+│   │       ├── Primary: localStorage via Zustand persist
+│   │       ├── Backup: Server database via API calls
+│   │       ├── Corruption Detection: Auto-repair on init
+│   │       └── Race Condition Prevention: Authentication locks
+│   │
+│   └── Database Integration
+│       ├── src/db/services/userService.ts
+│       │   ├── createUser() - User creation
+│       │   ├── getUserById() - User retrieval
+│       │   ├── updateUser() - User updates
+│       │   ├── getUserByEmail() - Google user lookup
+│       │   └── Account deletion workflows
+│       └── src/db/services/userActivityService.ts
+│           ├── Login/logout activity tracking
+│           ├── IP address logging
+│           └── Session management
+│
+├── 🎨 User Interface Components
+│   ├── Navigation Integration
+│   │   ├── src/components/Navbar.tsx
+│   │   │   ├── User initialization on mount
+│   │   │   ├── localStorage corruption detection (lines 81-104)
+│   │   │   ├── Authentication state debugging
+│   │   │   ├── Google sign-in handlers
+│   │   │   └── Toast notifications for auth events
+│   │   ├── src/components/navbar/UserProfile.tsx
+│   │   │   ├── Profile dropdown menu
+│   │   │   ├── Admin access control (orbitandchill@gmail.com)
+│   │   │   ├── Google sign-in button for anonymous users
+│   │   │   ├── Sign-out functionality
+│   │   │   └── Avatar display with fallbacks
+│   │   └── src/components/navbar/GoogleSignInPrompt.tsx
+│   │       ├── Auto-prompt after 2 seconds
+│   │       ├── Dismissible with localStorage flag
+│   │       └── Graceful fallback if OAuth unavailable
+│   │
+│   └── Desktop vs Mobile Layouts
+│       ├── src/components/navbar/DesktopNav.tsx
+│       ├── src/components/navbar/MobileNav.tsx
+│       └── Responsive design patterns
+│
+├── 🌐 API Endpoints
+│   ├── User Management APIs
+│   │   ├── src/app/api/users/profile/route.ts
+│   │   │   ├── GET - Retrieve user profile
+│   │   │   ├── POST - Create new user (Google or anonymous)
+│   │   │   ├── PATCH - Update user data
+│   │   │   └── Birth data flattening for database storage
+│   │   ├── src/app/api/users/account/route.ts
+│   │   ├── src/app/api/users/activity/route.ts
+│   │   └── src/app/api/users/preferences/route.ts
+│   │
+│   ├── Authentication APIs
+│   │   ├── src/app/api/auth/logout/route.ts
+│   │   │   ├── Web logout endpoint
+│   │   │   ├── Activity timestamp updates
+│   │   │   └── Session cleanup
+│   │   └── src/app/api/auth/mobile/route.ts
+│   │       ├── Mobile OAuth token verification
+│   │       ├── Cross-platform user creation
+│   │       └── Mobile session management
+│   │
+│   └── Admin Authentication
+│       ├── src/app/api/admin/auth/login/route.ts
+│       ├── src/app/api/admin/auth/logout/route.ts
+│       ├── src/app/api/admin/auth/verify/route.ts
+│       └── src/app/api/admin/auth/master-login/route.ts
+│
+├── 🛡️ Security & Privacy
+│   ├── Privacy Controls (src/types/user.ts)
+│   │   ├── showZodiacPublicly
+│   │   ├── showStelliumsPublicly
+│   │   ├── showBirthInfoPublicly
+│   │   ├── allowDirectMessages
+│   │   └── showOnlineStatus
+│   ├── Admin Role System
+│   │   ├── Master Admin: orbitandchill@gmail.com
+│   │   ├── Role-based permissions
+│   │   └── Premium feature overrides
+│   └── Data Protection
+│       ├── Optional email storage
+│       ├── Anonymous user support
+│       └── GDPR-friendly design
+│
+├── 📱 Mobile Authentication
+│   ├── src/app/api/auth/mobile/route.ts
+│   │   ├── Google token verification
+│   │   ├── Mobile user creation/login
+│   │   ├── Device info tracking
+│   │   └── Cross-platform user sync
+│   └── Flutter Integration Support
+│       ├── Token-based authentication
+│       ├── Device identification
+│       └── Offline data caching
+│
+├── 📊 Analytics & Activity Tracking
+│   ├── src/lib/analytics.ts
+│   │   └── trackUserRegistration() for Google/anonymous users
+│   ├── src/db/services/userActivityService.ts
+│   │   ├── Login/logout events
+│   │   ├── Session tracking
+│   │   └── IP address logging
+│   └── Admin notification system (orbitandchill@gmail.com only)
+│
+└── 🔧 Recent Fixes & Issues Resolved (Aug 2025)
+    ├── 🔐 Authentication Persistence
+    │   ├── Problem: localStorage corruption (Google email + anonymous authProvider)
+    │   ├── Solution: src/components/Navbar.tsx:81-104 (auto-repair)
+    │   ├── Solution: src/store/userStore.ts:435-473 (forceSetUser method)
+    │   └── Solution: src/hooks/useGoogleAuth.ts:177 (bypass normal updates)
+    │
+    ├── 👤 Admin Access Control  
+    │   ├── Problem: orbitandchill@gmail.com not showing Admin Dashboard
+    │   ├── Solution: src/components/navbar/UserProfile.tsx:100
+    │   └── Logic: user?.role === "admin" || user?.email === 'orbitandchill@gmail.com'
+    │
+    ├── 🏗️ Build System Stability
+    │   ├── Fixed: src/app/sitemap.ts merge conflicts
+    │   ├── Fixed: src/store/eventsStore.ts syntax errors  
+    │   └── Added: react-icons dependency
+    │
+    └── 🤖 AI Content Processing
+        ├── Problem: Success toasts for failed AI parsing
+        ├── Solution: src/app/api/admin/transform-with-ai/route.ts:410-425
+        └── Solution: src/hooks/useSeedingContent.ts:66-81 (frontend validation)
+```
 
 ### ✅ Completed Components
 

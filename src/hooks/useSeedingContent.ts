@@ -63,6 +63,23 @@ export const useSeedingContent = () => {
       
       setSeedingResults(result);
       if (result && result.success && result.data) {
+        // Check if any of the transformed content contains parsing failure
+        const hasParsingFailure = result.data.some((item: any) => 
+          item.transformedContent === 'AI-transformed content (parsing failed)' ||
+          item.transformedContent?.includes('(parsing failed)')
+        );
+        
+        if (hasParsingFailure) {
+          console.error('🔄 AI processing returned parsing failure in content');
+          const failureResult = {
+            success: false,
+            error: 'AI response parsing failed. The content could not be properly transformed.',
+            data: result.data
+          };
+          setSeedingResults(failureResult);
+          return failureResult;
+        }
+        
         console.log('🔄 AI processing successful, setting preview content:', result.data.length, 'discussions');
         setPreviewContent(result.data);
         setExpandedReplies({});
