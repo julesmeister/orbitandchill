@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePublicAIConfig } from '@/hooks/usePublicAIConfig';
 
 interface SeedingPersistenceData {
   pastedContent: string;
@@ -15,6 +16,8 @@ interface SeedingPersistenceData {
 }
 
 export const useSeedingPersistence = () => {
+  // Database AI configuration hook
+  const { config: dbConfig, isLoading: dbConfigLoading, hasValidConfig, error: dbConfigError } = usePublicAIConfig();
   
   const [pastedContent, setPastedContent] = useState('');
   const [scrapedContent, setScrapedContent] = useState<any[]>([]);
@@ -81,6 +84,7 @@ export const useSeedingPersistence = () => {
   const [aiModel, setAiModel] = useState('deepseek/deepseek-r1-distill-llama-70b:free');
   const [aiApiKey, setAiApiKey] = useState('');
   const [temperature, setTemperature] = useState(0.7);
+  const [configLoadedFromDB, setConfigLoadedFromDB] = useState(false);
   
   // Active Personas State (default to all active)
   const [activePersonas, setActivePersonas] = useState<string[]>(() => {
@@ -98,36 +102,70 @@ export const useSeedingPersistence = () => {
     return [];
   });
 
-  // Load saved settings from localStorage on component mount
+  // Load saved settings from localStorage and database on component mount
   useEffect(() => {
-    // Load AI settings
+    // Priority: Database config > localStorage > defaults
+    // Load AI settings - database takes priority over localStorage
     const savedApiKey = localStorage.getItem('seeding_ai_api_key');
     const savedProvider = localStorage.getItem('seeding_ai_provider');
     const savedModel = localStorage.getItem('seeding_ai_model');
     const savedTemperature = localStorage.getItem('seeding_ai_temperature');
     
-    if (savedApiKey) {
-      setAiApiKey(savedApiKey);
-    }
-    if (savedProvider) {
-      setAiProvider(savedProvider);
-    }
-    if (savedModel) {
-      // console.log('🔍 DEBUG: Loading saved AI model from localStorage:', savedModel);
-      // Check if it's the problematic old model
-      if (savedModel === 'meta-llama/llama-3.1-70b-instruct:free') {
-        console.log('🚨 Found old meta-llama model in localStorage, updating to working model');
-        const newModel = 'deepseek/deepseek-r1-distill-llama-70b:free';
-        setAiModel(newModel);
-        localStorage.setItem('seeding_ai_model', newModel);
-      } else {
-        setAiModel(savedModel);
+    // Don't load multiple times
+    if (configLoadedFromDB) return;
+
+    try {
+      // Priority: Database config > localStorage > defaults
+      if (dbConfig && hasValidConfig && !dbConfigLoading) {
+        console.log('🗃️ [AI Config] Loading from database:', {
+          provider: dbConfig.provider,
+          model: dbConfig.model,
+          hasApiKey: !!dbConfig.apiKey,
+          temperature: dbConfig.temperature
+        });
+        
+        // Apply database configuration
+        setAiProvider(dbConfig.provider);
+        setAiModel(dbConfig.model);
+        setAiApiKey(dbConfig.apiKey);
+        setTemperature(dbConfig.temperature);
+        
+        // Sync localStorage with database for offline consistency
+        localStorage.setItem('seeding_ai_provider', dbConfig.provider);
+        localStorage.setItem('seeding_ai_model', dbConfig.model);
+        localStorage.setItem('seeding_ai_api_key', dbConfig.apiKey);
+        localStorage.setItem('seeding_ai_temperature', dbConfig.temperature.toString());
+        
+        setConfigLoadedFromDB(true);
+        return;
       }
-    } else {
-      // console.log('🔍 DEBUG: No saved AI model found, using default:', aiModel);
-    }
-    if (savedTemperature) {
-      setTemperature(parseFloat(savedTemperature));
+      
+      // Database unavailable or no valid config - fallback to localStorage
+      if (dbConfigError || (!dbConfig && !dbConfigLoading)) {
+        console.log('💾 [AI Config] Database unavailable, loading from localStorage');
+        
+        if (savedApiKey) setAiApiKey(savedApiKey);
+        if (savedProvider) setAiProvider(savedProvider);
+        if (savedTemperature) setTemperature(parseFloat(savedTemperature));
+        
+        // Handle model with migration
+        if (savedModel) {
+          // Migrate away from problematic old model
+          if (savedModel === 'meta-llama/llama-3.1-70b-instruct:free') {
+            console.warn('⚠️ [AI Config] Migrating from deprecated model to working model');
+            const newModel = 'deepseek/deepseek-r1-distill-llama-70b:free';
+            setAiModel(newModel);
+            localStorage.setItem('seeding_ai_model', newModel);
+          } else {
+            setAiModel(savedModel);
+          }
+        }
+        
+        setConfigLoadedFromDB(true);
+      }
+    } catch (error) {
+      console.error('❌ [AI Config] Error during configuration loading:', error);
+      setConfigLoadedFromDB(true);
     }
     
     // Load content and preview data
@@ -164,7 +202,7 @@ export const useSeedingPersistence = () => {
         console.error('Failed to parse saved seeding results:', e);
       }
     }
-  }, []);
+  }, [dbConfig, hasValidConfig, dbConfigLoading, dbConfigError, configLoadedFromDB]);
 
   // Handle restoration notification after component mounts (migration already done in initializer)
   useEffect(() => {
@@ -207,37 +245,37 @@ export const useSeedingPersistence = () => {
     }
   }, [seedingResults]);
 
-  // Save AI settings to localStorage when they change
-  const handleApiKeyChange = (newApiKey: string) => {
+  // Optimized AI settings handlers with useCallback
+  const handleApiKeyChange = useCallback((newApiKey: string) => {
     setAiApiKey(newApiKey);
     if (newApiKey.trim()) {
       localStorage.setItem('seeding_ai_api_key', newApiKey);
     } else {
       localStorage.removeItem('seeding_ai_api_key');
     }
-  };
+  }, []);
 
-  const handleProviderChange = (newProvider: string) => {
+  const handleProviderChange = useCallback((newProvider: string) => {
     setAiProvider(newProvider);
     localStorage.setItem('seeding_ai_provider', newProvider);
-  };
+  }, []);
 
-  const handleTemperatureChange = (newTemperature: number) => {
+  const handleTemperatureChange = useCallback((newTemperature: number) => {
     setTemperature(newTemperature);
     localStorage.setItem('seeding_ai_temperature', newTemperature.toString());
-  };
+  }, []);
 
-  const handleModelChange = (newModel: string) => {
+  const handleModelChange = useCallback((newModel: string) => {
     setAiModel(newModel);
     localStorage.setItem('seeding_ai_model', newModel);
-  };
+  }, []);
 
   // Save active personas to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('seeding_active_personas', JSON.stringify(activePersonas));
   }, [activePersonas]);
 
-  const togglePersonaActive = (personaId: string) => {
+  const togglePersonaActive = useCallback((personaId: string) => {
     setActivePersonas(prev => {
       if (prev.includes(personaId)) {
         return prev.filter(id => id !== personaId);
@@ -245,18 +283,18 @@ export const useSeedingPersistence = () => {
         return [...prev, personaId];
       }
     });
-  };
+  }, []);
 
-  const setAllPersonasActive = (personas: string[], active: boolean) => {
+  const setAllPersonasActive = useCallback((personas: string[], active: boolean) => {
     if (active) {
       setActivePersonas(personas);
     } else {
       setActivePersonas([]);
     }
-  };
+  }, []);
 
-  const clearAllContent = () => {
-    // console.log('🔄 Clearing all seeding content');
+  const clearAllContent = useCallback(() => {
+    console.log('🔄 [Seeding] Clearing all content and cache');
     // Clear state
     setPastedContent('');
     setScrapedContent([]);
@@ -268,33 +306,34 @@ export const useSeedingPersistence = () => {
     localStorage.removeItem('seeding_scraped_content');
     localStorage.removeItem('seeding_preview_content');
     localStorage.removeItem('seeding_results');
-  };
+  }, []);
 
-  const clearAIConfiguration = () => {
-    // console.log('🔄 Clearing AI configuration');
+  const clearAIConfiguration = useCallback(() => {
+    console.log('🔄 [AI Config] Clearing configuration and reverting to defaults');
     // Reset state to defaults
     setAiProvider('openrouter');
     setAiModel('deepseek/deepseek-r1-distill-llama-70b:free');
     setAiApiKey('');
     setTemperature(0.7);
+    setConfigLoadedFromDB(false);
     
     // Clear localStorage
     localStorage.removeItem('seeding_ai_provider');
     localStorage.removeItem('seeding_ai_model');
     localStorage.removeItem('seeding_ai_api_key');
     localStorage.removeItem('seeding_ai_temperature');
-  };
+  }, []);
 
-  // Enhanced setPreviewContent with logging
-  const setPreviewContentWithLogging = (newContent: any[] | ((prev: any[]) => any[])) => {
+  // Enhanced setPreviewContent with logging and useCallback
+  const setPreviewContentWithLogging = useCallback((newContent: any[] | ((prev: any[]) => any[])) => {
     if (typeof newContent === 'function') {
       setPreviewContent(prev => {
         const result = newContent(prev);
-        console.log('🔄 setPreviewContent updated:', prev.length, '→', result.length, 'discussions');
+        console.log('🔄 [Content] Preview updated:', prev.length, '→', result.length, 'discussions');
         
         // Debug: Log reply counts for each discussion
         if (result.length > 0) {
-          console.log('🔄 Reply counts per discussion:');
+          console.log('🔄 [Content] Reply counts per discussion:');
           result.forEach((item, index) => {
             console.log(`  ${index}: "${item.transformedTitle}" - ${item.replies?.length || 0} replies`);
           });
@@ -303,11 +342,11 @@ export const useSeedingPersistence = () => {
         return result;
       });
     } else {
-      console.log('🔄 setPreviewContent set to:', newContent?.length || 0, 'discussions');
+      console.log('🔄 [Content] Preview set to:', newContent?.length || 0, 'discussions');
       
       // Debug: Log reply counts for each discussion
       if (newContent && newContent.length > 0) {
-        console.log('🔄 Reply counts per discussion:');
+        console.log('🔄 [Content] Reply counts per discussion:');
         newContent.forEach((item, index) => {
           console.log(`  ${index}: "${item.transformedTitle}" - ${item.replies?.length || 0} replies`);
         });
@@ -315,10 +354,30 @@ export const useSeedingPersistence = () => {
       
       setPreviewContent(newContent);
     }
-  };
+  }, []);
+
+  // Memoized computed values for performance
+  const persistenceStatus = useMemo(() => ({
+    hasContent: pastedContent.length > 0 || scrapedContent.length > 0 || previewContent.length > 0,
+    hasAIConfig: aiApiKey.trim().length > 0,
+    configSource: configLoadedFromDB ? (hasValidConfig ? 'database' : 'localStorage') : 'defaults',
+    isConfigLoading: dbConfigLoading,
+    hasValidDatabaseConfig: hasValidConfig,
+    totalDiscussions: previewContent.length,
+    totalReplies: previewContent.reduce((total, discussion) => total + (discussion.replies?.length || 0), 0)
+  }), [
+    pastedContent.length, 
+    scrapedContent.length, 
+    previewContent.length, 
+    aiApiKey, 
+    configLoadedFromDB, 
+    hasValidConfig, 
+    dbConfigLoading, 
+    previewContent
+  ]);
 
   return {
-    // State
+    // Core State
     pastedContent,
     scrapedContent,
     previewContent,
@@ -329,7 +388,10 @@ export const useSeedingPersistence = () => {
     temperature,
     activePersonas,
     
-    // Setters
+    // Computed Status
+    persistenceStatus,
+    
+    // State Setters (optimized)
     setPastedContent,
     setScrapedContent,
     setPreviewContent: setPreviewContentWithLogging,
@@ -337,13 +399,17 @@ export const useSeedingPersistence = () => {
     setAiModel,
     setActivePersonas,
     
-    // Handlers
+    // AI Configuration Handlers (memoized)
     handleApiKeyChange,
     handleProviderChange,
     handleModelChange,
     handleTemperatureChange,
+    
+    // Persona Management (memoized)
     togglePersonaActive,
     setAllPersonasActive,
+    
+    // Cleanup Actions (memoized)
     clearAllContent,
     clearAIConfiguration,
   };

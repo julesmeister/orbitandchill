@@ -144,6 +144,7 @@ This threading system is designed to be easily extractable as a standalone React
 ### Overview
 The application uses a multi-layer data persistence architecture combining Zustand for state management, Dexie (IndexedDB) for primary storage, and localStorage for fallback caching. This ensures user data persistence across browser sessions while maintaining performance through intelligent caching.
 
+
 ### Data Flow Architecture
 ```
 NatalChartForm → useUserStore → Dexie Database → IndexedDB
