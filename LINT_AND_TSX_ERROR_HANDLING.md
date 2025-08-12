@@ -122,12 +122,17 @@ Error Handling System Architecture
 │       ├── Preserve CLAUDE.md specified disable comments
 │       └── Comment complex type bridges/workarounds
 │
-├── 🔄 Build vs TypeScript Check Differences
+├── 🔄 Build vs TypeScript Check Differences & False Positive Errors
 │   ├── Issue: tsc passes but npm run build fails
 │   ├── Causes:
 │   │   ├── Next.js includes additional type checking
 │   │   ├── Different tsconfig.json settings in build
 │   │   └── Build process includes more files than standalone tsc
+│   ├── False Positive Errors When Running tsc on Individual Files:
+│   │   ├── TS2307: Cannot find module '@/...' → Path aliases not resolved
+│   │   ├── TS6142: '--jsx' is not set → JSX configuration missing
+│   │   ├── TS17004: Cannot use JSX unless '--jsx' flag provided → Same issue
+│   │   └── These are NOT real errors - they're configuration mismatches
 │   └── Best Practice: Test both tsc AND build
 │
 ├── 🆘 Emergency Fallback Patterns
@@ -150,6 +155,7 @@ Error Handling System Architecture
     ├── Missing Properties → Add to mocks, ensure complete interfaces
     ├── Function Signatures → Use literal types instead of generic strings
     ├── Build Failures → Test both tsc and npm run build
+    ├── False Positives (TS2307, TS6142, TS17004) → Use full project tsc check
     └── Memory Issues → Use NODE_OPTIONS and batch processing
 ```
 
@@ -184,7 +190,11 @@ These are added per the CLAUDE.md instructions to reduce linting noise during de
 
 ### Step 1: Check TypeScript Errors First
 ```bash
-npx tsc --noEmit --skipLibCheck
+# CORRECT - Full project check with Next.js configuration
+NODE_OPTIONS="--max-old-space-size=1024" npx tsc --noEmit --skipLibCheck
+
+# WRONG - Individual files with path aliases (causes false positives)
+# npx tsc --noEmit src/components/admin/PostsTab.tsx
 ```
 
 ### Step 2: Fix TypeScript Errors
@@ -374,7 +384,7 @@ const mockResponsive: ResponsiveValues = {
 };
 ```
 
-### Build vs TypeScript Check Differences
+### Build vs TypeScript Check Differences & False Positives
 
 **Issue**: `npx tsc` passes but `npm run build` fails with different errors.
 
@@ -383,11 +393,25 @@ const mockResponsive: ResponsiveValues = {
 - Build process may have different `tsconfig.json` settings
 - Build includes all files, standalone `tsc` may skip some
 
+**False Positive Errors When Running tsc on Individual Files**:
+```bash
+# These errors are FALSE POSITIVES when running tsc on individual files:
+# TS2307: Cannot find module '@/store/adminStore'
+# TS6142: Module resolved to .tsx but '--jsx' is not set
+# TS17004: Cannot use JSX unless '--jsx' flag provided
+
+# Cause: Running tsc outside Next.js configuration context
+# Solution: Use full project check instead
+```
+
 **Best Practice**:
 ```bash
-# Always test both
+# CORRECT - Always test full project
 NODE_OPTIONS="--max-old-space-size=1024" npx tsc --noEmit --skipLibCheck
 npm run build --no-lint  # If memory allows
+
+# AVOID - Individual file checks with path aliases
+# npx tsc --noEmit src/components/admin/PostsTab.tsx
 ```
 
 ### Systematic Error Resolution Process
@@ -443,3 +467,5 @@ const convertEvent = (event: OriginalEvent): BridgeEventType => ({
 5. **Interface compatibility requires systematic analysis of type definitions**
 6. **Always ensure mock objects conform to complete interfaces**
 7. **Fix dependency order: types → stores → hooks → components**
+8. **Always use full project TypeScript checks - individual file checks cause false positives**
+9. **TS2307, TS6142, TS17004 errors on individual files are configuration mismatches, not real errors**
