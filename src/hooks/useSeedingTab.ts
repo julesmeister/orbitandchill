@@ -57,7 +57,7 @@ export function useSeedingTab(): UseSeedingTabReturn {
   );
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [personasExpanded, setPersonasExpanded] = useState(false);
-  const [showPersonasCompleteMessage, setShowPersonasCompleteMessage] = useState(true);
+  const [showPersonasCompleteMessage, setShowPersonasCompleteMessage] = useState(false);
 
   // Helper function to toggle user selection
   const toggleUserSelection = (userId: string) => {

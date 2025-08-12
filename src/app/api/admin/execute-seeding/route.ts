@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
         success: true,
         batchId,
         results,
+        discussionSlugs: results.discussionSlugs || [],
         message: `Successfully seeded ${results.discussionsCreated} discussions with ${results.repliesCreated} replies`
       });
     } catch (seedingError) {

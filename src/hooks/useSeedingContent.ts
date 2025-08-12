@@ -127,6 +127,13 @@ export const useSeedingContent = () => {
       const successMessage = `Created ${stats.discussionsCreated} discussions, ${stats.repliesCreated} replies, and ${stats.votesDistributed} votes!`;
       showSuccessToast('Forum Generation Complete', successMessage);
       
+      // Open the first generated discussion in a new tab
+      if (result.discussionSlugs && result.discussionSlugs.length > 0) {
+        const firstDiscussionSlug = result.discussionSlugs[0];
+        const discussionUrl = `/discussions/${firstDiscussionSlug}`;
+        window.open(discussionUrl, '_blank');
+      }
+      
       return enhancedResult;
     } else {
       setSeedingResults(result);

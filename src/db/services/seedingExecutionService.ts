@@ -17,6 +17,7 @@ export interface SeedingResults {
   repliesCreated: number;
   votesCreated: number;
   errors: string[];
+  discussionSlugs?: string[];
 }
 
 export interface DiscussionItemData {
@@ -46,7 +47,8 @@ export async function executeDatabaseSeeding(
     discussionsCreated: 0,
     repliesCreated: 0,
     votesCreated: 0,
-    errors: []
+    errors: [],
+    discussionSlugs: []
   };
   
   const maxNestingDepth = generationSettings?.maxNestingDepth || 4;
@@ -77,6 +79,9 @@ export async function executeDatabaseSeeding(
       results.repliesCreated += discussionResult.repliesCreated;
       results.votesCreated += discussionResult.votesCreated;
       results.errors.push(...discussionResult.errors);
+      if (discussionResult.discussionSlugs) {
+        results.discussionSlugs!.push(...discussionResult.discussionSlugs);
+      }
       
     } catch (error) {
       results.errors.push(`Failed to create discussion "${item.transformedTitle}": ${(error as Error).message}`);
@@ -150,7 +155,8 @@ async function processSingleDiscussion(
     discussionsCreated: 0,
     repliesCreated: 0,
     votesCreated: 0,
-    errors: []
+    errors: [],
+    discussionSlugs: []
   };
   
   console.log(`🔍 Processing item: "${item.transformedTitle}"`);
@@ -178,14 +184,16 @@ async function processSingleDiscussion(
   };
   
   // Create discussion
-  const discussionId = await createDiscussion(discussionData);
+  const discussionResult = await createDiscussion(discussionData);
   
-  if (!discussionId) {
+  if (!discussionResult) {
     results.errors.push(`Failed to create discussion in database: ${item.transformedTitle}`);
     return results;
   }
   
+  const { id: discussionId, slug } = discussionResult;
   results.discussionsCreated++;
+  results.discussionSlugs!.push(slug);
   
   // Handle replies
   const repliesResult = await processDiscussionReplies(

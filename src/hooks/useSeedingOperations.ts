@@ -283,6 +283,7 @@ export const useSeedingOperations = () => {
             votesDistributed: result.results.votesCreated,
             errors: result.results.errors
           },
+          discussionSlugs: result.discussionSlugs || [],
           batchId: result.batchId
         };
       } else {

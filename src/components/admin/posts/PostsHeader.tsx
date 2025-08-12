@@ -17,13 +17,15 @@ interface PostsHeaderProps {
   onCategoryManagerToggle: () => void;
   onUncategorizedManagerToggle: () => void;
   onCreatePost: () => void;
+  onRefresh: () => void;
 }
 
 export default function PostsHeader({
   threads,
   onCategoryManagerToggle,
   onUncategorizedManagerToggle,
-  onCreatePost
+  onCreatePost,
+  onRefresh
 }: PostsHeaderProps) {
   const blogPosts = threads.filter((t: Thread) => t.isBlogPost);
   const forumThreads = threads.filter((t: Thread) => !t.isBlogPost);
@@ -59,6 +61,16 @@ export default function PostsHeader({
       icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
       fullText: 'Organize',
       shortText: 'Org.'
+    },
+    {
+      onClick: onRefresh,
+      bgColor: 'bg-[#a78bfa]',
+      hoverColor: 'hover:bg-[#9577e7]',
+      gradientColor: 'via-purple-200/30',
+      title: 'Refresh Posts List',
+      icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+      fullText: 'Refresh',
+      shortText: 'Refresh'
     },
     {
       onClick: onCreatePost,

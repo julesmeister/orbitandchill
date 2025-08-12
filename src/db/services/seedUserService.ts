@@ -508,7 +508,7 @@ export const updateSeedingBatch = async (id: string, updates: Partial<SeedingBat
 };
 
 // Create discussion in database
-export const createDiscussion = async (discussionData: any): Promise<string | null> => {
+export const createDiscussion = async (discussionData: any): Promise<{ id: string; slug: string } | null> => {
   try {
     const db = await getDbAsync();
     if (!db) return null;
@@ -548,7 +548,7 @@ export const createDiscussion = async (discussionData: any): Promise<string | nu
       ]
     });
 
-    return discussionId;
+    return { id: discussionId, slug };
   } catch (error) {
     console.error('Error creating discussion:', error);
     return null;

@@ -68,6 +68,33 @@ interface PostFormData {
 
 export default function PostsTab({ isLoading }: PostsTabProps) {
   const { loadThreads } = useAdminStore();
+  
+  // Refresh function
+  const handleRefresh = async () => {
+    setToast({
+      show: true,
+      title: 'Refreshing Posts',
+      message: 'Loading latest posts...',
+      status: 'loading'
+    });
+    
+    try {
+      await loadThreads();
+      setToast({
+        show: true,
+        title: 'Posts Refreshed',
+        message: 'Successfully loaded latest posts',
+        status: 'success'
+      });
+    } catch (error) {
+      setToast({
+        show: true,
+        title: 'Refresh Failed',
+        message: 'Failed to refresh posts. Please try again.',
+        status: 'error'
+      });
+    }
+  };
   const { user } = useUserStore();
   
   // Custom hooks
@@ -190,6 +217,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         onCategoryManagerToggle={() => setShowCategoryManager(!showCategoryManager)}
         onUncategorizedManagerToggle={() => setShowUncategorizedManager(!showUncategorizedManager)}
         onCreatePost={handleCreatePost}
+        onRefresh={handleRefresh}
       />
 
       {/* Category Manager */}
