@@ -14,6 +14,7 @@
 - **Location Search**: Intelligent location autocomplete powered by Nominatim OpenStreetMap API
 - **User Persistence**: Anonymous user profiles with data caching using Zustand + IndexedDB
 - **Responsive Design**: Beautiful UI that works perfectly on all devices
+- **Performance Optimized**: Buttery smooth loading with skeleton states, React.memo, and intelligent caching
 
 ### 🏛️ Admin Dashboard
 - **Analytics Overview**: Site metrics, user analytics, and traffic monitoring
@@ -151,8 +152,9 @@ svg_string = chart.svg
 
 ### User Persistence
 - **Anonymous Profiles**: No sign-up required
-- **Data Caching**: Charts and preferences stored locally
+- **Data Caching**: Charts and preferences stored locally with IndexedDB + localStorage fallback
 - **Cross-session**: Data persists between visits
+- **Instant Loading**: Cached data loads immediately with background refresh
 
 ### Admin Analytics
 - **Real-time Metrics**: Live user counts and activity

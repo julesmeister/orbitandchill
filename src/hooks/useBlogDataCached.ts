@@ -322,8 +322,24 @@ export function useFeaturedArticlesCached() {
   const [cachedFeatured, setCachedFeatured] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Also get fresh data from the main hook
-  const { featuredPosts: freshFeatured } = useBlogDataCached();
+  // Background refresh without blocking initial render
+  useEffect(() => {
+    const backgroundRefresh = async () => {
+      try {
+        // Only refresh in background - don't block initial render
+        const { useAdminStore } = await import('@/store/adminStore');
+        const { loadThreads } = useAdminStore.getState();
+        // This runs in background without affecting isLoading state
+        loadThreads();
+      } catch (err) {
+        console.error('Background refresh error:', err);
+      }
+    };
+
+    // Start background refresh after cache is loaded
+    const timer = setTimeout(backgroundRefresh, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const loadFeaturedCache = async () => {
@@ -345,11 +361,8 @@ export function useFeaturedArticlesCached() {
     loadFeaturedCache();
   }, []);
 
-  // Use fresh data if available, otherwise use cached
-  const featuredPosts = freshFeatured.length > 0 ? freshFeatured : cachedFeatured;
-
   return {
-    featuredPosts,
-    isLoading: isLoading && featuredPosts.length === 0
+    featuredPosts: cachedFeatured,
+    isLoading: isLoading && cachedFeatured.length === 0
   };
 }

@@ -14,7 +14,7 @@ interface FeaturedArticlesListProps {
   isLoading?: boolean;
 }
 
-const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
+const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = React.memo(({
   posts,
   config,
   className = '',
@@ -37,12 +37,35 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
       {/* Featured Posts List */}
       <div className="space-y-4">
         {isLoading ? (
-          <LoadingSpinner 
-            size="sm" 
-            title="Loading Articles..."
-            subtitle="Fetching the latest featured articles"
-            className="py-8"
-          />
+          // Skeleton loading state that matches the actual article layout
+          Array.from({ length: 3 }).map((_, index) => (
+            <div 
+              key={`skeleton-${index}`} 
+              className="border border-black bg-white animate-pulse"
+            >
+              <div className="p-4 xl:p-5 2xl:p-8">
+                <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="flex-shrink-0 w-2 h-2 bg-gray-300 rounded-full mt-2"></div>
+                    <div className="flex-1 space-y-2">
+                      {/* Title skeleton */}
+                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                      {/* Excerpt skeleton */}
+                      <div className="space-y-1">
+                        <div className="h-3 bg-gray-200 rounded w-full"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                      </div>
+                      {/* Author skeleton */}
+                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                    </div>
+                  </div>
+                  {/* Image skeleton */}
+                  <div className="w-20 h-20 xl:w-24 xl:h-24 2xl:w-28 2xl:h-28 bg-gray-300 flex-shrink-0"></div>
+                </div>
+              </div>
+            </div>
+          ))
         ) : (
           posts.slice(0, config.maxArticles).map((post) => (
           <div 
@@ -72,6 +95,10 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
                   <img 
                     src={post.imageUrl} 
                     alt={post.title}
+                    loading="lazy"
+                    decoding="async"
+                    width={80}
+                    height={80}
                     className="w-20 h-20 xl:w-24 xl:h-24 2xl:w-28 2xl:h-28 object-cover flex-shrink-0"
                   />
                 )}
@@ -93,6 +120,8 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = ({
       </div>
     </div>
   );
-};
+});
+
+FeaturedArticlesList.displayName = 'FeaturedArticlesList';
 
 export default FeaturedArticlesList;

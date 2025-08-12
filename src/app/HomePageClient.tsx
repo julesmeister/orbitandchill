@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { NatalChartFormData } from '@/components/forms/NatalChartForm';
 import ClientWorldMap from '@/components/ClientWorldMap';
 import ElectionalAstrologyShowcase from '@/components/ElectionalAstrologyShowcase';
@@ -52,7 +52,7 @@ export default function HomePageClient() {
     }
   }, [isProfileComplete, cachedChart, isGenerating, user, generateChart]);
 
-  const handleFormSubmit = async (formData: NatalChartFormData) => {
+  const handleFormSubmit = useCallback(async (formData: NatalChartFormData) => {
     showLoading('Generating Chart', 'Creating your personalized natal chart...', true);
 
     if (!user) {
@@ -77,17 +77,20 @@ export default function HomePageClient() {
     } catch (error) {
       showError('Chart Error', 'An error occurred while generating your chart.');
     }
-  };
+  }, [user, generateChart, showLoading, showError, showSuccess, router]);
 
   // Show chart preview if user has complete data and a cached chart
-  const shouldShowChart = hasStoredData && isProfileComplete && cachedChart && !showingForm;
+  const shouldShowChart = useMemo(() => 
+    hasStoredData && isProfileComplete && cachedChart && !showingForm,
+    [hasStoredData, isProfileComplete, cachedChart, showingForm]
+  );
 
-  const handleCountryClick = (countryId: string, event?: MouseEvent) => {
+  const handleCountryClick = useCallback((countryId: string, event?: MouseEvent) => {
     // Country selection analytics could be tracked here
     // Add any future country click functionality here
-  };
+  }, []);
 
-  const scrollToSection = (sectionId: string) => {
+  const scrollToSection = useCallback((sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       // Scroll to the top of the section
@@ -96,7 +99,7 @@ export default function HomePageClient() {
         block: 'start' // This scrolls to the top of the section
       });
     }
-  };
+  }, []);
 
 
   return (
