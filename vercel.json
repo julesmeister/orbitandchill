@@ -10,17 +10,6 @@
       ],
       "destination": "https://orbitandchill.com/$1",
       "permanent": true
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.orbit-and-chill.com"
-        }
-      ],
-      "destination": "https://orbit-and-chill.com/$1",
-      "permanent": true
     }
   ],
   "headers": [
