@@ -29,53 +29,8 @@ export default function DiscussionsStructuredData() {
     }
   };
 
-  // FAQ Schema for Astrology Community Questions
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "How do I ask a good astrology question in the community?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Provide context about your question, include relevant birth data (you can use initials for privacy), specify what type of reading you're seeking, and search existing discussions first to avoid duplicates."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What topics can I discuss in the astrology community?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "You can discuss natal chart analysis, transits and predictions, chart reading help, synastry and compatibility, mundane astrology, learning resources, and general astrology topics."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is it safe to share birth information in discussions?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "For privacy, use initials instead of full names, and consider using approximate times if you're concerned. The most important data for chart reading is date, time, and location - names are not necessary for interpretation."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do I interpret conflicting astrological advice?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Astrology is interpretive, so different astrologers may emphasize different aspects. Consider multiple perspectives, look for common themes, and trust your intuition about what resonates with your experience."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can beginners participate in astrology discussions?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Absolutely! Our community welcomes all levels. Tag your posts with 'beginner' if needed, ask for explanations of terms you don't understand, and don't hesitate to share your learning journey."
-        }
-      }
-    ]
-  };
+  // NOTE: FAQ Schema removed to prevent SEO conflicts with dedicated FAQ page
+  // FAQ content is now centralized in /src/data/faqData.ts and rendered on /faq page
 
   // Breadcrumb Schema for Discussions
   const breadcrumbSchema = {
@@ -130,13 +85,7 @@ export default function DiscussionsStructuredData() {
         }}
       />
 
-      {/* FAQ Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema)
-        }}
-      />
+      {/* FAQ Schema removed - now centralized on dedicated /faq page */}
 
       {/* Breadcrumb Schema */}
       <script

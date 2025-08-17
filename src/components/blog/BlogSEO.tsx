@@ -157,43 +157,10 @@ const BlogSEO: React.FC<BlogSEOProps> = ({
     return blogSchema;
   };
 
-  // Additional FAQ schema for astrology-related questions
+  // NOTE: FAQ Schema removed to prevent SEO conflicts with dedicated FAQ page
+  // FAQ content is now centralized in /src/data/faqData.ts and rendered on /faq page
   const getFAQSchema = () => {
-    if (!isHomePage) return null;
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || BRAND.domain;
-    
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      '@id': `${baseUrl}/blog#faq`,
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'What is a natal chart?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'A natal chart, also known as a birth chart, is a map of where all the planets were in their journey around the Sun at the exact moment you were born. It serves as a blueprint of your personality, strengths, challenges, and life path.'
-          }
-        },
-        {
-          '@type': 'Question',
-          name: 'How do planetary transits affect me?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Planetary transits occur when planets in the sky form aspects to the planets in your natal chart. These cosmic events can trigger important life events, opportunities for growth, and shifts in energy that influence your daily life and long-term development.'
-          }
-        },
-        {
-          '@type': 'Question',
-          name: 'What is astrology compatibility?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Astrology compatibility, or synastry, is the practice of comparing two people\'s natal charts to understand their relationship dynamics. It reveals how planetary energies interact between partners and can highlight areas of harmony and potential challenges.'
-          }
-        }
-      ]
-    };
+    return null; // FAQ schema disabled to prevent conflicts
   };
 
   // WebSite schema for enhanced search features
