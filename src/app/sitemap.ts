@@ -124,7 +124,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
-      url: `${baseUrl}/guides/matrix-of-destiny`,
+      url: `${baseUrl}/guides/destiny-matrix`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.6,
@@ -161,13 +161,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/privacy-policy`,
+      url: `${baseUrl}/privacy`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/terms-of-service`,
+      url: `${baseUrl}/terms`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.3,

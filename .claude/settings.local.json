@@ -123,7 +123,9 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useNatalChart.ts src/hooks/useChartCache.ts src/hooks/useChartOperations.ts src/utils/chartCache.ts src/services/chartApiService.ts src/types/chart.ts --quiet)",
       "Bash(export NODE_OPTIONS=\"--max-old-space-size=1024\")",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/discussions/page.tsx src/app/discussions/DiscussionsPageClient.tsx src/components/SEO/DiscussionsStructuredData.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/discussions/page.tsx src/app/discussions/DiscussionsPageClient.tsx src/components/SEO/DiscussionsStructuredData.tsx)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/discussions/page.tsx src/app/discussions/DiscussionsPageClient.tsx src/components/SEO/DiscussionsStructuredData.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/learning-center/page.tsx src/app/learning-center/LearningCenterClient.tsx --quiet)",
+      "WebFetch(domain:localhost)"
     ],
     "deny": []
   }
