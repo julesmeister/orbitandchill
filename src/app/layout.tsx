@@ -66,15 +66,37 @@ export const metadata: Metadata = {
     canonical: 'https://orbitandchill.com/',
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/images/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/images/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
     other: [
+      {
+        rel: 'icon',
+        url: '/images/favicon/favicon-16x16.png',
+        sizes: '16x16',
+        type: 'image/png'
+      },
+      {
+        rel: 'icon',
+        url: '/images/favicon/favicon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png'
+      },
       {
         rel: 'apple-touch-icon',
         url: '/apple-touch-icon.png',
-        sizes: '180x180',
+        sizes: '180x180'
       },
-    ],
+      {
+        rel: 'manifest',
+        url: '/site.webmanifest'
+      }
+    ]
   },
   openGraph: {
     type: 'website',
@@ -135,6 +157,16 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="preconnect" href="https://nominatim.openstreetmap.org" />
         <link rel="dns-prefetch" href="https://accounts.google.com" />
+        
+        {/* Additional favicon links for maximum compatibility */}
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#19181a" />
+        <meta name="msapplication-TileColor" content="#19181a" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
         
         <StructuredData type="website" />
         <script src="https://accounts.google.com/gsi/client" async defer></script>
