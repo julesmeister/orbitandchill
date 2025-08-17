@@ -41,9 +41,9 @@ User Chart → Share Token Generation → Public URL → Shared Chart Display
 #### 2. Frontend Components
 
 **Chart Display Page (`/src/app/chart/page.tsx`)**
-- Main chart page with sharing functionality
-- Share button integrated into `NatalChartDisplay` component
-- Native Web Share API support with clipboard fallback
+- Main chart page with integrated sharing functionality
+- Unified interface for both personal and shared charts
+- Share token URL parameter handling (`/chart?shareToken=abc123`)
 - Status toast notifications for user feedback
 
 **Shared Chart Page (`/src/app/chart/shared/[token]/page.tsx`)**
@@ -54,9 +54,16 @@ User Chart → Share Token Generation → Public URL → Shared Chart Display
 - Call-to-action for visitors to create their own charts
 
 **Chart Quick Actions (`/src/components/charts/ChartQuickActions.tsx`)**
-- Share button with loading states
-- Clipboard integration for share URLs
-- Error handling and user feedback
+- **Primary Sharing Component**: Fresh chart generation and share link creation
+- Generates new chart with current person data to ensure accurate sharing
+- Copy-to-clipboard functionality with comprehensive error handling
+- Loading states and user feedback for sharing operations
+
+**Chart Actions (`/src/components/charts/ChartActions.tsx`)**
+- **Export & Sharing Hub**: Download formats (SVG, PNG, PDF) + social sharing
+- Social sharing modal integration for multiple platforms
+- File export functionality with format selection
+- Comprehensive sharing tools for chart preservation
 
 #### 3. Database Layer
 
@@ -91,16 +98,62 @@ User Chart → Share Token Generation → Public URL → Shared Chart Display
 - Race condition protection for concurrent operations
 - Comprehensive error handling and loading states
 
+## Clean Sharing Architecture ✅ **UPDATED 2025-01-22**
+
+### Streamlined Sharing Components
+
+The sharing system has been optimized to eliminate redundancy and provide clear separation of concerns:
+
+#### 1. **ChartQuickActions - Primary Sharing** 
+**Location**: Left sidebar of chart display
+**Purpose**: Fresh chart generation and link sharing
+- ✅ **Fresh Chart Generation**: Always generates new chart with current person data
+- ✅ **Share Link Creation**: Creates shareable URLs that reflect current state
+- ✅ **Clipboard Integration**: Copy-to-clipboard with fallback mechanisms
+- ✅ **User Feedback**: Loading states and success/error notifications
+
+#### 2. **ChartActions - Export & Social Hub**
+**Location**: Below chart display in interpretation tab
+**Purpose**: Download formats and social media sharing
+- ✅ **File Exports**: SVG, PNG, PDF download options
+- ✅ **Social Media Sharing**: Platform-specific sharing modal
+- ✅ **Share Modal**: Integrated social sharing with platform buttons
+- ✅ **Export Management**: Comprehensive file format options
+
+#### 3. **~~SocialShareButtons - REMOVED~~** ❌ **ELIMINATED REDUNDANCY**
+**Previous Location**: Chart sidebar (removed)
+**Reason for Removal**: Redundant with ChartActions social sharing functionality
+- ❌ **Duplicate Functionality**: Same social sharing as ChartActions
+- ❌ **User Confusion**: Multiple share buttons in close proximity
+- ❌ **Maintenance Overhead**: Duplicate code paths for same functionality
+
+### Sharing Flow Optimization
+
+#### Primary Sharing Flow (ChartQuickActions)
+```
+User Clicks "Share Chart" → Generate Fresh Chart → Create Share Token → Copy Link → Toast Feedback
+        ↓                        ↓                    ↓            ↓            ↓
+   Sidebar Button           API /charts/generate    /charts/[id]/share  Clipboard   Success Message
+```
+
+#### Export & Social Flow (ChartActions)
+```
+User Clicks Export/Share → Social Modal → Platform Selection → Customized Share → Platform Native
+        ↓                      ↓             ↓                 ↓                ↓
+   Below Chart Display    Social Buttons   Twitter/FB/etc    Platform Content   External App
+```
+
 ## User Experience Features
 
 ### Sharing Flow
 
 1. **Chart Generation**: User creates a natal chart through the main interface
-2. **Share Button**: Prominent share button in chart display
-3. **Token Generation**: System generates unique share token via API
-4. **URL Creation**: Complete shareable URL constructed automatically
-5. **Native Sharing**: Web Share API for mobile devices, clipboard fallback
-6. **Feedback**: Toast notifications confirm successful sharing
+2. **Primary Sharing**: "Share Chart" button in Quick Actions generates fresh chart and shareable link
+3. **Export Sharing**: "Export & Share" section provides file downloads and social media options
+4. **Token Generation**: System generates unique share token via API for link sharing
+5. **URL Creation**: Complete shareable URL constructed automatically
+6. **Native Sharing**: Web Share API for mobile devices, clipboard fallback for desktop
+7. **Feedback**: Toast notifications confirm successful sharing operations
 
 ### Public Viewing Experience
 
