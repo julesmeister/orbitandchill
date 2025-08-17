@@ -85,9 +85,22 @@ src/
 │   ├── forms/             # Form components
 │   └── reusable/          # Shared components
 ├── hooks/                 # Custom React hooks
+│   ├── useBlogData.ts         # Main blog data orchestrator ⭐
+│   ├── useBlogCache.ts        # Caching & data fetching
+│   ├── useBlogFilters.ts      # Filtering & pagination
+│   ├── useBlogSidebar.ts      # Popular/recent posts
+│   ├── useFeaturedPosts.ts    # Homepage featured articles
+│   ├── useNatalChart.ts       # Main chart orchestrator ⭐
+│   ├── useChartCache.ts       # Chart caching & persistence
+│   └── useChartOperations.ts  # Chart API operations
+├── services/              # API service layers
+│   └── chartApiService.ts     # Chart API operations
 ├── store/                 # Zustand state management
+├── types/                 # TypeScript type definitions
+│   └── chart.ts               # Chart-related types ⭐
 └── utils/                 # Utility functions
-    └── threading/         # Threading utilities (legacy)
+    ├── chartCache.ts          # Chart caching utilities ⭐
+    └── threading/             # Threading utilities (legacy)
 ```
 
 ### Backend Library (Python)
@@ -151,10 +164,18 @@ svg_string = chart.svg
 - **Caching**: Efficient API usage with local storage
 
 ### User Persistence
-- **Anonymous Profiles**: No sign-up required
+- **Anonymous Profiles**: No sign-up required with secure user isolation
 - **Data Caching**: Charts and preferences stored locally with IndexedDB + localStorage fallback
 - **Cross-session**: Data persists between visits
 - **Instant Loading**: Cached data loads immediately with background refresh
+- **Secure Isolation**: Each anonymous user gets unique chart cache to prevent data leakage
+
+### Hook Architecture ⭐
+- **Modular Design**: Both blog and chart systems split into focused, reusable hooks
+- **Single Responsibility**: Each hook handles one specific concern (caching, API operations, UI state)
+- **Performance Optimized**: 30-minute blog cache TTL, 24-hour chart cache with smart invalidation
+- **Composable**: Main orchestrator hooks (`useBlogData`, `useNatalChart`) compose specialized hooks
+- **User Isolation**: Chart caching ensures complete separation between anonymous and authenticated users
 
 ### Admin Analytics
 - **Real-time Metrics**: Live user counts and activity
@@ -168,6 +189,13 @@ svg_string = chart.svg
 - **Reusable Design**: Easily extractable as standalone component library
 
 ![Comment Threading Demo](src/components/threading/React-Thread-Lines-For-Comments/Screenshot%202025-06-11%20121301.png)
+
+### Chart System Architecture ⭐
+- **Modular Hooks**: Chart system split into specialized hooks for caching, operations, and API
+- **Secure User Isolation**: Advanced cache key generation prevents anonymous user data conflicts
+- **Performance Optimized**: 24-hour local cache with intelligent invalidation and background refresh
+- **Error Resilience**: Comprehensive error handling with graceful fallbacks
+- **Type Safety**: Full TypeScript coverage with consolidated type definitions
 
 ## 🚀 Deployment
 

@@ -179,7 +179,7 @@ export const threadsApi = {
   } = {}): Promise<any> {
     const {
       page = 1,
-      limit = 10,
+      limit = 10, // Default limit
       category,
       sortBy = 'recent',
       filter,

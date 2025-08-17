@@ -78,7 +78,7 @@ Error Handling System Architecture
 │       ├── Dependency Order (Fix in this sequence):
 │       │   ├── 1. src/types/ → Interface definitions
 │       │   ├── 2. src/store/ → State management
-│       │   ├── 3. src/hooks/ → Custom hooks  
+│       │   ├── 3. src/hooks/ → Custom hooks
 │       │   └── 4. src/components/ → UI components
 │       ├── Verification After Each Major Fix:
 │       │   └── NODE_OPTIONS="--max-old-space-size=1024" npx tsc --noEmit --skipLibCheck src/types/ src/store/

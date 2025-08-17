@@ -117,7 +117,11 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/PostsTab.tsx src/components/admin/posts/PostsHeader.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostsHeader.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/PostsTab.tsx src/store/admin/api.ts)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/store/admin/api.ts --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/store/admin/api.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useBlogData.ts src/hooks/useBlogCache.ts src/hooks/useBlogFilters.ts src/hooks/useFeaturedPosts.ts src/hooks/useBlogSidebar.ts src/app/HomePageClient.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useNatalChart.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useNatalChart.ts src/hooks/useChartCache.ts src/hooks/useChartOperations.ts src/utils/chartCache.ts src/services/chartApiService.ts src/types/chart.ts --quiet)",
+      "Bash(export NODE_OPTIONS=\"--max-old-space-size=1024\")"
     ],
     "deny": []
   }

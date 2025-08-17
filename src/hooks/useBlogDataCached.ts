@@ -114,6 +114,13 @@ export function useBlogDataCached(): UseBlogDataReturn {
   const allBlogPosts = useMemo(() => {
     const processed = threads
       .filter((thread: any) => thread.isPublished) // Show all published content, not just blog posts
+      .sort((a: any, b: any) => {
+        // Prioritize pinned content first, then sort by recent
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        // If both have same pin status, sort by date (newest first)
+        return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
+      })
       .map(convertThreadToBlogPost);
 
     // Cache the processed data
@@ -187,7 +194,7 @@ export function useBlogDataCached(): UseBlogDataReturn {
 
   // Get featured posts (cached separately for faster home page loading)
   const featuredPosts = useMemo(() => {
-    const featured = effectiveBlogPosts.filter((post: any) => post.isFeatured).slice(0, 3);
+    const featured = effectiveBlogPosts.filter((post: any) => post.isPinned).slice(0, 3);
     
     // Cache featured articles separately for home page
     if (featured.length > 0) {
@@ -317,52 +324,3 @@ export function useBlogDataCached(): UseBlogDataReturn {
   };
 }
 
-// Hook specifically for featured articles on home page
-export function useFeaturedArticlesCached() {
-  const [cachedFeatured, setCachedFeatured] = useState<BlogPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Background refresh without blocking initial render
-  useEffect(() => {
-    const backgroundRefresh = async () => {
-      try {
-        // Only refresh in background - don't block initial render
-        const { useAdminStore } = await import('@/store/adminStore');
-        const { loadThreads } = useAdminStore.getState();
-        // This runs in background without affecting isLoading state
-        loadThreads();
-      } catch (err) {
-        console.error('Background refresh error:', err);
-      }
-    };
-
-    // Start background refresh after cache is loaded
-    const timer = setTimeout(backgroundRefresh, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const loadFeaturedCache = async () => {
-      try {
-        const cached = await db.getCache<BlogPost[]>(FEATURED_CACHE_KEY);
-        if (cached && cached.length > 0) {
-          setCachedFeatured(cached.map(post => ({
-            ...post,
-            publishedAt: new Date(post.publishedAt)
-          })));
-        }
-      } catch (err) {
-        console.error('Error loading cached featured articles:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadFeaturedCache();
-  }, []);
-
-  return {
-    featuredPosts: cachedFeatured,
-    isLoading: isLoading && cachedFeatured.length === 0
-  };
-}

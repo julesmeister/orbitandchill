@@ -68,8 +68,10 @@ User Chart → Share Token Generation → Public URL → Shared Chart Display
 
 #### 4. Hooks and Utilities
 
-**`useNatalChart` Hook (`/src/hooks/useNatalChart.ts`)**
-- `shareChart()` method for generating share links
+**Chart Management Hooks (`/src/hooks/`)**
+- **`useNatalChart.ts`** - Main orchestrator hook composing specialized modules
+- **`useChartCache.ts`** - Chart caching and persistence with user isolation
+- **`useChartOperations.ts`** - Chart API operations and manipulation
 - Integration with chart generation and caching
 - Error handling and user feedback
 
@@ -1363,6 +1365,161 @@ The unified approach enables:
 - **Future-Ready Architecture**: Foundation for advanced sharing features
 
 This comprehensive refactoring establishes a solid foundation for advanced sharing features, community building, and enhanced user engagement while maintaining the highest standards of technical excellence and user experience design.
+
+## Major Architecture Refactoring: Modular Chart System ✅ **COMPLETED**
+
+### Overview of Modular Chart System
+
+The chart system has been completely refactored from a monolithic `useNatalChart` hook into a modular, composable architecture that provides better maintainability, performance, and user isolation.
+
+### User Isolation Security Fix ✅ **RESOLVED**
+
+#### Critical Issue Resolved
+**Problem**: Anonymous users were seeing admin's charts instead of their own due to flawed cache key generation.
+
+**Root Cause**: 
+```typescript
+// PROBLEMATIC: Could fall back to wrong user ID
+const personId = activePerson?.id || user.id;  // ❌ Admin fallback
+```
+
+**Solution**:
+```typescript
+// SECURE: Always uses current user's ID as primary identifier
+const identifier = personId ? `${userId}_person_${personId}` : `${userId}_self`;
+const cacheKey = `natal_chart_${identifier}_${birthDataHash}`;
+```
+
+#### Security Results ✅
+- **Anonymous users**: Get unique cache keys based on their `anon_xxxxx` IDs
+- **Google users**: Get unique cache keys based on their Google IDs  
+- **No cross-contamination**: Each user's charts are completely isolated
+- **No admin fallback**: System fails safely rather than using wrong user data
+
+### New Modular Architecture
+
+#### Previous Architecture
+```
+useNatalChart.ts (2000+ lines) → Monolithic hook with mixed concerns
+```
+
+#### New Architecture ✅
+```
+useNatalChart.ts (52 lines) → Main orchestrator
+├── useChartCache.ts → Caching and persistence logic
+├── useChartOperations.ts → API operations and manipulation
+├── chartApiService.ts → API service layer
+├── chartCache.ts → Cache utilities and key generation
+└── chart.ts → Consolidated type definitions
+```
+
+### Key Improvements
+
+#### 1. **Secure Cache Key Generation** ✅
+**File**: `/src/utils/chartCache.ts`
+- **User-First Approach**: Always uses actual user ID as primary identifier
+- **No Fallback Conflicts**: Eliminates problematic fallback patterns
+- **Hash-Based Keys**: Short, reliable cache keys with birth data hash
+- **Coordinate Normalization**: Prevents floating-point precision cache misses
+
+#### 2. **Modular Hook Architecture** ✅
+**Files**: `/src/hooks/useChart*.ts`
+- **Single Responsibility**: Each hook handles one specific concern
+- **Composable Design**: Main hook orchestrates specialized sub-hooks
+- **Clean Interfaces**: Same external API, completely refactored internals
+- **Type Safety**: Full TypeScript coverage throughout
+
+#### 3. **API Service Layer** ✅
+**File**: `/src/services/chartApiService.ts`
+- **Clean API Interface**: Dedicated service layer for all chart operations
+- **Error Handling**: Comprehensive error handling with proper propagation
+- **Data Transformation**: Consistent transformation between API and local formats
+- **Reusability**: Service methods usable across different components
+
+#### 4. **Consolidated Type Definitions** ✅
+**File**: `/src/types/chart.ts`
+- **Single Source of Truth**: All chart-related types in one file
+- **Clear Separation**: Local vs API data structures clearly defined
+- **Request/Response Types**: Complete API interaction type coverage
+- **Documentation**: Comprehensive JSDoc comments for all interfaces
+
+### Performance Benefits ✅
+
+#### Modular Loading
+- **Lazy Evaluation**: Hooks only load when needed
+- **Dependency Optimization**: Cleaner dependency arrays prevent unnecessary re-renders
+- **Code Splitting**: Smaller, focused modules load faster
+
+#### Cache Optimization
+- **Smarter Cache Keys**: Hash-based keys prevent collisions
+- **Precise Invalidation**: Only invalidate cache when data actually changes
+- **Memory Management**: Better cleanup of unused cache entries
+
+#### Error Handling
+- **Graceful Degradation**: Comprehensive error handling at every level
+- **User Feedback**: Clear error messages for troubleshooting
+- **Debug Support**: Extensive logging for development
+
+### Maintainability Benefits ✅
+
+#### Single Responsibility Principle
+- **`useChartCache`**: Only handles caching and persistence
+- **`useChartOperations`**: Only handles API operations
+- **`chartApiService`**: Only handles API communication
+- **`chartCache`**: Only handles cache utilities
+
+#### Developer Experience
+- **Isolated Testing**: Each module can be tested independently
+- **Clear Responsibilities**: Easy to identify which module handles what
+- **Debug Friendly**: Comprehensive logging throughout all modules
+- **Type Safety**: Full TypeScript coverage with proper interfaces
+
+### Migration Impact
+
+#### No Breaking Changes ✅
+- **Same External API**: All existing code using `useNatalChart` works unchanged
+- **Backward Compatibility**: Existing chart functionality preserved
+- **Progressive Enhancement**: New features added without affecting existing ones
+
+#### Security Improvements ✅
+- **Complete User Isolation**: Each user gets unique cache namespace
+- **No Cross-Contamination**: Anonymous users can't access each other's charts
+- **Admin Protection**: Admin charts completely isolated from user charts
+- **Fail-Safe Design**: System fails safely rather than using wrong user data
+
+### Future Benefits
+
+#### Extensibility ✅
+- Easy to add new chart types (transit, synastry, composite)
+- Simple to enhance caching strategies
+- Straightforward to add new API operations
+- Clear path for additional user isolation features
+
+#### Performance ✅
+- Foundation for advanced performance optimizations
+- Better cache strategies with granular control
+- Optimized API usage patterns
+- Improved error recovery mechanisms
+
+#### Maintainability ✅
+- Much easier to understand and modify individual modules
+- Clear separation of concerns simplifies debugging
+- Better test coverage through isolated unit tests
+- Simplified onboarding for new developers
+
+### Files Created/Modified
+
+#### New Files ✅
+- `/src/hooks/useChartCache.ts` - Chart caching and persistence
+- `/src/hooks/useChartOperations.ts` - Chart API operations
+- `/src/services/chartApiService.ts` - API service layer
+- `/src/utils/chartCache.ts` - Cache utilities and management
+- `/src/types/chart.ts` - Consolidated type definitions
+
+#### Modified Files ✅
+- `/src/hooks/useNatalChart.ts` - Refactored from 2000+ lines to 52 lines
+
+This modular refactoring establishes a robust, secure, and maintainable foundation for chart management while completely resolving the user isolation security issue that was causing anonymous users to see incorrect chart data.
 
 ## User Profile & Stellium Persistence System ✅ **COMPLETED**
 
