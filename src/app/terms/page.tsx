@@ -1,8 +1,27 @@
-"use client";
-
 import React from 'react';
 import Link from 'next/link';
 import { BRAND } from '@/config/brand';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: `Terms of Service | ${BRAND.name}`,
+  description: `Terms of Service for ${BRAND.name}. Learn about our community guidelines, user responsibilities, privacy practices, and terms for using our free natal chart generator and astrology platform.`,
+  keywords: ['terms of service', 'user agreement', 'community guidelines', 'astrology terms', 'natal chart terms', 'privacy terms'],
+  openGraph: {
+    title: `Terms of Service | ${BRAND.name}`,
+    description: `Terms of Service for ${BRAND.name}. Learn about our community guidelines, user responsibilities, privacy practices, and terms for using our free natal chart generator and astrology platform.`,
+    type: 'website',
+  },
+  twitter: {
+    title: `Terms of Service | ${BRAND.name}`,
+    description: `Terms of Service for ${BRAND.name}. Learn about our community guidelines, user responsibilities, privacy practices, and terms for using our free natal chart generator and astrology platform.`,
+    card: 'summary',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function TermsPage() {
   return (
