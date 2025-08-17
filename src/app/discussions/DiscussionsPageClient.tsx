@@ -261,6 +261,53 @@ export default function DiscussionsPageClient() {
         </section>
       </div>
 
+      {/* Featured Content for SEO */}
+      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+        <section className="px-6 md:px-12 lg:px-20 py-8 bg-gray-50 border-y border-gray-200">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="font-space-grotesk text-2xl font-bold text-black mb-6 text-center">
+              Get Free Astrology Help From Our Expert Community
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white p-6 border border-gray-200 rounded-lg">
+                <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">What can I ask about?</h3>
+                <ul className="space-y-2 text-black/80">
+                  <li>• <strong>Natal chart interpretations</strong> - Birth chart analysis and personality insights</li>
+                  <li>• <strong>Transit predictions</strong> - How current planets affect your chart</li>
+                  <li>• <strong>Synastry compatibility</strong> - Relationship astrology between two people</li>
+                  <li>• <strong>Career guidance</strong> - Astrological insights for professional paths</li>
+                  <li>• <strong>Timing questions</strong> - Electional astrology for important decisions</li>
+                </ul>
+              </div>
+              
+              <div className="bg-white p-6 border border-gray-200 rounded-lg">
+                <h3 className="font-space-grotesk text-lg font-bold text-black mb-3">How does our community help?</h3>
+                <ul className="space-y-2 text-black/80">
+                  <li>• <strong>Expert astrologers</strong> provide detailed chart analysis</li>
+                  <li>• <strong>Quick responses</strong> - Most questions answered within 24 hours</li>
+                  <li>• <strong>Multiple perspectives</strong> - Different astrological approaches and insights</li>
+                  <li>• <strong>Learning environment</strong> - Educational discussions and resources</li>
+                  <li>• <strong>Completely free</strong> - No fees for community support and advice</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-lg text-black/80 mb-4">
+                Join <strong>thousands of astrology enthusiasts</strong> discussing charts, transits, and astrological insights daily.
+              </p>
+              <Link
+                href="/discussions/new"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Ask Your First Question
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+
       {/* Community Guidelines Section */}
       <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
         <section className="px-6 md:px-12 lg:px-20 py-10" style={{ backgroundColor: '#f0e3ff' }}>

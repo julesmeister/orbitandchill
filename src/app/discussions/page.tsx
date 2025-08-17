@@ -5,9 +5,9 @@ import DiscussionsStructuredData from '@/components/SEO/DiscussionsStructuredDat
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com';
-  const title = `Astrology Discussions - ${BRAND.name} Community`;
-  const description = "Join our astrology community discussions. Ask questions, share insights, and connect with fellow astrology enthusiasts about natal charts, transits, synastry, electional astrology, and more.";
-  const keywords = "astrology discussions, astrology community, natal chart questions, transit interpretations, synastry help, astrology forum, astrological insights, chart reading help, astrology learning, birth chart analysis";
+  const title = `Free Astrology Community - Ask Questions & Get Chart Help | ${BRAND.name}`;
+  const description = "Get expert astrology help from our community. Ask natal chart questions, share insights about transits, synastry & more. Join thousands discussing astrology daily.";
+  const keywords = "astrology discussions, astrology community, natal chart questions, transit interpretations, synastry help, astrology forum, astrological insights, chart reading help, astrology learning, birth chart analysis, free astrology help, astrology experts";
   
   return {
     title,

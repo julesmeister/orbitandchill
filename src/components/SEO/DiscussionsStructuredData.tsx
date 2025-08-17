@@ -52,27 +52,75 @@ export default function DiscussionsStructuredData() {
     ]
   };
 
-  // Forum Schema
+  // Forum Schema with enhanced service descriptions
   const forumSchema = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Astrology Community Discussions",
-    "description": "Community forum for astrology discussions, chart readings, and astrological insights",
+    "@type": "DiscussionForumPosting",
+    "headline": "Free Astrology Community - Expert Chart Help & Discussions",
+    "description": "Get expert astrology help from our active community. Ask questions about natal charts, transits, synastry, and astrological interpretations. Free advice from experienced astrologers.",
     "url": `${siteUrl}/discussions`,
-    "isPartOf": {
-      "@type": "WebSite",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${siteUrl}/discussions`
+    },
+    "publisher": {
+      "@type": "Organization", 
       "name": BRAND.name,
       "url": siteUrl
     },
-    "about": {
-      "@type": "Thing",
-      "name": "Astrology Community",
-      "description": "A community of astrology enthusiasts sharing knowledge about natal charts, transits, synastry, and astrological interpretations"
-    },
+    "about": [
+      {
+        "@type": "Thing",
+        "name": "Natal Chart Analysis",
+        "description": "Birth chart interpretation and personality insights"
+      },
+      {
+        "@type": "Thing", 
+        "name": "Transit Astrology",
+        "description": "Current planetary movements and their effects"
+      },
+      {
+        "@type": "Thing",
+        "name": "Synastry Analysis", 
+        "description": "Relationship compatibility through astrology"
+      },
+      {
+        "@type": "Thing",
+        "name": "Astrology Education",
+        "description": "Learning resources and astrology tutorials"
+      }
+    ],
     "audience": {
       "@type": "Audience",
-      "audienceType": "astrology enthusiasts, astrologers, spiritual seekers"
-    }
+      "audienceType": "astrology enthusiasts, spiritual seekers, people seeking astrological guidance"
+    },
+    "keywords": "free astrology help, natal chart questions, astrology community, chart reading help, astrology forum, transit interpretations, synastry analysis"
+  };
+
+  // Local Business Schema for astrology services
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Free Astrology Community Support",
+    "description": "Free astrology consultations and chart interpretations from our expert community members",
+    "provider": {
+      "@type": "Organization",
+      "name": BRAND.name,
+      "url": siteUrl
+    },
+    "serviceType": "Astrology Consultation",
+    "audience": {
+      "@type": "Audience", 
+      "audienceType": "People seeking astrological guidance"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free community-based astrology help and chart analysis"
+    },
+    "areaServed": "Worldwide",
+    "availableLanguage": "English"
   };
 
   return (
@@ -100,6 +148,14 @@ export default function DiscussionsStructuredData() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(forumSchema)
+        }}
+      />
+
+      {/* Service Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(serviceSchema)
         }}
       />
     </>
