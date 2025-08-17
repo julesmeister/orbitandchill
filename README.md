@@ -26,7 +26,8 @@
 - **Forum System**: Threaded discussions with visual threading lines
 - **Comment Threading**: SVG-based visual connection system for nested replies
 - **Blog Platform**: Publishing system for astrological content
-- **SEO Optimized**: Comprehensive metadata and structured data
+- **FAQ System**: Centralized knowledge base with 24 comprehensive questions across 6 categories
+- **SEO Optimized**: Comprehensive metadata and structured data with no duplicate schemas
 
 ## 🚀 Quick Start
 
@@ -93,6 +94,8 @@ src/
 │   ├── useNatalChart.ts       # Main chart orchestrator ⭐
 │   ├── useChartCache.ts       # Chart caching & persistence
 │   └── useChartOperations.ts  # Chart API operations
+├── data/                  # Centralized data sources
+│   └── faqData.ts             # FAQ system with 24 questions ⭐
 ├── services/              # API service layers
 │   └── chartApiService.ts     # Chart API operations
 ├── store/                 # Zustand state management
@@ -112,6 +115,22 @@ natal/
 │   └── utils.py          # Utility functions
 ├── tests/                 # Test suite
 └── docs/                  # Documentation
+```
+
+### Public Assets
+```
+public/
+├── favicon.ico                    # Main favicon
+├── apple-touch-icon.png          # iOS home screen icon
+├── site.webmanifest              # PWA configuration
+├── browserconfig.xml             # Windows tile configuration
+└── images/
+    └── favicon/                   # Complete favicon set
+        ├── favicon-16x16.png      # Small favicon
+        ├── favicon-32x32.png      # Medium favicon
+        ├── android-chrome-192x192.png  # Android icon
+        ├── android-chrome-512x512.png  # High-res Android
+        └── apple-touch-icon.png   # Apple touch icon
 ```
 
 ## 🛠️ Technology Stack
@@ -158,6 +177,20 @@ svg_string = chart.svg
 
 ## 🎨 Key Features in Detail
 
+### Favicon & PWA Support ⭐
+- **Cross-Platform Icons**: Complete favicon set for all devices and browsers
+- **PWA Ready**: Android Chrome icons and web app manifest configured
+- **iOS Support**: Apple touch icon for iOS home screen installation
+- **Windows Compatibility**: Browserconfig.xml for Windows tiles and taskbar
+- **SEO Optimized**: Proper meta tags and icon declarations for maximum compatibility
+
+### FAQ System ⭐
+- **Centralized Knowledge Base**: 24 comprehensive questions across 6 categories
+- **Smart Search**: Real-time filtering across all FAQ content
+- **Color-Coded Categories**: Visual organization with category indicators
+- **SEO Structured Data**: Proper Schema.org markup with no duplicate schemas
+- **Responsive Design**: Mobile-optimized accordion interface
+
 ### Location Search
 - **Smart Autocomplete**: Real-time location suggestions
 - **Coordinates**: Automatic latitude/longitude extraction
@@ -196,6 +229,33 @@ svg_string = chart.svg
 - **Performance Optimized**: 24-hour local cache with intelligent invalidation and background refresh
 - **Error Resilience**: Comprehensive error handling with graceful fallbacks
 - **Type Safety**: Full TypeScript coverage with consolidated type definitions
+
+### Content Management ⭐
+- **Centralized Data**: Single source of truth for FAQ content with TypeScript interfaces
+- **SEO Optimization**: Eliminated duplicate Schema.org FAQPage markups across components
+- **Component Reusability**: FAQ structured data component supports multiple page types
+- **Content Consistency**: Unified FAQ management prevents content drift and maintenance issues
+
+## 📊 Recent Improvements
+
+### FAQ System Consolidation (Latest)
+- ✅ **Eliminated Duplicates**: Removed 4+ duplicate FAQ schemas causing SEO conflicts
+- ✅ **Centralized Data**: Created `/src/data/faqData.ts` with 24 comprehensive questions
+- ✅ **Enhanced Categories**: Added "Astrology Basics" category with foundational knowledge
+- ✅ **Better UX**: Real-time search, color-coded categories, and improved mobile experience
+- ✅ **SEO Optimized**: Single FAQPage schema on dedicated `/faq` page prevents conflicts
+
+### Favicon Implementation (Latest)
+- ✅ **Complete Coverage**: All device types (desktop, mobile, tablet, PWA)
+- ✅ **Brand Integration**: Theme colors and app manifest with proper branding
+- ✅ **Cross-Platform**: Windows tiles, iOS home screen, Android PWA support
+- ✅ **Performance**: Optimized file placement and proper MIME types
+
+### Chart System Security Fixes
+- ✅ **User Isolation**: Fixed critical bug where anonymous users saw admin's charts
+- ✅ **Modular Architecture**: Refactored 2000+ line hook into focused components
+- ✅ **Cache Security**: Secure cache key generation prevents user data conflicts
+- ✅ **Type Safety**: Comprehensive TypeScript coverage across chart system
 
 ## 🚀 Deployment
 
