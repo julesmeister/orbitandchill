@@ -125,7 +125,10 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/discussions/page.tsx src/app/discussions/DiscussionsPageClient.tsx src/components/SEO/DiscussionsStructuredData.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/discussions/page.tsx src/app/discussions/DiscussionsPageClient.tsx src/components/SEO/DiscussionsStructuredData.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/learning-center/page.tsx src/app/learning-center/LearningCenterClient.tsx --quiet)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(magick:*)",
+      "Bash(convert:*)",
+      "Bash(where convert)"
     ],
     "deny": []
   }
