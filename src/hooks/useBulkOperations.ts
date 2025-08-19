@@ -140,7 +140,7 @@ export function useBulkOperations() {
       for (const postId of selectedArray) {
         const post = threads.find(t => t.id === postId);
         if (post) {
-          await updateThread(postId, { ...post, isPublished: true });
+          await updateThread(postId, { isPublished: true });
         }
       }
       
@@ -185,7 +185,7 @@ export function useBulkOperations() {
       for (const postId of selectedArray) {
         const post = threads.find(t => t.id === postId);
         if (post) {
-          await updateThread(postId, { ...post, isPublished: false });
+          await updateThread(postId, { isPublished: false });
         }
       }
       
@@ -214,6 +214,96 @@ export function useBulkOperations() {
     }
   }, [selectedPosts, threads, updateThread]);
 
+  const handleBulkFeature = useCallback(async (onToast?: (toast: ToastState) => void) => {
+    try {
+      const selectedArray = Array.from(selectedPosts);
+      
+      if (onToast) {
+        onToast({
+          show: true,
+          title: 'Featuring Posts',
+          message: `Featuring ${selectedArray.length} posts...`,
+          status: 'loading'
+        });
+      }
+
+      for (const postId of selectedArray) {
+        const post = threads.find(t => t.id === postId);
+        if (post) {
+          await updateThread(postId, { isPinned: true });
+        }
+      }
+      
+      setSelectedPosts(new Set());
+      setShowBulkActions(false);
+      
+      if (onToast) {
+        onToast({
+          show: true,
+          title: 'Posts Featured',
+          message: `Successfully featured ${selectedArray.length} posts.`,
+          status: 'success'
+        });
+      }
+    } catch (error) {
+      console.error('Error bulk featuring posts:', error);
+      
+      if (onToast) {
+        onToast({
+          show: true,
+          title: 'Feature Failed',
+          message: 'Failed to feature some posts. Please try again.',
+          status: 'error'
+        });
+      }
+    }
+  }, [selectedPosts, threads, updateThread]);
+
+  const handleBulkUnfeature = useCallback(async (onToast?: (toast: ToastState) => void) => {
+    try {
+      const selectedArray = Array.from(selectedPosts);
+      
+      if (onToast) {
+        onToast({
+          show: true,
+          title: 'Unfeaturing Posts',
+          message: `Unfeaturing ${selectedArray.length} posts...`,
+          status: 'loading'
+        });
+      }
+
+      for (const postId of selectedArray) {
+        const post = threads.find(t => t.id === postId);
+        if (post) {
+          await updateThread(postId, { isPinned: false });
+        }
+      }
+      
+      setSelectedPosts(new Set());
+      setShowBulkActions(false);
+      
+      if (onToast) {
+        onToast({
+          show: true,
+          title: 'Posts Unfeatured',
+          message: `Successfully unfeatured ${selectedArray.length} posts.`,
+          status: 'success'
+        });
+      }
+    } catch (error) {
+      console.error('Error bulk unfeaturing posts:', error);
+      
+      if (onToast) {
+        onToast({
+          show: true,
+          title: 'Unfeature Failed',
+          message: 'Failed to unfeature some posts. Please try again.',
+          status: 'error'
+        });
+      }
+    }
+  }, [selectedPosts, threads, updateThread]);
+
   const clearSelectionsOnFilterChange = useCallback(() => {
     setSelectedPosts(new Set());
     setShowBulkActions(false);
@@ -234,6 +324,8 @@ export function useBulkOperations() {
     cancelBulkDelete,
     handleBulkPublish,
     handleBulkUnpublish,
+    handleBulkFeature,
+    handleBulkUnfeature,
     clearSelectionsOnFilterChange,
   };
 }

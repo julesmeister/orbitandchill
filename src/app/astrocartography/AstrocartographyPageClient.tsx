@@ -5,6 +5,7 @@
 import React, { useEffect, Suspense } from 'react';
 import { usePeopleStore } from '../../store/peopleStore';
 import { useUserStore } from '../../store/userStore';
+import { Person } from '../../types/people';
 import { useAstrocartography } from '../../hooks/useAstrocartography';
 import TimeZoneWarnings from '../../components/astrocartography/TimeZoneWarnings';
 import CalculationMethodInfo from '../../components/astrocartography/CalculationMethodInfo';
@@ -48,10 +49,42 @@ const sliderStyles = `
 export default function AstrocartographyPageClient() {
   const { defaultPerson, people, selectedPersonId } = usePeopleStore();
   const { user } = useUserStore();
+  const [astroPersonData, setAstroPersonData] = React.useState<Person | null>(null);
+
+  // Check for person data from chart navigation
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedPersonData = sessionStorage.getItem('astro_person_data');
+        if (storedPersonData) {
+          const personData = JSON.parse(storedPersonData);
+          console.log('🌍 Astrocartography: Received person data from chart navigation:', personData);
+          setAstroPersonData(personData);
+          // Clear the session storage after using it
+          sessionStorage.removeItem('astro_person_data');
+        }
+      } catch (error) {
+        console.error('Error reading astro person data from sessionStorage:', error);
+      }
+    }
+  }, []);
 
   // Manually compute selectedPerson to avoid potential Zustand getter issues
   const selectedPerson = selectedPersonId ? people.find(p => p.id === selectedPersonId) || null : null;
-  const currentPerson = selectedPerson || defaultPerson || people[0];
+  
+  // Priority: astro person data from chart navigation, then selected person, then default person, then first person
+  const currentPerson = astroPersonData || selectedPerson || defaultPerson || people[0];
+  
+  // Debug log the current person being used
+  useEffect(() => {
+    console.log('🌍 Astrocartography: Current person:', {
+      astroPersonData: !!astroPersonData,
+      selectedPerson: !!selectedPerson,
+      defaultPerson: !!defaultPerson,
+      peopleCount: people.length,
+      finalPerson: currentPerson ? { id: currentPerson.id, name: currentPerson.name } : null
+    });
+  }, [astroPersonData, selectedPerson, defaultPerson, people.length, currentPerson]);
 
   // Use custom hooks for state management
   const {

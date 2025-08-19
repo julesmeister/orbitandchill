@@ -156,6 +156,8 @@ export default function PostFormModal({
             onAdminOptionsChange={(formData) => {
               console.log('🔍 Form data updated:', {
                 title: formData.title,
+                tags: formData.tags,
+                tagsArray: JSON.stringify(formData.tags),
                 contentLength: formData.content?.length,
                 contentPreview: formData.content?.substring(0, 100) + '...'
               });

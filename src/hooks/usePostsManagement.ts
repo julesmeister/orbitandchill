@@ -76,6 +76,17 @@ export function usePostsManagement() {
     shouldPublish?: boolean,
     onToast?: (toast: ToastState) => void
   ) => {
+    console.log('🚀 handleFormSubmit called with:', { 
+      formData: { 
+        title: formData.title, 
+        tags: formData.tags,
+        tagsType: typeof formData.tags,
+        tagsLength: formData.tags?.length 
+      }, 
+      shouldPublish, 
+      editingPost 
+    });
+    
     if (shouldPublish === undefined) {
       return;
     }
@@ -111,6 +122,13 @@ export function usePostsManagement() {
       isPinned: formData.isPinned ?? false,
       isLocked: false,
     };
+
+    console.log('📦 Final postData being sent to updateThread:', { 
+      title: postData.title, 
+      tags: postData.tags,
+      tagsType: typeof postData.tags,
+      tagsLength: postData.tags?.length 
+    });
 
     try {
       if (editingPost) {

@@ -129,6 +129,8 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     cancelBulkDelete,
     handleBulkPublish,
     handleBulkUnpublish,
+    handleBulkFeature,
+    handleBulkUnfeature,
     clearSelectionsOnFilterChange
   } = useBulkOperations();
 
@@ -175,6 +177,13 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
   // Helper functions for button-triggered submissions
   const handleButtonSubmit = async (shouldPublish: boolean) => {
+    console.log('🎯 handleButtonSubmit - formDataRef.current:', {
+      title: formDataRef.current?.title,
+      tags: formDataRef.current?.tags,
+      tagsArray: JSON.stringify(formDataRef.current?.tags),
+      tagsType: typeof formDataRef.current?.tags,
+      tagsLength: formDataRef.current?.tags?.length
+    });
     // Extract fresh data from DOM and call the hook's handleFormSubmit
     await handleFormSubmit(formDataRef.current || {} as PostFormData, shouldPublish, setToast);
   };
@@ -238,9 +247,13 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       {showBulkActions && (
         <BulkActionsBar
           selectedCount={selectedPosts.size}
+          selectedPosts={selectedPosts}
+          threads={threads}
           onClearSelection={handleClearSelection}
           onBulkPublish={() => handleBulkPublish(setToast)}
           onBulkUnpublish={() => handleBulkUnpublish(setToast)}
+          onBulkFeature={() => handleBulkFeature(setToast)}
+          onBulkUnfeature={() => handleBulkUnfeature(setToast)}
           onBulkDelete={handleBulkDelete}
         />
       )}

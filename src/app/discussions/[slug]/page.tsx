@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { BRAND } from '../../../config/brand';
 import DiscussionDetailPageClient from './DiscussionDetailPageClient';
 import DiscussionDetailStructuredData from '../../../components/SEO/DiscussionDetailStructuredData';
@@ -42,6 +43,8 @@ export async function generateMetadata({
       robots: {
         index: false,
         follow: false,
+        noarchive: true,
+        nosnippet: true,
       },
     };
   }
@@ -139,37 +142,9 @@ export default async function DiscussionDetailPage({
   const resolvedParams = await params;
   const discussion = await fetchDiscussion(resolvedParams.slug);
   
-  // If discussion not found, show error state with structured data
+  // If discussion not found, return 404
   if (!discussion) {
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebPage",
-              name: "Discussion Not Found",
-              description: "The requested discussion could not be found.",
-              url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'}/discussions/${resolvedParams.slug}`,
-            }),
-          }}
-        />
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Discussion Not Found
-            </h1>
-            <Link
-              href="/discussions"
-              className="text-blue-600 hover:text-blue-700"
-            >
-              ← Back to Discussions
-            </Link>
-          </div>
-        </div>
-      </>
-    );
+    notFound();
   }
   
   return (

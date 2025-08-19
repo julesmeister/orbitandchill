@@ -465,7 +465,9 @@ export class DiscussionService {
     
     // Handle tags
     if (data.tags !== undefined) {
+      console.log('🏷️ Updating tags:', data.tags);
       updateData.tags = JSON.stringify(data.tags);
+      console.log('🏷️ Serialized tags:', updateData.tags);
     }
     
     // Handle featuredImage

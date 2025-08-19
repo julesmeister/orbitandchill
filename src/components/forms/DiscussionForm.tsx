@@ -89,7 +89,7 @@ export default function DiscussionForm({
     isEditingAuthor,
     handleAuthorEdit,
     handleAuthorBlur
-  } = useDiscussionForm(initialData);
+  } = useDiscussionForm(initialData, onAdminOptionsChange);
 
   // Enhanced content change handler that extracts first image for thumbnail
   const handleContentChange = (content: string) => {

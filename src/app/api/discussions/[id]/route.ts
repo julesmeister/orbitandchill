@@ -134,6 +134,8 @@ export async function PATCH(
     }
     
     const updates = await request.json();
+    console.log('🔍 API received updates:', JSON.stringify(updates, null, 2));
+    console.log('🏷️ Tags in updates:', updates.tags);
     
     // Get the original discussion to check if category changed
     const originalDiscussion = await DiscussionService.getDiscussionById(discussionId);

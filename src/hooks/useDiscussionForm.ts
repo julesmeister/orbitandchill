@@ -21,7 +21,7 @@ export interface DiscussionFormData {
   thumbnailUrl?: string; // Automatically extracted from first image in content
 }
 
-export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {}) {
+export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {}, onAdminOptionsChange?: (data: DiscussionFormData) => void) {
   const [formData, setFormData] = useState<DiscussionFormData>({
     title: '',
     content: '',
@@ -59,15 +59,8 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
         const recentUserInteraction = lastUserInteraction > 0 && timeSinceLastInteraction < 10000; // 10 seconds
         
         if (hasChanges) {
-          console.log('🔍 initialData changed - updating form data');
-          console.log('🔍 Previous category:', prev.category);
-          console.log('🔍 New initialData category:', initialData.category);
-          console.log('🔍 Time since last user interaction:', timeSinceLastInteraction, 'ms');
-          console.log('🔍 lastUserInteraction timestamp:', lastUserInteraction);
-          console.log('🔍 Recent user interaction detected:', recentUserInteraction);
           
           if (recentUserInteraction) {
-            console.log('🔍 Skipping initialData update due to recent user interaction');
             return prev;
           }
           
@@ -109,7 +102,6 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
-    console.log('🔍 handleInputChange called:', { name, value });
     setLastUserInteraction(Date.now()); // Track user interaction
     
     if (name === 'slug') {
@@ -120,16 +112,10 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
         slug: generateSlug(value) // Ensure slug is always URL-safe
       });
     } else {
-      setFormData(prev => {
-        const newData = {
-          ...prev,
-          [name]: value
-        };
-        console.log('🔍 Form data updated:', newData);
-        console.log('🔍 New authorName value:', newData.authorName);
-        console.log('🔍 handleInputChange - Updated lastUserInteraction timestamp');
-        return newData;
-      });
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
   };
 
@@ -143,18 +129,30 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
 
   const handleAddTag = (tag: string) => {
     if (!formData.tags.includes(tag)) {
-      setFormData({
+      const newFormData = {
         ...formData,
         tags: [...formData.tags, tag]
-      });
+      };
+      setFormData(newFormData);
+      
+      // Notify parent component about the change
+      if (onAdminOptionsChange) {
+        onAdminOptionsChange(newFormData);
+      }
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setFormData({
+    const newFormData = {
       ...formData,
       tags: formData.tags.filter(tag => tag !== tagToRemove)
-    });
+    };
+    setFormData(newFormData);
+    
+    // Notify parent component about the change
+    if (onAdminOptionsChange) {
+      onAdminOptionsChange(newFormData);
+    }
   };
 
   const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
@@ -162,25 +160,24 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {})
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
       if (!formData.tags.includes(newTag)) {
-        setFormData(prev => ({
-          ...prev,
-          tags: [...prev.tags, newTag]
-        }));
+        const newFormData = {
+          ...formData,
+          tags: [...formData.tags, newTag]
+        };
+        setFormData(newFormData);
+        
+        // Notify parent component about the change
+        if (onAdminOptionsChange) {
+          onAdminOptionsChange(newFormData);
+        }
       }
       setTagInput('');
     }
   };
 
   const updateFormData = (updates: Partial<DiscussionFormData>) => {
-    console.log('🔍 updateFormData called with:', updates);
     setLastUserInteraction(Date.now()); // Track user interaction
-    setFormData(prev => {
-      const newData = { ...prev, ...updates };
-      console.log('🔍 updateFormData - Previous category:', prev.category);
-      console.log('🔍 updateFormData - New category:', newData.category);
-      console.log('🔍 updateFormData - Updated lastUserInteraction timestamp');
-      return newData;
-    });
+    setFormData(prev => ({ ...prev, ...updates }));
   };
 
   // Text statistics for content

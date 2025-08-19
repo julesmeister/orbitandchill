@@ -141,9 +141,29 @@ export function useChartActions({ chartId, onPersonChange }: UseChartActionsProp
       return;
     }
     
-    // Sync person selection to global store for astrocartography page
-    setGlobalSelectedPerson(currentPerson.id);
-    router.push('/astrocartography');
+    try {
+      const personDataForAstro = {
+        id: currentPerson.id,
+        name: currentPerson.name,
+        relationship: currentPerson.relationship || 'other',
+        birthData: currentPerson.birthData,
+        notes: currentPerson.notes,
+        isDefault: currentPerson.isDefault || false,
+      };
+      
+      // Store the current person data in sessionStorage so astrocartography page can access it
+      sessionStorage.setItem('astro_person_data', JSON.stringify(personDataForAstro));
+      console.log('⚡ ChartActions: Storing person data for astrocartography:', personDataForAstro);
+      
+      // Also sync the selection to global store as fallback
+      setGlobalSelectedPerson(currentPerson.id);
+      
+      // Navigate to astrocartography page
+      router.push('/astrocartography');
+    } catch (error) {
+      console.error('Error preparing person data for astrocartography:', error);
+      showError('Navigation Error', 'Failed to prepare person data for astrocartography');
+    }
   }, [currentPerson, setGlobalSelectedPerson, router, showError]);
 
   return {

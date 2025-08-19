@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import { BRAND } from '@/config/brand';
 import SearchPageClient from './SearchPageClient';
 
@@ -23,5 +24,9 @@ export const metadata: Metadata = {
 };
 
 export default function SearchPage() {
-  return <SearchPageClient />;
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading search...</div>}>
+      <SearchPageClient />
+    </Suspense>
+  );
 }

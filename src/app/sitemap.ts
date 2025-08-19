@@ -237,7 +237,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         
         // Add individual discussion/blog pages
         dynamicPages = discussions.map((post: any) => ({
-          url: `${baseUrl}/discussions/${post.id}`,
+          url: `${baseUrl}/discussions/${post.slug || post.id}`,
           lastModified: new Date(post.updatedAt || post.createdAt),
           changeFrequency: 'monthly' as const,
           priority: post.isPinned ? 0.8 : 0.6,

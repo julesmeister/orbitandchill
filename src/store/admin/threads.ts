@@ -8,6 +8,11 @@ import { generateSlug } from '@/utils/slugify';
  * Transform discussion data from API to Thread interface
  */
 const transformDiscussionToThread = (discussion: any): Thread => {
+  // Debug tags transformation for specific discussion
+  if (discussion.id === 'disc_1755547727770_209pzwo6y') {
+    console.log('🔄 Raw discussion tags from API:', discussion.tags, typeof discussion.tags);
+  }
+  
   return {
     id: discussion.id,
     title: discussion.title,
@@ -70,6 +75,12 @@ export const createThreadsSlice = (set: any, get: any) => ({
       
       if (data.success && data.discussions) {
         const threads: Thread[] = data.discussions.map(transformDiscussionToThread);
+        
+        // Debug: Check if the updated discussion has the correct tags
+        const updatedDiscussion = threads.find(t => t.id === 'disc_1755547727770_209pzwo6y'); // Your test discussion ID
+        if (updatedDiscussion) {
+          console.log('🔄 Reloaded discussion tags:', updatedDiscussion.tags);
+        }
 
         set({
           threads,
@@ -146,9 +157,12 @@ export const createThreadsSlice = (set: any, get: any) => ({
       const data = await threadsApi.update(id, updates);
       
       if (data.success && data.discussion) {
+        console.log('✅ Update successful, reloading threads...');
         // After successful update, reload threads with force refresh to get fresh data from API
         await get().loadThreads({ forceRefresh: true });
+        console.log('✅ Threads reloaded');
       } else {
+        console.error('❌ Update failed:', data.error);
         throw new Error(data.error || 'Failed to update discussion');
       }
     } catch (error) {
