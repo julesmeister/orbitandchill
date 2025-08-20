@@ -202,4 +202,26 @@ export const createThreadsSlice = (set: any, get: any) => ({
       throw error;
     }
   },
+
+  // Load only thread counts for dashboard (no actual thread data)
+  loadThreadCounts: async (): Promise<void> => {
+    try {
+      const data = await threadsApi.getAll({ limit: 1 }); // Just get count, minimal data
+      
+      if (data.success) {
+        set({
+          totalThreads: data.totalCount || 0,
+          totalPages: data.totalPages || 0,
+          currentPage: data.currentPage || 1,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load thread counts:', error);
+      set({
+        totalThreads: 0,
+        totalPages: 0,
+        currentPage: 1,
+      });
+    }
+  },
 });

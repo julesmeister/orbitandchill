@@ -81,7 +81,7 @@ interface OverviewTabProps {
 }
 
 export default function OverviewTab({ siteMetrics, healthMetrics, notifications, isLoading }: OverviewTabProps) {
-  const { threads, userAnalytics, trafficData, loadThreads, loadUserAnalytics, loadTrafficData } = useAdminStore();
+  const { totalThreads, userAnalytics, trafficData, loadUserAnalytics, loadTrafficData } = useAdminStore();
   
   useEffect(() => {
     // Only load data if not already loaded - AdminDashboard handles initial loading
@@ -93,7 +93,7 @@ export default function OverviewTab({ siteMetrics, healthMetrics, notifications,
     }
   }, []); // Empty dependency array - only run once on mount
   
-  const realMetrics = useRealMetrics(userAnalytics, trafficData, threads);
+  const realMetrics = useRealMetrics(userAnalytics, trafficData, totalThreads);
   
   const trends = {
     newUsers: realMetrics.newUsersThisMonth,

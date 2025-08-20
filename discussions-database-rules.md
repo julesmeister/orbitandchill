@@ -1,6 +1,29 @@
 # Discussion & Reply Database Implementation Rules
 
-This document outlines the established patterns for creating and fetching discussions and replies in the Luckstrology application.
+This document outlines the established patterns for creating and fetching discussions and replies in the Luckstrology application with optimized server-side pagination architecture.
+
+## Architecture Overview
+```
+Database Layer              Service Layer               API Layer                  Frontend
+─────────────────          ──────────────────          ───────────────           ──────────────
+discussions                DiscussionService           /api/discussions          useDiscussions
+├── id (nanoid)           ├── createDiscussion()      ├── GET (paginated)       ├── Server-side pagination
+├── title                 ├── getAllDiscussions()     ├── totalCount return     ├── 10 per page
+├── content               ├── getDiscussionById()     └── page/limit params     ├── Real totals display
+├── authorId              └── Reply management                                   └── Cache refresh
+├── category                                           Admin API
+├── tags (JSON)           Performance Optimization    ─────────────────          Admin Components
+├── replies (count)       ─────────────────────────   /api/admin/threads        ──────────────────
+├── views                 ├── Count-only loading      ├── Separated endpoints   ├── AdminDashboard
+├── upvotes               ├── Content pagination      ├── loadThreadCounts()    │   └── Count loading only
+└── createdAt             └── Accurate totals         └── Content pagination    ├── PostsTab
+                                                                                │   └── Content + pagination
+discussion_replies                                                             └── PostsList
+├── id (nanoid)                                                                    └── Accurate totals
+├── discussionId
+├── parentReplyId
+└── content
+```
 
 ## Database Schema
 
@@ -76,7 +99,8 @@ static async getDiscussionById(id: string) {
 static async getAllDiscussions(options) {
   // Support filtering: category, isBlogPost, isPublished
   // Support sorting: recent, popular, replies, views
-  // Support pagination: limit, offset
+  // Support server-side pagination: limit=10, offset calculated from page
+  // Return totalCount for accurate pagination displays
   // Parse JSON fields in results
 }
 ```
@@ -242,10 +266,13 @@ const organizeReplies = (replies: Reply[]): Reply[] => {
 
 ## Performance Optimizations
 
-1. **Pagination**: Always implement for large result sets
-2. **Indexing**: Index frequently queried fields (discussionId, authorId)
-3. **Caching**: Cache popular discussions and reply counts
-4. **Lazy Loading**: Load replies separately from discussion content
+1. **Server-Side Pagination**: Implemented 10-per-page pagination for both admin and discussions
+2. **Separated Count Loading**: AdminDashboard loads only counts, content pages handle pagination
+3. **Accurate Database Totals**: Real-time total counts displayed across all interfaces
+4. **Optimized Architecture**: Reduced unnecessary data loading by separating concerns
+5. **Indexing**: Index frequently queried fields (discussionId, authorId)
+6. **Caching**: Cache popular discussions and reply counts
+7. **Lazy Loading**: Load replies separately from discussion content
 
 ## Next Steps for Reply Implementation
 

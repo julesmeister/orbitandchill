@@ -23,6 +23,43 @@ This document provides a clean reference for all API endpoints, their status, an
 
 ## 🎯 Recent Fixes & Improvements
 
+### ✅ Server-Side Pagination Architecture Optimization (2025-08-20)
+- **Problem**: Admin and discussions pages used inefficient client-side pagination, loading 100+ records then slicing on frontend
+- **Root Cause**: 
+  - Admin PostsTab calculated totals from filtered threads instead of actual database totals
+  - Discussions page used client-side pagination with `limit: '100'` then frontend slicing
+  - Pagination displays showed current page counts instead of actual database totals
+  - Poor architecture with AdminDashboard loading full threads just for navigation tab counts
+- **Complete Solution Implemented**: 
+  - **Admin Pagination**: Proper server-side pagination with 10 posts per page fetched from API
+  - **Discussions Pagination**: Updated from 6 to 10 posts per page with server-side fetching
+  - **Accurate Totals**: Fixed pagination displays to show real database totals ("Showing 1-10 of 17" instead of "Showing 1-10 of 10")
+  - **Architecture Cleanup**: AdminDashboard now only loads counts via `loadThreadCounts()`, PostsTab handles its own pagination
+  - **API Optimization**: Admin API changed from `limit: 100` to `limit: 10` for true server-side pagination
+  - **State Management**: Added `totalThreads` and `totalDiscussions` to stores for accurate totals
+- **Architecture Overview**:
+  - **Server-Side Pattern**: Page changes trigger API calls with `page` and `limit` parameters
+  - **Total Count Accuracy**: APIs return `totalCount` which is stored and used for pagination displays
+  - **Optimized Loading**: Only current page data loaded, not entire datasets
+  - **Consistent UX**: Both admin and discussions use identical 10-per-page pagination pattern
+  - **Performance Improvement**: Reduced memory usage and faster initial page loads
+- **Files Modified**:
+  - `src/store/admin/api.ts` - Changed default limit from 100 to 10 for server-side pagination
+  - `src/store/admin/threads.ts` - Added `loadThreadCounts()` method for dashboard navigation
+  - `src/components/admin/AdminDashboard.tsx` - Only loads counts, not full threads
+  - `src/components/admin/PostsTab.tsx` - Server-side pagination with `handlePageChange` fetching new pages
+  - `src/components/admin/posts/PostsList.tsx` - Uses `totalThreads` for accurate pagination display
+  - `src/hooks/useDiscussions.ts` - Server-side pagination with `totalDiscussions` state tracking
+  - `src/app/discussions/DiscussionsPageClient.tsx` - Uses `totalDiscussions` for accurate pagination
+  - `src/hooks/useRealMetrics.ts` - Uses `totalThreads` instead of `threads.length` for metrics
+- **Technical Implementation**:
+  - **Page Handler**: `handlePageChange` calls `loadThreads({ page: newPage, limit: postsPerPage, filter })`
+  - **Total Storage**: APIs store `data.totalCount` in state for accurate pagination calculations
+  - **Display Logic**: Pagination shows `totalThreads`/`totalDiscussions` instead of current page counts
+  - **Filter Integration**: Category and sort filters work with server-side pagination
+  - **Memory Efficiency**: Only 10 records loaded per page instead of 100+ with client-side slicing
+- **Impact**: Consistent 10-per-page server-side pagination across admin and discussions with accurate totals and improved performance
+
 ### ✅ Horary Questions DELETE API & Connection Pool Implementation (2025-06-30)
 - **Problem**: Horary question deletion was failing with 500 errors and had no user feedback during the operation
 - **Root Cause**: 

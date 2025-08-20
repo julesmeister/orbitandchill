@@ -179,7 +179,7 @@ export const threadsApi = {
   } = {}): Promise<any> {
     const {
       page = 1,
-      limit = 10, // Default limit
+      limit = 10, // Server-side pagination - only load current page
       category,
       sortBy = 'recent',
       filter,

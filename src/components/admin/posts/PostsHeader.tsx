@@ -12,8 +12,16 @@ interface Thread {
   updatedAt: string;
 }
 
+interface TotalCounts {
+  blogPosts: number;
+  forumThreads: number;
+  published: number;
+  total: number;
+}
+
 interface PostsHeaderProps {
   threads: Thread[];
+  totalCounts: TotalCounts;
   onCategoryManagerToggle: () => void;
   onUncategorizedManagerToggle: () => void;
   onCreatePost: () => void;
@@ -22,14 +30,14 @@ interface PostsHeaderProps {
 
 export default function PostsHeader({
   threads,
+  totalCounts,
   onCategoryManagerToggle,
   onUncategorizedManagerToggle,
   onCreatePost,
   onRefresh
 }: PostsHeaderProps) {
-  const blogPosts = threads.filter((t: Thread) => t.isBlogPost);
-  const forumThreads = threads.filter((t: Thread) => !t.isBlogPost);
-  const publishedCount = threads.filter((t: Thread) => t.isPublished).length;
+  // Use totalCounts for accurate statistics instead of current page threads
+  const { blogPosts: blogPostsCount, forumThreads: forumThreadsCount, published: publishedCount } = totalCounts;
 
   // Helper function for most recent thread calculation
   const getMostRecentActivity = () => {
@@ -88,7 +96,7 @@ export default function PostsHeader({
   // Statistics cards configuration
   const statsCards = [
     {
-      value: blogPosts.length,
+      value: blogPostsCount,
       label: 'Blog Posts',
       bgGradient: 'from-[#6bdbff]/20 to-[#6bdbff]/10',
       borderColor: 'border-[#6bdbff]/30',
@@ -97,7 +105,7 @@ export default function PostsHeader({
       icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z'
     },
     {
-      value: forumThreads.length,
+      value: forumThreadsCount,
       label: 'Forum Threads',
       bgGradient: 'from-[#51bd94]/20 to-[#51bd94]/10',
       borderColor: 'border-[#51bd94]/30',

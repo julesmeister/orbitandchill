@@ -23,11 +23,12 @@
 - **Post Creation**: TipTap-powered rich text editor with full formatting capabilities
 
 ### 🌐 Community Features
-- **Forum System**: Threaded discussions with visual threading lines
+- **Forum System**: Threaded discussions with visual threading lines and server-side pagination
 - **Comment Threading**: SVG-based visual connection system for nested replies
-- **Blog Platform**: Publishing system for astrological content
+- **Blog Platform**: Publishing system for astrological content with admin management
 - **FAQ System**: Centralized knowledge base with 24 comprehensive questions across 6 categories
 - **SEO Optimized**: Comprehensive metadata and structured data with no duplicate schemas
+- **Pagination Architecture**: Consistent server-side pagination (10 per page) across admin and discussions
 
 ## 🚀 Quick Start
 
@@ -76,33 +77,47 @@
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── admin/             # Admin dashboard
-│   ├── discussions/       # Forum discussions
+│   ├── admin/             # Admin dashboard with server-side pagination ⭐
+│   │   └── page.tsx       # Dashboard with separated count loading
+│   ├── discussions/       # Forum discussions with pagination ⭐
+│   │   ├── page.tsx       # 10-per-page server-side pagination
+│   │   └── DiscussionsPageClient.tsx  # Real database totals
 │   └── layout.tsx         # Root layout
 ├── components/            # React components
-│   ├── admin/             # Admin-specific components
+│   ├── admin/             # Admin-specific components ⭐
+│   │   ├── AdminDashboard.tsx    # Optimized count-only loading
+│   │   ├── PostsTab.tsx          # Server-side content pagination
+│   │   └── posts/PostsList.tsx   # Accurate total displays
 │   ├── charts/            # Modular chart system ⭐
 │   │   ├── components/    # Chart sub-components
 │   │   ├── hooks/         # Chart-specific hooks
 │   │   └── types.ts       # Chart type definitions
-│   ├── discussions/       # Discussion components
+│   ├── discussions/       # Discussion components ⭐
+│   │   ├── DiscussionsSearchFilters.tsx  # Refresh functionality
+│   │   └── DiscussionsPageContent.tsx    # Pagination integration
 │   ├── threading/         # Comment threading system ⭐
 │   ├── forms/             # Form components
 │   └── reusable/          # Shared components
-├── hooks/                 # Custom React hooks
-│   ├── useBlogData.ts         # Main blog data orchestrator ⭐
+├── hooks/                 # Custom React hooks ⭐
+│   ├── useBlogData.ts         # Main blog data orchestrator
 │   ├── useBlogCache.ts        # Caching & data fetching
 │   ├── useBlogFilters.ts      # Filtering & pagination
 │   ├── useBlogSidebar.ts      # Popular/recent posts
 │   ├── useFeaturedPosts.ts    # Homepage featured articles
-│   ├── useNatalChart.ts       # Main chart orchestrator ⭐
+│   ├── useNatalChart.ts       # Main chart orchestrator
 │   ├── useChartCache.ts       # Chart caching & persistence
-│   └── useChartOperations.ts  # Chart API operations
+│   ├── useChartOperations.ts  # Chart API operations
+│   ├── useDiscussions.ts      # Server-side pagination hook
+│   ├── useDiscussionForm.ts   # Fixed title update handling
+│   └── useRealMetrics.ts      # Fixed to use totalThreads parameter
 ├── data/                  # Centralized data sources
 │   └── faqData.ts             # FAQ system with 24 questions ⭐
 ├── services/              # API service layers
 │   └── chartApiService.ts     # Chart API operations
-├── store/                 # Zustand state management
+├── store/                 # Zustand state management ⭐
+│   └── admin/
+│       ├── api.ts             # Server-side pagination API (limit=10)
+│       └── threads.ts         # loadThreadCounts() for dashboard
 ├── types/                 # TypeScript type definitions
 │   └── chart.ts               # Chart-related types ⭐
 └── utils/                 # Utility functions
@@ -214,10 +229,12 @@ svg_string = chart.svg
 - **Composable**: Main orchestrator hooks (`useBlogData`, `useNatalChart`) compose specialized hooks
 - **User Isolation**: Chart caching ensures complete separation between anonymous and authenticated users
 
-### Admin Analytics
-- **Real-time Metrics**: Live user counts and activity
-- **Traffic Analysis**: Visitor patterns and page views
-- **Content Management**: CRUD operations for posts and threads
+### Admin Analytics ⭐
+- **Real-time Metrics**: Live user counts and activity tracking with accurate database totals
+- **Traffic Analysis**: Visitor patterns and page views with comprehensive dashboard
+- **Content Management**: Server-side paginated CRUD operations for posts and threads
+- **Performance Optimized**: Separate count loading for navigation vs content pagination (10 per page)
+- **Accurate Totals**: Real database counts displayed across all admin interfaces
 
 ### Comment Threading System ⭐
 - **Visual Connections**: SVG-based threading lines between comments
@@ -259,7 +276,14 @@ svg_string = chart.svg
 
 ## 📊 Recent Improvements
 
-### Chart Component Optimization (Latest)
+### Server-Side Pagination Architecture (Latest)
+- ✅ **Optimized Admin Dashboard**: Separated count loading from content pagination for better performance
+- ✅ **Consistent Pagination**: Both admin and discussions use 10-per-page server-side pagination
+- ✅ **Accurate Database Totals**: Real-time total counts displayed across all interfaces
+- ✅ **Architecture Efficiency**: AdminDashboard only loads counts, PostsTab handles content pagination
+- ✅ **Performance Optimization**: Reduced unnecessary data loading and improved response times
+
+### Chart Component Optimization
 - ✅ **Modular Architecture**: Split 531-line monolith into 10+ focused components
 - ✅ **Performance Gains**: 30% smaller bundle, React.memo prevents unnecessary re-renders
 - ✅ **Error Resilience**: Error boundaries with retry functionality and graceful degradation

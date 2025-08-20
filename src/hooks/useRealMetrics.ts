@@ -60,7 +60,7 @@ interface UserActivityData {
 export function useRealMetrics(
   userAnalytics: UserAnalytics[],
   trafficData: TrafficData[],
-  threads: Thread[]
+  totalThreads: number
 ): RealMetrics {
   const [chartsData, setChartsData] = useState<NatalChartsData | null>(null);
   const [realUserData, setRealUserData] = useState<UserActivityData | null>(null);
@@ -110,7 +110,7 @@ export function useRealMetrics(
   return useMemo(() => {
     // Use real data only, show 0 during loading instead of undefined
     const totalUsers = realUserData?.totalUsers ?? 0;
-    const forumPosts = threads.length;
+    const forumPosts = totalThreads || 0;
     
     // Active users (last 30 days) - show 0 during loading instead of undefined
     const activeUsers = realUserData?.activeUsers ?? 0;
@@ -162,5 +162,5 @@ export function useRealMetrics(
       totalPageViews,
       conversionRate
     };
-  }, [userAnalytics, trafficData, threads.length, chartsData, realUserData]);
+  }, [userAnalytics, trafficData, totalThreads, chartsData, realUserData]);
 }

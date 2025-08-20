@@ -41,6 +41,7 @@ interface UseDiscussionsState {
   searchQuery: string;
   currentPage: number;
   discussionsPerPage: number;
+  totalDiscussions: number;
   // Cache state
   isFromCache: boolean;
   isFetchingFresh: boolean;
@@ -68,7 +69,7 @@ interface UseDiscussionsReturn extends UseDiscussionsState, UseDiscussionsAction
   handlePageChange: (page: number) => void;
 }
 
-export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussionsReturn {
+export function useDiscussions(initialPage = 1, initialPerPage = 10): UseDiscussionsReturn {
   const { user } = useUserStore();
   const [state, setState] = useState<UseDiscussionsState>({
     discussions: [],
@@ -79,6 +80,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
     searchQuery: "",
     currentPage: initialPage,
     discussionsPerPage: initialPerPage,
+    totalDiscussions: 0,
     // Cache state
     isFromCache: false,
     isFetchingFresh: false,
@@ -124,7 +126,7 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
   }, []);
 
   // Fetch discussions from API
-  const refreshDiscussions = useCallback(async (isBackgroundRefresh = false) => {
+  const refreshDiscussions = useCallback(async (isBackgroundRefresh = false, pageOverride?: number) => {
     try {
       // If we have cached data and this is a background refresh, set fetching fresh flag
       if (isBackgroundRefresh && state.discussions.length > 0) {
@@ -133,10 +135,17 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
         setState(prev => ({ ...prev, loading: true, error: null }));
       }
       
+      const currentPage = pageOverride || state.currentPage;
       const params = new URLSearchParams({
-        limit: '50',
-        sortBy: 'recent'
+        limit: state.discussionsPerPage.toString(), // Server-side pagination
+        page: currentPage.toString(), // Current page for server-side pagination
+        sortBy: state.sortBy
       });
+      
+      // Add category filter if not "All Categories"
+      if (state.selectedCategory && state.selectedCategory !== "All Categories") {
+        params.set('category', state.selectedCategory);
+      }
       
       // Include user ID to get vote data
       if (user?.id) {
@@ -186,7 +195,8 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
         // Discussions transformed and ready for display
         setState(prev => ({ 
           ...prev, 
-          discussions: transformedDiscussions, 
+          discussions: transformedDiscussions,
+          totalDiscussions: data.totalCount || 0, // Store total count from API
           loading: false, // Only set loading to false after fresh data is loaded
           isFetchingFresh: false,
           isFromCache: false,
@@ -249,32 +259,37 @@ export function useDiscussions(initialPage = 1, initialPerPage = 6): UseDiscussi
     }
   });
 
-  // Paginate discussions
-  const totalPages = Math.ceil(sortedDiscussions.length / state.discussionsPerPage);
-  const indexOfLastDiscussion = state.currentPage * state.discussionsPerPage;
-  const indexOfFirstDiscussion = indexOfLastDiscussion - state.discussionsPerPage;
-  const currentDiscussions = sortedDiscussions.slice(
-    indexOfFirstDiscussion,
-    indexOfLastDiscussion
-  );
+  // For server-side pagination, discussions are already paginated by the API
+  // We just need to display them as-is
+  const currentDiscussions = sortedDiscussions;
+  
+  // Total pages should be calculated from the actual total count from API
+  const totalPages = Math.ceil(state.totalDiscussions / state.discussionsPerPage);
 
   // Handlers with page reset
   const handleCategoryChange = useCallback((category: string) => {
     setState(prev => ({ ...prev, selectedCategory: category, currentPage: 1 }));
-  }, []);
+    // Fetch new data with filter
+    refreshDiscussions(false, 1);
+  }, [refreshDiscussions]);
 
   const handleSearchChange = useCallback((query: string) => {
     setState(prev => ({ ...prev, searchQuery: query, currentPage: 1 }));
+    // Search is client-side, no need to refetch
   }, []);
 
   const handleSortChange = useCallback((sort: string) => {
     setState(prev => ({ ...prev, sortBy: sort, currentPage: 1 }));
-  }, []);
+    // Fetch new data with sort
+    refreshDiscussions(false, 1);
+  }, [refreshDiscussions]);
 
   const handlePageChange = useCallback((page: number) => {
     setState(prev => ({ ...prev, currentPage: page }));
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+    // Fetch new page from server
+    refreshDiscussions(false, page);
+  }, [refreshDiscussions]);
 
   // Update individual discussion votes
   const updateDiscussionVotes = useCallback((id: string, upvotes: number, downvotes: number) => {

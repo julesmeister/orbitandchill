@@ -54,13 +54,15 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {},
           return initialData[key as keyof DiscussionFormData] !== prev[key as keyof DiscussionFormData];
         });
         
-        // Don't override user changes that happened in the last 10 seconds
+        // Don't override user changes that happened in the last 2 seconds (reduced from 10 seconds)
+        // This allows form updates while still protecting against race conditions
         const timeSinceLastInteraction = Date.now() - lastUserInteraction;
-        const recentUserInteraction = lastUserInteraction > 0 && timeSinceLastInteraction < 10000; // 10 seconds
+        const recentUserInteraction = lastUserInteraction > 0 && timeSinceLastInteraction < 2000; // 2 seconds
         
         if (hasChanges) {
-          
-          if (recentUserInteraction) {
+          // For edit mode, we need to allow updates even with recent interaction
+          // Only block if it's a very recent interaction (less than 500ms) to prevent flicker
+          if (recentUserInteraction && timeSinceLastInteraction < 500) {
             return prev;
           }
           
@@ -112,10 +114,18 @@ export function useDiscussionForm(initialData: Partial<DiscussionFormData> = {},
         slug: generateSlug(value) // Ensure slug is always URL-safe
       });
     } else {
-      setFormData(prev => ({
-        ...prev,
+      const newFormData = {
+        ...formData,
         [name]: value
-      }));
+      };
+      setFormData(newFormData);
+      
+      // Notify parent component about the change (especially important for title updates in edit mode)
+      if (onAdminOptionsChange) {
+        setTimeout(() => {
+          onAdminOptionsChange(newFormData);
+        }, 50); // Small delay to ensure state is updated
+      }
     }
   };
 

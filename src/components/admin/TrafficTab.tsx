@@ -16,13 +16,13 @@ interface TrafficTabProps {
 }
 
 export default function TrafficTab({ trafficData, isLoading }: TrafficTabProps) {
-  const { threads, userAnalytics } = useAdminStore();
+  const { threads, userAnalytics, totalThreads } = useAdminStore();
   const [timeRange, setTimeRange] = useState<TimeRange>('Last 30 days');
   
   const filteredTrafficData = getFilteredTrafficData(trafficData, timeRange);
 
   // Use the same consolidated real metrics from useRealMetrics
-  const realMetrics = useRealMetrics(userAnalytics, trafficData, threads);
+  const realMetrics = useRealMetrics(userAnalytics, trafficData, totalThreads);
   
   const trends = {
     visitors: realMetrics.dailyVisitors,

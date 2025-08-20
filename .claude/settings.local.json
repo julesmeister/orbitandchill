@@ -134,7 +134,12 @@
       "Bash(powershell:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/ --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/charts/ChartQuickActions.tsx src/components/charts/hooks/useChartActions.ts src/components/charts/hooks/usePersonFormState.ts src/components/charts/components/ChartActionButton.tsx src/components/charts/components/RegenerateButton.tsx src/components/charts/components/PersonFormModal.tsx src/components/charts/types.ts)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/hooks/useChartActions.ts src/app/astrocartography/AstrocartographyPageClient.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/hooks/useChartActions.ts src/app/astrocartography/AstrocartographyPageClient.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useDiscussionForm.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useDiscussionForm.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostFormModal.tsx src/components/forms/DiscussionForm.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/discussions/DiscussionsPageClient.tsx src/components/discussions/DiscussionsSearchFilters.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostsList.tsx --quiet)"
     ],
     "deny": []
   }

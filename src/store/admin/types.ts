@@ -183,6 +183,7 @@ export interface AdminState {
 
   // Thread actions
   loadThreads: (options?: any) => Promise<void>;
+  loadThreadCounts: () => Promise<void>;
   createThread: (thread: Omit<Thread, "id" | "createdAt" | "updatedAt" | "views" | "likes" | "comments" | "upvotes" | "downvotes" | "replies">) => Promise<void>;
   updateThread: (id: string, updates: Partial<Thread>) => Promise<void>;
   deleteThread: (id: string) => Promise<void>;

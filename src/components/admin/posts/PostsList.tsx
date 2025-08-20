@@ -44,6 +44,7 @@ interface PostsListProps {
   postsPerPage: number;
   indexOfFirstPost: number;
   indexOfLastPost: number;
+  totalThreads: number;
   
   // Filter and UI state
   filter: string;
@@ -59,6 +60,7 @@ interface PostsListProps {
   onDelete: (thread: Thread) => void;
   onTogglePin: (thread: Thread) => void;
   onPageChange: (page: number) => void;
+  onPostsPerPageChange: (postsPerPage: number) => void;
 }
 
 export default function PostsList({
@@ -70,6 +72,7 @@ export default function PostsList({
   postsPerPage,
   indexOfFirstPost,
   indexOfLastPost,
+  totalThreads,
   filter,
   isLoading,
   selectedPosts,
@@ -78,7 +81,8 @@ export default function PostsList({
   onEdit,
   onDelete,
   onTogglePin,
-  onPageChange
+  onPageChange,
+  onPostsPerPageChange
 }: PostsListProps) {
 
   return (
@@ -108,7 +112,7 @@ export default function PostsList({
             </h3>
           </div>
           <div className="text-sm md:text-sm text-gray-700 font-open-sans md:text-right">
-            <div>Showing {indexOfFirstPost + 1}-{Math.min(indexOfLastPost, filteredThreads.length)} of {filteredThreads.length} posts</div>
+            <div>Showing {indexOfFirstPost + 1}-{Math.min(indexOfLastPost, totalThreads)} of {totalThreads} posts</div>
             {threads.length > 0 && (
               <div className="text-xs text-gray-500 mt-1">
                 Most recent: {(() => {
@@ -284,13 +288,11 @@ export default function PostsList({
               <span className="text-xs md:text-sm text-black font-open-sans">Posts per page:</span>
               <select
                 value={postsPerPage}
-                onChange={() => {
-                  onPageChange(1);
-                  // Note: postsPerPage is read-only in current implementation
-                  // You could make it a state variable if you want to allow changing it
+                onChange={(e) => {
+                  const newPostsPerPage = parseInt(e.target.value, 10);
+                  onPostsPerPageChange(newPostsPerPage);
                 }}
-                className="text-xs md:text-sm border border-black px-1 md:px-2 py-1 bg-white font-open-sans"
-                disabled
+                className="text-xs md:text-sm border border-black px-1 md:px-2 py-1 bg-white font-open-sans hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black/20"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>

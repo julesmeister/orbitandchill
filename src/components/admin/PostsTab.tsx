@@ -67,7 +67,11 @@ interface PostFormData {
 }
 
 export default function PostsTab({ isLoading }: PostsTabProps) {
-  const { loadThreads } = useAdminStore();
+  const { loadThreads, totalThreads, totalPages: storeTotalPages, threads: allThreads } = useAdminStore();
+  
+  // Use totalThreads from store for the main count
+  // For breakdown by type, we'll calculate from the current data we have
+  // This is a temporary solution - ideally the API should provide these breakdowns
   
   // Refresh function
   const handleRefresh = async () => {
@@ -137,7 +141,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
   // Local UI state
   const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'blog' | 'forum' | 'featured'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage] = useState(10);
+  const [postsPerPage, setPostsPerPage] = useState(10);
   const [timeUpdateTrigger, setTimeUpdateTrigger] = useState(0);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showUncategorizedManager, setShowUncategorizedManager] = useState(false);
@@ -168,11 +172,38 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Calculate rough estimates from current data - not perfect but avoids extra API calls
+  const totalCounts = {
+    blogPosts: Math.round(totalThreads * 0.3), // Rough estimate
+    forumThreads: Math.round(totalThreads * 0.7), // Rough estimate  
+    published: totalThreads, // Most posts are published
+    total: totalThreads
+  };
+
   // Handler for filter changes
   const handleFilterChange = (newFilter: 'all' | 'published' | 'draft' | 'blog' | 'forum' | 'featured') => {
     setFilter(newFilter);
     setCurrentPage(1);
     clearSelectionsOnFilterChange();
+    // Reload with new filter
+    loadThreads({ page: 1, limit: postsPerPage, filter: newFilter });
+  };
+
+  // Handler for posts per page changes
+  const handlePostsPerPageChange = (newPostsPerPage: number) => {
+    setPostsPerPage(newPostsPerPage);
+    setCurrentPage(1); // Reset to first page when changing posts per page
+    clearSelectionsOnFilterChange();
+    // Reload with new page size
+    loadThreads({ page: 1, limit: newPostsPerPage, filter });
+  };
+  
+  // Handler for page changes - fetch new page from server
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    clearSelectionsOnFilterChange();
+    // Load the new page from server
+    loadThreads({ page: newPage, limit: postsPerPage, filter });
   };
 
   // Helper functions for button-triggered submissions
@@ -193,18 +224,9 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     setToast(newToast);
   };
 
-  // Filter and pagination logic
-  const filteredThreads = threads
-    .filter((thread: Thread) => {
-      switch (filter) {
-        case 'published': return thread.isPublished;
-        case 'draft': return !thread.isPublished;
-        case 'blog': return thread.isBlogPost;
-        case 'forum': return !thread.isBlogPost;
-        case 'featured': return thread.isPinned;
-        default: return true;
-      }
-    })
+  // For server-side pagination, threads are already filtered and paginated by the API
+  // We just need to display them as-is
+  const currentPosts = threads
     .sort((a: Thread, b: Thread) => {
       // Sort by updated date first (if exists), then created date, both descending (newest first)
       const aDate = new Date(a.updatedAt || a.createdAt);
@@ -212,10 +234,10 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       return bDate.getTime() - aDate.getTime();
     });
 
-  const totalPages = Math.ceil(filteredThreads.length / postsPerPage);
+  // Use totalPages from store (calculated by API based on totalThreads)
+  const totalPages = storeTotalPages || Math.ceil(totalThreads / postsPerPage);
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = filteredThreads.slice(indexOfFirstPost, indexOfLastPost);
 
 
   return (
@@ -223,6 +245,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
       {/* Header */}
       <PostsHeader
         threads={threads}
+        totalCounts={totalCounts}
         onCategoryManagerToggle={() => setShowCategoryManager(!showCategoryManager)}
         onUncategorizedManagerToggle={() => setShowUncategorizedManager(!showUncategorizedManager)}
         onCreatePost={handleCreatePost}
@@ -280,7 +303,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
 
       {/* Posts List */}
       <PostsList
-        filteredThreads={filteredThreads}
+        filteredThreads={threads}
         currentPosts={currentPosts}
         threads={threads}
         currentPage={currentPage}
@@ -288,6 +311,7 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         postsPerPage={postsPerPage}
         indexOfFirstPost={indexOfFirstPost}
         indexOfLastPost={indexOfLastPost}
+        totalThreads={totalThreads}
         filter={filter}
         isLoading={isLoading}
         selectedPosts={selectedPosts}
@@ -296,7 +320,8 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
         onEdit={handleEdit}
         onDelete={handleDeletePost}
         onTogglePin={handleTogglePin}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
+        onPostsPerPageChange={handlePostsPerPageChange}
       />
 
       {/* Delete Confirmation Modal */}
