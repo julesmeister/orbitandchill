@@ -264,15 +264,149 @@ const organizeReplies = (replies: Reply[]): Reply[] => {
 3. **Rate Limiting**: Implement for reply creation
 4. **Spam Prevention**: Basic content validation
 
-## Performance Optimizations
+## Performance & Database Connection Architecture
 
-1. **Server-Side Pagination**: Implemented 10-per-page pagination for both admin and discussions
-2. **Separated Count Loading**: AdminDashboard loads only counts, content pages handle pagination
-3. **Accurate Database Totals**: Real-time total counts displayed across all interfaces
-4. **Optimized Architecture**: Reduced unnecessary data loading by separating concerns
-5. **Indexing**: Index frequently queried fields (discussionId, authorId)
-6. **Caching**: Cache popular discussions and reply counts
-7. **Lazy Loading**: Load replies separately from discussion content
+```
+Discussion System Performance Tree
+├── Server-Side Pagination Strategy
+│   ├── Admin Interface: AdminDashboard loads counts only → PostsTab handles content (10/page)
+│   ├── Public Interface: Discussions page → 10 per page server-side fetching
+│   ├── Database Queries: Real-time totals → Accurate pagination displays
+│   └── Architecture Separation: Count loading vs content pagination concerns
+├── Database Connection Strategy (✅ ENHANCED) - AVOID DRIZZLE ORM
+│   ├── Implementation Approach (Drizzle ORM Avoidance)
+│   │   ├── Avoid: Drizzle ORM operations (unreliable with Turso HTTP client)
+│   │   └── Prefer: Direct Turso HTTP Client (guaranteed reliability)
+│   ├── Field Validation System
+│   │   ├── validFields: ['title', 'slug', 'content', 'excerpt', ...] 
+│   │   └── Prevents field filtering issues (slug persistence resolved)
+│   ├── Direct Database Connection Benefits
+│   │   ├── No WHERE clause parsing issues
+│   │   ├── No silent operation failures
+│   │   ├── Direct parameter binding
+│   │   └── Raw SQL execution control
+│   └── Production Debug System
+│       ├── 🔧 Direct database connection activation
+│       ├── 🔍 Raw SQL query execution logging  
+│       ├── ✅ Operation success confirmation
+│       └── ❌ Error identification and recovery paths
+└── Query & Data Optimization
+    ├── Database Indexing: discussionId, authorId, category fields
+    ├── Caching Strategy: Popular discussions and reply counts
+    ├── Lazy Loading: Separate reply loading from discussion content
+    └── Connection Pooling: Efficient resource management
+```
+
+## Database Connection Resilience Implementation
+
+### Discussion System Specific Patterns
+
+```
+Discussion Database Operations Tree (AVOID DRIZZLE ORM WHERE POSSIBLE)
+├── Field Validation Rules (src/db/services/discussionService.ts)
+│   ├── validFields: ['title', 'slug', 'content', 'excerpt', 'category', 'authorName', 'tags']
+│   ├── Boolean Fields: ['isBlogPost', 'isPublished', 'isPinned', 'isLocked'] 
+│   ├── Numeric Fields: ['views', 'upvotes', 'downvotes', 'replies', 'updatedAt']
+│   └── Critical Fix: Added 'slug' field to prevent filtering before database operations
+├── Discussion-Specific Column Mapping
+│   ├── Frontend → Database: authorName → author_name, featuredImage → featured_image
+│   ├── Boolean Conversion: SQLite integers (0/1) ↔ JavaScript booleans
+│   ├── JSON Fields: tags array ↔ JSON string storage
+│   └── Timestamps: JavaScript Date ↔ Unix timestamp (Math.floor(Date.getTime() / 1000))
+├── Raw SQL Implementation (RECOMMENDED - bypasses Drizzle ORM issues)
+│   ├── UPDATE discussions SET slug = ?, title = ?, content = ? WHERE id = ?
+│   ├── Parameter Binding: [slugValue, titleValue, contentValue, discussionId]
+│   ├── Environment Variables: TURSO_DATABASE_URL + TURSO_AUTH_TOKEN
+│   └── Error Recovery: Direct connection when Drizzle ORM WHERE clauses fail
+└── Discussion Threading Architecture
+    ├── discussion_replies table with parentReplyId for nesting
+    ├── Reply count auto-increment on discussion creation
+    ├── Last activity timestamp updates on new replies
+    └── Reply fetching with chronological ordering (createdAt ASC)
+```
+
+### Reply Management Patterns (Discussion-Specific)
+
+```
+Reply Threading Implementation
+├── Database Schema (discussion_replies table)
+│   ├── id (nanoid 12 chars) → Unique reply identifier
+│   ├── discussionId → Foreign key to discussions table (CASCADE DELETE)
+│   ├── parentReplyId → Self-reference for nested threading (nullable)
+│   ├── authorId → References users table (nullable for anonymous)
+│   └── content → Reply content with HTML support
+├── Reply Creation Flow
+│   ├── Insert reply → discussion_replies table
+│   ├── Increment count → UPDATE discussions SET replies = replies + 1
+│   ├── Update activity → UPDATE discussions SET last_activity = timestamp
+│   └── Thread organization → Frontend handles reply tree structure
+└── Reply Fetching Strategy
+    ├── Raw SQL: SELECT * FROM discussion_replies WHERE discussion_id = ? ORDER BY created_at ASC
+    ├── Flat array return → Frontend organizes into nested tree
+    ├── Author enhancement → LEFT JOIN with users table for author info
+    └── Performance: Load replies separately from discussion content (lazy loading)
+```
+
+### Discussion URL and Slug Management
+
+```
+Discussion URL Architecture (Post Slug-Fix Implementation)
+├── Admin Interface Slug Editing (src/components/admin/PostsTab.tsx)
+│   ├── Form Field: slug input in PostFormModal component
+│   ├── Real-time Preview: Shows URL as user types
+│   ├── Validation: Ensures slug meets URL requirements
+│   └── Persistence: Now correctly saves to database (validFields fix)
+├── Public URL Routing (src/app/discussions/[slug]/route.ts)
+│   ├── Primary Route: /discussions/[slug] → Dynamic routing
+│   ├── Slug Lookup: Raw SQL for reliable WHERE clause execution
+│   ├── ID Fallback: Falls back to ID lookup when slug missing
+│   └── SEO Benefits: Human-readable URLs for better search indexing
+├── API Slug Resolution (src/app/api/discussions/by-slug/[slug]/route.ts)
+│   ├── Database Query: SELECT * FROM discussions WHERE slug = ? AND is_published = 1
+│   ├── Error Handling: 404 when slug not found, 500 for database errors
+│   ├── Response Enhancement: Includes author avatar and computed fields
+│   └── Caching Headers: Optimized for CDN and browser caching
+└── Migration and Maintenance
+    ├── Existing discussions without slugs → Generate from title
+    ├── Slug uniqueness validation → Prevent duplicate URLs
+    ├── Slug history tracking → Maintain old URLs for SEO
+    └── Admin tools → Bulk slug generation and validation
+```
+
+### Discussion Categories and Filtering
+
+```
+Discussion Category System Architecture
+├── Category Structure (Astrology-Specific)
+│   ├── 'All Categories' → No filtering applied
+│   ├── 'Natal Chart Analysis' → Birth chart interpretations
+│   ├── 'Transits & Predictions' → Current planetary movements
+│   ├── 'Chart Reading Help' → Community assistance requests
+│   ├── 'Synastry & Compatibility' → Relationship astrology
+│   ├── 'Mundane Astrology' → World events and astrology
+│   ├── 'Learning Resources' → Educational content
+│   └── 'General Discussion' → Open-ended astrology discussions
+├── Database Filtering (Server-Side Performance)
+│   ├── Raw SQL: SELECT * FROM discussions WHERE category = ? AND is_published = 1
+│   ├── Index Optimization: CREATE INDEX idx_discussions_category ON discussions(category)
+│   ├── Pagination Integration: Combined with LIMIT/OFFSET for performance
+│   └── Count Queries: SELECT COUNT(*) for accurate pagination totals
+├── Frontend Category Management
+│   ├── Category Dropdown: Real-time filtering with server-side queries
+│   ├── URL State: Category preserved in query parameters
+│   ├── Category Colors: Visual coding for different astrology topics
+│   └── Category Badges: Discussion cards show category with styling
+└── Admin Category Management
+    ├── Category Creation: Admin interface for new categories
+    ├── Discussion Migration: Move discussions between categories
+    ├── Category Analytics: Track popular categories for insights
+    └── Category Permissions: Control who can post in specific categories
+```
+
+### 📋 For Database Connection Technical Patterns, See:
+- `API_DATABASE_PROTOCOL.md` → "Drizzle ORM Compatibility Issues & Solutions" (Line 251-354)
+- `API_DATABASE_PROTOCOL.md` → "Direct Database Connection Pattern" (Line 1371-1883)  
+- `API_DATABASE_PROTOCOL.md` → "Discussion Slug Persistence Resolution" (Line 1885-1906)
 
 ## Next Steps for Reply Implementation
 

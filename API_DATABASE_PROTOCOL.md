@@ -1882,6 +1882,29 @@ Use the debug tool at `/public/debug-horary.html` to test database connectivity:
 
 This pattern ensures critical functionality remains operational even when service layer abstractions encounter initialization issues.
 
+### Discussion Slug Persistence Resolution ✅ **RESOLVED** (2025-08-20)
+
+**Problem**: Discussion slug updates in admin interface appeared successful but weren't persisting to database, causing 404 errors on discussion URLs.
+
+**Root Cause Tree**:
+```
+Slug Update Failure Chain
+├── Field Validation Layer
+│   └── validFields = ['title', 'content', ...] // missing 'slug'!
+│       └── Result: slug filtered out before database operation
+├── Database Connection Layer
+│   ├── Drizzle ORM WHERE clause parsing issues with Turso HTTP client
+│   └── Service resilience incorrectly reports availability when db.client is null
+└── Error Masking: Operations return success but fail silently
+```
+
+**Solution Implementation**: 
+- Added `'slug'` to `validFields` array in `src/db/services/discussionService.ts`
+- Implemented direct database connection fallback pattern (see sections below)
+- Enhanced production debugging with emoji markers (🔧🔍✅❌)
+
+**Files Modified**: `src/db/services/discussionService.ts` (validFields array + direct connection pattern)
+
 ---
 
 ## Critical Database Persistence Issues & Solutions ✅ **RESOLVED**

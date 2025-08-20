@@ -506,7 +506,7 @@ export class DiscussionService {
     // Filter out any fields that don't exist in the schema
     // Using the exact Drizzle column names as defined in the schema
     const validFields = [
-      'title', 'content', 'excerpt', 'category', 'authorName', 'tags', 'featuredImage',
+      'title', 'slug', 'content', 'excerpt', 'category', 'authorName', 'tags', 'featuredImage',
       'isBlogPost', 'isPublished', 'isPinned', 'isLocked', 
       'views', 'upvotes', 'downvotes', 'replies', 'updatedAt'
     ];
@@ -548,72 +548,109 @@ export class DiscussionService {
         tags: result.tags ? JSON.parse(result.tags) : [],
       };
     } catch (drizzleError) {
+      console.log('🔧 Drizzle ORM failed, using direct database connection for updateDiscussion');
       
-      // Fallback to raw SQL with proper column name mapping
-      const dbObj = db as any;
-      const client = dbObj.client;
+      // Use direct database connection pattern (per API_DATABASE_PROTOCOL.md)
+      const databaseUrl = process.env.TURSO_DATABASE_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
       
-      if (!client) throw new Error('Database client not available');
+      if (!databaseUrl || !authToken) {
+        throw new Error('Database environment variables not available');
+      }
       
-      // Manual field mapping to database column names
-      const columnMapping: Record<string, string> = {
-        'authorName': 'author_name',
-        'featuredImage': 'featured_image',
-        'isBlogPost': 'is_blog_post', 
-        'isPinned': 'is_pinned',
-        'isLocked': 'is_locked',
-        'isPublished': 'is_published',
-        'createdAt': 'created_at',
-        'updatedAt': 'updated_at',
-        'lastActivity': 'last_activity'
-      };
-      
-      const mappedUpdates: string[] = [];
-      const params: any[] = [];
-      
-      for (const [field, value] of Object.entries(filteredUpdateData)) {
-        const dbColumn = columnMapping[field] || field;
-        mappedUpdates.push(`${dbColumn} = ?`);
+      try {
+        const { createClient } = await import('@libsql/client/http');
+        const client = createClient({
+          url: databaseUrl,
+          authToken: authToken,
+        });
         
-        // Convert Date objects to timestamps for SQLite
-        if (value instanceof Date) {
-          params.push(Math.floor(value.getTime() / 1000));
-        } else {
-          params.push(value);
+        console.log('🔧 Using direct database connection for slug update');
+        console.log('🔍 Filtered update data:', filteredUpdateData);
+        
+        // Manual field mapping to database column names
+        const columnMapping: Record<string, string> = {
+          'authorName': 'author_name',
+          'featuredImage': 'featured_image',
+          'isBlogPost': 'is_blog_post', 
+          'isPinned': 'is_pinned',
+          'isLocked': 'is_locked',
+          'isPublished': 'is_published',
+          'createdAt': 'created_at',
+          'updatedAt': 'updated_at',
+          'lastActivity': 'last_activity',
+          'slug': 'slug'  // slug maps to slug column
+        };
+      
+        const mappedUpdates: string[] = [];
+        const params: any[] = [];
+        
+        for (const [field, value] of Object.entries(filteredUpdateData)) {
+          const dbColumn = columnMapping[field] || field;
+          mappedUpdates.push(`${dbColumn} = ?`);
+          
+          // Convert Date objects to timestamps for SQLite
+          if (value instanceof Date) {
+            params.push(Math.floor(value.getTime() / 1000));
+          } else {
+            params.push(value);
+          }
         }
+        
+        if (mappedUpdates.length === 0) {
+          throw new Error('No valid fields to update');
+        }
+        
+        const sql = `UPDATE discussions SET ${mappedUpdates.join(', ')} WHERE id = ?`;
+        params.push(id);
+        
+        console.log('🔍 Direct SQL query:', sql);
+        console.log('🔍 Query parameters:', params);
+        
+        const result = await client.execute({ sql, args: params });
+        console.log('✅ Direct update result:', result);
+        
+        // Return the updated discussion
+        const selectResult = await client.execute({
+          sql: 'SELECT * FROM discussions WHERE id = ?',
+          args: [id]
+        });
+        
+        if (!selectResult.rows || selectResult.rows.length === 0) return null;
+        
+        const updatedRow = selectResult.rows[0] as any;
+        
+        console.log('✅ Direct database connection slug update successful');
+        
+        return {
+          id: updatedRow.id,
+          title: updatedRow.title,
+          slug: updatedRow.slug,
+          excerpt: updatedRow.excerpt,
+          content: updatedRow.content,
+          authorId: updatedRow.author_id,
+          authorName: updatedRow.author_name,
+          category: updatedRow.category,
+          tags: updatedRow.tags ? JSON.parse(updatedRow.tags) : [],
+          embeddedChart: updatedRow.embedded_chart ? JSON.parse(updatedRow.embedded_chart) : null,
+          embeddedVideo: updatedRow.embedded_video ? JSON.parse(updatedRow.embedded_video) : null,
+          replies: updatedRow.replies,
+          views: updatedRow.views,
+          upvotes: updatedRow.upvotes,
+          downvotes: updatedRow.downvotes,
+          isLocked: Boolean(updatedRow.is_locked),
+          isPinned: Boolean(updatedRow.is_pinned),
+          isBlogPost: Boolean(updatedRow.is_blog_post),
+          isPublished: Boolean(updatedRow.is_published),
+          createdAt: updatedRow.created_at,
+          updatedAt: updatedRow.updated_at,
+          lastActivity: updatedRow.last_activity,
+          featuredImage: updatedRow.featured_image,
+        };
+      } catch (directError) {
+        console.error('❌ Direct database connection failed:', directError);
+        throw directError;
       }
-      
-      if (mappedUpdates.length === 0) {
-        throw new Error('No valid fields to update');
-      }
-      
-      const sql = `UPDATE discussions SET ${mappedUpdates.join(', ')} WHERE id = ?`;
-      params.push(id);
-      
-      
-      const result = await client.execute({ sql, args: params });
-      
-      // Return the updated discussion
-      const selectResult = await client.execute({
-        sql: 'SELECT * FROM discussions WHERE id = ?',
-        args: [id]
-      });
-      
-      if (!selectResult.rows || selectResult.rows.length === 0) return null;
-      
-      const updatedRow = selectResult.rows[0] as any;
-      
-      return {
-        ...updatedRow,
-        tags: updatedRow.tags ? JSON.parse(updatedRow.tags) : [],
-        // Convert SQLite integers back to booleans
-        isBlogPost: Boolean(updatedRow.is_blog_post),
-        isPublished: Boolean(updatedRow.is_published),
-        isPinned: Boolean(updatedRow.is_pinned),
-        isLocked: Boolean(updatedRow.is_locked),
-        // Ensure featuredImage is properly mapped from snake_case
-        featuredImage: updatedRow.featured_image,
-      };
     }
   }
 

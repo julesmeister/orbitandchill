@@ -139,7 +139,9 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useDiscussionForm.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostFormModal.tsx src/components/forms/DiscussionForm.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/discussions/DiscussionsPageClient.tsx src/components/discussions/DiscussionsSearchFilters.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostsList.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostsList.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/services/discussionService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/discussionService.ts)"
     ],
     "deny": []
   }

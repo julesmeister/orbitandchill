@@ -23,6 +23,70 @@ This document provides a clean reference for all API endpoints, their status, an
 
 ## 🎯 Recent Fixes & Improvements
 
+### ✅ Discussion Slug Persistence & Database Connection Pattern (2025-08-20)
+
+#### Problem Flow
+```
+Admin Interface Edit → PATCH /api/discussions/[id] → discussionService.updateDiscussion() → Database
+       ↓                      ↓                             ↓                        ↓
+   slug: "new-value"     Updates received         validFields filter       SQL UPDATE fails
+       ↓                      ↓                             ↓                        ↓
+   Success shown        API returns 200           slug filtered out         404 on URL
+```
+
+#### Root Cause Analysis Tree
+```
+Slug Persistence Failure
+├── Field Validation Layer
+│   └── validFields = ['title', 'content', ...] // slug missing!
+│       └── Result: slug filtered out before SQL execution
+├── Database Connection Layer  
+│   ├── Drizzle ORM WHERE clause parsing
+│   │   └── Turso HTTP client ignores WHERE conditions
+│   └── Service resilience check
+│       └── !!db returns true but db.client is null
+└── Error Masking
+    └── Operations appear successful but fail silently
+```
+
+#### Solution Architecture Tree
+```
+Enhanced Discussion Service (src/db/services/discussionService.ts)
+├── Field Validation Fix
+│   ├── validFields: ['title', 'slug', 'content', 'excerpt', ...]
+│   └── Ensures slug included in filteredUpdateData
+├── Database Strategy (Avoiding Drizzle ORM)
+│   ├── Legacy: Drizzle ORM attempt (AVOID - unreliable with Turso)
+│   │   └── Known issues: WHERE clause parsing failures, silent errors
+│   └── Preferred: Direct Database Connection (RECOMMENDED)
+│       ├── Environment Variables: TURSO_DATABASE_URL + TURSO_AUTH_TOKEN
+│       ├── Raw SQL: UPDATE discussions SET slug = ? WHERE id = ?
+│       ├── Column Mapping: camelCase → snake_case conversion
+│       ├── Parameter Binding: Secure SQL execution
+│       └── Reliability: Bypasses Drizzle ORM compatibility issues
+└── Production Debugging System
+    ├── 🔧 Direct database connection activation
+    ├── 🔍 SQL query and parameter logging
+    ├── ✅ Successful operation confirmation
+    └── ❌ Error state identification and recovery
+```
+
+#### Implementation Impact Tree
+```
+Discussion URL Management
+├── Admin Interface (src/components/admin/PostsTab.tsx)
+│   ├── Slug editing in form → Now persists to database
+│   └── Real-time updates → URL changes immediately available
+├── Public Access (src/app/api/discussions/by-slug/[slug]/route.ts)  
+│   ├── Slug-based routing → Works reliably after admin edits
+│   └── Fallback to ID → Handles edge cases gracefully
+└── Database Layer (Direct Connection Pattern - AVOID DRIZZLE ORM)
+    ├── Bypasses unreliable Drizzle ORM WHERE clause parsing
+    ├── Direct Turso HTTP client for guaranteed execution
+    ├── Follows API_DATABASE_PROTOCOL.md established patterns
+    └── Production-ready error logging for troubleshooting
+```
+
 ### ✅ Server-Side Pagination Architecture Optimization (2025-08-20)
 - **Problem**: Admin and discussions pages used inefficient client-side pagination, loading 100+ records then slicing on frontend
 - **Root Cause**: 

@@ -276,7 +276,21 @@ svg_string = chart.svg
 
 ## 📊 Recent Improvements
 
-### Server-Side Pagination Architecture (Latest)
+### Discussion Slug Persistence & Database Resilience (Latest)
+
+**📋 Complete Technical Details:** See `API_DATABASE_PROTOCOL.md` → "Drizzle ORM Compatibility Issues & Solutions"
+
+```
+User-Facing Problem Resolution
+├── Admin Interface: PostsTab slug editing → Now persists to database correctly
+├── URL Routing: /discussions/[slug] → No more 404 errors after admin edits
+└── Implementation Details → See API_DATABASE_PROTOCOL.md for full patterns
+    ├── Database connection strategies (Direct vs Drizzle ORM)
+    ├── Field validation fixes (validFields array enhancement)
+    └── Production debugging patterns (🔧🔍✅❌ logging system)
+```
+
+### Server-Side Pagination Architecture
 - ✅ **Optimized Admin Dashboard**: Separated count loading from content pagination for better performance
 - ✅ **Consistent Pagination**: Both admin and discussions use 10-per-page server-side pagination
 - ✅ **Accurate Database Totals**: Real-time total counts displayed across all interfaces
