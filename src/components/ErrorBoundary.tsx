@@ -89,71 +89,75 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // Default error UI
+      // Default error UI - Synapsas style
       return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-          <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-              <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                  <svg
-                    className="h-6 w-6 text-red-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                </div>
-                
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Oops! Something went wrong
-                </h3>
-                
-                <p className="text-sm text-gray-500 mb-6">
-                  We've encountered an unexpected error. This has been automatically reported to our team.
-                </p>
-
-                {/* Show error details in development */}
-                {process.env.NODE_ENV === 'development' && this.state.error && (
-                  <details className="mb-6 text-left">
-                    <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-                      Error Details (Development)
-                    </summary>
-                    <div className="bg-red-50 border border-red-200 rounded p-3 text-xs font-mono text-red-800 overflow-auto max-h-40">
-                      <div className="font-bold mb-2">{this.state.error.message}</div>
-                      <div className="whitespace-pre-wrap">{this.state.error.stack}</div>
-                    </div>
-                  </details>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={this.handleRetry}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Try Again
-                  </button>
-                  
-                  <button
-                    onClick={this.handleReload}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Reload Page
-                  </button>
-                </div>
-
-                <div className="mt-6 text-xs text-gray-400">
-                  If this problem persists, please contact support.
-                </div>
+        <div className="bg-white">
+          {/* Main Error Section */}
+          <section className="px-[5%] py-16">
+            <div className="max-w-4xl mx-auto text-center">
+              {/* Three-dot error animation */}
+              <div className="flex items-center justify-center space-x-2 mb-8">
+                <div className="w-3 h-3 bg-black [animation-delay:-0.3s] animate-pulse"></div>
+                <div className="w-3 h-3 bg-black [animation-delay:-0.15s] animate-pulse"></div>
+                <div className="w-3 h-3 bg-black animate-pulse"></div>
               </div>
+
+              {/* Error Icon */}
+              <div className="w-16 h-16 bg-black text-white flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              <h1 className="font-space-grotesk text-4xl md:text-5xl font-bold text-black mb-6">
+                Something went wrong
+              </h1>
+              
+              <p className="font-inter text-xl text-black/80 leading-relaxed mb-8 max-w-2xl mx-auto">
+                We've encountered an unexpected error. This has been automatically reported to our team and we're working on a fix.
+              </p>
+
+              {/* Show error details in development */}
+              {process.env.NODE_ENV === 'development' && this.state.error && (
+                <details className="mb-8 text-left max-w-2xl mx-auto">
+                  <summary className="cursor-pointer text-sm font-semibold text-black border-b border-black pb-1 mb-3">
+                    Error Details (Development)
+                  </summary>
+                  <div className="bg-gray-50 border border-black p-4 text-xs font-mono text-black/80 overflow-auto max-h-40">
+                    <div className="font-bold mb-2">{this.state.error.message}</div>
+                    <div className="whitespace-pre-wrap">{this.state.error.stack}</div>
+                  </div>
+                </details>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-8">
+                <button
+                  onClick={this.handleRetry}
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white font-semibold border-2 border-black transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Try Again
+                </button>
+                
+                <button
+                  onClick={this.handleReload}
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-transparent text-black font-semibold border-2 border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v16h16V4H4zm8 10l-4-4h3V6h2v4h3l-4 4z" />
+                  </svg>
+                  Reload Page
+                </button>
+              </div>
+
+              <p className="text-sm text-black/60">
+                If this problem persists, please contact our support team.
+              </p>
             </div>
-          </div>
+          </section>
         </div>
       );
     }
@@ -194,18 +198,20 @@ export function ComponentErrorBoundary({
   return (
     <ErrorBoundary
       fallback={
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
-          <div className="flex">
+        <div className="bg-white border border-black p-4 my-4">
+          <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+              <div className="w-8 h-8 bg-black text-white flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
+            <div className="ml-4">
+              <h3 className="font-space-grotesk text-sm font-bold text-black">
                 {componentName ? `${componentName} Error` : 'Component Error'}
               </h3>
-              <p className="text-sm text-red-700 mt-1">
+              <p className="font-inter text-sm text-black/80 mt-1">
                 This component failed to load. Please try refreshing the page.
               </p>
             </div>
