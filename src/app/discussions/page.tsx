@@ -63,6 +63,9 @@ export async function generateMetadata(): Promise<Metadata> {
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION,
     },
+    other: {
+      'RSS': `${siteUrl}/discussions/rss.xml`,
+    },
   };
 }
 

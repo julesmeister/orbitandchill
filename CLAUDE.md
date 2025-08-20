@@ -734,15 +734,64 @@ When working with the `natal` library:
 - Use Google-style docstrings without type information
 - Use `typing.Self` instead of forward reference strings
 
+## Documentation Standards
+
+### Tree Map Format Requirement
+**CRITICAL: ALL documentation updates MUST use tree map format, NEVER checklists**
+
+```
+Documentation Update Structure
+├── Problem Analysis
+│   ├── Root Cause Identification
+│   │   ├── Technical Issue Description
+│   │   ├── Impact Assessment
+│   │   └── Affected Components
+│   └── Solution Architecture
+│       ├── Implementation Approach
+│       ├── Technical Decisions
+│       └── Integration Points
+├── Implementation Details
+│   ├── Code Changes
+│   │   ├── Files Modified
+│   │   ├── Functions Added/Updated
+│   │   └── Configuration Changes
+│   └── Testing Strategy
+│       ├── Verification Methods
+│       ├── Edge Cases Covered
+│       └── Performance Impact
+└── Results & Validation
+    ├── Feature Functionality
+    ├── Performance Metrics
+    └── User Experience Impact
+```
+
+### Forbidden Documentation Patterns
+**❌ NEVER USE:**
+- Bulleted lists for technical documentation
+- Checklist-style updates
+- Linear numbered sequences
+- Generic "✅ Fixed X" entries
+
+**✅ ALWAYS USE:**
+- Hierarchical tree map structures
+- Contextual problem-solution relationships  
+- Technical decision trees
+- Architecture flow diagrams in text format
+
 ## User Approval Workflow
 
-When the user says "solved", it means:
-- They have reviewed and approved the fixes or new features
-- Claude should proceed to commit the changes using git
-- The commit message should describe what was fixed or added
-
-Example workflow:
-1. Claude implements a fix or feature
-2. User reviews the changes
-3. User says "solved" to indicate approval
-4. Claude commits the changes with an appropriate commit message
+```
+User Approval Process Tree
+├── Implementation Phase
+│   ├── Claude implements fix/feature
+│   ├── Code changes completed
+│   └── Testing performed
+├── Review Phase
+│   ├── User examines changes
+│   ├── Functionality verification
+│   └── Quality assessment
+└── Completion Phase
+    ├── User says "solved" (approval signal)
+    ├── Claude commits changes with descriptive message
+    └── Git history updated with proper documentation
+```

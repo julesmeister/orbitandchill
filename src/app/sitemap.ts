@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/event-chart`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/horary`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
@@ -253,7 +259,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch blog categories
   const categories = [
     'natal-chart-analysis',
-    'transits-predictions',
+    'transits-predictions', 
     'synastry-compatibility',
     'mundane-astrology',
     'learning-resources',
@@ -268,6 +274,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
+  // Discussion category pages
+  const discussionCategories = [
+    'Natal Chart Analysis',
+    'Transits & Predictions', 
+    'Chart Reading Help',
+    'Synastry & Compatibility',
+    'Mundane Astrology',
+    'Learning Resources',
+    'General Discussion'
+  ]
+
+  const discussionCategoryPages: MetadataRoute.Sitemap = discussionCategories.map(category => ({
+    url: `${baseUrl}/discussions?category=${encodeURIComponent(category)}`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }))
+
+  // Discussion RSS feed
+  const discussionRssPage: MetadataRoute.Sitemap = [{
+    url: `${baseUrl}/discussions/rss.xml`,
+    lastModified: currentDate,
+    changeFrequency: 'hourly' as const,
+    priority: 0.6,
+  }]
+
   // Combine all pages
-  return [...staticPages, ...dynamicPages, ...categoryPages]
+  return [...staticPages, ...dynamicPages, ...categoryPages, ...discussionCategoryPages, ...discussionRssPage]
 }

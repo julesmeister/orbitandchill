@@ -141,8 +141,14 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/discussions/DiscussionsPageClient.tsx src/components/discussions/DiscussionsSearchFilters.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/PostsTab.tsx src/components/admin/posts/PostsList.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/services/discussionService.ts --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/discussionService.ts)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/discussionService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/[username]/page.tsx src/app/[username]/UserProfilePageClient.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useBlogCache.ts src/store/admin/threads.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useBlogCache.ts src/store/admin/threads.ts)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "C:\\mnt\\c\\Users\\User\\Documents"
+    ]
   }
 }

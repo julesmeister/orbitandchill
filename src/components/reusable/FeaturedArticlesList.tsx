@@ -23,9 +23,12 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = React.memo(({
 }) => {
   const router = useRouter();
   
-  // Use optimized loading for smooth UX
-  const showSkeleton = useSkeletonLoading(posts.length > 0 && !isLoading);
-  const { isItemVisible } = useStaggeredLoading(posts.length, 100);
+  // Simplified loading - no artificial delays
+  const hasData = posts.length > 0 && !isLoading;
+  
+  // Show skeleton only when actively loading, show content immediately when ready
+  const showSkeleton = isLoading || posts.length === 0;
+  const showContent = hasData;
 
   return (
     <div className={`space-y-6 xl:space-y-4 2xl:space-y-10 ${className}`}>
@@ -43,13 +46,11 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = React.memo(({
       <div className="space-y-4">
         {showSkeleton ? (
           <ArticleSkeleton count={config.maxArticles} showImage={true} />
-        ) : (
+        ) : showContent ? (
           posts.slice(0, config.maxArticles).map((post, index) => (
           <div 
             key={post.id} 
-            className={`border border-black bg-white hover:shadow-lg transition-all duration-300 cursor-pointer ${
-              isItemVisible(index) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-            }`}
+            className="border border-black bg-white hover:shadow-lg transition-all duration-300 cursor-pointer"
             onClick={() => router.push(`/discussions/${post.slug}`)}
           >
             <div className="p-4 xl:p-5 2xl:p-8">
@@ -85,7 +86,7 @@ const FeaturedArticlesList: React.FC<FeaturedArticlesListProps> = React.memo(({
             </div>
           </div>
           ))
-        )}
+        ) : null}
       </div>
 
       {/* View All Articles Button */}

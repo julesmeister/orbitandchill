@@ -52,6 +52,8 @@ export const createThreadsSlice = (set: any, get: any) => ({
   totalThreads: 0,
   totalPages: 0,
   currentPage: 1,
+  lastLoadTime: 0,
+  isLoadingThreads: false,
 
   // Threads actions
   loadThreads: async (options: {
@@ -63,7 +65,15 @@ export const createThreadsSlice = (set: any, get: any) => ({
     search?: string;
     forceRefresh?: boolean;
   } = {}): Promise<void> => {
-    set({ isLoading: true });
+    const state = get();
+    const now = Date.now();
+    
+    // Prevent concurrent loads and frequent requests (min 30 seconds between loads)
+    if (state.isLoadingThreads || (!options.forceRefresh && now - state.lastLoadTime < 30000)) {
+      return;
+    }
+
+    set({ isLoading: true, isLoadingThreads: true });
 
     try {
       // Add cache-busting timestamp when force refresh is requested
@@ -87,7 +97,9 @@ export const createThreadsSlice = (set: any, get: any) => ({
           totalThreads: data.totalCount || 0,
           totalPages: data.totalPages || 0,
           currentPage: data.currentPage || 1,
+          lastLoadTime: now,
           isLoading: false,
+          isLoadingThreads: false,
         });
       } else {
         throw new Error('Failed to fetch discussions');
@@ -100,6 +112,7 @@ export const createThreadsSlice = (set: any, get: any) => ({
         totalPages: 0,
         currentPage: 1,
         isLoading: false,
+        isLoadingThreads: false,
       });
     }
   },

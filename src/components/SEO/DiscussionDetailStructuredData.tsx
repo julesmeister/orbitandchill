@@ -175,6 +175,30 @@ export default function DiscussionDetailStructuredData({ discussion, slug }: Dis
     ]
   };
 
+  // Enhanced Comment/Reply Schema for better threading SEO
+  const commentSchema = {
+    "@context": "https://schema.org",
+    "@type": "Comment",
+    "url": discussionUrl,
+    "about": {
+      "@type": "Thing", 
+      "name": discussion.title
+    },
+    "author": {
+      "@type": "Person",
+      "name": discussion.author
+    },
+    "dateCreated": publishedDate.toISOString(),
+    "text": discussion.content,
+    "upvoteCount": discussion.upvotes || 0,
+    "replyCount": discussion.replies || 0,
+    "parentItem": {
+      "@type": "DiscussionForumPosting",
+      "url": `${siteUrl}/discussions`,
+      "name": "Astrology Community Discussions"
+    }
+  };
+
   // WebPage Schema
   const webPageSchema = {
     "@context": "https://schema.org",
@@ -198,7 +222,12 @@ export default function DiscussionDetailStructuredData({ discussion, slug }: Dis
     },
     "inLanguage": "en-US",
     "datePublished": publishedDate.toISOString(),
-    "dateModified": modifiedDate.toISOString()
+    "dateModified": modifiedDate.toISOString(),
+    "hasPart": discussion.replies > 0 ? [{
+      "@type": "Comment",
+      "about": discussion.title,
+      "commentCount": discussion.replies
+    }] : undefined
   };
 
   return (
@@ -224,6 +253,14 @@ export default function DiscussionDetailStructuredData({ discussion, slug }: Dis
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(breadcrumbSchema)
+        }}
+      />
+
+      {/* Comment Schema for Reply Threading */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(commentSchema)
         }}
       />
 

@@ -4,6 +4,7 @@
 import Link from "next/link";
 import VoteButtons from '@/components/reusable/VoteButtons';
 import { createCleanExcerpt } from '@/utils/textUtils';
+import { trackDiscussionView } from '@/utils/discussionSEOTracking';
 
 interface Discussion {
   id: string;
@@ -57,9 +58,46 @@ const formatCompactNumber = (num: number): string => {
 // All categories use consistent black styling per Synapsas guidelines
 const getCategoryColor = () => '#19181a'; // Synapsas black
 
+const getContentFreshnessIndicator = (lastActivity: Date, replies: number) => {
+  const now = new Date();
+  const daysSinceActivity = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Fresh content (within 7 days with activity)
+  if (daysSinceActivity <= 7 || (daysSinceActivity <= 30 && replies >= 5)) {
+    return { status: 'fresh', color: 'bg-green-500', text: 'Active' };
+  }
+  
+  // Recent content (within 30 days)
+  if (daysSinceActivity <= 30) {
+    return { status: 'recent', color: 'bg-blue-500', text: 'Recent' };
+  }
+  
+  // Popular evergreen content (high engagement)
+  if (replies >= 15) {
+    return { status: 'popular', color: 'bg-purple-500', text: 'Popular' };
+  }
+  
+  // Older content
+  return { status: 'older', color: 'bg-gray-400', text: 'Archive' };
+};
+
+const handleDiscussionClick = (discussion: Discussion) => {
+  // Track discussion view for SEO analytics
+  trackDiscussionView({
+    id: discussion.id,
+    slug: discussion.slug,
+    title: discussion.title,
+    category: discussion.category,
+    referrer: document.referrer
+  });
+};
+
 export default function DiscussionCard({ discussion, onVoteSuccess }: DiscussionCardProps) {
   // Check if we have a thumbnail image from extracted content
   const thumbnailImage = discussion.embeddedChart?.chartType === 'image' ? discussion.embeddedChart.imageUrl : null;
+  
+  // Get content freshness indicator for SEO
+  const freshnessIndicator = getContentFreshnessIndicator(discussion.lastActivity, discussion.replies);
 
   return (
     <div className="relative p-4 md:p-6 hover:bg-gray-50 transition-all duration-300 group">
@@ -97,7 +135,11 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                 <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z"/>
               </svg>
             )}
-            <Link href={`/discussions/${discussion.slug || discussion.id}`} className="flex-1">
+            <Link 
+              href={`/discussions/${discussion.slug || discussion.id}`} 
+              className="flex-1"
+              onClick={() => handleDiscussionClick(discussion)}
+            >
               <h3 className="font-space-grotesk text-base md:text-lg font-bold text-black hover:text-gray-700 transition-colors leading-tight">
                 {discussion.title}
               </h3>
@@ -112,9 +154,12 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
           {/* Author and Category row - spaced apart */}
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium text-xs text-black/70">{discussion.author}</span>
-            <span className="px-1.5 py-0.5 text-xs font-medium text-black border border-black bg-white">
-              {discussion.category.split(' ')[0]}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${freshnessIndicator.color}`} title={`Content ${freshnessIndicator.text}`} />
+              <span className="px-1.5 py-0.5 text-xs font-medium text-black border border-black bg-white">
+                {discussion.category.split(' ')[0]}
+              </span>
+            </div>
           </div>
 
           {/* Stats and time row */}
@@ -194,7 +239,10 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
                     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6z"/>
                   </svg>
                 )}
-                <Link href={`/discussions/${discussion.slug || discussion.id}`}>
+                <Link 
+                  href={`/discussions/${discussion.slug || discussion.id}`}
+                  onClick={() => handleDiscussionClick(discussion)}
+                >
                   <h3 className="font-space-grotesk text-lg font-bold text-black hover:text-gray-700 transition-colors">
                     {discussion.title}
                   </h3>
@@ -205,9 +253,12 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
               <div className="flex items-center gap-3 text-sm text-black/70 mb-3">
                 <span className="font-medium">{discussion.author}</span>
                 <span>•</span>
-                <span className="px-2 py-1 text-xs font-medium text-black border border-black bg-white">
-                  {discussion.category}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${freshnessIndicator.color}`} title={`Content ${freshnessIndicator.text}`} />
+                  <span className="px-2 py-1 text-xs font-medium text-black border border-black bg-white">
+                    {discussion.category}
+                  </span>
+                </div>
                 <span>•</span>
                 <span>{formatTimeAgo(discussion.lastActivity)}</span>
               </div>
