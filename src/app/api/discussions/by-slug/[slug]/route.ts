@@ -23,8 +23,21 @@ export async function GET(
     try {
       await initializeDatabase();
       
-      // Fetch discussion from database by slug
-      const discussion = await DiscussionService.getDiscussionBySlug(discussionSlug);
+      // Fetch discussion from database by slug or fallback to ID
+      let discussion = await DiscussionService.getDiscussionBySlug(discussionSlug);
+      
+      // If not found by slug, try by ID (fallback for missing slugs)
+      if (!discussion) {
+        const discussionById = await DiscussionService.getDiscussionById(discussionSlug);
+        if (discussionById) {
+          // Add missing properties for type compatibility
+          discussion = {
+            ...discussionById,
+            preferredAvatar: undefined,
+            profilePictureUrl: undefined
+          };
+        }
+      }
       
       if (!discussion) {
         return NextResponse.json(
