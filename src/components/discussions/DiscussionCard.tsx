@@ -106,7 +106,7 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
 
           {/* Excerpt - Shorter on mobile */}
           <p className="text-black/80 mb-3 leading-relaxed text-sm">
-            {createCleanExcerpt(discussion.excerpt || discussion.content, 80)}
+            {createCleanExcerpt(discussion.content || discussion.excerpt, 80)}
           </p>
 
           {/* Author and Category row - spaced apart */}
@@ -214,7 +214,7 @@ export default function DiscussionCard({ discussion, onVoteSuccess }: Discussion
 
               {/* Excerpt */}
               <p className="text-black/80 mb-4 leading-relaxed">
-                {createCleanExcerpt(discussion.excerpt || discussion.content, 150)}
+                {createCleanExcerpt(discussion.content || discussion.excerpt, 150)}
               </p>
 
               {/* Tags */}
