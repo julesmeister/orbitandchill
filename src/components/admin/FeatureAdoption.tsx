@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import { 
-  getGeneratedPercentage, 
-  getBookmarkPercentage, 
-  getManualPercentage 
-} from '@/utils/analyticsHelpers';
+
+// Analytics helpers removed - using Google Analytics
+// Stub functions for backward compatibility
+const getGeneratedPercentage = (analytics: any) => 0;
+const getBookmarkPercentage = (analytics: any) => 0;
+const getManualPercentage = (analytics: any) => 0;
 
 interface FeatureAdoptionProps {
   analytics: any;

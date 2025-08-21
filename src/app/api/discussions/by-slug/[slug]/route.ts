@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { initializeDatabase } from '@/db/index';
 
 export async function GET(
@@ -49,20 +49,11 @@ export async function GET(
       // PERFORMANCE: Async non-blocking analytics with faster Promise.allSettled
       const today = new Date().toISOString().split('T')[0];
       
-      // Fire-and-forget analytics (no await)
+      // Fire-and-forget view increment (analytics tracked by Google Analytics)
       Promise.allSettled([
         DiscussionService.incrementViews(discussion.id),
-        AnalyticsService.incrementDailyCounter('pageViews', today),
-        AnalyticsService.incrementEngagementCounter('activeUsers', today),
-        AnalyticsService.recordEngagementData({
-          date: today,
-          popularDiscussions: [{
-            id: discussion.id,
-            title: discussion.title,
-            engagement: (discussion.upvotes || 0) + (discussion.replies || 0) + (discussion.views || 0)
-          }]
-        })
-      ]).catch(err => console.warn('Analytics tracking failed:', err));
+        // Analytics tracking removed - handled by Google Analytics
+      ]).catch(err => console.warn('View increment failed:', err));
 
       // Use stored author name
       const authorName = discussion.authorName || 'Anonymous User';

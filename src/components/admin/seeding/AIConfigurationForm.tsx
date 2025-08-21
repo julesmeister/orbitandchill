@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React from 'react';
-import { useAIConfiguration } from '@/hooks/useAIConfiguration';
+import React, { useState, useEffect } from 'react';
+import { useAIConfiguration, AI_PROVIDERS } from '@/hooks/useAIConfiguration';
 import { useAIFormState } from '@/hooks/useAIFormState';
 import StatusToast from '@/components/reusable/StatusToast';
 import ConfirmationToast from '@/components/reusable/ConfirmationToast';
@@ -37,6 +37,28 @@ const AIConfigurationForm: React.FC<AIConfigurationFormProps> = ({
 }) => {
   const { user } = useUserStore();
   const { getSelectedAiProvider, customModels, isLoading } = useAIConfiguration(user?.id);
+  const [configurationLoaded, setConfigurationLoaded] = useState(false);
+
+  // Track when configuration has been loaded (after first render with values)
+  useEffect(() => {
+    if (aiProvider && aiModel && !configurationLoaded) {
+      setConfigurationLoaded(true);
+    }
+  }, [aiProvider, aiModel, configurationLoaded]);
+
+  // Wrapper for provider change that preserves model during initial load
+  const handleProviderChange = (newProvider: string) => {
+    onProviderChange(newProvider);
+    
+    // Only reset model if configuration has been loaded (user interaction)
+    // This prevents overwriting saved model during initial configuration load
+    if (configurationLoaded) {
+      const provider = AI_PROVIDERS.find(p => p.id === newProvider);
+      if (provider) {
+        onModelChange(provider.models[0]);
+      }
+    }
+  };
   
   // Use the custom hook for form state management
   const {
@@ -81,7 +103,7 @@ const AIConfigurationForm: React.FC<AIConfigurationFormProps> = ({
       <div className="p-4 space-y-4">
         <ProviderSelector
           aiProvider={aiProvider}
-          onProviderChange={onProviderChange}
+          onProviderChange={handleProviderChange}
           onModelChange={onModelChange}
         />
         

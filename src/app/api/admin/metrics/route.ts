@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserService } from '@/db/services/userService';
 import { DiscussionService } from '@/db/services/discussionService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { EventService } from '@/db/services/eventService';
 import { initializeDatabase } from '@/db/index';
 import { createAdminRoute, type AdminAuthContext } from '@/middleware/adminAuth';
@@ -50,9 +50,10 @@ async function handleGetMetrics(request: NextRequest, context: AdminAuthContext)
     
     // Get traffic summary for recent analytics
     try {
-      const trafficSummary = await AnalyticsService.getTrafficSummary(30);
-      chartsGenerated = (trafficSummary as any).chartsGenerated || 0;
-      dailyVisitors = trafficSummary.averages?.visitors || 0;
+      // Traffic summary removed - use Google Analytics
+      const trafficSummary = { dailyVisitors: 0, monthlyGrowth: 0 };
+      chartsGenerated = 0; // Google Analytics tracks this
+      dailyVisitors = trafficSummary.dailyVisitors || 0;
       console.log(`📊 API: Analytics: ${chartsGenerated} charts, ${dailyVisitors} daily visitors`);
     } catch (analyticsError) {
       console.warn('Failed to fetch analytics:', analyticsError);

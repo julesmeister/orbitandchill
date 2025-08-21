@@ -41,6 +41,88 @@ poetry run pytest # Run tests
 poetry run mkdocs serve # View documentation locally
 ```
 
+## Performance Optimization Guidelines
+
+### Featured Articles Loading Performance Architecture
+
+```
+Loading Performance Enhancement Implementation
+├── Problem Analysis & Root Cause Identification
+│   ├── Artificial skeleton delays preventing cached content display
+│   │   ├── useSkeletonLoading hook enforced 200ms minimum delays
+│   │   ├── Cached content forced to wait despite availability
+│   │   └── Poor user experience on subsequent visits
+│   ├── Staggered loading animations creating blank periods
+│   │   ├── useStaggeredLoading created opacity-0 initial states
+│   │   ├── 50ms delays per item compounded loading perception
+│   │   └── Skeleton→blank→content sequence degraded UX
+│   └── Redundant API calls without intelligent debouncing
+│       ├── loadThreads() called on every component mount
+│       ├── 5-minute background refresh too aggressive
+│       └── Concurrent requests without prevention mechanisms
+├── Implementation Strategy & Technical Solutions
+│   ├── useBlogCache Hook Architecture Enhancement
+│   │   ├── Instant cache prioritization logic implementation
+│   │   │   ├── isCacheLoaded starts as true to prevent initial skeleton
+│   │   │   ├── Cached data displayed immediately upon availability
+│   │   │   └── Fresh data loads silently in background
+│   │   ├── Intelligent loading state management
+│   │   │   ├── effectiveLoading only when no data available
+│   │   │   ├── Background refresh without UI interruption
+│   │   │   └── Cache-first strategy with seamless updates
+│   │   └── API call optimization with debouncing mechanisms
+│   │       ├── 30-second minimum interval between requests
+│   │       ├── Concurrent load prevention with isLoadingRef
+│   │       └── Reduced refresh interval from 5 to 15 minutes
+│   ├── FeaturedArticlesList Component Optimization
+│   │   ├── Elimination of artificial loading delays
+│   │   │   ├── Removed useSkeletonLoading artificial timing
+│   │   │   ├── Eliminated useStaggeredLoading opacity animations
+│   │   │   └── Direct skeleton-to-content transition logic
+│   │   ├── Simplified loading state architecture
+│   │   │   ├── showSkeleton = isLoading || posts.length === 0
+│   │   │   ├── showContent = hasData (immediate display)
+│   │   │   └── Removed intermediate loading states
+│   │   └── Performance-focused rendering patterns
+│   │       ├── React.memo preservation for component optimization
+│   │       ├── Eliminated layout shift with consistent spacing
+│   │       └── Maintained hover transitions without loading interference
+│   └── Admin Store Thread Loading Enhancement
+│       ├── Intelligent caching with time-based validation
+│       │   ├── lastLoadTime tracking for request deduplication
+│       │   ├── isLoadingThreads state for concurrent prevention
+│       │   └── 30-second minimum between loadThreads() calls
+│       ├── Cache-aware loading strategies
+│       │   ├── Conditional loading based on data freshness
+│       │   ├── Background refresh without UI loading states
+│       │   └── Optimized for both fresh and cached scenarios
+│       └── Error handling with graceful fallback patterns
+│           ├── Preserved existing fallback mechanisms
+│           ├── Loading state cleanup on errors
+│           └── Maintained backward compatibility
+└── Results Validation & Performance Impact
+    ├── User Experience Enhancement Metrics
+    │   ├── Cached content appears instantly (0ms delay vs 200ms)
+    │   ├── Eliminated skeleton→blank→content sequence completely
+    │   ├── Background refresh maintains freshness without interruption
+    │   └── First-time loading still shows appropriate skeleton states
+    ├── Technical Performance Improvements
+    │   ├── Reduced API calls through intelligent debouncing
+    │   ├── 30-second request deduplication prevents unnecessary loads
+    │   ├── 15-minute refresh interval reduces server load
+    │   └── Cache-first strategy optimizes perceived performance
+    ├── Architecture Integrity Preservation
+    │   ├── Hook separation of concerns maintained
+    │   ├── Component reusability preserved across contexts
+    │   ├── TypeScript type safety maintained throughout
+    │   └── Backward compatibility with existing implementations
+    └── Development Guidelines Integration
+        ├── Performance optimization patterns established
+        ├── Cache-first loading strategy documented
+        ├── Debouncing mechanisms available for future features
+        └── Loading state best practices codified for team use
+```
+
 ## Architecture
 
 ### Project Structure

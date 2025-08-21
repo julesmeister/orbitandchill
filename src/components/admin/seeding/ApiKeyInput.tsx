@@ -91,6 +91,12 @@ export default function ApiKeyInput({
     onApiKeyChange('');
   };
 
+  const handleRestore = () => {
+    if (savedApiKey) {
+      onApiKeyChange(savedApiKey);
+    }
+  };
+
   return (
     <div>
       <label className="block text-sm font-space-grotesk font-semibold mb-2">API Key</label>
@@ -100,7 +106,7 @@ export default function ApiKeyInput({
           value={apiKey}
           onChange={(e) => onApiKeyChange(e.target.value)}
           placeholder="Enter your AI API key..."
-          className="w-full p-2 pr-32 border border-black font-open-sans"
+          className="w-full p-2 pr-40 border border-black font-open-sans"
         />
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
           {/* Paste Button */}
@@ -115,6 +121,21 @@ export default function ApiKeyInput({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </button>
+
+          {/* Restore Button - only show if savedApiKey exists and it's different from current */}
+          {savedApiKey && savedApiKey !== apiKey && (
+            <button
+              type="button"
+              onClick={handleRestore}
+              className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              aria-label="Restore saved API key"
+              title="Restore saved API key from database"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          )}
           
           {/* Clear Button */}
           {apiKey && (

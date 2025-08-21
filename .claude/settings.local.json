@@ -144,7 +144,13 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/discussionService.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/[username]/page.tsx src/app/[username]/UserProfilePageClient.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useBlogCache.ts src/store/admin/threads.ts --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useBlogCache.ts src/store/admin/threads.ts)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useBlogCache.ts src/store/admin/threads.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx next build)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/AdminHeader.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/ApiKeyInput.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/seeding/ApiKeyInput.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/seeding/AIConfigurationForm.tsx src/components/admin/seeding/ProviderSelector.tsx src/components/admin/seeding/ApiKeyInput.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/AIConfigurationForm.tsx src/components/admin/seeding/ProviderSelector.tsx src/components/admin/seeding/ApiKeyInput.tsx)"
     ],
     "deny": [],
     "additionalDirectories": [

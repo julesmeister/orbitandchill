@@ -18,7 +18,7 @@ interface UseBlogCacheReturn {
 
 export function useBlogCache(): UseBlogCacheReturn {
   const [cachedBlogPosts, setCachedBlogPosts] = useState<BlogPost[]>([]);
-  const [isCacheLoaded, setIsCacheLoaded] = useState(false);
+  const [isCacheLoaded, setIsCacheLoaded] = useState(true); // Start as true to prevent skeleton
   const [error, setError] = useState<string | null>(null);
   const lastLoadTimeRef = useRef<number>(0);
   const isLoadingRef = useRef<boolean>(false);
@@ -26,7 +26,7 @@ export function useBlogCache(): UseBlogCacheReturn {
   // Use admin store for real blog data
   const { threads, loadThreads, isLoading } = useAdminStore();
 
-  // Load cached data on mount
+  // Load cached data immediately on mount
   useEffect(() => {
     const loadCachedData = async () => {
       try {
@@ -39,9 +39,8 @@ export function useBlogCache(): UseBlogCacheReturn {
         }
       } catch (err) {
         console.error('Error loading cached blog data:', err);
-      } finally {
-        setIsCacheLoaded(true);
       }
+      // Keep isCacheLoaded as true always
     };
 
     loadCachedData();
@@ -139,8 +138,8 @@ export function useBlogCache(): UseBlogCacheReturn {
     return [];
   }, [allBlogPosts, cachedBlogPosts, isCacheLoaded]);
 
-  // Only show loading when we have no cached data at all (first time)
-  const effectiveLoading = isLoading && !isCacheLoaded;
+  // Only show loading when we truly have no data to show
+  const effectiveLoading = effectiveBlogPosts.length === 0 && isLoading;
 
   return {
     blogPosts: effectiveBlogPosts,

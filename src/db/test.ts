@@ -2,7 +2,7 @@
 import { initializeDatabase, getDbAsync } from './index';
 import { UserService } from './services/userService';
 import { DiscussionService } from './services/discussionService';
-import { AnalyticsService } from './services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 
 async function testDatabase() {
   // DISABLED: Database test function disabled to prevent memory issues

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { DiscussionService } from '@/db/services/discussionService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { initializeDatabase } from '@/db/index';
 import { eq } from 'drizzle-orm';
 

@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// ⚠️ DEPRECATED - Custom analytics replaced with Google Analytics
+// This file is kept for backwards compatibility only
+// Use Google Analytics for all tracking needs
+
 import type { SiteMetrics, UserAnalytics, TrafficData, HealthMetrics, NotificationSummary } from './types';
 import { analyticsApi } from './api';
 
 /**
- * Analytics slice for admin store
+ * DEPRECATED: Analytics slice for admin store
+ * Now using Google Analytics instead of custom tracking
  */
 export const createAnalyticsSlice = (set: any, get: any) => ({
   // Analytics state

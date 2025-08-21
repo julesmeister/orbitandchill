@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUserStore } from '@/store/userStore';
-import { trackPageView } from '@/utils/analytics';
+// Custom analytics removed - Google Analytics tracks page views automatically
 import { useDiscussions } from '@/hooks/useDiscussions';
 import DiscussionsSearchFilters from '@/components/discussions/DiscussionsSearchFilters';
 import MobileCategoryFilter from '@/components/discussions/MobileCategoryFilter';
@@ -96,7 +96,7 @@ export default function DiscussionsPageClient() {
 
   // Track page view analytics (client-side only)
   useEffect(() => {
-    trackPageView('/discussions');
+    // Page view tracking removed - Google Analytics handles this automatically
   }, []);
 
 

@@ -1,6 +1,3 @@
-import { useEffect } from 'react';
-import { useAdminStore } from '@/store/adminStore';
-
 interface AdminHeaderProps {
   adminName: string;
   onRefresh?: () => void;
@@ -8,31 +5,6 @@ interface AdminHeaderProps {
 }
 
 export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHeaderProps) {
-  const { 
-    siteMetrics, 
-    healthMetrics, 
-    notifications, 
-    loadHealthMetrics, 
-    loadNotifications 
-  } = useAdminStore();
-  
-  // Load health metrics and notifications on mount and periodically
-  useEffect(() => {
-    // Initial load
-    loadHealthMetrics();
-    loadNotifications();
-    
-    // Set up polling every 30 seconds for health metrics
-    const healthInterval = setInterval(loadHealthMetrics, 30000);
-    
-    // Set up polling every 2 minutes for notifications
-    const notificationInterval = setInterval(loadNotifications, 120000);
-    
-    return () => {
-      clearInterval(healthInterval);
-      clearInterval(notificationInterval);
-    };
-  }, []); // Remove functions from dependencies to prevent infinite loop
 
   const currentTime = new Date().toLocaleTimeString('en-US', { 
     hour: '2-digit', 
@@ -40,37 +12,9 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
     hour12: true 
   });
   
-  // Get real system status from health metrics
+  // Simplified system status - no custom analytics needed
   const getSystemStatus = () => {
-    if (!healthMetrics) {
-      return { label: 'Loading...', color: 'bg-gray-400' };
-    }
-    
-    switch (healthMetrics.status) {
-      case 'healthy':
-        return { label: 'System Active', color: 'bg-green-500' };
-      case 'degraded':
-        return { label: 'Performance Issues', color: 'bg-yellow-500' };
-      case 'down':
-        return { label: 'System Error', color: 'bg-red-500' };
-      default:
-        return { label: 'Unknown', color: 'bg-gray-400' };
-    }
-  };
-  
-  // Get real uptime from health metrics
-  const getUptimePercentage = () => {
-    return healthMetrics?.uptimePercentage || '0.0';
-  };
-  
-  // Check if there are unread high-priority notifications
-  const hasHighPriorityNotifications = () => {
-    return notifications?.hasHigh || false;
-  };
-  
-  // Get notification count
-  const getNotificationCount = () => {
-    return notifications?.unread || 0;
+    return { label: 'System Active', color: 'bg-green-500' };
   };
   
   return (
@@ -98,11 +42,7 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                 
                 {onRefresh && (
                   <button 
-                    onClick={() => {
-                      onRefresh();
-                      loadHealthMetrics();
-                      loadNotifications();
-                    }}
+                    onClick={onRefresh}
                     disabled={isLoading}
                     className="h-8 w-8 bg-black text-white border border-black transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
                     title="Refresh"
@@ -113,30 +53,19 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                   </button>
                 )}
                 
-                <button className="relative h-8 w-8 bg-white text-black border border-black transition-all duration-300 hover:bg-black hover:text-white flex items-center justify-center">
+                <button className="h-8 w-8 bg-white text-black border border-black transition-all duration-300 hover:bg-black hover:text-white flex items-center justify-center" title="Notifications">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  {getNotificationCount() > 0 && (
-                    <span className={`absolute -top-0.5 -right-0.5 inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-white ${
-                      hasHighPriorityNotifications() ? 'bg-red-500' : 'bg-black'
-                    } border border-white`}>
-                      {getNotificationCount() > 9 ? '9+' : getNotificationCount()}
-                    </span>
-                  )}
                 </button>
               </div>
             </div>
             
-            {/* Mobile Stats Grid */}
-            <div className="grid grid-cols-3 gap-0 border border-black">
+            {/* Mobile Stats Grid - Simplified */}
+            <div className="grid grid-cols-2 gap-0 border border-black">
               <div className="p-3 text-center border-r border-black bg-white">
-                <div className="font-space-grotesk text-sm font-bold text-black">{siteMetrics.activeUsers}</div>
-                <div className="font-open-sans text-xs text-black/60">Users</div>
-              </div>
-              <div className="p-3 text-center border-r border-black bg-white">
-                <div className="font-space-grotesk text-sm font-bold text-black">{getUptimePercentage()}%</div>
-                <div className="font-open-sans text-xs text-black/60">Uptime</div>
+                <div className="font-space-grotesk text-sm font-bold text-black">Analytics</div>
+                <div className="font-open-sans text-xs text-black/60">Google</div>
               </div>
               <div className="p-3 text-center bg-white">
                 <div className="font-space-grotesk text-sm font-bold text-black">{currentTime}</div>
@@ -176,18 +105,11 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                 <span className="font-open-sans text-xs md:text-sm font-medium text-black hidden md:inline">{getSystemStatus().label}</span>
               </div>
 
-              {/* Quick Stats - Show on larger screens */}
+              {/* Quick Stats - Google Analytics Link */}
               <div className="hidden 2xl:flex items-center space-x-4 h-12 px-4 bg-white border border-black">
                 <div className="text-center">
-                  <div className="font-space-grotesk text-sm font-bold text-black">
-                    {siteMetrics.activeUsers.toLocaleString()}
-                  </div>
-                  <div className="font-open-sans text-xs text-black/60">Users</div>
-                </div>
-                <div className="w-px h-6 bg-black"></div>
-                <div className="text-center">
-                  <div className="font-space-grotesk text-sm font-bold text-black">{getUptimePercentage()}%</div>
-                  <div className="font-open-sans text-xs text-black/60">Uptime</div>
+                  <div className="font-space-grotesk text-sm font-bold text-black">Google</div>
+                  <div className="font-open-sans text-xs text-black/60">Analytics</div>
                 </div>
               </div>
 
@@ -195,11 +117,7 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
               <div className="flex items-center space-x-1 md:space-x-2">
                 {onRefresh && (
                   <button 
-                    onClick={() => {
-                      onRefresh();
-                      loadHealthMetrics();
-                      loadNotifications();
-                    }}
+                    onClick={onRefresh}
                     disabled={isLoading}
                     className="h-12 w-12 bg-black text-white border border-black font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 disabled:opacity-50 flex items-center justify-center"
                     title="Refresh Data"
@@ -210,42 +128,12 @@ export default function AdminHeader({ adminName, onRefresh, isLoading }: AdminHe
                   </button>
                 )}
 
-                <button className="relative h-12 w-12 bg-white text-black border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15 flex items-center justify-center" title="Notifications">
+                <button className="h-12 w-12 bg-white text-black border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15 flex items-center justify-center" title="Notifications">
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  {getNotificationCount() > 0 && (
-                    <span className={`absolute top-0.5 right-0.5 inline-flex items-center justify-center px-1 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 ${
-                      hasHighPriorityNotifications() ? 'bg-red-500' : 'bg-black'
-                    } min-w-[16px] h-[16px] border border-white`}>
-                      {getNotificationCount() > 99 ? '99+' : getNotificationCount()}
-                    </span>
-                  )}
                 </button>
 
-                {/* Seed Data Button - Show on larger tablets */}
-                {siteMetrics.totalUsers === 0 && (
-                  <button 
-                    onClick={async () => {
-                      try {
-                        // DISABLED: Seed data API disabled to prevent memory issues
-                        const response = { ok: false, json: async () => ({ success: false, message: 'Seed data disabled', error: 'Seed data API has been disabled' }) };
-                        const data = await response.json();
-                        if (data.success) {
-                          alert('Test data seeded successfully! Refresh to see updated metrics.');
-                          if (onRefresh) onRefresh();
-                        } else {
-                          alert('Failed to seed data: ' + data.error);
-                        }
-                      } catch (error) {
-                        alert('Error seeding data: ' + (error instanceof Error ? error.message : 'Unknown error'));
-                      }
-                    }}
-                    className="hidden lg:flex h-12 px-3 bg-white text-black border border-black font-semibold transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25 items-center"
-                  >
-                    <span className="text-xs lg:text-sm font-space-grotesk">Seed</span>
-                  </button>
-                )}
 
                 <button className="hidden lg:flex h-12 w-12 bg-white text-black border border-black transition-all duration-300 hover:bg-black hover:text-white hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15 items-center justify-center" title="Settings">
                   <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

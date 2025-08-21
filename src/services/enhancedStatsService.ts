@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { UserService } from '@/db/services/userService';
 import { DiscussionService } from '@/db/services/discussionService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { EnhancedStats } from '@/types/metrics';
 
 export class EnhancedStatsService {
@@ -9,7 +9,8 @@ export class EnhancedStatsService {
     try {
       const allUsers = await UserService.getAllUsers(1000);
       const allDiscussions = await DiscussionService.getAllDiscussions({ limit: 1000 });
-      const trafficSummary = await AnalyticsService.getTrafficSummary(30);
+      // Traffic summary removed - use Google Analytics
+      const trafficSummary = { averages: { visitors: 0 } };
       
       // Calculate real statistics
       const usersWithCharts = allUsers.filter((user: any) => user.hasNatalChart);

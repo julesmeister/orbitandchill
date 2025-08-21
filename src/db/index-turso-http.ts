@@ -98,9 +98,9 @@ async function initializeTurso() {
     // Initialize connection pool after successful client creation
     try {
       pool = await initializeConnectionPool(databaseUrl, authToken, {
-        maxConnections: 6,
-        minConnections: 1,
-        acquireTimeoutMs: 4000
+        maxConnections: 20,        // Increase to handle higher load
+        minConnections: 2,         // Keep minimum connections ready
+        acquireTimeoutMs: 3000     // Faster timeout for queue management
       });
       console.log('✅ Connection pool initialized successfully');
     } catch (poolError) {

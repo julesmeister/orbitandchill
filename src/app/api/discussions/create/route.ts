@@ -4,7 +4,7 @@ import { DiscussionService } from '@/db/services/discussionService';
 import { UserService } from '@/db/services/userService';
 import { TagService } from '@/db/services/tagService';
 import { incrementCategoryUsage } from '@/db/services/categoryService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { AdminAuditService } from '@/db/services/adminAuditService';
 import { initializeDatabase } from '@/db/index';
 import { nanoid } from 'nanoid';
@@ -141,24 +141,7 @@ export async function POST(request: NextRequest) {
         console.warn('Failed to log content creation audit:', auditError);
       }
 
-      // Track analytics - discussion created
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        await AnalyticsService.incrementEngagementCounter('discussionsCreated', today);
-        await AnalyticsService.incrementEngagementCounter('activeUsers', today);
-        
-        // Record this as new content
-        await AnalyticsService.recordEngagementData({
-          date: today,
-          popularDiscussions: [{
-            id: discussion.id,
-            title: discussion.title,
-            engagement: 1 // New discussion starts with engagement of 1
-          }]
-        });
-      } catch (analyticsError) {
-        console.warn('Failed to record analytics for discussion creation:', analyticsError);
-      }
+      // Analytics tracking removed - handled by Google Analytics
 
       return NextResponse.json({
         success: true,

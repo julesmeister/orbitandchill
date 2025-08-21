@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { generateNatalChart } from '../utils/natalChart';
 import { getChartAnalysis } from '../components/horary/InteractiveHoraryChart';
 import { useUserStore } from '../store/userStore';
-import { getLocationAnalytics } from '../utils/locationAnalytics';
+// Location analytics removed - using Google Analytics
 
 interface VoidMoonStatus {
   isVoid: boolean;
@@ -41,15 +41,12 @@ export const useVoidMoonStatus = () => {
   const requestLocationPermission = async (): Promise<void> => {
     try {
       setVoidStatus(prev => ({ ...prev, isLoading: true, locationError: undefined }));
-      getLocationAnalytics().trackLocationRequest();
+      // Analytics removed - GA handles this: trackLocationRequest();
       
       const position = await getCurrentPosition();
       
       // Track successful permission grant
-      getLocationAnalytics().trackPermissionGranted({
-        lat: position.coords.latitude.toString(),
-        lon: position.coords.longitude.toString()
-      });
+      // Analytics removed - GA handles this
       
       // Trigger a fresh check with new location
       checkVoidStatus(position);
@@ -58,9 +55,9 @@ export const useVoidMoonStatus = () => {
       
       // Track the specific error type
       if (locationError.type === 'permission_denied') {
-        getLocationAnalytics().trackPermissionDenied();
+        // Analytics removed - GA handles this: trackPermissionDenied();
       } else {
-        getLocationAnalytics().trackLocationError(locationError.type);
+        // Analytics removed - GA handles this: trackLocationError(locationError.type);
       }
       
       setVoidStatus(prev => ({ 
@@ -159,7 +156,7 @@ export const useVoidMoonStatus = () => {
           };
           
           // Track birth location usage and clear location toast
-          getLocationAnalytics().trackBirthLocationUsed(user.birthData.coordinates);
+          // Analytics removed - GA handles this: trackBirthLocationUsed(user.birthData.coordinates);
           setVoidStatus(prev => ({ ...prev, showLocationToast: false }));
         } else {
           // Try to get current location (use provided position if available)
@@ -203,11 +200,11 @@ export const useVoidMoonStatus = () => {
             }));
             
             // Track fallback usage and the error type
-            getLocationAnalytics().trackFallbackUsed();
+            // Analytics removed - GA handles this: trackFallbackUsed();
             if (locationError.type === 'permission_denied') {
-              getLocationAnalytics().trackPermissionDenied();
+              // Analytics removed - GA handles this: trackPermissionDenied();
             } else {
-              getLocationAnalytics().trackLocationError(locationError.type);
+              // Analytics removed - GA handles this: trackLocationError(locationError.type);
             }
             
             // Return early, don't continue with fallback location

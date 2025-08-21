@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { shouldTrackAnalytics } from '@/utils/analyticsConsent';
+// Analytics consent removed - Google Analytics handles consent
 
 interface PageViewData {
   page: string;
@@ -37,7 +37,8 @@ export const usePageTracking = (userId?: string) => {
       if (typeof window === 'undefined') return;
       
       // Check analytics consent before tracking
-      if (!shouldTrackAnalytics()) {
+      // Google Analytics handles consent - always track if GA is enabled
+      if (false) { // Disabled - Google Analytics handles page tracking
         console.debug('📊 Analytics tracking skipped - no consent');
         return;
       }
@@ -100,7 +101,8 @@ export const usePageTracking = (userId?: string) => {
       };
 
       // Use sendBeacon for reliable delivery on page unload (only if user consented)
-      if (shouldTrackAnalytics() && navigator.sendBeacon) {
+      // Disabled - Google Analytics handles tracking
+      if (false && navigator.sendBeacon) {
         // Create Blob with correct content-type for sendBeacon
         const blob = new Blob([JSON.stringify({
           event: 'session_end',
@@ -126,7 +128,8 @@ export const trackEvent = async (eventName: string, eventData: any, userId?: str
   if (typeof window === 'undefined') return;
   
   // Check analytics consent before tracking
-  if (!shouldTrackAnalytics()) {
+  // Disabled - Google Analytics handles tracking
+  if (true) { // Always return early - using Google Analytics
     console.debug('📊 Custom event tracking skipped - no consent:', eventName);
     return;
   }

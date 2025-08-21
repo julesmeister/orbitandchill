@@ -7,7 +7,7 @@ import AdminNavigation from './AdminNavigation';
 import AdminLogin from './AdminLogin';
 import OverviewTab from './OverviewTab';
 import UsersTab from './UsersTab';
-import TrafficTab from './TrafficTab';
+// TrafficTab removed - using Google Analytics instead
 import PostsTab from './PostsTab';
 import SEOTab from './SEOTab';
 import PremiumTab from './PremiumTab';
@@ -21,16 +21,12 @@ export default function AdminDashboard() {
     isAuthenticated,
     adminUser,
     siteMetrics,
-    userAnalytics,
-    trafficData,
     totalThreads,
     healthMetrics,
     notifications,
     isLoading,
     initializeAuth,
     refreshMetrics,
-    loadUserAnalytics,
-    loadTrafficData,
     loadHealthMetrics,
     loadNotifications,
     loadThreadCounts
@@ -48,8 +44,6 @@ export default function AdminDashboard() {
     if (isAuthenticated) {
       // AdminDashboard loading data for authenticated admin
       refreshMetrics();
-      loadUserAnalytics();
-      loadTrafficData();
       loadThreadCounts(); // Only load counts for dashboard
       loadHealthMetrics();
       loadNotifications();
@@ -63,8 +57,6 @@ export default function AdminDashboard() {
     try {
       await Promise.all([
         refreshMetrics(),
-        loadUserAnalytics(), 
-        loadTrafficData(),
         loadThreadCounts(), // Only load counts for dashboard
         loadHealthMetrics(),
         loadNotifications()
@@ -95,16 +87,7 @@ export default function AdminDashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
       ),
-      count: userAnalytics.length
-    },
-    { 
-      id: 'traffic', 
-      label: 'Traffic',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      )
+      count: 0 // Analytics data now in Google Analytics
     },
     { 
       id: 'posts', 
@@ -187,8 +170,6 @@ export default function AdminDashboard() {
         );
       case 'users':
         return <UsersTab />;
-      case 'traffic':
-        return <TrafficTab trafficData={trafficData} isLoading={isLoading} />;
       case 'posts':
         return <PostsTab isLoading={isLoading} />;
       case 'events':

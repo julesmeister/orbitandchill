@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAdminStore } from '@/store/adminStore';
-import { useRealMetrics } from '@/hooks/useRealMetrics';
 import MetricsGrid from './overview/MetricsGrid';
 import QuickStats from './overview/QuickStats';
 import EventsAnalyticsCard from './overview/EventsAnalytics';
@@ -81,27 +80,49 @@ interface OverviewTabProps {
 }
 
 export default function OverviewTab({ siteMetrics, healthMetrics, notifications, isLoading }: OverviewTabProps) {
-  const { totalThreads, userAnalytics, trafficData, loadUserAnalytics, loadTrafficData } = useAdminStore();
+  const { totalThreads } = useAdminStore();
+  const [enhancedMetrics, setEnhancedMetrics] = useState<any>(null);
   
   useEffect(() => {
-    // Only load data if not already loaded - AdminDashboard handles initial loading
-    if (userAnalytics.length === 0) {
-      loadUserAnalytics(); 
-    }
-    if (trafficData.length === 0) {
-      loadTrafficData();
-    }
-  }, []); // Empty dependency array - only run once on mount
+    // Fetch enhanced metrics from the working endpoint
+    const fetchEnhancedMetrics = async () => {
+      try {
+        const response = await fetch('/api/admin/enhanced-metrics?period=30d');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setEnhancedMetrics(result.data);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch enhanced metrics:', error);
+      }
+    };
+
+    fetchEnhancedMetrics();
+  }, []);
   
-  const realMetrics = useRealMetrics(userAnalytics, trafficData, totalThreads);
+  // Use enhanced metrics if available, otherwise fall back to siteMetrics
+  const realMetrics = enhancedMetrics || {
+    totalUsers: siteMetrics.totalUsers || 0,
+    activeUsers: siteMetrics.activeUsers || 0,
+    chartsGenerated: siteMetrics.chartsGenerated || 0,
+    forumPosts: siteMetrics.forumPosts || totalThreads || 0,
+    dailyVisitors: siteMetrics.dailyVisitors || 0,
+    monthlyGrowth: siteMetrics.monthlyGrowth || 0,
+    newUsersThisMonth: 0,
+    avgChartsPerUser: '0.0',
+    totalPageViews: 0,
+    conversionRate: '0%'
+  };
   
   const trends = {
-    newUsers: realMetrics.newUsersThisMonth,
-    activeUsers: realMetrics.activeUsers,
-    charts: realMetrics.chartsGenerated,
-    posts: realMetrics.forumPosts,
-    visitors: realMetrics.dailyVisitors,
-    growth: realMetrics.monthlyGrowth
+    newUsers: realMetrics.newUsersThisMonth || 0,
+    activeUsers: realMetrics.activeUsers || 0,
+    charts: realMetrics.chartsGenerated || 0,
+    posts: realMetrics.forumPosts || 0,
+    visitors: realMetrics.dailyVisitors || 0,
+    growth: realMetrics.monthlyGrowth || 0
   };
 
   return (

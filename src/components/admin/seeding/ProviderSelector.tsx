@@ -16,14 +16,10 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({
   onProviderChange,
   onModelChange,
 }) => {
+  // Note: The provider change logic is now handled in the parent component
+  // to allow proper preservation of saved models during configuration loading
   const handleProviderChange = (newProvider: string) => {
     onProviderChange(newProvider);
-    
-    // Set default model for the new provider
-    const provider = AI_PROVIDERS.find(p => p.id === newProvider);
-    if (provider) {
-      onModelChange(provider.models[0]);
-    }
   };
 
   return (

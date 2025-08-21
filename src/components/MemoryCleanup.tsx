@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from 'react';
-import { destroyAnalytics } from '@/utils/analytics';
+// Custom analytics removed - using Google Analytics only
 import { stopMemoryMonitoring } from '@/utils/memoryMonitor';
 import { destroyConnectionPool } from '@/db/connectionPool';
 import { getGlobalCache } from '@/utils/cache';
@@ -15,8 +15,7 @@ export default function MemoryCleanup() {
     return () => {
       if (false) { // Disable all cleanup
       try {
-        // Clean up analytics event listeners and pageViews Set
-        destroyAnalytics();
+        // Analytics cleanup removed - Google Analytics handles its own cleanup
         
         // Stop memory monitoring
         stopMemoryMonitoring();

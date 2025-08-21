@@ -7,7 +7,8 @@ import { use, useState, useEffect, Key } from "react";
 import Link from "next/link";
 import { useReplyHandling } from "../../../hooks/useReplyHandling";
 import { useUserStore } from "../../../store/userStore";
-import { trackDiscussionViewed, trackPageView } from "../../../utils/analytics";
+// Custom analytics removed - using Google Analytics for tracking
+import { trackDiscussionView } from "../../../lib/analytics"; // Google Analytics
 import { trackDiscussionInteraction } from "../../../hooks/usePageTracking";
 import DiscussionContent, { FirstImageData } from "../../../components/discussions/DiscussionContent";
 import ReplyForm from "../../../components/discussions/ReplyForm";
@@ -166,8 +167,8 @@ export default function DiscussionDetailPageClient({
           }, 100);
           
           // Track analytics - discussion viewed (legacy and new system)
-          trackDiscussionViewed(data.discussion.id, data.discussion.title);
-          trackPageView(`/discussions/${data.discussion.slug || resolvedParams.slug}`);
+          trackDiscussionView(data.discussion.id, data.discussion.category);
+          // Page view tracking handled by Google Analytics automatically
           
           // New analytics system tracking (non-blocking)
           trackDiscussionInteraction('view', data.discussion.id, user?.id).catch(() => {});

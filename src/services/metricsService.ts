@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { DiscussionService } from '@/db/services/discussionService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { PeriodMetrics, UserMetrics, ChartMetrics } from '@/types/metrics';
 
 export class MetricsService {
@@ -131,7 +131,8 @@ export class MetricsService {
     let pageViews = 0;
 
     try {
-      const trafficSummary = await AnalyticsService.getTrafficSummary(30);
+      // Traffic summary removed - use Google Analytics
+      const trafficSummary = { chartsGenerated: 0 };
       dailyVisitors = (trafficSummary as any)?.averages?.visitors || 0;
       pageViews = (trafficSummary as any)?.totals?.pageViews || 0;
     } catch (error) {

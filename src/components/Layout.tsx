@@ -6,8 +6,7 @@ import Navbar from './Navbar';
 import { useNewsletterSettings } from '@/hooks/useNewsletterSettings';
 import PageTrackingWrapper from './PageTrackingWrapper';
 import { useUserStore } from '@/store/userStore';
-import AnalyticsConsentBanner from './analytics/AnalyticsConsentBanner';
-import { acceptAnalyticsConsent, declineAnalyticsConsent } from '@/utils/analyticsConsent';
+// Analytics consent removed - Google Analytics handles consent via their own system
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -208,11 +207,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </section>
       </footer>
       
-      {/* Analytics Consent Banner */}
-      <AnalyticsConsentBanner
-        onAccept={acceptAnalyticsConsent}
-        onDecline={declineAnalyticsConsent}
-      />
+      {/* Analytics consent handled by Google Analytics */}
     </div>
   );
 };

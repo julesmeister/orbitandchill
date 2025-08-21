@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useCallback } from 'react';
 import { useUserStore } from '../store/userStore';
-import { getLocationAnalytics } from '../utils/locationAnalytics';
+// Location analytics removed - using Google Analytics
 import { approximateTimeZoneFromCoordinates } from '../utils/timeZoneHandler';
 
 interface LocationData {
@@ -227,7 +227,8 @@ export const useSharedLocation = () => {
   const requestLocationPermission = async (): Promise<void> => {
     try {
       setLocationState(prev => ({ ...prev, isLoading: true, error: undefined }));
-      getLocationAnalytics().trackLocationRequest();
+      // Analytics tracking removed - Google Analytics handles this
+      // trackLocationRequest();
       
       const position = await getCurrentPosition();
       
@@ -252,7 +253,8 @@ export const useSharedLocation = () => {
       };
       
       // Track successful permission grant
-      getLocationAnalytics().trackPermissionGranted(coordinates);
+      // Analytics tracking removed - Google Analytics handles this
+      // trackPermissionGranted(coordinates);
       
       setLocationState(prev => ({
         ...prev,
@@ -291,9 +293,11 @@ export const useSharedLocation = () => {
       
       // Track the specific error type
       if (locationError.type === 'permission_denied') {
-        getLocationAnalytics().trackPermissionDenied();
+        // Analytics tracking removed - Google Analytics handles this
+      // trackPermissionDenied();
       } else {
-        getLocationAnalytics().trackLocationError(locationError.type);
+        // Analytics tracking removed - Google Analytics handles this
+      // trackLocationError(locationError.type);
       }
       
       setLocationState(prev => ({ 

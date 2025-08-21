@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { initializeDatabase } from '@/db/index';
 import { UserService } from '@/db/services/userService';
 import { DiscussionService } from '@/db/services/discussionService';
-import { AnalyticsService } from '@/db/services/analyticsService';
+// AnalyticsService removed - using Google Analytics
 import { AdminAuditService } from '@/db/services/adminAuditService';
 
 export async function POST() {
