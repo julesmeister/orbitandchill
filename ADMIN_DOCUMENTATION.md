@@ -1,5 +1,10 @@
 # Orbit and Chill Admin Dashboard Documentation
 
+> **📚 Related Documentation:**
+> - **Real Data Integration**: See [ADMIN_DASHBOARD_INTEGRATION.md](./ADMIN_DASHBOARD_INTEGRATION.md) for real data implementation
+> - **API Endpoints**: See [API_PROGRESS.md](./API_PROGRESS.md) for complete API reference
+> - **Traffic Analytics**: See [TRAFFIC_ANALYTICS_IMPLEMENTATION.md](./TRAFFIC_ANALYTICS_IMPLEMENTATION.md) for analytics details
+
 ## Overview
 
 The Luckstrology admin dashboard is a comprehensive administrative interface built with the Synapsas design system. It provides complete management capabilities for users, content, analytics, SEO, and site operations through a modern, high-contrast interface with sharp edges, black borders, and the distinctive Synapsas color palette.

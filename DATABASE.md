@@ -1,5 +1,10 @@
 # Database Documentation
 
+> **📚 Related Documentation:**
+> - **API Reference**: See [API_DATABASE_PROTOCOL.md](./API_DATABASE_PROTOCOL.md) for implementation patterns
+> - **Discussion System**: See [DISCUSSIONS_INTEGRATION.md](./DISCUSSIONS_INTEGRATION.md) for forum database
+> - **Admin System**: See [ADMIN_DOCUMENTATION.md](./ADMIN_DOCUMENTATION.md) for admin database operations
+
 ## 🚀 Quick Status
 - **Database**: Turso (SQLite) - Production Ready
 - **ORM**: Drizzle with raw SQL workarounds for Turso HTTP client

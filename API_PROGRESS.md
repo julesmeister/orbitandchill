@@ -1,5 +1,11 @@
 # API Progress & Reference Guide
 
+> **📚 Related Documentation:**
+> - **Database Protocol**: See [API_DATABASE_PROTOCOL.md](./API_DATABASE_PROTOCOL.md) for integration patterns
+> - **Admin APIs**: See [ADMIN_DASHBOARD_INTEGRATION.md](./ADMIN_DASHBOARD_INTEGRATION.md) for admin implementation
+> - **Discussion APIs**: See [DISCUSSIONS_INTEGRATION.md](./DISCUSSIONS_INTEGRATION.md) for forum endpoints
+> - **SEO APIs**: See [SEO.md](./SEO.md) for SEO-related endpoints
+
 This document provides a clean reference for all API endpoints, their status, and implementation progress in the Luckstrology application.
 
 ## 📊 Overall Progress Summary

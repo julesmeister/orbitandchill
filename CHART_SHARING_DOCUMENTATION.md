@@ -1,5 +1,10 @@
 # Chart Sharing Documentation
 
+> **📚 Related Documentation:**
+> - **Chart System**: See [README.md](./README.md) for chart architecture
+> - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
+> - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
+
 ## Overview
 
 The application provides a comprehensive chart sharing system that allows users to generate public shareable links for their natal charts. This system includes both technical infrastructure and user experience features designed to facilitate easy sharing while maintaining security and privacy controls.

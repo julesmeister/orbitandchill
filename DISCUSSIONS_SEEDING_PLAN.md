@@ -1,4 +1,10 @@
 # AI-Powered Discussion Seeding System
+
+> **📚 Related Documentation:**
+> - **Discussion System**: See [DISCUSSIONS_INTEGRATION.md](./DISCUSSIONS_INTEGRATION.md) for forum architecture
+> - **Admin Interface**: See [ADMIN_DOCUMENTATION.md](./ADMIN_DOCUMENTATION.md) for content management
+> - **Database**: See [DATABASE.md](./DATABASE.md) for discussion storage schema
+
 ## Comprehensive Architecture & Implementation Tree Map
 
 ```

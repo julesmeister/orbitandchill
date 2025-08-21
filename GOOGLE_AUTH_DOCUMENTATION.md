@@ -1,5 +1,10 @@
 # Google Authentication Integration Documentation
 
+> **📚 Related Documentation:**
+> - **User System**: See [README.md](./README.md) for user data architecture
+> - **Database**: See [DATABASE.md](./DATABASE.md) for user storage schema
+> - **API Reference**: See [API_PROGRESS.md](./API_PROGRESS.md) for authentication endpoints
+
 ## Overview
 
 This document outlines the Google OAuth integration implemented in the Luckstrology application. The system provides seamless Google Sign-In functionality with fallback to anonymous users, activity tracking, and session management.

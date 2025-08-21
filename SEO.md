@@ -1,5 +1,10 @@
 # SEO Implementation Tree Map for Orbit and Chill
 
+> **📚 Related Documentation:**
+> - **Sitemap Details**: See [SITEMAP-DOCUMENTATION.md](./SITEMAP-DOCUMENTATION.md) for sitemap implementation
+> - **Main Project**: See [README.md](./README.md) for project overview and recent improvements
+> - **API Integration**: See [API_PROGRESS.md](./API_PROGRESS.md) for API endpoints used in SEO
+
 ## 🌟 **Current SEO Score: 10/10** (Complete Implementation - Final Polish Complete)
 
 ```

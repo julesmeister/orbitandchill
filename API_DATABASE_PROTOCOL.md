@@ -1,5 +1,10 @@
 # API Database Protocol & Integration Patterns
 
+> **📚 Related Documentation:**
+> - **API Endpoints**: See [API_PROGRESS.md](./API_PROGRESS.md) for complete API reference and status
+> - **Discussions**: See [discussions-database-rules.md](./discussions-database-rules.md) for discussion-specific patterns
+> - **Admin Integration**: See [ADMIN_DASHBOARD_INTEGRATION.md](./ADMIN_DASHBOARD_INTEGRATION.md) for admin API patterns
+
 This document captures the established patterns and protocols for API and database integration in the Orbit and Chill application, based on successful implementations like the location persistence system and other core features.
 
 ## 📋 Table of Contents

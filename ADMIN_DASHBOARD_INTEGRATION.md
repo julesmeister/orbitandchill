@@ -1,5 +1,10 @@
 # Admin Dashboard Real Data Integration - Complete! ✅
 
+> **📚 Related Documentation:**
+> - **Architecture & Design**: See [ADMIN_DOCUMENTATION.md](./ADMIN_DOCUMENTATION.md) for complete admin system architecture
+> - **API Reference**: See [API_PROGRESS.md](./API_PROGRESS.md) for all admin API endpoints
+> - **Discussion Integration**: See [DISCUSSIONS_INTEGRATION.md](./DISCUSSIONS_INTEGRATION.md) for forum integration
+
 ## 🎉 What Was Accomplished
 
 Successfully removed ALL mock/seed data and made the admin dashboard show 100% real data from actual application usage, following the same pattern as PostsTab.

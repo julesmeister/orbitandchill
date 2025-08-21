@@ -1,5 +1,10 @@
 # Sitemap Implementation Documentation
 
+> **📚 Related Documentation:**
+> - **SEO Strategy**: See [SEO.md](./SEO.md) for complete SEO implementation
+> - **Discussion System**: See [DISCUSSIONS_INTEGRATION.md](./DISCUSSIONS_INTEGRATION.md) for sitemap content sources
+> - **Admin System**: See [ADMIN_DOCUMENTATION.md](./ADMIN_DOCUMENTATION.md) for content management
+
 ## Overview
 Orbit and Chill uses a single, comprehensive sitemap.xml that dynamically includes all content for optimal SEO performance while maintaining simplicity.
 
