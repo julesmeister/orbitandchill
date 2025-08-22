@@ -9,6 +9,8 @@ import { useUserStore } from '../../../store/userStore';
 import StatusToast from '../../../components/reusable/StatusToast';
 import { generateSlug } from '../../../utils/slugify';
 import { DiscussionFormData } from '../../../hooks/useDiscussionForm';
+import { useCategories } from '../../../hooks/useCategories';
+import { useDiscussions } from '../../../hooks/useDiscussions';
 
 function NewDiscussionContent() {
   const router = useRouter();
@@ -30,6 +32,8 @@ function NewDiscussionContent() {
     isVisible: false
   });
   const { user, ensureAnonymousUser, loadProfile } = useUserStore();
+  const { categories, isLoading: categoriesLoading } = useCategories();
+  const { discussions } = useDiscussions();
 
   const showToast = (title: string, message: string, status: 'loading' | 'success' | 'error' | 'info') => {
     setToast({
@@ -300,46 +304,84 @@ function NewDiscussionContent() {
               </div>
             </div>
 
-            {/* Popular Topics */}
+            {/* Categories */}
             <div className="" style={{ backgroundColor: '#f2e356' }}>
               <div className="p-8">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 bg-black flex items-center justify-center mr-4">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-space-grotesk text-xl font-bold text-black">Popular Topics</h3>
+                    <h3 className="font-space-grotesk text-xl font-bold text-black">Categories</h3>
                     <div className="w-16 h-0.5 bg-black mt-1"></div>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {[
-                    { name: 'Mercury Retrograde', count: 42, color: '#ff91e9' },
-                    { name: 'Natal Chart Reading', count: 38, color: '#6bdbff' },
-                    { name: 'Relationship Synastry', count: 29, color: '#51bd94' },
-                    { name: 'Career Astrology', count: 24, color: '#19181a' },
-                    { name: 'Transit Analysis', count: 19, color: '#ff91e9' }
-                  ].map((topic, index) => (
-                    <div key={index} className="group relative p-4 bg-white border border-black hover:bg-gray-50 transition-all duration-300 cursor-pointer">
-                      {/* Color indicator bar */}
-                      <div 
-                        className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300"
-                        style={{ backgroundColor: topic.color }}
-                      />
-                      
-                      <div className="flex items-center justify-between ml-2">
-                        <div>
-                          <p className="text-sm font-space-grotesk font-bold text-black">{topic.name}</p>
-                          <p className="text-xs text-black/60 font-open-sans">{topic.count} discussions</p>
-                        </div>
-                        <div className="w-6 h-6 bg-black flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white"></div>
-                        </div>
+                  {categoriesLoading ? (
+                    // Loading state
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.3s]"></div>
+                        <div className="w-2 h-2 bg-black animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-2 h-2 bg-black animate-bounce"></div>
                       </div>
                     </div>
-                  ))}
+                  ) : categories.length === 0 ? (
+                    // Empty state
+                    <div className="text-center py-8">
+                      <p className="text-sm text-black/60 font-open-sans">No categories available</p>
+                    </div>
+                  ) : (
+                    // Categories list - filter to show only active, non-'All Categories' categories
+                    categories
+                      .filter(category => category.isActive && category.name !== 'All Categories')
+                      .map(category => {
+                        // Calculate count from actual discussions, same as main discussions page
+                        const discussionCount = discussions.filter(d => d.category === category.name).length;
+                        return { ...category, calculatedCount: discussionCount };
+                      })
+                      .sort((a, b) => {
+                        // Sort by actual discussion count, then by sort order
+                        const countDiff = b.calculatedCount - a.calculatedCount;
+                        if (countDiff !== 0) return countDiff;
+                        return a.sortOrder - b.sortOrder;
+                      })
+                      .slice(0, 7) // Show top 7 categories
+                      .map((category) => {
+                        // Use calculated count from actual discussions
+                        const countText = category.calculatedCount === 0 
+                          ? 'Be the first to post!' 
+                          : `${category.calculatedCount} discussion${category.calculatedCount !== 1 ? 's' : ''}`;
+                        
+                        return (
+                          <button 
+                            key={category.id}
+                            onClick={() => router.push(`/discussions?category=${encodeURIComponent(category.name)}`)}
+                            className="group relative p-4 bg-white border border-black hover:bg-gray-50 transition-all duration-300 cursor-pointer w-full"
+                          >
+                            {/* Color indicator bar */}
+                            <div 
+                              className="absolute left-0 top-0 w-1 h-0 group-hover:h-full transition-all duration-300"
+                              style={{ backgroundColor: category.color || '#6bdbff' }}
+                            />
+                            
+                            <div className="flex items-center justify-between ml-2">
+                              <div className="text-left">
+                                <p className="text-sm font-space-grotesk font-bold text-black">{category.name}</p>
+                                <p className="text-xs text-black/60 font-open-sans">
+                                  {countText}
+                                </p>
+                              </div>
+                              <div className="w-6 h-6 bg-black flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white"></div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })
+                  )}
                 </div>
               </div>
             </div>

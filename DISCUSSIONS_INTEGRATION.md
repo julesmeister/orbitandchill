@@ -13,8 +13,8 @@ Successfully integrated the `/src/app/discussions/` pages with our Drizzle datab
 ## 📁 System Architecture Tree
 
 ```
-Pagination Architecture Flow
-════════════════════════════
+Pagination & Category Architecture Flow
+════════════════════════════════════════
 Frontend Components           Hooks & Services              API Endpoints              Database
 ─────────────────────         ──────────────────           ─────────────────         ─────────────
 AdminDashboard.tsx           useRealMetrics.ts             /api/admin/threads         Drizzle ORM
@@ -32,6 +32,18 @@ DiscussionsPageClient.tsx    useDiscussions.ts             /api/discussions
 ├── Refresh functionality   ├── Cache management          └── 10 items per page
 └── Cache clearing          └── Page change handling      
 
+Category System              useCategories.ts              /api/categories
+├── Database categories     ├── Categories from DB        ├── GET all categories
+├── Real-time counts       ├── Fallback support          ├── Database managed
+├── Color mapping          └── CRUD operations           └── categories table
+└── Admin management                                      
+
+NewDiscussionPageClient     Category Count Architecture   Real-time Calculation
+├── Categories sidebar     ├── discussions.filter()      ├── Client-side counting
+├── useCategories hook     ├── Same as main page         ├── Always accurate
+├── useDiscussions hook    └── Real discussion data      └── No sync needed
+└── Live count display
+
 PostsList.tsx               Admin Store (Zustand)         Performance Optimization
 ├── totalThreads display   ├── admin/api.ts              ─────────────────────────
 ├── Accurate counts        │   └── limit: 10 default     ├── Separated concerns
@@ -40,7 +52,57 @@ PostsList.tsx               Admin Store (Zustand)         Performance Optimizati
                               └── loadThreadCounts()      └── Accurate UI displays
 ```
 
-## 🏗️ Discussion Detail Page Modular Architecture (NEW)
+## 🎯 Category System Architecture (NEW)
+
+```
+Discussion Category Management Tree
+├── Problem Analysis & Resolution
+│   ├── Original Issue: Database usageCount field not real-time
+│   ├── Inconsistent Counts: Different pages showed different numbers
+│   └── Solution: Client-side counting from actual discussions
+├── Category Data Architecture
+│   ├── Database Storage (categories table)
+│   │   ├── Category definitions stored in database
+│   │   ├── Managed via admin CategoryManager component
+│   │   ├── Fields: name, color, sortOrder, isActive
+│   │   └── usageCount field (legacy, not used for display)
+│   ├── Data Flow
+│   │   ├── useCategories hook fetches from /api/categories
+│   │   ├── Categories come from database
+│   │   └── Fallback to hardcoded list if DB unavailable
+│   └── Color System
+│       ├── Each category has assigned color in DB
+│       ├── Used for visual indicators in UI
+│       └── Consistent across all pages
+├── Real-time Count Implementation
+│   ├── Main Discussions Page
+│   │   ├── Loads discussions via useDiscussions()
+│   │   ├── Counts: discussions.filter(d => d.category === category).length
+│   │   └── Always accurate, no sync needed
+│   ├── New Discussion Page
+│   │   ├── Uses same useDiscussions() hook
+│   │   ├── Calculates counts identically to main page
+│   │   ├── Shows top 7 categories by discussion count
+│   │   └── "Be the first to post!" for empty categories
+│   └── Benefits
+│       ├── No manual recalculation needed
+│       ├── Always shows accurate counts
+│       ├── Consistent across all pages
+│       └── No database sync issues
+└── Admin Management
+    ├── CategoryManager Component
+    │   ├── Add/Edit/Delete categories
+    │   ├── Reset to defaults option
+    │   ├── "Fix Usage Counts" (legacy, updates DB field)
+    │   └── Clean category names utility
+    └── Integration Points
+        ├── PostsTab uses categories for dropdown
+        ├── DiscussionForm shows category selection
+        └── All pages respect isActive flag
+
+```
+
+## 🏗️ Discussion Detail Page Modular Architecture
 
 ```
 Discussion Detail Component Refactoring Tree
@@ -156,7 +218,13 @@ src/
 │       ├── page.tsx                 # Server-side pagination (UPDATED ⭐)
 │       ├── DiscussionsPageClient.tsx # Real totals display (UPDATED ⭐)
 │       │   ├── totalDiscussions     # Accurate database counts
+│       │   ├── Category counts      # Real-time from discussions.filter()
 │       │   └── Cache refresh        # Clear + reload functionality
+│       ├── new/
+│       │   └── NewDiscussionPageClient.tsx # Categories with counts (UPDATED ⭐)
+│       │       ├── useCategories()  # Database categories
+│       │       ├── useDiscussions()  # For real-time counts
+│       │       └── Top 7 categories  # Sorted by discussion count
 │       └── [slug]/                  # Discussion detail page (REFACTORED ⭐)
 │           ├── DiscussionDetailPageClient.tsx # Main component (135 lines, was 484)
 │           ├── utils.ts             # Helper functions & constants (NEW)
