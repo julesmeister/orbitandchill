@@ -5,7 +5,8 @@ interface MobileCategoryFilterProps {
   categories: string[];
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
-  discussions: any[];
+  discussions?: any[]; // Make optional since we'll use categoryCounts
+  categoryCounts?: Record<string, number>;
 }
 
 // All categories use consistent black styling per Synapsas guidelines
@@ -15,7 +16,8 @@ export default function MobileCategoryFilter({
   categories, 
   selectedCategory, 
   onCategoryChange, 
-  discussions 
+  discussions,
+  categoryCounts 
 }: MobileCategoryFilterProps) {
   return (
     <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] lg:hidden">
@@ -28,9 +30,12 @@ export default function MobileCategoryFilter({
           }}
         >
           {categories.map((category) => {
-            const categoryCount = category === "All Categories" 
-              ? discussions.length 
-              : discussions.filter(d => d.category === category).length;
+            // Use categoryCounts if provided, otherwise fall back to discussions
+            const categoryCount = categoryCounts 
+              ? (categoryCounts[category] || 0)
+              : (category === "All Categories" 
+                  ? (discussions?.length || 0)
+                  : (discussions?.filter(d => d.category === category).length || 0));
             
             const isSelected = selectedCategory === category;
             

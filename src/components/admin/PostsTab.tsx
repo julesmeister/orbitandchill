@@ -15,6 +15,7 @@ import PostsList from './posts/PostsList';
 import { usePostsManagement } from '@/hooks/usePostsManagement';
 import { useBulkOperations } from '@/hooks/useBulkOperations';
 import { useUserStore } from '@/store/userStore';
+import { useAdminStats } from '@/hooks/useAdminStats';
 import { formatRelativeTime, formatDetailedDateTime } from '@/utils/dateFormatting';
 
 // Thread interface from adminStore
@@ -68,10 +69,7 @@ interface PostFormData {
 
 export default function PostsTab({ isLoading }: PostsTabProps) {
   const { loadThreads, totalThreads, totalPages: storeTotalPages, threads: allThreads } = useAdminStore();
-  
-  // Use totalThreads from store for the main count
-  // For breakdown by type, we'll calculate from the current data we have
-  // This is a temporary solution - ideally the API should provide these breakdowns
+  const { stats } = useAdminStats();
   
   // Refresh function
   const handleRefresh = async () => {
@@ -172,12 +170,12 @@ export default function PostsTab({ isLoading }: PostsTabProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate rough estimates from current data - not perfect but avoids extra API calls
+  // Use real stats from the admin stats API
   const totalCounts = {
-    blogPosts: Math.round(totalThreads * 0.3), // Rough estimate
-    forumThreads: Math.round(totalThreads * 0.7), // Rough estimate  
-    published: totalThreads, // Most posts are published
-    total: totalThreads
+    blogPosts: stats.blogPosts,
+    forumThreads: stats.forumThreads,
+    published: stats.published,
+    total: stats.total
   };
 
   // Handler for filter changes

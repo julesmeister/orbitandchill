@@ -16,6 +16,7 @@ import DiscussionsErrorState from '@/components/discussions/DiscussionsErrorStat
 import CommunityStats from '@/components/discussions/CommunityStats';
 import StatusToast from '@/components/reusable/StatusToast';
 import { useCategories } from '@/hooks/useCategories';
+import { useCategoryCounts } from '@/hooks/useCategoryCounts';
 import { getCategoryColor } from '@/utils/categories';
 
 export default function DiscussionsPageClient() {
@@ -27,6 +28,9 @@ export default function DiscussionsPageClient() {
     error: categoriesError,
     fallback: categoriesFallback
   } = useCategories();
+  
+  // Get real category counts from the stats API
+  const { categoryCounts } = useCategoryCounts();
 
   // Add "All Categories" to the beginning and convert to string array for compatibility
   const categories = ['All Categories', ...dbCategories.map(cat => cat.name)];
@@ -132,6 +136,7 @@ export default function DiscussionsPageClient() {
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
         discussions={discussions}
+        categoryCounts={categoryCounts}
       />
 
       {/* Desktop Search Section */}
@@ -163,9 +168,8 @@ export default function DiscussionsPageClient() {
               </div>
               <div className="divide-y divide-black">
                 {categories.map((category) => {
-                  const categoryCount = category === "All Categories"
-                    ? discussions.length
-                    : discussions.filter(d => d.category === category).length;
+                  // Use real counts from the stats API
+                  const categoryCount = categoryCounts[category] || 0;
 
                   return (
                     <button

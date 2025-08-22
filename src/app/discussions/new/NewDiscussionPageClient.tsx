@@ -10,7 +10,7 @@ import StatusToast from '../../../components/reusable/StatusToast';
 import { generateSlug } from '../../../utils/slugify';
 import { DiscussionFormData } from '../../../hooks/useDiscussionForm';
 import { useCategories } from '../../../hooks/useCategories';
-import { useDiscussions } from '../../../hooks/useDiscussions';
+import { useCategoryCounts } from '../../../hooks/useCategoryCounts';
 
 function NewDiscussionContent() {
   const router = useRouter();
@@ -33,7 +33,7 @@ function NewDiscussionContent() {
   });
   const { user, ensureAnonymousUser, loadProfile } = useUserStore();
   const { categories, isLoading: categoriesLoading } = useCategories();
-  const { discussions } = useDiscussions();
+  const { categoryCounts } = useCategoryCounts();
 
   const showToast = (title: string, message: string, status: 'loading' | 'success' | 'error' | 'info') => {
     setToast({
@@ -338,8 +338,8 @@ function NewDiscussionContent() {
                     categories
                       .filter(category => category.isActive && category.name !== 'All Categories')
                       .map(category => {
-                        // Calculate count from actual discussions, same as main discussions page
-                        const discussionCount = discussions.filter(d => d.category === category.name).length;
+                        // Use real count from the stats API
+                        const discussionCount = categoryCounts[category.name] || 0;
                         return { ...category, calculatedCount: discussionCount };
                       })
                       .sort((a, b) => {
@@ -350,7 +350,7 @@ function NewDiscussionContent() {
                       })
                       .slice(0, 7) // Show top 7 categories
                       .map((category) => {
-                        // Use calculated count from actual discussions
+                        // Use calculated count from stats API
                         const countText = category.calculatedCount === 0 
                           ? 'Be the first to post!' 
                           : `${category.calculatedCount} discussion${category.calculatedCount !== 1 ? 's' : ''}`;

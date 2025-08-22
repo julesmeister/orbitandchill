@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useCategories } from '@/hooks/useCategories';
+import { useAdminStats } from '@/hooks/useAdminStats';
 
 interface ToastState {
   show: boolean;
@@ -27,6 +28,8 @@ export default function CategoryManager({ isVisible, onToast }: CategoryManagerP
     deleteCategory: deleteCategoryDb,
     refreshCategories
   } = useCategories();
+  
+  const { stats } = useAdminStats();
 
   const [newCategory, setNewCategory] = useState('');
   const [editingCategory, setEditingCategory] = useState<{id: string, value: string} | null>(null);
@@ -331,11 +334,15 @@ export default function CategoryManager({ isVisible, onToast }: CategoryManagerP
                           <span className="ml-1 text-xs text-gray-500">(default)</span>
                         )}
                       </span>
-                      {category.usageCount >= 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-gray-500 rounded-full">
-                          {category.usageCount}
-                        </span>
-                      )}
+                      {(() => {
+                        // Use real count from admin stats instead of stale database usageCount
+                        const realCount = stats.categoryCounts[category.name] || 0;
+                        return (
+                          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-gray-500 rounded-full">
+                            {realCount}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
