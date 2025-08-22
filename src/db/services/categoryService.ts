@@ -548,16 +548,36 @@ export const cleanupCategoryNames = async (): Promise<CategoryServiceResponse<Re
       const cleanedName = category.name.replace(/\d+$/, '').trim();
       
       if (cleanedName !== category.name && cleanedName.length > 0) {
-        // Update the category name
-        await db
-          .update(categories)
-          .set({ 
-            name: cleanedName,
-            updatedAt: new Date()
-          })
-          .where(eq(categories.id, category.id));
+        // Check if the cleaned name already exists
+        const existingCategory = allCategories.find((cat: any) => 
+          cat.name === cleanedName && cat.id !== category.id
+        );
         
-        cleanupResults[category.id] = `"${category.name}" → "${cleanedName}"`;
+        if (existingCategory) {
+          // If cleaned name already exists, mark this duplicate as inactive instead of deleting
+          // to avoid foreign key constraint issues
+          await db
+            .update(categories)
+            .set({ 
+              isActive: false,
+              name: `${category.name}_duplicate_${Date.now()}`,
+              updatedAt: new Date()
+            })
+            .where(eq(categories.id, category.id));
+          
+          cleanupResults[category.id] = `"${category.name}" → marked inactive (duplicate of "${cleanedName}")`;
+        } else {
+          // Safe to rename to cleaned name
+          await db
+            .update(categories)
+            .set({ 
+              name: cleanedName,
+              updatedAt: new Date()
+            })
+            .where(eq(categories.id, category.id));
+          
+          cleanupResults[category.id] = `"${category.name}" → "${cleanedName}"`;
+        }
       }
     }
 

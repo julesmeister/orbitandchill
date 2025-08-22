@@ -116,10 +116,30 @@ export function useReplyHandlers({
     }));
   }, [setPreviewContent, setSeedingResults]);
 
+  const handleUpdateDiscussion = useCallback((discussionIndex: number, field: 'content' | 'title', newValue: string) => {
+    setPreviewContent(prev => {
+      const updated = [...prev];
+      if (updated[discussionIndex]) {
+        if (field === 'content') {
+          updated[discussionIndex].transformedContent = newValue;
+        } else if (field === 'title') {
+          updated[discussionIndex].transformedTitle = newValue;
+        }
+      }
+      return updated;
+    });
+    
+    setSeedingResults((prev: any) => ({
+      ...prev,
+      message: `Discussion ${field} updated`
+    }));
+  }, [setPreviewContent, setSeedingResults]);
+
   return {
     handleAddReplyWrapper,
     handleDeleteReply,
     handleClearReplies,
-    handleUpdateReply
+    handleUpdateReply,
+    handleUpdateDiscussion
   };
 }

@@ -7,6 +7,7 @@ import {
   getRandomMood,
   getPersonalityForPersona 
 } from '@/utils/commentProcessing';
+import { HumanizationService } from '@/services/humanizationService';
 
 // POST - Process Reddit comments and assign random personas
 export async function POST(request: NextRequest) {
@@ -77,25 +78,23 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < batchRephrasedComments.length; i++) {
         const { originalComment, rephrasedComment, persona } = batchRephrasedComments[i];
         
-        // Generate random timestamp for natural conversation flow
-        // Discussion starts 1-7 days ago, replies spread out after that
+        // Generate scheduled timing like the main seeding system
         const now = new Date();
-        const discussionStartTime = new Date(now.getTime() - (Math.random() * 7 * 24 * 60 * 60 * 1000)); // 1-7 days ago
-        
-        // Replies come progressively after discussion start
-        const minDelayHours = i * 0.5 + Math.random() * 2; // Stagger replies (30min - 2h apart)
-        const maxDelayHours = 72; // Up to 3 days after discussion start
+        const minDelayHours = 1 + (i * 0.5); // Start 1 hour after, stagger by 30min each
+        const maxDelayHours = 7 * 24; // Up to 7 days
         const randomDelayHours = minDelayHours + Math.random() * (maxDelayHours - minDelayHours);
-        const replyTime = new Date(discussionStartTime.getTime() + (randomDelayHours * 60 * 60 * 1000));
+        const scheduledTime = new Date(now.getTime() + (randomDelayHours * 60 * 60 * 1000));
         
-        // Create reply object
+        // Create reply object with proper seeding system fields
         const reply = {
           id: `reply_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 15)}`,
           content: rephrasedComment,
           authorName: persona.username,
           authorId: persona.userId,
           avatar: persona.profilePictureUrl || '/avatars/default.png',
-          timestamp: replyTime.toISOString(),
+          timestamp: scheduledTime.toISOString(),
+          createdAt: now.toISOString(), // Current time when created
+          scheduledDelay: Math.round(randomDelayHours * 60), // Convert to minutes
           upvotes: Math.floor(Math.random() * 20) + 1,
           downvotes: Math.floor(Math.random() * 5),
           reactionType: getRandomMood(),
@@ -103,7 +102,8 @@ export async function POST(request: NextRequest) {
           writingStyle: persona.writingStyle,
           userExpertise: persona.expertiseAreas,
           originalComment: originalComment,
-          isRephrased: true
+          isRephrased: true,
+          isTemporary: true // Mark as temporary like main seeding system
         };
         
         processedReplies.push(reply);
@@ -117,29 +117,35 @@ export async function POST(request: NextRequest) {
         const originalComment = commentsToProcess[i];
         const randomPersona = allSeedConfigs[Math.floor(Math.random() * allSeedConfigs.length)];
         
-        // Also stagger fallback replies
+        // Generate scheduled timing for fallback replies
         const now = new Date();
-        const discussionStartTime = new Date(now.getTime() - (Math.random() * 7 * 24 * 60 * 60 * 1000)); // 1-7 days ago
-        const minDelayHours = i * 0.5 + Math.random() * 2;
-        const maxDelayHours = 72;
+        const minDelayHours = 1 + (i * 0.5); // Start 1 hour after, stagger by 30min each
+        const maxDelayHours = 7 * 24; // Up to 7 days
         const randomDelayHours = minDelayHours + Math.random() * (maxDelayHours - minDelayHours);
-        const fallbackReplyTime = new Date(discussionStartTime.getTime() + (randomDelayHours * 60 * 60 * 1000));
+        const scheduledTime = new Date(now.getTime() + (randomDelayHours * 60 * 60 * 1000));
+
+        // Apply humanization to fallback content too
+        const humanizationIntensity = HumanizationService.getIntensityForStyle(randomPersona.writingStyle);
+        const humanizedContent = HumanizationService.humanizeText(originalComment, humanizationIntensity);
 
         const fallbackReply = {
           id: `reply_${Date.now()}_${i}_fallback`,
-          content: originalComment,
+          content: humanizedContent, // Use humanized content instead of original
           authorName: randomPersona.username,
           authorId: randomPersona.userId,
           avatar: randomPersona.profilePictureUrl || '/avatars/default.png',
-          timestamp: fallbackReplyTime.toISOString(),
+          timestamp: scheduledTime.toISOString(),
+          createdAt: now.toISOString(), // Current time when created
+          scheduledDelay: Math.round(randomDelayHours * 60), // Convert to minutes
           upvotes: Math.floor(Math.random() * 15) + 1,
           downvotes: Math.floor(Math.random() * 3),
           reactionType: getRandomMood(),
-          aiGenerated: false,
+          aiGenerated: true, // Mark as AI generated since we applied humanization
           writingStyle: randomPersona.writingStyle,
           userExpertise: randomPersona.expertiseAreas,
           originalComment: originalComment,
-          isRephrased: false
+          isRephrased: true, // Mark as rephrased since we humanized it
+          isTemporary: true // Mark as temporary like main seeding system
         };
         
         processedReplies.push(fallbackReply);

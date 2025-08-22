@@ -66,9 +66,9 @@ export function useCommentProcessing({
       const result = await response.json();
 
       if (result.success) {
-        // Show warning toast if we have partial results
+        // Show warning toast if we have partial results (use error toast for visibility)
         if (result.warning) {
-          showErrorToast('Partial Results', result.warning.message);
+          showErrorToast('⚠️ Partial Results', result.warning.message);
         }
         
         // Add comments as replies to existing preview content instead of creating separate discussion
@@ -149,14 +149,58 @@ export function useCommentProcessing({
           }, 100);
         }
       } else {
-        showErrorToast('Comment Processing Failed', result.error || 'Unknown error occurred while processing comments');
+        // Enhanced error handling with specific rate limit messaging
+        let errorTitle = 'Comment Processing Failed';
+        let errorMessage = result.error || 'Unknown error occurred while processing comments';
+        
+        // Check for specific error types
+        if (result.error && result.error.includes('402') && result.error.includes('Payment Required')) {
+          errorTitle = '💳 Insufficient Credits';
+          errorMessage = 'Your API credits have been exhausted. Please add funds to your OpenRouter account or switch to a different AI provider.';
+        } else if (result.error && (result.error.includes('Insufficient USD') || result.error.includes('balance'))) {
+          errorTitle = '💳 Account Balance Low';
+          errorMessage = 'Insufficient balance to complete the request. Please add credits to your OpenRouter account.';
+        } else if (result.error && result.error.includes('429') && result.error.includes('rate')) {
+          errorTitle = '⏳ Rate Limit Reached';
+          if (result.error.includes('temporarily rate-limited upstream')) {
+            errorMessage = 'The AI model is temporarily overloaded. Please try again in a few minutes or select a different model.';
+          } else {
+            errorMessage = 'Rate limit reached. Please try again later or consider upgrading your API plan.';
+          }
+        } else if (result.error && (result.error.includes('401') || result.error.includes('Unauthorized') || result.error.includes('No auth credentials'))) {
+          errorTitle = '🔑 Authentication Failed';
+          errorMessage = 'API credentials are missing or invalid. Please check your API key configuration.';
+        } else if (result.error && result.error.includes('API key')) {
+          errorTitle = '🔑 API Key Issue';
+          errorMessage = 'There was an issue with your API key. Please check your configuration.';
+        } else if (result.error && result.error.includes('Provider returned error')) {
+          errorTitle = '🤖 AI Provider Error';
+          errorMessage = 'The AI service encountered an error. This may be temporary - try again in a few minutes.';
+        }
+        
+        showErrorToast(errorTitle, errorMessage);
         setSeedingResults({
           success: false,
           error: result.error
         });
       }
     } catch (error) {
-      showErrorToast('Comment Processing Error', 'Failed to process comments: ' + (error as Error).message);
+      // Enhanced catch block error handling
+      let errorTitle = '🚨 Comment Processing Error';
+      let errorMessage = 'Failed to process comments: ' + (error as Error).message;
+      
+      // Check for specific network errors
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          errorTitle = '🌐 Connection Error';
+          errorMessage = 'Unable to connect to the AI service. Please check your internet connection.';
+        } else if (error.message.includes('timeout')) {
+          errorTitle = '⏰ Request Timeout';
+          errorMessage = 'The request took too long. The AI service may be busy - please try again.';
+        }
+      }
+      
+      showErrorToast(errorTitle, errorMessage);
       setSeedingResults({
         success: false,
         error: 'Failed to process comments: ' + (error as Error).message

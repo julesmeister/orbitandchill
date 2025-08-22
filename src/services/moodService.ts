@@ -38,7 +38,25 @@ REPLY REQUIREMENTS:
 - MANDATORY: Match the ${selectedMood} emotional tone exactly - this is the most important requirement
 - Use casual internet typing style (lowercase, missing punctuation, etc.)
 - Keep it 1-3 sentences maximum
-- Include natural typing imperfections
+- Include natural typing imperfections and human quirks
+
+🚫 HUMANIZATION REQUIREMENTS (CRITICAL):
+- Include occasional typos (missing letters, wrong letters, autocorrect mistakes)
+- Use casual contractions (im, dont, cant, youre, etc.)
+- Add filler words (like, tbh, ngl, literally, actually, etc.)
+- Sometimes skip capitalization entirely
+- Use internet slang and abbreviations (rn, fr, omg, wtf, etc.)
+- Add trailing thoughts with "..." or incomplete sentences
+- Include occasional self-corrections like "wait no" or "actually..."
+- Use emotion/reaction words (ugh, yikes, lol, etc.)
+- Sometimes repeat letters for emphasis (sooo, reallly, yesss)
+
+TYPING IMPERFECTIONS TO INCLUDE:
+- Dropped letters: "goin" instead of "going", "nothin" instead of "nothing"
+- Common typos: "teh" for "the", "recieve" for "receive", "seperate" for "separate"
+- Mobile autocorrect fails: "ducking" for a mild expletive, "shot" for "short"
+- Stream of consciousness: start sentence, change direction mid-thought
+- Hesitation markers: "i mean...", "like...", "idk..."
 
 ${selectedMood === 'questioning' ? '🔍 QUESTIONING MOOD: You MUST ask questions, express curiosity, or wonder about the topic. Use "?" marks, phrases like "wait", "how", "why", "I wonder", etc.' : ''}
 ${selectedMood === 'excited' ? '✨ EXCITED MOOD: You MUST show enthusiasm with exclamation points, energetic language, and positive excitement.' : ''}

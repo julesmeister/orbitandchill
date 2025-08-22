@@ -12,9 +12,26 @@ export interface FirstImageData {
 interface DiscussionContentProps {
   discussion: DiscussionTemp;
   onFirstImageExtracted?: (imageData: FirstImageData | null) => void;
+  isEditable?: boolean;
+  isContentEditing?: boolean;
+  editContent?: string;
+  onStartEdit?: (content: string) => void;
+  onSaveEdit?: () => void;
+  onCancelEdit?: () => void;
+  onSetEditContent?: (content: string) => void;
 }
 
-export default function DiscussionContent({ discussion, onFirstImageExtracted }: DiscussionContentProps) {
+export default function DiscussionContent({ 
+  discussion, 
+  onFirstImageExtracted,
+  isEditable = false,
+  isContentEditing = false,
+  editContent = '',
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  onSetEditContent
+}: DiscussionContentProps) {
   // Safely format date for better SEO
   const getValidDate = (dateValue: string | Date | number) => {
     try {
@@ -169,10 +186,84 @@ export default function DiscussionContent({ discussion, onFirstImageExtracted }:
       </header>
       
       <div 
-        className="prose prose-black max-w-none font-open-sans"
+        className={`prose prose-black max-w-none font-open-sans ${
+          isEditable && !isContentEditing ? 'cursor-pointer hover:bg-gray-50 rounded p-2 -m-2 transition-colors' : ''
+        }`}
         itemProp="text"
+        onClick={() => {
+          if (isEditable && !isContentEditing && onStartEdit) {
+            onStartEdit(normalizedContent || '');
+          }
+        }}
+        title={isEditable && !isContentEditing ? 'Click to edit this content' : undefined}
       >
-        {normalizedContent?.includes('<') ? (
+        {isContentEditing ? (
+          // Editing mode for content
+          <div className="relative">
+            <div
+              contentEditable
+              suppressContentEditableWarning={true}
+              className="text-black leading-relaxed text-base sm:text-lg outline-none focus:outline-2 focus:outline-blue-500 bg-gray-50 p-4 rounded border min-h-[200px] whitespace-pre-wrap"
+              style={{ 
+                lineHeight: '1.5',
+                fontFamily: 'inherit'
+              }}
+              onInput={(e) => onSetEditContent && onSetEditContent(e.currentTarget.textContent || '')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  e.preventDefault();
+                  if (onSaveEdit) onSaveEdit();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  if (onCancelEdit) onCancelEdit();
+                }
+              }}
+              onBlur={() => {
+                if (editContent.trim() && editContent !== normalizedContent) {
+                  if (onSaveEdit) onSaveEdit();
+                } else {
+                  if (onCancelEdit) onCancelEdit();
+                }
+              }}
+              ref={(el) => {
+                if (el && isContentEditing) {
+                  el.textContent = editContent;
+                  el.focus();
+                  const range = document.createRange();
+                  const sel = window.getSelection();
+                  range.selectNodeContents(el);
+                  range.collapse(false);
+                  sel?.removeAllRanges();
+                  sel?.addRange(range);
+                }
+              }}
+            />
+            <div className="text-xs text-gray-500 mt-2 flex justify-between items-center">
+              <span>Ctrl+Enter to save, Esc to cancel, or click outside to auto-save</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSaveEdit) onSaveEdit();
+                  }}
+                  className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onCancelEdit) onCancelEdit();
+                  }}
+                  className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : normalizedContent?.includes('<') ? (
           // Render HTML content with enhanced styling
           <>
             {/* DEBUG: Show raw HTML for debugging */}

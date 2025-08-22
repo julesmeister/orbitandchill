@@ -150,7 +150,16 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/ApiKeyInput.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/seeding/ApiKeyInput.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/seeding/AIConfigurationForm.tsx src/components/admin/seeding/ProviderSelector.tsx src/components/admin/seeding/ApiKeyInput.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/AIConfigurationForm.tsx src/components/admin/seeding/ProviderSelector.tsx src/components/admin/seeding/ApiKeyInput.tsx)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/AIConfigurationForm.tsx src/components/admin/seeding/ProviderSelector.tsx src/components/admin/seeding/ApiKeyInput.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/categoryService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/discussions/DiscussionContent.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/admin/seeding/PreviewContentDisplay.tsx src/components/discussions/DiscussionContent.tsx src/hooks/useDiscussionEditor.ts src/hooks/useReplyHandlers.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/discussions/DiscussionContent.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useInlineEditor.ts src/hooks/useReplyEditor.ts src/hooks/useDiscussionEditor.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/PreviewContentDisplay.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useInlineEditor.ts src/hooks/useDiscussionEditor.ts src/hooks/useReplyEditor.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useInlineEditor.ts src/hooks/useDiscussionEditor.ts src/hooks/useReplyEditor.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/services/humanizationService.ts src/services/aiProviderService.ts src/components/admin/seeding/discussion/ReplyCard.tsx)"
     ],
     "deny": [],
     "additionalDirectories": [

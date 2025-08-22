@@ -28,7 +28,7 @@ const ReplyCard: React.FC<ReplyCardProps> = ({
   onSetEditContent,
   onDeleteReply,
 }) => {
-  const isExistingReply = reply.isFromDatabase || (reply.timestamp && !reply.scheduledDelay);
+  const isExistingReply = reply.isFromDatabase || (reply.timestamp && !reply.scheduledDelay && !reply.aiGenerated);
   const scheduledHours = reply.scheduledDelay ? Math.round(reply.scheduledDelay / 60) : 0;
   const scheduledDate = reply.createdAt ? new Date(reply.createdAt) : new Date();
 

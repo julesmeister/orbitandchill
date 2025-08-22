@@ -1,45 +1,55 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from 'react';
+import { useInlineEditor } from './useInlineEditor';
 
-interface EditingState {
+interface ReplyIdentifier {
   discussionIndex: number;
   replyIndex: number;
+  replyId?: string;
+  [key: string]: string | number | undefined;
 }
 
-export const useReplyEditor = (onUpdateReply?: (discussionIndex: number, replyId: string, newContent: string) => void) => {
-  const [editingReply, setEditingReply] = useState<EditingState | null>(null);
-  const [editContent, setEditContent] = useState('');
+/**
+ * Reply editor hook using the generic useInlineEditor
+ * Maintains backward compatibility with existing code
+ */
+export const useReplyEditor = (
+  onUpdateReply?: (discussionIndex: number, replyId: string, newContent: string) => void
+) => {
+  const editor = useInlineEditor<ReplyIdentifier>({
+    onUpdate: (identifier, newContent) => {
+      if (onUpdateReply && identifier.replyId) {
+        onUpdateReply(identifier.discussionIndex, identifier.replyId, newContent);
+      }
+    },
+    autoTrim: true,
+  });
 
+  // Adapter functions to maintain original API
   const startEditing = (discussionIndex: number, replyIndex: number, currentContent: string) => {
-    setEditingReply({ discussionIndex, replyIndex });
-    setEditContent(currentContent);
+    editor.startEditing({ discussionIndex, replyIndex }, currentContent);
   };
 
   const saveEdit = (discussionIndex: number, replyId: string) => {
-    if (onUpdateReply && editContent.trim()) {
-      onUpdateReply(discussionIndex, replyId, editContent.trim());
+    if (editor.editingItem) {
+      // Update the identifier with replyId before saving
+      editor.startEditing({ ...editor.editingItem, replyId }, editor.editContent);
     }
-    setEditingReply(null);
-    setEditContent('');
-  };
-
-  const cancelEdit = () => {
-    setEditingReply(null);
-    setEditContent('');
+    editor.saveEdit();
   };
 
   const isEditing = (discussionIndex: number, replyIndex: number) => {
-    return editingReply?.discussionIndex === discussionIndex && 
-           editingReply?.replyIndex === replyIndex;
+    return editor.isEditing({ discussionIndex, replyIndex });
   };
 
   return {
-    editingReply,
-    editContent,
-    setEditContent,
+    editingReply: editor.editingItem,
+    editContent: editor.editContent,
+    setEditContent: editor.setEditContent,
     startEditing,
     saveEdit,
-    cancelEdit,
-    isEditing
+    cancelEdit: editor.cancelEdit,
+    isEditing,
+    handleKeyDown: editor.handleKeyDown,
+    handleBlur: editor.handleBlur,
   };
 };

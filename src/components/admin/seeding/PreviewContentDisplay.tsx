@@ -5,6 +5,7 @@ import React from 'react';
 import DiscussionContent from '@/components/discussions/DiscussionContent';
 import { DiscussionTemp } from '@/types/threads';
 import { useReplyEditor } from '@/hooks/useReplyEditor';
+import { useDiscussionEditor } from '@/hooks/useDiscussionEditor';
 import PreviewHeader from './discussion/PreviewHeader';
 import DiscussionPreviewCard from './discussion/DiscussionPreviewCard';
 import MoodSelector from './discussion/MoodSelector';
@@ -22,6 +23,7 @@ interface PreviewContentDisplayProps {
   onToggleExpandReplies: (discussionIndex: number) => void;
   onClearReplies?: (discussionIndex: number) => void;
   onUpdateReply?: (discussionIndex: number, replyId: string, newContent: string) => void;
+  onUpdateDiscussion?: (discussionIndex: number, field: 'content' | 'title', newValue: string) => void;
 }
 
 const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
@@ -36,6 +38,7 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
   onToggleExpandReplies,
   onClearReplies,
   onUpdateReply,
+  onUpdateDiscussion,
 }) => {
   const {
     editContent,
@@ -45,6 +48,15 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
     cancelEdit,
     isEditing
   } = useReplyEditor(onUpdateReply);
+  
+  const {
+    editContent: discussionEditContent,
+    setEditContent: setDiscussionEditContent,
+    startEditing: startDiscussionEditing,
+    saveEdit: saveDiscussionEdit,
+    cancelEdit: cancelDiscussionEdit,
+    isEditing: isDiscussionEditing
+  } = useDiscussionEditor(onUpdateDiscussion);
   
   
   if (!previewContent || previewContent.length === 0) {
@@ -116,7 +128,16 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
               />
 
               {/* Use DiscussionContent component for proper formatting */}
-              <DiscussionContent discussion={discussionForPreview} />
+              <DiscussionContent 
+                discussion={discussionForPreview}
+                isEditable={true}
+                isContentEditing={isDiscussionEditing(index, 'content')}
+                editContent={discussionEditContent}
+                onStartEdit={(content) => startDiscussionEditing(index, 'content', content)}
+                onSaveEdit={() => saveDiscussionEdit(index, 'content')}
+                onCancelEdit={cancelDiscussionEdit}
+                onSetEditContent={setDiscussionEditContent}
+              />
               
               {/* Add Reply Section with Mood Selection */}
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
@@ -159,14 +180,24 @@ const PreviewContentDisplay: React.FC<PreviewContentDisplayProps> = ({
                 <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-space-grotesk font-semibold text-sm text-blue-800">Generated Replies ({item.replies.length}):</h4>
-                    {item.replies.length > 3 && (
-                      <button
-                        onClick={() => onToggleExpandReplies(index)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
-                      >
-                        {expandedReplies[index] ? 'Show Less' : 'Show All'}
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {item.replies.length > 0 && onClearReplies && (
+                        <button
+                          onClick={() => onClearReplies(index)}
+                          className="text-xs text-red-600 hover:text-red-800 font-semibold"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                      {item.replies.length > 3 && (
+                        <button
+                          onClick={() => onToggleExpandReplies(index)}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          {expandedReplies[index] ? 'Show Less' : 'Show All'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-3">
                     {(expandedReplies[index] ? item.replies : item.replies.slice(0, 3)).map((reply: any, replyIdx: any) => {

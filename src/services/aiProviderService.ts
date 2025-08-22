@@ -11,6 +11,7 @@ import {
 import { PersonalityService } from './personalityService';
 import { MoodService } from './moodService';
 import { SchedulingService } from './schedulingService';
+import { HumanizationService } from './humanizationService';
 
 export class AIProviderService {
   static async generateReply(
@@ -110,7 +111,11 @@ export class AIProviderService {
       return this.generateMockReply(discussionData, selectedUser, selectedMood, timingConfig);
     }
 
-    const replyContent = this.parseAIResponse(aiOutput);
+    let replyContent = this.parseAIResponse(aiOutput);
+    
+    // Apply humanization to make the reply sound more natural
+    const humanizationIntensity = HumanizationService.getIntensityForStyle(selectedUser.writingStyle);
+    replyContent = HumanizationService.humanizeText(replyContent, humanizationIntensity);
     
     return this.createReplyObject(
       selectedUser, 
@@ -226,45 +231,65 @@ export class AIProviderService {
       'professional_educational': [
         "honestly this aligns really well with what ive seen in charts over the years ✨",
         "yep this is pretty much textbook for how these transits work... seen it so many times",
-        "from my experience this usually means big changes coming, like major ones",
-        "the timing here is pretty interesting ngl, especially with everything else happening",
-        "ive noticed similar patterns with clients lately... something is definitely shifting",
-        "this resonates with traditional interpretations but the modern twist is spot on"
+        "from my experiance this usually means big changes comming, like major ones",
+        "the timing here is pretty intresting ngl, especially with everything else happening",
+        "ive noticed similar patterns with clients lately... somthing is definitely shifting",
+        "this resonates with traditional interpretations but teh modern twist is spot on",
+        "wait no actually... this reminds me of what we saw in 2019 with similar aspects",
+        "tbh ive been seeing this exact pattern show up in readings lately and its... wow",
+        "ngl this is giving me flashbacks to my astro mentor who always said...",
+        "the correlation here is undeniable but i mean... timing could be coincidence? idk"
       ],
       'enthusiastic_personal': [
         "omg YES this is literally my life right now!! 😍✨",
-        "wait this gave me actual chills... explains so much about whats been happening",
-        "YESSS finally someone said it!! this resonates so hard",
+        "wait this gave me actual chills... explains so much about whats been hapening",
+        "YESSS finally someone said it!! this resonates so freaking hard",
         "this gives me hope tbh... been feeling this energy shift too 💫",
         "the timing of seeing this post tho... universe is speaking fr",
         "im totally feeling this!! like everything is clicking into place",
-        "this is so spot on its scary... been noticing these changes recently"
+        "this is so spot on its scary... been noticing these changes recntly",
+        "literally crying rn bc this explains everything ive been going thru 😭",
+        "wait hold up... this is exactly what my friend was telling me about!!",
+        "OMG stop it this is too accurate... like how did you even know??",
+        "im shook ngl... this post just changed my whole perspective on everything"
       ],
       'analytical_questioning': [
         "this is interesting but tbh id love to see some data backing this up 🤔",
         "the correlation seems real but whats the sample size here?",
-        "ngl this warrants more investigation... curious about the methodology",
+        "ngl this warants more investigation... curious about the methodology",
         "would be more convincing with proper controls but still intriguing",
         "skeptical part of me wants peer review but the patterns are there 📊",
-        "data scientist in me needs more proof but... this has been accurate in my life"
+        "data scientist in me needs more proof but... this has been accurate in my life",
+        "wait how do we account for confirmation bias tho? like genuinely curious",
+        "this is fascinating but i keep wondering about the statistical significance...",
+        "not trying to be a buzzkill but shouldnt we consider alternative explanations?",
+        "the cynic in me wants more evidence but ngl the timing is too perfect to ignore"
       ],
       'beginner_enthusiastic': [
         "wait im still learning but this makes SO much sense!! 🌙",
-        "omg as someone new to this... this is absolutely mind blowing",
+        "omg as someone new to this... this is absolutley mind blowing",
         "thank u for explaining this so clearly!! super helpful for newbies like me",
         "im a total newbie but this is blowing my mind rn 🥺",
-        "this is so cool!! never realized astrology was this detailed",
-        "just starting my astro journey and this is exactly what i needed ✨",
-        "learning so much from posts like this... keep them coming pls!"
+        "this is so cool!! never realised astrology was this detailed",
+        "just starting my astro journy and this is exactly what i needed ✨",
+        "learning so much from posts like this... keep them comming pls!",
+        "ok wait so like... does this mean what i think it means? 👀",
+        "sorry if this is a dumb question but how does this relate to my chart?",
+        "this is making me want to dive so much deeper into all of this stuff",
+        "wait no im confused... can someone explain this in simple terms? 😅"
       ],
       'specialist_timing': [
         "the timing of this is pretty wild actually... especially right now",
         "considering current planetary stuff this timing is... interesting",
-        "given whats happening astrologically this message hits different",
+        "given whats happening astrologicaly this message hits different",
         "ngl the timing for this discussion is kinda perfect...",
-        "this aligns with the current lunar phase were in... interesting",
+        "this aligns with the current lunar phase were in... intresting",
         "perfect timing considering mercury retrograde and everything 🙃",
-        "the cosmic timing of this is... honestly pretty wild"
+        "the cosmic timing of this is... honestly pretty wild",
+        "i mean the fact that this showed up now when mars is doing its thing...",
+        "timing wise this couldnt be more relevant with whats happening in the sky rn",
+        "the universe really said 'lets drop this bomb today' huh? 💣",
+        "ok but seriously the synchronicity here is giving me goosebumps..."
       ]
     };
     
@@ -293,6 +318,10 @@ export class AIProviderService {
       ];
       content = `${baseTemplate} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
     }
+    
+    // Apply humanization to mock replies too
+    const humanizationIntensity = HumanizationService.getIntensityForStyle(selectedUser.writingStyle);
+    content = HumanizationService.humanizeText(content, humanizationIntensity);
     
     return this.createReplyObject(selectedUser, content, selectedMood, discussionData, timingConfig);
   }

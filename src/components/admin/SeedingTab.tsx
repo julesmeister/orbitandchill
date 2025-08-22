@@ -285,7 +285,8 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
     handleAddReplyWrapper,
     handleDeleteReply,
     handleClearReplies,
-    handleUpdateReply
+    handleUpdateReply,
+    handleUpdateDiscussion
   } = useReplyHandlers({
     previewContent,
     selectedMoodForIndex,
@@ -397,6 +398,7 @@ const SeedingTab: React.FC<SeedingTabProps> = ({ isLoading = false }) => {
           onDeleteReply={handleDeleteReply}
           onClearReplies={handleClearReplies}
           onUpdateReply={handleUpdateReply}
+          onUpdateDiscussion={handleUpdateDiscussion}
           onMoodSelect={(index, mood) => {
             setSelectedMoodForIndex(prev => {
               const newState = { ...prev, [index]: mood };

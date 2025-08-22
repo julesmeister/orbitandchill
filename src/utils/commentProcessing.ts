@@ -3,6 +3,7 @@
 /**
  * Utility functions for processing and rephrasing Reddit comments using AI
  */
+import { HumanizationService } from '@/services/humanizationService';
 
 interface CommentWithPersona {
   originalComment: string;
@@ -215,7 +216,7 @@ export async function batchRephraseComments(
   }));
 
   // Create batch prompt for all comments
-  const systemPrompt = `You are rephrasing Reddit comments to make them unique while preserving their core meaning and sentiment. Each comment should be rephrased according to the assigned persona's writing style.
+  const systemPrompt = `You are rephrasing Reddit comments to make them sound like real people typing casually on their phones. Each comment should be rephrased according to the assigned persona's writing style with LOTS of human imperfections.
 
 CRITICAL FORMATTING: Respond with a valid JSON array. Use simple double quotes only. No markdown, no code blocks, no explanations.
 
@@ -225,14 +226,34 @@ JSON Format:
   {"originalComment": "second comment", "rephrasedComment": "rephrased version"}
 ]
 
+🚫 HUMANIZATION REQUIREMENTS (CRITICAL):
+- Include lots of typos (missing letters, wrong letters, autocorrect mistakes)
+- Use casual contractions (im, dont, cant, youre, etc.)
+- Add filler words (like, tbh, ngl, literally, actually, etc.)
+- ALWAYS start lowercase (never capitalize first letter)
+- Use internet slang and abbreviations (rn, fr, omg, wtf, etc.)
+- Drop punctuation randomly (no periods, missing commas)
+- Add trailing thoughts with "..." or incomplete sentences
+- Include occasional self-corrections like "wait no" or "actually..."
+- Use emotion/reaction words (ugh, yikes, lol, etc.)
+- Sometimes repeat letters for emphasis (sooo, reallly, yesss)
+- Make casual word choices (going → goin, nothing → nothin)
+- Add common typos (the → teh, receive → recieve, separate → seperate)
+- Use "bc" for "because", "&" for "and", "w/" for "with", etc.
+
+TYPING IMPERFECTIONS TO INCLUDE:
+- Mobile autocorrect fails and casual abbreviations everywhere
+- Stream of consciousness writing with direction changes
+- Hesitation markers like "i mean...", "like...", "idk..."
+- NO proper punctuation or capitalization (too formal!)
+
 REQUIREMENTS:
-- Keep the same meaning and sentiment
-- Use the persona's natural writing style
-- Make it sound authentic and conversational
-- Don't add new information, just rephrase
-- Maintain the original tone
-- NEVER include usernames, persona names, or author attribution in the rephrased content
-- Focus only on rephrasing the actual comment text, not identifying who said it
+- Keep the same meaning and sentiment but make it sound SUPER casual
+- Use the persona's natural writing style but with heavy human imperfections
+- Make it sound like someone typing quickly on their phone
+- Don't add new information, just rephrase casually
+- Maintain the original tone but way more relaxed
+- Focus only on rephrasing the actual comment text with lots of imperfections
 
 RESPOND WITH ONLY THE JSON ARRAY.`;
 
@@ -288,9 +309,14 @@ COMMENT TO REPHRASE: "${item.originalComment}"`
     const originalData = commentsWithPersonas[i];
     
     // Use rephrased comment if available, otherwise fall back to original
-    const rephrasedComment = aiResult.rephrasedComment || originalData.originalComment;
+    let rephrasedComment = aiResult.rephrasedComment || originalData.originalComment;
     const isRephrased = !!aiResult.rephrasedComment;
     
+    // Apply additional humanization in case AI didn't follow instructions properly
+    if (rephrasedComment) {
+      const humanizationIntensity = HumanizationService.getIntensityForStyle(originalData.persona.writingStyle);
+      rephrasedComment = HumanizationService.humanizeText(rephrasedComment, humanizationIntensity);
+    }
     
     finalResults.push({
       originalComment: originalData.originalComment,

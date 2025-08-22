@@ -31,6 +31,9 @@ export default function CategoryManager({ isVisible, onToast }: CategoryManagerP
   
   const { stats } = useAdminStats();
 
+  // Debug: Log what categories we're receiving
+  console.log('CategoryManager - Categories received:', categories.map(c => ({ id: c.id, name: c.name })));
+
   const [newCategory, setNewCategory] = useState('');
   const [editingCategory, setEditingCategory] = useState<{id: string, value: string} | null>(null);
 
