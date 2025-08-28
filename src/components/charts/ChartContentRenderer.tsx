@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { useUserStore } from '@/store/userStore';
 import LoadingSpinner from '@/components/reusable/LoadingSpinner';
 import ChartDisplayContainer from './ChartDisplayContainer';
 import ChartEmptyState from './ChartEmptyState';
@@ -60,6 +61,23 @@ export default function ChartContentRenderer({
   onClearCache,
   onShare
 }: ChartContentRendererProps) {
+  const { user } = useUserStore();
+  
+  // CRITICAL: Final validation layer before rendering
+  // Prevent displaying wrong user's chart
+  if (cachedChart && user) {
+    const chartName = cachedChart.metadata?.name;
+    const currentUsername = user.username;
+    
+    // Check for obvious contamination
+    if (chartName === 'Orbit Chill' && currentUsername !== 'Orbit Chill') {
+      console.error('🚨 CRITICAL: Prevented rendering admin chart for non-admin user!');
+      console.error('🚨 Chart name:', chartName, 'User:', currentUsername);
+      // Force empty state and clear cache
+      onClearCache();
+      return <ChartEmptyState />;
+    }
+  }
   // Loading state
   if (isLoading) {
     return (

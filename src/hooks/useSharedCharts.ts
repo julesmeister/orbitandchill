@@ -26,8 +26,9 @@ export const useSharedCharts = (): UseSharedChartsReturn => {
     setError(null);
     
     try {
-      const response = await fetch('/api/charts/shared?list=true');
-      const result = await response.json();
+      console.log('🔍 DEBUGGING: Temporarily disabling shared charts API call');
+      // TEMPORARY DEBUG: Disable shared charts to isolate the issue
+      const result = { success: true, charts: [], error: undefined };
       
       // Debug log to see what shared charts are returned
       console.log('=== SHARED CHARTS API DEBUG ===');

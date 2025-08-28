@@ -3,6 +3,9 @@ import { db } from '@/store/database';
 import { BirthData } from '@/types/user';
 import { NatalChartData } from '@/types/chart';
 
+// Cache version - increment this to invalidate all old cache entries
+const CACHE_VERSION = 'v3';
+
 /**
  * Generates a unique, collision-resistant cache key for chart data
  * Always uses the current user's ID to ensure proper isolation between users
@@ -23,9 +26,10 @@ export const generateCacheKey = (
     .substring(0, 16);
   
   // Always use userId as the primary identifier to prevent cross-user conflicts
+  // Include version to invalidate old cache when security fixes are applied
   const identifier = personId ? `${userId}_person_${personId}` : `${userId}_self`;
   
-  return `natal_chart_${identifier}_${birthDataHash}`;
+  return `natal_chart_${CACHE_VERSION}_${identifier}_${birthDataHash}`;
 };
 
 /**
@@ -37,7 +41,16 @@ export class ChartCacheManager {
    */
   static async getCache(cacheKey: string): Promise<NatalChartData | null> {
     try {
-      return await db.getCache<NatalChartData>(cacheKey);
+      console.log('🔍 ChartCacheManager.getCache: Fetching key:', cacheKey);
+      const cached = await db.getCache<NatalChartData>(cacheKey);
+      if (cached) {
+        console.log('🔍 ChartCacheManager.getCache: Found cached chart:', {
+          chartId: cached.id,
+          chartName: cached.metadata?.name,
+          userId: (cached as any).userId
+        });
+      }
+      return cached;
     } catch (error) {
       console.error('Error getting cache:', error);
       return null;
@@ -53,6 +66,11 @@ export class ChartCacheManager {
     ttlMinutes: number = 1440
   ): Promise<void> {
     try {
+      console.log('🔍 ChartCacheManager.setCache: Storing key:', cacheKey, {
+        chartId: chartData.id,
+        chartName: chartData.metadata?.name,
+        userId: (chartData as any).userId
+      });
       await db.setCache(cacheKey, chartData, ttlMinutes);
     } catch (error) {
       console.error('Error setting cache:', error);

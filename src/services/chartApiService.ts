@@ -144,7 +144,7 @@ export class ChartApiService {
    * Transform API chart data to local format
    */
   static transformApiChartToLocal(apiChart: ChartData): NatalChartData {
-    return {
+    const transformed: any = {
       id: apiChart.id,
       svg: apiChart.chartData,
       metadata: {
@@ -162,6 +162,11 @@ export class ChartApiService {
         chartData: apiChart.metadata?.chartData
       }
     };
+    
+    // CRITICAL: Preserve userId for validation
+    transformed.userId = apiChart.userId;
+    
+    return transformed as NatalChartData;
   }
 
   /**

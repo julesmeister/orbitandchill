@@ -55,9 +55,67 @@ export const useChartCache = (selectedPerson?: Person | null) => {
     
     try {
       // First, check local cache
+      console.log('🔍 useChartCache: Checking cache with key:', cacheKey);
       const cached = await ChartCacheManager.getCache(cacheKey);
       
       if (cached) {
+        console.log('🔍 useChartCache: Found local cache:', {
+          chartId: cached.id,
+          chartName: cached.metadata?.name,
+          chartUserId: (cached as any).userId,
+          currentUserId: user.id
+        });
+        
+        // CRITICAL: Verify the cached chart belongs to the current user
+        // Multiple validation layers to prevent cross-user contamination
+        const chartUserId = (cached as any).userId;
+        const chartName = cached.metadata?.name;
+        const currentUsername = user.username;
+        
+        // Contamination detection rules:
+        // 1. Chart has userId that doesn't match current user
+        // 2. No userId but name is "Orbit Chill" (admin) and current user isn't admin
+        // 3. No userId and chart name doesn't match current username (excluding shared charts)
+        // 4. Chart birth data doesn't match user's birth data when it should
+        const isContaminated = 
+          (chartUserId && chartUserId !== user.id) ||
+          (!chartUserId && chartName === 'Orbit Chill' && currentUsername !== 'Orbit Chill') ||
+          (!chartUserId && chartName && currentUsername && 
+           chartName !== currentUsername && 
+           !chartName.includes('Shared') && 
+           activePersonData && 
+           !ChartCacheManager.isChartDataMatching(cached, activePersonData));
+          
+        if (isContaminated) {
+          console.error('🚨 CRITICAL: Cached chart contamination detected!');
+          console.error('🚨 Current user:', user.id, 'Username:', currentUsername);
+          console.error('🚨 Chart userId:', chartUserId, 'Chart name:', chartName);
+          console.error('🚨 Active birth data:', activePersonData?.dateOfBirth, activePersonData?.timeOfBirth);
+          console.error('🚨 Clearing contaminated cache and all user cache...');
+          
+          // Clear this specific contaminated entry
+          await ChartCacheManager.deleteCache(cacheKey);
+          
+          // Also clear ALL cache for this user to ensure complete cleanup
+          await ChartCacheManager.clearUserCache(user.id);
+          
+          setCachedChart(null);
+          setHasExistingChart(false);
+          return;
+        }
+        
+        // Additional validation: Verify birth data matches if we have it
+        if (activePersonData && cached.metadata?.birthData) {
+          const dataMatches = ChartCacheManager.isChartDataMatching(cached, activePersonData);
+          if (!dataMatches) {
+            console.warn('⚠️ Cached chart birth data mismatch, clearing cache');
+            await ChartCacheManager.deleteCache(cacheKey);
+            setCachedChart(null);
+            setHasExistingChart(false);
+            return;
+          }
+        }
+        
         // Check if this is actually different from what we already have
         setCachedChart(prevChart => {
           if (ChartCacheManager.isChartDataMatching(prevChart, activePersonData)) {
@@ -68,9 +126,20 @@ export const useChartCache = (selectedPerson?: Person | null) => {
       } else {
         // Try to load from API if no local cache
         try {
+          console.log('🔍 useChartCache: DEBUG - Starting chart load for user:', user.id);
+          console.log('🔍 useChartCache: DEBUG - activePersonData:', activePersonData);
+          
           const charts = await ChartApiService.getUserCharts(user.id);
-          console.log('useChartCache: Loading charts for userId:', user.id);
-          console.log('useChartCache: Found charts:', charts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+          console.log('🔍 useChartCache: Loading charts for userId:', user.id);
+          console.log('🔍 useChartCache: Found charts:', charts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+          
+          // CRITICAL DEBUG: Check if any charts don't belong to current user
+          const invalidCharts = charts.filter(c => c.userId !== user.id);
+          if (invalidCharts.length > 0) {
+            console.error('🚨 CRITICAL: getUserCharts returned charts for different users!');
+            console.error('🚨 Current user:', user.id);
+            console.error('🚨 Invalid charts:', invalidCharts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+          }
           
           if (charts.length > 0) {
             // Find matching chart with precise coordinate matching
@@ -99,6 +168,14 @@ export const useChartCache = (selectedPerson?: Person | null) => {
             
             // Transform API chart to local format
             const chartData = ChartApiService.transformApiChartToLocal(chartToLoad);
+            
+            console.log('🔍 DEBUG: About to set cached chart:');
+            console.log('🔍 DEBUG: chartToLoad userId:', chartToLoad.userId);
+            console.log('🔍 DEBUG: current user.id:', user.id);
+            console.log('🔍 DEBUG: chartData.metadata.name:', chartData?.metadata?.name);
+            
+            // CRITICAL: Store userId with chart data for validation
+            (chartData as any).userId = chartToLoad.userId;
             
             // Cache it locally with the new key structure
             await ChartCacheManager.setCache(cacheKey, chartData, 1440);
@@ -139,6 +216,14 @@ export const useChartCache = (selectedPerson?: Person | null) => {
   const cacheChart = useCallback(async (chartData: NatalChartData, birthData: BirthData) => {
     if (!user?.id) return;
     
+    // CRITICAL: Validate chart belongs to current user before caching
+    if ((chartData as any).userId && (chartData as any).userId !== user.id) {
+      console.error('🚨 CRITICAL: Attempting to cache chart from different user!');
+      console.error('🚨 Current user:', user.id);
+      console.error('🚨 Chart userId:', (chartData as any).userId);
+      return; // Refuse to cache wrong user's chart
+    }
+    
     const cacheKey = generateCacheKey(user.id, activePerson?.id || null, birthData);
     await ChartCacheManager.setCache(cacheKey, chartData, 1440);
     setCachedChart(chartData);
@@ -163,6 +248,27 @@ export const useChartCache = (selectedPerson?: Person | null) => {
     }
   }, [cachedChart, user?.id, activePerson?.id]);
 
+  // One-time cleanup of old contaminated cache entries (with flag to prevent repeated clearing)
+  useEffect(() => {
+    const cleanupOldCache = async () => {
+      if (user?.id) {
+        // Check if we've already cleaned for this session
+        const cleanupKey = `cache_cleanup_${user.id}_v2`;
+        const alreadyCleaned = sessionStorage.getItem(cleanupKey);
+        
+        if (!alreadyCleaned) {
+          // Clear all cache for this user to remove contaminated entries
+          const cleared = await ChartCacheManager.clearUserCache(user.id);
+          if (cleared > 0) {
+            console.log('🧽 Cleaned up', cleared, 'old contaminated cache entries for user', user.id);
+          }
+          sessionStorage.setItem(cleanupKey, 'true');
+        }
+      }
+    };
+    cleanupOldCache();
+  }, [user?.id]);
+  
   // Load cached chart when dependencies change with debouncing
   useEffect(() => {
     // Create a unique string representation of the current birth data
