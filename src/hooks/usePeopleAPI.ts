@@ -247,6 +247,14 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         return;
       }
       
+      // CRITICAL FIX: Only run after initial people load is complete
+      // This prevents the race condition where adding a person triggers loadPeople
+      // which changes people.length back to 0, triggering another autoAddUser
+      if (people.length === 0 && isLoading) {
+        console.log('autoAddUser: Still loading initial people, skipping auto-add');
+        return;
+      }
+      
       // Validate user has proper ID and is not corrupted/cached admin data
       if (user.id.length < 10) {
         console.warn('autoAddUser: Invalid user ID length, skipping auto-add');
@@ -295,7 +303,9 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       }
       
       // Wait for people to load first and check if we need to auto-add
-      if (people.length === 0 && !isLoading && !isAutoAdding) {
+      // CRITICAL FIX: Only auto-add if we truly have no people AND have not found existing user person
+      // Additional fix: Ensure we have completed initial load to prevent race conditions
+      if (people.length === 0 && !isLoading && !isAutoAdding && user?.id) {
         console.log('autoAddUser: Starting auto-add process for user', user.id);
         setIsAutoAdding(true);
         
@@ -342,10 +352,15 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
     };
     
     // Only run if we have a user and people array has been loaded (not loading)
-    if (user?.id && !isLoading) {
-      autoAddUser();
-    }
-  }, [user?.id, user?.birthData, user?.username, people.length, isLoading, isAutoAdding, addPerson, people]);
+    // CRITICAL FIX: Add debouncing to prevent rapid fire execution
+    const timeoutId = setTimeout(() => {
+      if (user?.id && !isLoading) {
+        autoAddUser();
+      }
+    }, 100); // Small delay to allow state to stabilize
+    
+    return () => clearTimeout(timeoutId);
+  }, [user?.id, user?.birthData, user?.username, people.length, isLoading, isAutoAdding, addPerson]);
   
   return {
     people,

@@ -171,7 +171,9 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartCache.ts src/hooks/useChartOperations.ts src/app/api/charts/user/[userId]/route.ts src/db/services/chartService.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/usePeopleAPI.ts src/services/PersonService.ts --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/usePeopleAPI.ts src/services/PersonService.ts)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/forms/CompactNatalChartFormV2.tsx src/components/forms/NatalChartFormV2.tsx --fix)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/forms/CompactNatalChartFormV2.tsx src/components/forms/NatalChartFormV2.tsx --fix)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts src/services/chartApiService.ts src/utils/chartCache.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts src/utils/chartCache.ts src/components/charts/ChartContentRenderer.tsx --quiet)"
     ],
     "deny": [],
     "additionalDirectories": [
