@@ -3,7 +3,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import NatalChartForm, { NatalChartFormData } from '@/components/forms/NatalChartForm';
+import NatalChartForm from '@/components/forms/NatalChartForm';
+import { NatalChartFormData } from '@/hooks/useNatalChartForm';
 import ChartPreview from '@/components/charts/ChartPreview';
 import { NatalChartSectionConfig } from '@/config/sectionConfigs';
 import { User } from '@/types/user';

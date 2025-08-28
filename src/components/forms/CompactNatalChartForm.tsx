@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { Person, PersonFormData } from '../../types/people';
-import { useCompactNatalChartForm } from '../../hooks/useCompactNatalChartForm';
+import React from 'react';
+import { Person } from '../../types/people';
+import { useNatalChartForm } from '../../hooks/useNatalChartForm';
 
 // Import modular components
-import PersonFormFields from './components/PersonFormFields';
 import RelationshipSelector from './components/RelationshipSelector';
 import DateInput from './components/DateInput';
 import TimeInput from './components/TimeInput';
@@ -25,78 +24,31 @@ const CompactNatalChartForm = ({
   onPersonSaved,
   onCancel
 }: CompactNatalChartFormProps) => {
-  const [isLocationFocused, setIsLocationFocused] = useState(false);
-
-  // Use the comprehensive form hook
+  
+  // Use the unified form hook
   const {
     formData,
     relationship,
     notes,
     isDefault,
+    isLocationFocused,
     isSaving,
     handleInputChange,
     handleRelationshipChange,
     handleNotesChange,
     handleIsDefaultChange,
     handleSubmit,
-    handleCancel,
+    handleLocationFocus,
+    handleLocationBlur,
     dateTimeInput,
     locationSearch,
     isFormValid,
-    validationErrors,
-    relationshipOptions
-  } = useCompactNatalChartForm({
+    statusToast
+  } = useNatalChartForm({
+    mode: 'person',
     editingPerson,
-    onPersonSaved,
-    onCancel
+    onPersonSaved
   });
-
-  // Handle location input changes with focus management
-  const handleLocationInputChange = useCallback((value: string) => {
-    locationSearch.handleLocationInputChange(value);
-  }, [locationSearch]);
-
-  const handleLocationFocus = useCallback(() => {
-    setIsLocationFocused(true);
-  }, []);
-
-  const handleLocationBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    // Only blur if not clicking on dropdown
-    if (!locationSearch.dropdownRef.current?.contains(e.relatedTarget as Node)) {
-      setTimeout(() => setIsLocationFocused(false), 150);
-    }
-  }, [locationSearch]);
-
-  // The form loading is now handled by useCompactNatalChartForm hook
-
-  // Handler functions are now provided by useCompactNatalChartForm hook
-
-  // All handler functions and data are now managed by the hook
-
-  // Window focus handling for location dropdown
-  React.useEffect(() => {
-    const handleWindowFocus = () => {
-      if (isLocationFocused && !locationSearch.locationInputRef.current?.matches(':focus')) {
-        setIsLocationFocused(false);
-      }
-    };
-
-    const handleWindowBlur = () => {
-      setIsLocationFocused(false);
-    };
-
-    window.addEventListener('focus', handleWindowFocus);
-    window.addEventListener('blur', handleWindowBlur);
-    
-    return () => {
-      window.removeEventListener('focus', handleWindowFocus);
-      window.removeEventListener('blur', handleWindowBlur);
-    };
-  }, [isLocationFocused, locationSearch]);
-
-  // Form validation and submission are handled by the hook
-
-  // Relationship icons are handled by the RelationshipSelector component
 
   return (
     <div className="w-full bg-white" style={{ overflow: 'visible' }}>
@@ -151,14 +103,14 @@ const CompactNatalChartForm = ({
           locationOptions={locationSearch.locationOptions}
           showLocationDropdown={locationSearch.showLocationDropdown && isLocationFocused}
           isLoadingLocations={locationSearch.isLoadingLocations}
-          onLocationInputChange={handleLocationInputChange}
-          onLocationSelect={(location: any) => locationSearch.handleLocationSelect(location)}
+          onLocationInputChange={locationSearch.handleLocationInputChange}
+          onLocationSelect={locationSearch.handleLocationSelect}
           onFocus={handleLocationFocus}
           onBlur={handleLocationBlur}
           required
         />
 
-        {/* Notes Section - Using PersonFormFields component */}
+        {/* Notes Section */}
         <div className="p-4 border-b border-black">
           <label className="synapsas-label mb-2 block">
             Notes (Optional)
@@ -177,7 +129,7 @@ const CompactNatalChartForm = ({
           isFormValid={isFormValid}
           isSaving={isSaving}
           isEditing={!!editingPerson}
-          onCancel={handleCancel}
+          onCancel={onCancel}
           onSubmit={handleSubmit}
         />
       </form>

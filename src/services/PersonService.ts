@@ -53,6 +53,8 @@ export class PersonService {
    * Create a new person with business logic
    */
   static async createPerson(request: CreatePersonRequest): Promise<ServiceResult<Person>> {
+    let sanitizedData: any = null;
+    
     try {
       // Check memory pressure before heavy operations
       await checkAndHandleMemoryPressure();
@@ -67,7 +69,7 @@ export class PersonService {
         };
       }
 
-      const sanitizedData = validation.sanitizedData!;
+      sanitizedData = validation.sanitizedData!;
 
       // Check for duplicate birth data
       console.log('PersonService.createPerson: Checking for duplicate person', {

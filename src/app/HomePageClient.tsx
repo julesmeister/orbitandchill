@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { NatalChartFormData } from '@/components/forms/NatalChartForm';
+import { NatalChartFormData } from '@/hooks/useNatalChartForm';
 
 // Lazy load heavy components for better initial load performance
 const ClientWorldMap = lazy(() => import('@/components/ClientWorldMap'));

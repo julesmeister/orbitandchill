@@ -1,24 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Location } from '../types';
+import { LocationOption } from '../types';
 
 interface UseLocationSearchReturn {
   locationQuery: string;
   setLocationQuery: (query: string) => void;
-  locationOptions: Location[];
+  locationOptions: LocationOption[];
   showLocationDropdown: boolean;
   setShowLocationDropdown: (show: boolean) => void;
   isLoadingLocations: boolean;
   locationInputRef: React.RefObject<HTMLInputElement | null>;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
-  handleLocationSelect: (location: Location) => void;
+  handleLocationSelect: (location: LocationOption) => void;
   handleLocationInputChange: (value: string) => void;
 }
 
 export const useLocationSearch = (
-  onLocationSelect?: (location: Location) => void
+  onLocationSelect?: (location: LocationOption) => void
 ): UseLocationSearchReturn => {
   const [locationQuery, setLocationQuery] = useState('');
-  const [locationOptions, setLocationOptions] = useState<Location[]>([]);
+  const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +66,7 @@ export const useLocationSearch = (
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLocationSelect = (location: Location) => {
+  const handleLocationSelect = (location: LocationOption) => {
     setLocationQuery(location.display_name);
     setShowLocationDropdown(false);
     onLocationSelect?.(location);

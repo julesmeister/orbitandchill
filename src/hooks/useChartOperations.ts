@@ -56,7 +56,7 @@ export const useChartOperations = (
 
     // Use formData if provided, otherwise use active person data
     const dataToUse = formData || (activePersonData ? {
-      name: (formData?.name || (activePerson as any)?.name || currentUser?.username || 'Natal Chart') as string,
+      name: ((activePerson as any)?.name || currentUser?.username || 'Natal Chart') as string,
       dateOfBirth: activePersonData.dateOfBirth,
       timeOfBirth: activePersonData.timeOfBirth,
       locationOfBirth: activePersonData.locationOfBirth,

@@ -46,7 +46,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error(`API - Failed to update person ${id}:`, error);
+    console.error('API - Failed to update person:', error);
     return HttpResponseUtils.error(
       'Failed to update person',
       error instanceof Error ? error.message : 'Unknown error'
@@ -94,7 +94,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error(`API - Failed to delete person ${id}:`, error);
+    console.error('API - Failed to delete person:', error);
     return HttpResponseUtils.error(
       'Failed to delete person',
       error instanceof Error ? error.message : 'Unknown error'
@@ -148,7 +148,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error(`API - Failed to get person ${id}:`, error);
+    console.error('API - Failed to get person:', error);
     return HttpResponseUtils.error(
       'Failed to get person',
       error instanceof Error ? error.message : 'Unknown error'
