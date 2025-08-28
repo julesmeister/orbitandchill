@@ -43,6 +43,13 @@ export interface Location {
   importance: number;
 }
 
+export interface LocationOption {
+  place_id: string;
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
 // Form validation utility types
 export type FormField<T> = keyof T;
 export type FormErrors<T> = Partial<Record<keyof T, string>>;

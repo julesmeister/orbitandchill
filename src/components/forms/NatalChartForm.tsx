@@ -43,10 +43,26 @@ const NatalChartForm = ({
   editingPerson = null,
   onPersonSaved
 }: NatalChartFormProps) => {
+  // Removed excessive render logging for performance
+  
   const router = useRouter();
-  const { user, updateBirthData, hasStoredData, isProfileComplete } = useUserStore();
-  const { addPerson, updatePerson } = usePeopleStore();
+  
+  // Use selective store subscriptions to prevent unnecessary re-renders
+  const user = useUserStore(state => state.user);
+  const userId = useUserStore(state => state.user?.id); // Extract ID separately for stability
+  const userBirthData = useUserStore(state => state.user?.birthData); // Extract birth data separately
+  const userUsername = useUserStore(state => state.user?.username); // Extract username separately
+  const updateBirthData = useUserStore(state => state.updateBirthData);  
+  const hasStoredData = useUserStore(state => state.hasStoredData);
+  const isProfileComplete = useUserStore(state => state.isProfileComplete);
+  
+  const addPerson = usePeopleStore(state => state.addPerson);
+  const updatePerson = usePeopleStore(state => state.updatePerson);
+  
+  // useNatalChart is a custom hook that returns an object
   const { cachedChart, generateChart, isGenerating: isChartGenerating, hasExistingChart, isLoadingCache } = useNatalChart();
+  
+  // Removed store value logging for performance
 
   const [formData, setFormData] = useState<NatalChartFormData>({
     name: '',
@@ -141,23 +157,34 @@ const NatalChartForm = ({
     });
   }, [mode, debouncedUpdateBirthData]);
 
+  // Ensure anonymous user exists on mount for user mode
+  useEffect(() => {
+    if (mode === 'user' && !userId) {
+      const ensureUser = async () => {
+        const { ensureAnonymousUser } = useUserStore.getState();
+        await ensureAnonymousUser();
+      };
+      ensureUser();
+    }
+  }, [mode, userId]);
+
   // Load saved data when user changes or when editing a person
   useEffect(() => {
-    if (mode === 'user' && user?.birthData) {
+    if (mode === 'user' && userBirthData) {
       setFormData({
-        name: user.username || '',
-        dateOfBirth: user.birthData.dateOfBirth || '',
-        timeOfBirth: user.birthData.timeOfBirth || '',
-        locationOfBirth: user.birthData.locationOfBirth || '',
-        coordinates: user.birthData.coordinates || { lat: '', lon: '' },
+        name: userUsername || '',
+        dateOfBirth: userBirthData.dateOfBirth || '',
+        timeOfBirth: userBirthData.timeOfBirth || '',
+        locationOfBirth: userBirthData.locationOfBirth || '',
+        coordinates: userBirthData.coordinates || { lat: '', lon: '' },
       });
       
-      if (user.birthData.locationOfBirth && !isUserTypingLocation) {
-        setLocationQuery(user.birthData.locationOfBirth);
+      if (userBirthData.locationOfBirth && !isUserTypingLocation) {
+        setLocationQuery(userBirthData.locationOfBirth);
       }
-      if (user.birthData.timeOfBirth && !isUserTypingTime) {
+      if (userBirthData.timeOfBirth && !isUserTypingTime) {
         // Convert 24-hour to 12-hour inline to avoid function dependency
-        const [hours, minutes] = user.birthData.timeOfBirth.split(':');
+        const [hours, minutes] = userBirthData.timeOfBirth.split(':');
         const hour24 = parseInt(hours);
         const period = hour24 >= 12 ? 'PM' : 'AM';
         let hour12 = hour24 % 12;
@@ -168,9 +195,9 @@ const NatalChartForm = ({
           period: period
         });
       }
-      if (user.birthData.dateOfBirth) {
+      if (userBirthData.dateOfBirth) {
         // Convert date string inline to avoid function dependency
-        const [year, month, day] = user.birthData.dateOfBirth.split('-');
+        const [year, month, day] = userBirthData.dateOfBirth.split('-');
         setDateInput({
           month: parseInt(month).toString(),
           day: parseInt(day).toString(),
@@ -229,7 +256,7 @@ const NatalChartForm = ({
       setTimeInput({ hours: '', minutes: '', period: 'AM' });
       setDateInput({ month: '', day: '', year: '' });
     }
-  }, [user?.id, mode, editingPerson?.id]);
+  }, [userId, mode, editingPerson?.id]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -356,7 +383,6 @@ const NatalChartForm = ({
       const { name: _name, ...birthData } = formData;
       await updateBirthData(birthData);
     }
-
     try {
       if (mode === 'person') {
         const { name, ...birthData } = formData;
@@ -386,7 +412,16 @@ const NatalChartForm = ({
           return;
         }
 
-        const chartData = await generateChart(formData);
+        // Ensure we pass the complete form data to generateChart
+        const chartFormData = {
+          name: formData.name || userUsername || 'Natal Chart',
+          dateOfBirth: formData.dateOfBirth,
+          timeOfBirth: formData.timeOfBirth,
+          locationOfBirth: formData.locationOfBirth,
+          coordinates: formData.coordinates
+        };
+        
+        const chartData = await generateChart(chartFormData);
         
         if (chartData) {
           // Track successful chart generation
@@ -407,14 +442,32 @@ const NatalChartForm = ({
         }
       }
     } catch (error) {
-      console.error('Failed to save:', error);
+      console.error('🚨 CATCH BLOCK - Failed to save:', error);
+      console.error('🚨 Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        type: typeof error
+      });
       showError(
         "Save Failed",
         "Failed to save your data. Please check your connection and try again.",
         5000
       );
     }
-  }, [formData, onSubmit, isFormValid, cachedChart, router, mode, relationship, notes, isDefault, editingPerson, addPerson, updatePerson, onPersonSaved, generateChart, showError, showSuccess]);
+  }, [
+    // Only include primitive values and stable references
+    mode, 
+    relationship, 
+    notes, 
+    isDefault,
+    editingPerson?.id, // Only ID, not full object
+    onSubmit,
+    onPersonSaved,
+    // Remove: formData, isFormValid, cachedChart (accessed directly)
+    // Remove: router, addPerson, updatePerson, generateChart, showError, updateBirthData (stable functions)
+  ]);
+  
+  // handleSubmit optimized - dependencies reduced for performance
 
   return (
     <div className="max-w-lg">

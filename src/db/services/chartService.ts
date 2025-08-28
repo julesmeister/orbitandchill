@@ -224,13 +224,33 @@ export class ChartService {
   static async getUserCharts(userId: string): Promise<ChartData[]> {
     // Bypass resilience wrapper - direct database access
     try {
+      console.log('ChartService.getUserCharts: Querying database for userId:', userId);
+      
       const charts = await db
         .select()
         .from(natalCharts)
         .where(eq(natalCharts.userId, userId))
         .orderBy(desc(natalCharts.createdAt));
 
-      return charts.map((chart: any) => ({
+      console.log('ChartService.getUserCharts: Database returned charts:', charts.map((c: any) => ({ 
+        id: c.id, 
+        userId: c.userId, 
+        subjectName: c.subjectName, 
+        dateOfBirth: c.dateOfBirth 
+      })));
+
+      // CRITICAL FIX: Verify that all returned charts actually belong to the requested user
+      const invalidCharts = charts.filter((chart: any) => chart.userId !== userId);
+      if (invalidCharts.length > 0) {
+        console.error('ChartService.getUserCharts: WARNING - Database query returned charts that do not belong to the requested user!');
+        console.error('ChartService.getUserCharts: Requested userId:', userId);
+        console.error('ChartService.getUserCharts: Invalid charts found:', invalidCharts.map((c: any) => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+      }
+
+      // Filter to only include charts that actually belong to the user (failsafe)
+      const validCharts = charts.filter((chart: any) => chart.userId === userId);
+
+      return validCharts.map((chart: any) => ({
         ...chart,
         metadata: JSON.parse(chart.metadata),
         // Timestamps are already Date objects from Drizzle

@@ -247,6 +247,36 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         return;
       }
       
+      // Validate user has proper ID and is not corrupted/cached admin data
+      if (user.id.length < 10) {
+        console.warn('autoAddUser: Invalid user ID length, skipping auto-add');
+        return;
+      }
+      
+      // Check for suspicious admin data contamination
+      if (user.username === 'Orbit Chill' && user.email === 'orbitandchill@gmail.com') {
+        console.warn('autoAddUser: Detected admin data contamination, skipping auto-add');
+        return;
+      }
+      
+      // Validate complete birth data
+      if (!user.birthData.dateOfBirth || 
+          !user.birthData.timeOfBirth || 
+          !user.birthData.locationOfBirth ||
+          !user.birthData.coordinates?.lat || 
+          !user.birthData.coordinates?.lon) {
+        console.warn('autoAddUser: Incomplete birth data, skipping auto-add');
+        return;
+      }
+      
+      console.log('autoAddUser: Checking for existing user person', {
+        userId: user.id,
+        hasData: !!user.birthData,
+        peopleLength: people.length,
+        isLoading,
+        isAutoAdding
+      });
+      
       // Check if user already exists as a person (by birth data)
       const existingUserPerson = people.find(p => 
         p.relationship === 'self' && 
@@ -257,11 +287,16 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       );
       
       if (existingUserPerson) {
+        console.log('autoAddUser: Existing user person found, skipping auto-add', {
+          personId: existingUserPerson.id,
+          name: existingUserPerson.name
+        });
         return;
       }
       
       // Wait for people to load first and check if we need to auto-add
       if (people.length === 0 && !isLoading && !isAutoAdding) {
+        console.log('autoAddUser: Starting auto-add process for user', user.id);
         setIsAutoAdding(true);
         
         try {
@@ -273,9 +308,33 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
             notes: 'Your personal birth data',
           };
           
-          await addPerson(userPersonData);
+          console.log('autoAddUser: Adding person with data', {
+            name: userPersonData.name,
+            relationship: userPersonData.relationship,
+            hasData: !!userPersonData.birthData
+          });
+          
+          const result = await addPerson(userPersonData);
+          console.log('autoAddUser: Successfully added person', { personId: result.id });
         } catch (error) {
-          // Silent fail - the user will see the error through the UI
+          console.error('autoAddUser failed:', error);
+          
+          // Check if this is a constraint violation or conflict error
+          if (error instanceof Error && 
+              (error.message.includes('UNIQUE constraint') || 
+               error.message.includes('Person with this birth data already exists') ||
+               error.message.includes('409'))) {
+            console.log('autoAddUser: Duplicate person detected - this is expected behavior when the person already exists.');
+            // Don't treat this as an error - the person already exists
+            // Reload people to get the existing person
+            try {
+              await loadPeople();
+            } catch (reloadError) {
+              console.error('autoAddUser: Failed to reload people after duplicate detection:', reloadError);
+            }
+          } else {
+            console.error('autoAddUser: Unexpected error:', error);
+          }
         } finally {
           setIsAutoAdding(false);
         }

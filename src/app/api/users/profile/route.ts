@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new user with the specific ID (especially for Google users)
-      const now = new Date();
+      const now = new Date().toISOString();
       
       const userData = {
         id,

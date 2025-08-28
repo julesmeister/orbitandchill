@@ -203,8 +203,16 @@ export class UserService {
     return resilient.item(db, 'updateUser', async () => {
       const updateData: any = {
         ...data,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
+
+      // Handle Date objects - convert to ISO strings
+      if (data.currentLocationUpdatedAt instanceof Date) {
+        updateData.currentLocationUpdatedAt = data.currentLocationUpdatedAt.toISOString();
+      }
+      if (data.updatedAt instanceof Date) {
+        updateData.updatedAt = data.updatedAt.toISOString();
+      }
 
       // Handle JSON fields
       if (data.stelliumSigns) {

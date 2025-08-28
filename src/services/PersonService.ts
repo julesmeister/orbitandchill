@@ -48,6 +48,7 @@ export class PersonService {
     }
   }
 
+
   /**
    * Create a new person with business logic
    */
@@ -69,6 +70,14 @@ export class PersonService {
       const sanitizedData = validation.sanitizedData!;
 
       // Check for duplicate birth data
+      console.log('PersonService.createPerson: Checking for duplicate person', {
+        userId: sanitizedData.userId,
+        relationship: sanitizedData.relationship,
+        name: sanitizedData.name,
+        dateOfBirth: sanitizedData.birthData.dateOfBirth,
+        timeOfBirth: sanitizedData.birthData.timeOfBirth
+      });
+      
       const existingPerson = await PersonRepository.findDuplicate(
         sanitizedData.userId,
         sanitizedData.relationship,
@@ -76,18 +85,19 @@ export class PersonService {
       );
 
       if (existingPerson) {
+        console.log('PersonService.createPerson: Duplicate person found, returning existing', {
+          existingPersonId: existingPerson.id,
+          existingPersonName: existingPerson.name
+        });
         return {
           success: true,
           data: existingPerson // Return existing person instead of creating duplicate
         };
       }
+      
+      console.log('PersonService.createPerson: No duplicate found, proceeding to create new person');
 
-      // Handle default person logic
-      if (sanitizedData.isDefault) {
-        await PersonRepository.removeAllDefaults(sanitizedData.userId);
-      }
-
-      // Generate person ID and create person
+      // Generate person ID
       const personId = PersonDataTransformers.generatePersonId();
       const personToCreate: Omit<Person, 'createdAt' | 'updatedAt'> = {
         id: personId,
@@ -99,7 +109,10 @@ export class PersonService {
         isDefault: sanitizedData.isDefault || false
       };
 
-      const createdPerson = await PersonRepository.create(personToCreate);
+      // Use atomic operation for creating default person
+      const createdPerson = sanitizedData.isDefault 
+        ? await PersonRepository.createAsDefault(personToCreate)
+        : await PersonRepository.create(personToCreate);
 
       return {
         success: true,
@@ -107,6 +120,40 @@ export class PersonService {
       };
     } catch (error) {
       console.error('PersonService.createPerson failed:', error);
+      
+      // Handle unique constraint violation gracefully
+      if (error instanceof Error && error.message.includes('UNIQUE constraint')) {
+        console.log('PersonService.createPerson: Unique constraint violation - trying to find existing person');
+        
+        // Try to find the existing person that caused the constraint violation
+        try {
+          const existingPerson = await PersonRepository.findDuplicate(
+            sanitizedData.userId,
+            sanitizedData.relationship,
+            sanitizedData.birthData
+          );
+          
+          if (existingPerson) {
+            console.log('PersonService.createPerson: Found existing person after constraint violation', {
+              existingPersonId: existingPerson.id,
+              existingPersonName: existingPerson.name
+            });
+            return {
+              success: true,
+              data: existingPerson // Return the existing person
+            };
+          }
+        } catch (findError) {
+          console.error('PersonService.createPerson: Failed to find existing person after constraint violation:', findError);
+        }
+        
+        return {
+          success: false,
+          error: 'Person with this birth data already exists',
+          statusCode: 409 // Conflict
+        };
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to create person',
@@ -118,7 +165,7 @@ export class PersonService {
   /**
    * Update a person with business logic
    */
-  static async updatePerson(request: UpdatePersonRequest): Promise<ServiceResult<boolean>> {
+  static async updatePerson(request: UpdatePersonRequest): Promise<ServiceResult<Person>> {
     try {
       // Validate request
       const validation = PersonValidationService.validateUpdateRequest(request);
@@ -164,9 +211,23 @@ export class PersonService {
         };
       }
 
+      // Get the updated person data
+      const updatedPerson = await PersonRepository.findByIdAndUserId(
+        request.personId,
+        request.userId
+      );
+
+      if (!updatedPerson) {
+        return {
+          success: false,
+          error: 'Updated person not found',
+          statusCode: 500
+        };
+      }
+
       return {
         success: true,
-        data: true
+        data: updatedPerson
       };
     } catch (error) {
       console.error('PersonService.updatePerson failed:', error);
@@ -241,9 +302,46 @@ export class PersonService {
   }
 
   /**
-   * Get person by ID with ownership validation
+   * Get a specific person by ID and user ID
    */
-  static async getPersonById(personId: string, userId: string): Promise<ServiceResult<Person>> {
+  static async getPersonById(request: { personId: string; userId: string }): Promise<ServiceResult<Person>> {
+    try {
+      if (!request.personId || !request.userId) {
+        return {
+          success: false,
+          error: 'Person ID and User ID are required',
+          statusCode: 400
+        };
+      }
+
+      const person = await PersonRepository.findByIdAndUserId(request.personId, request.userId);
+      
+      if (!person) {
+        return {
+          success: false,
+          error: 'Person not found or access denied',
+          statusCode: 404
+        };
+      }
+
+      return {
+        success: true,
+        data: person
+      };
+    } catch (error) {
+      console.error('PersonService.getPersonById failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get person',
+        statusCode: 500
+      };
+    }
+  }
+
+  /**
+   * Get person by ID with ownership validation (legacy method)
+   */
+  static async getPersonByIdLegacy(personId: string, userId: string): Promise<ServiceResult<Person>> {
     try {
       if (!personId || !userId) {
         return {

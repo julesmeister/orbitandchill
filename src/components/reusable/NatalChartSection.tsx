@@ -34,7 +34,7 @@ const NatalChartSection: React.FC<NatalChartSectionProps> = ({
   return (
     <section className={`px-[5%] py-20 min-h-screen flex items-center ${className}`} id="natal-chart-section">
       <div className="max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 bg-white border border-black overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 bg-white border border-black">
           {/* Left Side - Form */}
           <div className="p-8 border-r border-black">
             {shouldShowChart && cachedChart ? (

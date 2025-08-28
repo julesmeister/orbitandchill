@@ -274,12 +274,24 @@ export const useUserStore = create<UserState>()(
             if (response.ok) {
               const result = await response.json();
               if (result.user) {
-                // Convert flat database structure to nested store structure
+                // Validate that server user matches local user ID to prevent data contamination
+                if (result.user.id !== localUser.id) {
+                  console.warn('loadProfile: Server user ID mismatch, skipping update', {
+                    localId: localUser.id,
+                    serverId: result.user.id
+                  });
+                  return;
+                }
+                
+                // Convert flat database structure to nested store structure with validation
                 const convertedUser = {
                   ...result.user,
                   createdAt: new Date(result.user.createdAt),
                   updatedAt: new Date(result.user.updatedAt),
                   preferredAvatar: result.user.preferredAvatar, // Include preferred avatar
+                  // Prevent admin data contamination
+                  username: result.user.username === 'Orbit Chill' ? localUser.username : result.user.username,
+                  email: result.user.email === 'orbitandchill@gmail.com' ? undefined : result.user.email,
                   birthData: result.user.dateOfBirth ? {
                     dateOfBirth: result.user.dateOfBirth,
                     timeOfBirth: result.user.timeOfBirth || '',
@@ -411,9 +423,27 @@ export const useUserStore = create<UserState>()(
               // Track anonymous user registration
               trackUserRegistration('anonymous');
               
-              // Update local state with server response
-              if (result.user) {
-                set({ user: result.user });
+              // Validate server response and preserve clean local user
+              if (result.user && result.user.id === newUser.id) {
+                // Only update with clean server fields, preserve local anonymous user structure
+                const validatedUser = {
+                  ...newUser, // Keep our clean local user as base
+                  id: result.user.id,
+                  username: result.user.username || newUser.username,
+                  authProvider: result.user.authProvider || newUser.authProvider,
+                  createdAt: result.user.createdAt ? new Date(result.user.createdAt) : newUser.createdAt,
+                  updatedAt: result.user.updatedAt ? new Date(result.user.updatedAt) : newUser.updatedAt,
+                  // Explicitly prevent admin data contamination
+                  email: result.user.email === 'orbitandchill@gmail.com' ? undefined : result.user.email,
+                  profilePictureUrl: result.user.profilePictureUrl || newUser.profilePictureUrl,
+                };
+                
+                // Additional validation - if username is admin, reset it
+                if (validatedUser.username === 'Orbit Chill') {
+                  validatedUser.username = customName || 'Anonymous';
+                }
+                
+                set({ user: validatedUser });
               }
             }
           } catch (error) {
@@ -424,6 +454,33 @@ export const useUserStore = create<UserState>()(
 
       clearProfile: async () => {
         set({ user: null });
+        
+        // Clear all localStorage cached data
+        try {
+          localStorage.removeItem('luckstrology-anonymous-id');
+          localStorage.removeItem('luckstrology-user');
+          localStorage.removeItem('userStore');
+          
+          // Clear any other cached user data
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('luckstrology-') || key.includes('user'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+        } catch (error) {
+          console.warn('Error clearing localStorage:', error);
+        }
+        
+        // Clear IndexedDB cached data
+        try {
+          const { db } = await import('../store/database');
+          await db.cache.clear();
+        } catch (error) {
+          console.warn('Error clearing IndexedDB cache:', error);
+        }
         
         // Note: For now, we keep the user in Turso database for data persistence
         // In the future, we could add a DELETE endpoint if needed

@@ -11,6 +11,7 @@ interface UseLocationSearchReturn {
   locationInputRef: React.RefObject<HTMLInputElement | null>;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   handleLocationSelect: (location: Location) => void;
+  handleLocationInputChange: (value: string) => void;
 }
 
 export const useLocationSearch = (
@@ -71,6 +72,10 @@ export const useLocationSearch = (
     onLocationSelect?.(location);
   };
 
+  const handleLocationInputChange = (value: string) => {
+    setLocationQuery(value);
+  };
+
   return {
     locationQuery,
     setLocationQuery,
@@ -81,5 +86,6 @@ export const useLocationSearch = (
     locationInputRef,
     dropdownRef,
     handleLocationSelect,
+    handleLocationInputChange,
   };
 };

@@ -37,15 +37,26 @@ export const useChartOperations = (
       return null;
     }
 
-    // Validate user exists and has valid ID
-    if (!user?.id) {
-      console.error('generateChart: User not found or invalid user ID');
-      return null;
+    // Ensure we have a user (create anonymous if needed)
+    let currentUser = user;
+    if (!currentUser?.id) {
+      console.log('generateChart: No user found, ensuring anonymous user...');
+      
+      // Try to ensure anonymous user
+      const userStore = useUserStore.getState();
+      await userStore.ensureAnonymousUser();
+      currentUser = userStore.user;
+      
+      // Check again after ensuring
+      if (!currentUser?.id) {
+        console.error('generateChart: Failed to create anonymous user');
+        return null;
+      }
     }
 
     // Use formData if provided, otherwise use active person data
     const dataToUse = formData || (activePersonData ? {
-      name: activePerson?.name || user.username || 'Natal Chart',
+      name: (formData?.name || (activePerson as any)?.name || currentUser?.username || 'Natal Chart') as string,
       dateOfBirth: activePersonData.dateOfBirth,
       timeOfBirth: activePersonData.timeOfBirth,
       locationOfBirth: activePersonData.locationOfBirth,
@@ -69,7 +80,7 @@ export const useChartOperations = (
     try {
       // Prepare API request
       const requestData: GenerateChartRequest = {
-        userId: user.id,
+        userId: currentUser.id,
         subjectName: dataToUse.name,
         dateOfBirth: dataToUse.dateOfBirth,
         timeOfBirth: dataToUse.timeOfBirth,
@@ -118,7 +129,15 @@ export const useChartOperations = (
     if (!user?.id) return [];
     
     try {
-      return await ChartApiService.getUserCharts(user.id);
+      const charts = await ChartApiService.getUserCharts(user.id);
+      console.log('useChartOperations.getUserCharts: Loading charts for userId:', user.id);
+      console.log('useChartOperations.getUserCharts: API returned charts:', charts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+      
+      // CRITICAL FIX: Filter to only return charts that belong to this user
+      const userCharts = charts.filter(chart => chart.userId === user.id);
+      console.log('useChartOperations.getUserCharts: Filtered user charts:', userCharts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+      
+      return userCharts;
     } catch (error) {
       console.error('Error fetching user charts:', error);
       // Fallback to local database

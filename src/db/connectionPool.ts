@@ -43,10 +43,10 @@ export class TursoConnectionPool {
     this.config = {
       minConnections: 1,
       maxConnections: 15,      // Increase to handle higher concurrency
-      acquireTimeoutMs: 2000,  // Reduce to 2 seconds for faster failure detection
-      idleTimeoutMs: 30000,    // Reduce to 30 seconds idle timeout  
-      maxLifetimeMs: 300000,   // Reduce to 5 minutes max lifetime
-      retryAttempts: 1,        // Reduce retry attempts for faster failure
+      acquireTimeoutMs: 10000, // Increase to 10 seconds for chart generation
+      idleTimeoutMs: 600000,   // Increase to 10 minutes for long-running operations
+      maxLifetimeMs: 1800000,  // Increase to 30 minutes max lifetime for chart generation
+      retryAttempts: 2,        // Increase retry attempts for reliability
       ...config
     };
 

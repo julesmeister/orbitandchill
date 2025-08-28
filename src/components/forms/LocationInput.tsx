@@ -69,10 +69,9 @@ const LocationInput = React.memo(({
         role="listbox"
         aria-label="Location suggestions"
         style={{
-          zIndex: 4999,
+          zIndex: 9999,
           transform: 'translateZ(0)',
-          isolation: 'isolate',
-          position: 'absolute'
+          isolation: 'isolate'
         }}
       >
         {isLoadingLocations ? (

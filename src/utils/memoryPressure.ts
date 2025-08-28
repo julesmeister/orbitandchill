@@ -24,8 +24,8 @@ class MemoryPressureManager {
   };
 
   private readonly EMERGENCY_HEAP_THRESHOLD = 0.98;  // 98% - immediate action
-  private readonly CRITICAL_HEAP_THRESHOLD = 0.95;  // 95% - more realistic threshold
-  private readonly HIGH_HEAP_THRESHOLD = 0.85;      // 85% - reasonable warning level
+  private readonly CRITICAL_HEAP_THRESHOLD = 0.90;  // 90% - more realistic threshold  
+  private readonly HIGH_HEAP_THRESHOLD = 0.80;      // 80% - reasonable warning level
   private readonly CLEANUP_COOLDOWN = 300000;       // 5 minutes between cleanups
   private readonly MAX_CLEANUPS_PER_HOUR = 4;       // Reduced cleanup frequency
 

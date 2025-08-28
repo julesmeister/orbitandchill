@@ -24,8 +24,12 @@ export const useChartCache = (selectedPerson?: Person | null) => {
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Determine which person's data to use
+  // PRIORITY: selectedPerson > user's own birthData > defaultPerson
   const activePerson = selectedPerson || defaultPerson;
-  const activePersonData = activePerson?.birthData || user?.birthData;
+  
+  // For forms/user mode: user's birthData takes precedence over defaultPerson
+  // For people mode: person's birthData takes precedence
+  const activePersonData = selectedPerson?.birthData || user?.birthData || defaultPerson?.birthData;
 
   /**
    * Load cached chart or fetch from API
@@ -62,11 +66,33 @@ export const useChartCache = (selectedPerson?: Person | null) => {
         // Try to load from API if no local cache
         try {
           const charts = await ChartApiService.getUserCharts(user.id);
+          console.log('useChartCache: Loading charts for userId:', user.id);
+          console.log('useChartCache: Found charts:', charts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
           
           if (charts.length > 0) {
             // Find matching chart with precise coordinate matching
             const matchingChart = ChartApiService.findMatchingChart(charts, activePersonData);
-            const chartToLoad = matchingChart || charts[0];
+            console.log('useChartCache: Matching chart found:', matchingChart ? { id: matchingChart.id, userId: matchingChart.userId, subjectName: matchingChart.subjectName } : 'none');
+            
+            // CRITICAL FIX: Only use charts that actually belong to this user
+            const userCharts = charts.filter(chart => chart.userId === user.id);
+            console.log('useChartCache: Filtered user charts:', userCharts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+            
+            if (userCharts.length === 0) {
+              console.log('useChartCache: No user-specific charts found, clearing cached chart');
+              setCachedChart(null);
+              setHasExistingChart(false);
+              return;
+            }
+            
+            const userMatchingChart = userCharts.find(chart => 
+              chart.dateOfBirth === activePersonData.dateOfBirth &&
+              chart.timeOfBirth === activePersonData.timeOfBirth &&
+              Math.abs(chart.latitude - parseFloat(activePersonData.coordinates.lat)) < 0.0001 &&
+              Math.abs(chart.longitude - parseFloat(activePersonData.coordinates.lon)) < 0.0001
+            );
+            
+            const chartToLoad = userMatchingChart || userCharts[0];
             
             // Transform API chart to local format
             const chartData = ChartApiService.transformApiChartToLocal(chartToLoad);

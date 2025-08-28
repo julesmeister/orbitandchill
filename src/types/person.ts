@@ -81,6 +81,17 @@ export interface PersonRow {
 }
 
 /**
+ * Form data interface
+ */
+export interface PersonFormData {
+  name: string;
+  relationship: string;
+  birthData: BirthData;
+  notes?: string;
+  isDefault?: boolean;
+}
+
+/**
  * Response interfaces
  */
 export interface PersonResponse {

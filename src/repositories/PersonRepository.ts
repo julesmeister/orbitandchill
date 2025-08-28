@@ -127,6 +127,47 @@ export class PersonRepository {
   }
 
   /**
+   * Create a new person as default atomically (removes existing defaults first)
+   */
+  static async createAsDefault(personData: Omit<Person, 'createdAt' | 'updatedAt'>): Promise<Person> {
+    const timestamp = new Date().toISOString();
+    
+    // Force isDefault to true
+    const defaultPersonData = { ...personData, isDefault: true };
+    
+    const removeDefaultsQuery = SQLQueryBuilder.PersonQueries.removeAllDefaults(personData.userId);
+    const createQuery = SQLQueryBuilder.buildInsertQuery(
+      this.TABLE_NAME,
+      {
+        id: defaultPersonData.id,
+        userId: defaultPersonData.userId,
+        name: defaultPersonData.name,
+        relationship: defaultPersonData.relationship,
+        dateOfBirth: defaultPersonData.birthData.dateOfBirth,
+        timeOfBirth: defaultPersonData.birthData.timeOfBirth,
+        locationOfBirth: defaultPersonData.birthData.locationOfBirth,
+        coordinates: defaultPersonData.birthData.coordinates,
+        notes: defaultPersonData.notes,
+        isDefault: true,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+    );
+
+    // Execute both operations atomically in a transaction
+    await DatabaseConnectionService.executeTransaction([
+      { sql: removeDefaultsQuery.sql, args: removeDefaultsQuery.args },
+      { sql: createQuery.sql, args: createQuery.args }
+    ]);
+
+    return {
+      ...defaultPersonData,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+  }
+
+  /**
    * Update a person
    */
   static async update(

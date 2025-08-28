@@ -9,7 +9,7 @@ import type { Client } from '@libsql/client';
  */
 export class DatabaseConnectionService {
   private static connectionPool: Map<string, Client> = new Map();
-  private static readonly MAX_POOL_SIZE = 10;
+  private static readonly MAX_POOL_SIZE = 20;
 
   /**
    * Create a direct database connection
@@ -63,7 +63,7 @@ export class DatabaseConnectionService {
       // Validate parameters before execution
       this.validateQueryParameters(sql, args);
       
-      const client = await this.createDirectConnection();
+      const client = await this.getPooledConnection();
       
       try {
         const result = await client.execute({ sql, args });
@@ -101,7 +101,7 @@ export class DatabaseConnectionService {
    * Execute multiple queries in a transaction
    */
   static async executeTransaction(queries: Array<{ sql: string; args: any[] }>): Promise<any[]> {
-    const client = await this.createDirectConnection();
+    const client = await this.getPooledConnection();
     
     try {
       // Begin transaction

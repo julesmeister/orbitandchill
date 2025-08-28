@@ -163,7 +163,15 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartCache.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartOperations.ts src/hooks/useChartPage.ts --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartOperations.ts src/hooks/useChartPage.ts)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartOperations.ts src/hooks/useChartPage.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/forms/CompactNatalChartForm.tsx src/hooks/useCompactNatalChartForm.ts src/hooks/useDateTimeInput.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useNatalChartForm.ts src/components/forms/CompactNatalChartFormV2.tsx src/components/forms/NatalChartFormV2.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts src/hooks/useChartOperations.ts src/hooks/useNatalChartForm.ts src/components/forms/NatalChartForm.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/store/userStore.ts src/hooks/usePeopleAPI.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartCache.ts src/hooks/useChartOperations.ts src/app/api/charts/user/[userId]/route.ts src/db/services/chartService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/usePeopleAPI.ts src/services/PersonService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/usePeopleAPI.ts src/services/PersonService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/forms/CompactNatalChartFormV2.tsx src/components/forms/NatalChartFormV2.tsx --fix)"
     ],
     "deny": [],
     "additionalDirectories": [
