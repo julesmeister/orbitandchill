@@ -31,6 +31,12 @@ export const useChartOperations = (
     formData?: GenerateChartParams,
     forceRegenerate: boolean = false
   ): Promise<NatalChartData | null> => {
+    // Prevent concurrent generations unless force regenerating
+    if (isGenerating && !forceRegenerate) {
+      console.log('generateChart: Already generating, skipping duplicate request');
+      return null;
+    }
+
     // Validate user exists and has valid ID
     if (!user?.id) {
       console.error('generateChart: User not found or invalid user ID');
@@ -103,7 +109,7 @@ export const useChartOperations = (
     } finally {
       setIsGenerating(false);
     }
-  }, [user?.id, activePerson?.name, user?.username, activePersonData, onChartCached]);
+  }, [user?.id, activePerson?.name, user?.username, activePersonData, onChartCached, isGenerating]);
 
   /**
    * Get all charts for current user

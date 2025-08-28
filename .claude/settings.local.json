@@ -159,7 +159,11 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/admin/seeding/PreviewContentDisplay.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useInlineEditor.ts src/hooks/useDiscussionEditor.ts src/hooks/useReplyEditor.ts --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useInlineEditor.ts src/hooks/useDiscussionEditor.ts src/hooks/useReplyEditor.ts)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/services/humanizationService.ts src/services/aiProviderService.ts src/components/admin/seeding/discussion/ReplyCard.tsx)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/services/humanizationService.ts src/services/aiProviderService.ts src/components/admin/seeding/discussion/ReplyCard.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartCache.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartOperations.ts src/hooks/useChartPage.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useChartOperations.ts src/hooks/useChartPage.ts)"
     ],
     "deny": [],
     "additionalDirectories": [

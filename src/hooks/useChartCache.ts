@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useUserStore } from '@/store/userStore';
 import { usePeopleStore } from '@/store/peopleStore';
 import { BirthData } from '@/types/user';
@@ -18,6 +18,10 @@ export const useChartCache = (selectedPerson?: Person | null) => {
   const [cachedChart, setCachedChart] = useState<NatalChartData | null>(null);
   const [hasExistingChart, setHasExistingChart] = useState(false);
   const [isLoadingCache, setIsLoadingCache] = useState(false);
+  
+  // Use a ref to track the last loaded birth data to prevent unnecessary reloads
+  const lastLoadedDataRef = useRef<string>('');
+  const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Determine which person's data to use
   const activePerson = selectedPerson || defaultPerson;
@@ -32,19 +36,13 @@ export const useChartCache = (selectedPerson?: Person | null) => {
         !activePersonData?.coordinates?.lat || !activePersonData?.coordinates?.lon) {
       setHasExistingChart(false);
       setIsLoadingCache(false);
+      setCachedChart(null);
       return;
     }
 
     // Generate secure cache key
     const cacheKey = generateCacheKey(user.id, activePerson?.id || null, activePersonData);
     
-    // Check if we already have this exact chart cached
-    if (ChartCacheManager.isChartDataMatching(cachedChart, activePersonData)) {
-      setHasExistingChart(true);
-      setIsLoadingCache(false);
-      return;
-    }
-
     setIsLoadingCache(true);
     setHasExistingChart(true);
     
@@ -53,7 +51,13 @@ export const useChartCache = (selectedPerson?: Person | null) => {
       const cached = await ChartCacheManager.getCache(cacheKey);
       
       if (cached) {
-        setCachedChart(cached);
+        // Check if this is actually different from what we already have
+        setCachedChart(prevChart => {
+          if (ChartCacheManager.isChartDataMatching(prevChart, activePersonData)) {
+            return prevChart; // Keep existing if it matches
+          }
+          return cached; // Update with new cached data
+        });
       } else {
         // Try to load from API if no local cache
         try {
@@ -70,17 +74,25 @@ export const useChartCache = (selectedPerson?: Person | null) => {
             // Cache it locally with the new key structure
             await ChartCacheManager.setCache(cacheKey, chartData, 1440);
             setCachedChart(chartData);
+          } else {
+            // No charts found, clear cached chart
+            setCachedChart(null);
+            setHasExistingChart(false);
           }
         } catch (error) {
           console.error('useChartCache: Error loading charts from API:', error);
+          setCachedChart(null);
+          setHasExistingChart(false);
         }
       }
     } catch (error) {
       console.error('Error loading cached chart:', error);
+      setCachedChart(null);
+      setHasExistingChart(false);
     } finally {
       setIsLoadingCache(false);
     }
-  }, [user?.id, activePerson?.id, activePersonData, cachedChart]);
+  }, [user?.id, activePerson?.id, activePersonData]);
 
   /**
    * Clear all cache for current user
@@ -122,10 +134,46 @@ export const useChartCache = (selectedPerson?: Person | null) => {
     }
   }, [cachedChart, user?.id, activePerson?.id]);
 
-  // Load cached chart when dependencies change
+  // Load cached chart when dependencies change with debouncing
   useEffect(() => {
-    loadCachedChart();
-  }, [loadCachedChart]);
+    // Create a unique string representation of the current birth data
+    const currentDataString = activePersonData ? 
+      `${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${activePersonData.coordinates?.lat}_${activePersonData.coordinates?.lon}` : 
+      '';
+    
+    // Skip if this is the same data we just loaded
+    if (currentDataString === lastLoadedDataRef.current) {
+      return;
+    }
+    
+    // Clear any pending load
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+    
+    // If we don't have complete data, clear immediately
+    if (!activePersonData?.dateOfBirth || !activePersonData?.timeOfBirth || 
+        !activePersonData?.coordinates?.lat || !activePersonData?.coordinates?.lon) {
+      setHasExistingChart(false);
+      setIsLoadingCache(false);
+      setCachedChart(null);
+      lastLoadedDataRef.current = '';
+      return;
+    }
+    
+    // Debounce the load to prevent rapid reloads when typing
+    loadTimeoutRef.current = setTimeout(() => {
+      lastLoadedDataRef.current = currentDataString;
+      loadCachedChart();
+    }, 200); // Reduced to 200ms for faster response
+    
+    // Cleanup timeout on unmount or when dependencies change
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+    };
+  }, [activePersonData, loadCachedChart]);
 
   return {
     cachedChart,

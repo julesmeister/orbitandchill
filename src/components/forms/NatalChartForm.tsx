@@ -381,6 +381,7 @@ const NatalChartForm = ({
         }
       } else {
         if (cachedChart) {
+          // Navigate immediately if chart is cached
           router.push('/chart');
           return;
         }
@@ -391,16 +392,8 @@ const NatalChartForm = ({
           // Track successful chart generation
           trackChartGeneration('natal');
           
-          // Show brief success message before redirecting
-          showSuccess(
-            "Chart Generated!",
-            "Your natal chart has been generated successfully. Redirecting...",
-            2000
-          );
-          // Delay redirect to show success message
-          setTimeout(() => {
-            router.push('/chart');
-          }, 1500);
+          // Navigate immediately - no delays
+          router.push('/chart');
         } else {
           showError(
             "Chart Generation Failed",
