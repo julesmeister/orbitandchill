@@ -30,11 +30,12 @@ export const useReplyEditor = (
   };
 
   const saveEdit = (discussionIndex: number, replyId: string) => {
-    if (editor.editingItem) {
-      // Update the identifier with replyId before saving
-      editor.startEditing({ ...editor.editingItem, replyId }, editor.editContent);
+    // Directly call the update callback with the proper identifier including replyId
+    if (onUpdateReply && editor.editContent.trim()) {
+      onUpdateReply(discussionIndex, replyId, editor.editContent.trim());
     }
-    editor.saveEdit();
+    // Clear the editing state
+    editor.cancelEdit();
   };
 
   const isEditing = (discussionIndex: number, replyIndex: number) => {
