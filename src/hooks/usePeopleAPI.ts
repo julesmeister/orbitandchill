@@ -33,8 +33,8 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   
   // Hook initialization logging removed for cleaner output
   
-  // Computed values
-  const defaultPerson = people.find(p => p.isDefault) || null;
+  // Computed values - CRITICAL FIX: Only find default person for current user
+  const defaultPerson = people.find(p => p.isDefault && p.userId === user?.id) || null;
   const selectedPerson = selectedPersonId ? people.find(p => p.id === selectedPersonId) || null : null;
   
   // Load people from API

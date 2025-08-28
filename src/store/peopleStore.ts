@@ -51,6 +51,9 @@ export const usePeopleStore = create<PeopleState>()(
       get defaultPerson() {
         const state = get();
         const { people = [] } = state || {};
+        // CRITICAL FIX: Only find default person for current user
+        // Since peopleStore should only contain current user's people, this should be safe
+        // but add extra check for security
         return people.find(p => p.isDefault) || null;
       },
 

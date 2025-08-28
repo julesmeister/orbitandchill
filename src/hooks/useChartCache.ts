@@ -24,12 +24,15 @@ export const useChartCache = (selectedPerson?: Person | null) => {
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Determine which person's data to use
-  // PRIORITY: selectedPerson > user's own birthData > defaultPerson
-  const activePerson = selectedPerson || defaultPerson;
+  // PRIORITY: selectedPerson > user's own birthData > defaultPerson (only if same user)
+  const activePerson = selectedPerson || (defaultPerson?.userId === user?.id ? defaultPerson : null);
   
   // For forms/user mode: user's birthData takes precedence over defaultPerson
   // For people mode: person's birthData takes precedence
-  const activePersonData = selectedPerson?.birthData || user?.birthData || defaultPerson?.birthData;
+  // CRITICAL FIX: Only use defaultPerson birthData if it belongs to current user
+  const activePersonData = selectedPerson?.birthData || 
+                           user?.birthData || 
+                           (defaultPerson?.userId === user?.id ? defaultPerson?.birthData : null);
 
   /**
    * Load cached chart or fetch from API
