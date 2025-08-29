@@ -133,20 +133,20 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
     <>
       <div className="mb-6">
         <div className="bg-white border border-black">
-          <div className="flex items-center p-6 border-b border-black">
-            <div className="w-10 h-10 bg-black flex items-center justify-center mr-4">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center p-3 sm:p-6 border-b border-black">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black flex items-center justify-center mr-3 sm:mr-4">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <div>
-              <h4 className="font-space-grotesk text-xl font-bold text-black">Chart Interpretation</h4>
-              <p className="font-open-sans text-sm text-black/60">Discover the meaning behind your natal chart</p>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-space-grotesk text-lg sm:text-xl font-bold text-black">Chart Interpretation</h4>
+              <p className="font-open-sans text-xs sm:text-sm text-black/60">Discover the meaning behind your natal chart</p>
             </div>
           </div>
 
           {/* Interpretation Content */}
-          <div className="p-6 space-y-0">
+          <div className="p-3 sm:p-6 space-y-0">
             {filteredSections.map((section) => {
                 const sectionId = `section-${section.id}`;
                 

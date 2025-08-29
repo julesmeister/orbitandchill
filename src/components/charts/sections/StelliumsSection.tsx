@@ -119,15 +119,15 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
     <div className="pb-6">
       <div className="relative mb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-black flex items-center justify-center">
-              <span className="text-white text-lg">🌟</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black flex items-center justify-center">
+              <span className="text-white text-sm sm:text-lg">🌟</span>
             </div>
-            <div>
-              <h5 className="font-space-grotesk text-xl font-bold text-black">
+            <div className="min-w-0 flex-1">
+              <h5 className="font-space-grotesk text-lg sm:text-xl font-bold text-black">
                 Stelliums
               </h5>
-              <p className="font-open-sans text-sm text-black/60">Concentrated planetary energy patterns</p>
+              <p className="font-open-sans text-xs sm:text-sm text-black/60">Concentrated planetary energy patterns</p>
             </div>
           </div>
         </div>
@@ -136,35 +136,37 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
       <div className="space-y-4">
         {/* Sign Stelliums */}
         {stelliums?.signStelliums?.map((stellium) => (
-          <div key={`sign-${stellium.sign}`} className="bg-white border border-black p-5" 
+          <div key={`sign-${stellium.sign}`} className="bg-white border border-black p-3 sm:p-5" 
                style={{ backgroundColor: stelliumColors[stellium.sign] || '#f8f9fa' }}>
             <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
-                <span className="text-white text-lg">🔥</span>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">
+                <span className="text-white text-sm sm:text-lg">🔥</span>
               </div>
-              <div className="flex-1">
-                <h6 className="font-space-grotesk text-lg font-bold text-black">
+              <div className="flex-1 min-w-0">
+                <h6 className="font-space-grotesk text-base sm:text-lg font-bold text-black">
                   {stellium.sign.charAt(0).toUpperCase() + stellium.sign.slice(1)} Stellium
                 </h6>
-                <p className="font-open-sans text-sm text-black/70">
+                <p className="font-open-sans text-xs sm:text-sm text-black/70">
                   {stellium.planets.length} planets concentrated in {stellium.sign}
                 </p>
               </div>
             </div>
 
             {/* Planet Icons */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="font-open-sans text-sm text-black/80 mr-2">Planets:</span>
-              {stellium.planets.map(planet => (
-                <div key={planet.name} className="flex items-center">
-                  <span className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs mr-1">
-                    {planetIcons[planet.name] || '●'}
-                  </span>
-                  <span className="font-open-sans text-xs text-black/70 capitalize mr-2">
-                    {planet.name}
-                  </span>
-                </div>
-              ))}
+            <div className="mb-4">
+              <span className="font-open-sans text-sm text-black/80 block mb-2">Planets:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {stellium.planets.map(planet => (
+                  <div key={planet.name} className="flex items-center">
+                    <span className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs mr-1">
+                      {planetIcons[planet.name] || '●'}
+                    </span>
+                    <span className="font-open-sans text-xs text-black/70 capitalize mr-2">
+                      {planet.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <p className="font-open-sans text-sm text-black leading-relaxed">
@@ -175,35 +177,37 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
 
         {/* House Stelliums */}
         {stelliums?.houseStelliums?.map((stellium) => (
-          <div key={`house-${stellium.house}`} className="bg-white border border-black p-5" 
+          <div key={`house-${stellium.house}`} className="bg-white border border-black p-3 sm:p-5" 
                style={{ backgroundColor: getHouseColor(stellium.house) }}>
             <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
-                <span className="text-white text-lg">🏠</span>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">
+                <span className="text-white text-sm sm:text-lg">🏠</span>
               </div>
-              <div className="flex-1">
-                <h6 className="font-space-grotesk text-lg font-bold text-black">
+              <div className="flex-1 min-w-0">
+                <h6 className="font-space-grotesk text-base sm:text-lg font-bold text-black">
                   {stellium.house}th House Stellium
                 </h6>
-                <p className="font-open-sans text-sm text-black/70">
+                <p className="font-open-sans text-xs sm:text-sm text-black/70">
                   {stellium.planets.length} planets in {houseNames[stellium.house]}
                 </p>
               </div>
             </div>
 
             {/* Planet Icons */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="font-open-sans text-sm text-black/80 mr-2">Planets:</span>
-              {stellium.planets.map(planet => (
-                <div key={planet.name} className="flex items-center">
-                  <span className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs mr-1">
-                    {planetIcons[planet.name] || '●'}
-                  </span>
-                  <span className="font-open-sans text-xs text-black/70 capitalize mr-2">
-                    {planet.name}
-                  </span>
-                </div>
-              ))}
+            <div className="mb-4">
+              <span className="font-open-sans text-sm text-black/80 block mb-2">Planets:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {stellium.planets.map(planet => (
+                  <div key={planet.name} className="flex items-center">
+                    <span className="w-6 h-6 bg-black text-white flex items-center justify-center text-xs mr-1">
+                      {planetIcons[planet.name] || '●'}
+                    </span>
+                    <span className="font-open-sans text-xs text-black/70 capitalize mr-2">
+                      {planet.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <p className="font-open-sans text-sm text-black leading-relaxed">
