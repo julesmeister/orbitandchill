@@ -173,7 +173,14 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/usePeopleAPI.ts src/services/PersonService.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/forms/CompactNatalChartFormV2.tsx src/components/forms/NatalChartFormV2.tsx --fix)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts src/services/chartApiService.ts src/utils/chartCache.ts --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts src/utils/chartCache.ts src/components/charts/ChartContentRenderer.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartCache.ts src/utils/chartCache.ts src/components/charts/ChartContentRenderer.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useNatalChartForm.ts src/hooks/useChartPage.ts src/hooks/useNatalChart.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useNatalChartForm.ts src/hooks/useChartPage.ts src/hooks/useNatalChart.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/ChartTabs.tsx src/components/charts/ChartInterpretation.tsx src/components/charts/sections/StelliumsSection.tsx src/components/charts/sections/PlanetaryInfluencesSection.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/charts/ChartTabs.tsx src/components/charts/ChartInterpretation.tsx src/components/charts/sections/StelliumsSection.tsx src/components/charts/sections/PlanetaryInfluencesSection.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryInfluencesSection.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryPositionsSection.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryDignitiesSection.tsx --quiet)"
     ],
     "deny": [],
     "additionalDirectories": [

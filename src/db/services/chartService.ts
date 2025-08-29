@@ -250,7 +250,28 @@ export class ChartService {
       // Filter to only include charts that actually belong to the user (failsafe)
       const validCharts = charts.filter((chart: any) => chart.userId === userId);
 
-      return validCharts.map((chart: any) => ({
+      // Deduplicate charts using Set based on unique chart fingerprint
+      // Create fingerprint: birth data + subject name (charts with identical birth data are duplicates)
+      const uniqueCharts = new Map();
+      
+      for (const chart of validCharts) {
+        const fingerprint = `${chart.dateOfBirth}_${chart.timeOfBirth}_${chart.latitude}_${chart.longitude}_${chart.subjectName}`;
+        
+        // Keep the most recently created chart if duplicates exist
+        if (!uniqueCharts.has(fingerprint) || 
+            new Date(chart.createdAt) > new Date(uniqueCharts.get(fingerprint).createdAt)) {
+          uniqueCharts.set(fingerprint, chart);
+        }
+      }
+
+      const deduplicatedCharts = Array.from(uniqueCharts.values());
+      
+      // Log deduplication results
+      if (validCharts.length > deduplicatedCharts.length) {
+        console.log(`ChartService.getUserCharts: Deduplicated ${validCharts.length - deduplicatedCharts.length} duplicate charts for user ${userId}`);
+      }
+
+      return deduplicatedCharts.map((chart: any) => ({
         ...chart,
         metadata: JSON.parse(chart.metadata),
         // Timestamps are already Date objects from Drizzle
