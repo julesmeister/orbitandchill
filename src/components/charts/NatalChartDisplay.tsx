@@ -6,8 +6,10 @@ import { useChartTab } from '../../store/chartStore';
 import { usePDFGeneration } from '../../hooks/usePDFGeneration';
 import { getAvatarByIdentifier } from '../../utils/avatarUtils';
 import ChartTabs from './ChartTabs';
-import ChartInterpretation from './ChartInterpretation';
 import ChartActions from './ChartActions';
+
+// Use the new micro-frontend ChartInterpretation module with section controls
+const ChartInterpretation = lazy(() => import('../../app/chart/components/modules/ChartInterpretation'));
 import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
 import TransitAspectsTab from './TransitAspectsTab';
 
@@ -233,13 +235,22 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
               );
             } else if (activeTab === 'interpretation') {
               return (
-                // Interpretation View
+                // Interpretation View with Section Controls
                 <div>
-                  <ChartInterpretation 
-                    key="interpretation-stable" // Stable key
-                    birthData={stableBirthData} 
-                    chartData={stableChartData} 
-                  />
+                  <Suspense fallback={
+                    <div className="p-8 bg-white">
+                      <div className="animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+                        <div className="space-y-4">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      </div>
+                    </div>
+                  }>
+                    <ChartInterpretation />
+                  </Suspense>
                 </div>
               );
             } else if (activeTab === 'transits') {

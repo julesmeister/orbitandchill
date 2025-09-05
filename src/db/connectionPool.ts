@@ -17,8 +17,6 @@ interface PooledConnection {
 interface PoolConfig {
   minConnections: number;
   maxConnections: number;
-  acquireTimeoutMs: number;
-  idleTimeoutMs: number;
   maxLifetimeMs: number;
   retryAttempts: number;
 }
@@ -42,43 +40,23 @@ export class TursoConnectionPool {
     this.authToken = authToken;
     this.config = {
       minConnections: 1,
-      maxConnections: 15,      // Increase to handle higher concurrency
-      acquireTimeoutMs: 10000, // Increase to 10 seconds for chart generation
-      idleTimeoutMs: 600000,   // Increase to 10 minutes for long-running operations
-      maxLifetimeMs: 1800000,  // Increase to 30 minutes max lifetime for chart generation
-      retryAttempts: 2,        // Increase retry attempts for reliability
+      maxConnections: 8,       // Reduced for localhost - fewer connections = better performance
+      maxLifetimeMs: 600000,   // 10 minutes max lifetime - faster rotation
+      retryAttempts: 2,        // Fewer retries for faster failure detection
       ...config
     };
 
-    // Only initialize if we're in a runtime environment (not during build)
-    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'development') {
-      // Defer initialization to avoid build-time issues
-      process.nextTick(() => {
-        this.initialize().catch(error => {
-          console.warn('Deferred connection pool initialization failed:', error);
-        });
-      });
-    } else if (typeof window === 'undefined') {
-      // In development, initialize immediately
-      this.initialize().catch(error => {
-        console.warn('Connection pool initialization failed:', error);
-      });
-    }
+    // Don't initialize on startup - initialize lazily when first connection is needed
+    // This prevents startup failures when database is unavailable
   }
 
   /**
-   * Initialize the connection pool
+   * Initialize the connection pool lazily
    */
   private async initialize() {
     try {
-      // Create minimum number of connections
-      const connectionPromises = Array.from({ length: this.config.minConnections }, () => 
-        this.createConnection()
-      );
-      
-      await Promise.all(connectionPromises);
-      
-      // Start cleanup timer
+      // Only start cleanup timer, don't create initial connections
+      // Connections will be created on-demand
       this.startCleanupTimer();
     } catch (error) {
       console.error('❌ Failed to initialize connection pool:', error);
@@ -98,7 +76,7 @@ export class TursoConnectionPool {
         authToken: this.authToken,
       });
 
-      // Test the connection
+      // Test the connection (no timeout)
       await client.execute('SELECT 1 as test');
 
       const connection: PooledConnection = {
@@ -125,6 +103,15 @@ export class TursoConnectionPool {
   async acquireConnection(): Promise<PooledConnection> {
     if (this.isDestroyed) {
       throw new Error('Connection pool has been destroyed');
+    }
+
+    // Lazy initialization - initialize pool on first use
+    if (!this.cleanupInterval) {
+      try {
+        await this.initialize();
+      } catch (error) {
+        console.warn('Pool initialization failed on first use, continuing with direct connections');
+      }
     }
 
     // Try to find an available connection
@@ -160,7 +147,7 @@ export class TursoConnectionPool {
    * Find an available connection
    */
   private findAvailableConnection(): PooledConnection | null {
-    for (const connection of this.connections.values()) {
+    for (const [, connection] of Array.from(this.connections.entries())) {
       if (!connection.isInUse && this.isConnectionValid(connection)) {
         return connection;
       }
@@ -174,68 +161,19 @@ export class TursoConnectionPool {
   private isConnectionValid(connection: PooledConnection): boolean {
     const now = Date.now();
     const age = now - connection.createdAt;
-    const idleTime = now - connection.lastUsed;
 
-    return age < this.config.maxLifetimeMs && idleTime < this.config.idleTimeoutMs;
+    return age < this.config.maxLifetimeMs;
   }
 
   /**
-   * Wait for a connection to become available
+   * Wait for a connection to become available (no timeout)
    */
   private async waitForConnection(): Promise<PooledConnection> {
     return new Promise((resolve, reject) => {
-      const startTime = Date.now();
-      
-      const timeout = setTimeout(() => {
-        // Remove from queue
-        const index = this.waitingQueue.findIndex(item => item.resolve === resolve);
-        if (index !== -1) {
-          this.waitingQueue.splice(index, 1);
-        }
-        const waitTime = Date.now() - startTime;
-        const activeConnections = Array.from(this.connections.values()).filter(c => c.isInUse).length;
-        console.warn(`⏱️ Connection acquisition timeout after ${waitTime}ms. Queue length: ${this.waitingQueue.length}, Active connections: ${activeConnections}/${this.connections.size}`);
-        
-        // Emergency recovery: Force release connections that have been in use too long (>10 seconds)
-        const now = Date.now();
-        const stuckConnections = Array.from(this.connections.values()).filter(c => 
-          c.isInUse && (now - c.lastUsed) > 10000
-        );
-        
-        if (stuckConnections.length > 0) {
-          console.warn(`🚨 Emergency recovery: Force-releasing ${stuckConnections.length} stuck connections`);
-          stuckConnections.forEach(conn => {
-            conn.isInUse = false;
-            conn.lastUsed = now;
-          });
-          
-          // Try to fulfill the current request with a recovered connection
-          const recoveredConnection = stuckConnections[0];
-          if (recoveredConnection) {
-            recoveredConnection.isInUse = true;
-            clearTimeout(timeout);
-            resolve(recoveredConnection);
-            return;
-          }
-        }
-        
-        // If queue is too long, emergency clear some requests to prevent cascade failure
-        if (this.waitingQueue.length > 50) {
-          console.error(`🚨 Emergency queue clear: Rejecting ${Math.floor(this.waitingQueue.length / 2)} oldest requests`);
-          const requestsToReject = this.waitingQueue.splice(0, Math.floor(this.waitingQueue.length / 2));
-          requestsToReject.forEach(req => {
-            req.reject(new Error('Request cleared due to queue overflow - please retry'));
-          });
-        }
-        
-        reject(new Error('Connection acquisition timeout'));
-      }, this.config.acquireTimeoutMs);
-
       // Try to create a new connection if we haven't reached the limit
       if (this.connections.size < this.config.maxConnections) {
         this.createConnection()
           .then(connection => {
-            clearTimeout(timeout);
             connection.isInUse = true;
             resolve(connection);
           })
@@ -245,32 +183,23 @@ export class TursoConnectionPool {
             
             // Add to queue since connection creation failed
             this.waitingQueue.push({
-              resolve: (connection) => {
-                clearTimeout(timeout);
-                resolve(connection);
-              },
-              reject: (error) => {
-                clearTimeout(timeout);
-                reject(error);
-              },
+              resolve,
+              reject,
               timestamp: Date.now()
             });
           });
         return; // Don't add to queue if we're creating a connection
       }
 
-      // Only add to queue if we can't create more connections
+      // Add to queue and wait indefinitely for a connection to become available
       this.waitingQueue.push({
-        resolve: (connection) => {
-          clearTimeout(timeout);
-          resolve(connection);
-        },
-        reject: (error) => {
-          clearTimeout(timeout);
-          reject(error);
-        },
+        resolve,
+        reject,
         timestamp: Date.now()
       });
+      
+      // Log queue status for debugging
+      console.log(`🔄 Connection queued. Queue length: ${this.waitingQueue.length}, Active connections: ${Array.from(this.connections.values()).filter(c => c.isInUse).length}/${this.connections.size}`);
     });
   }
 
@@ -398,7 +327,7 @@ export class TursoConnectionPool {
     const now = Date.now();
     const connectionsToRemove: string[] = [];
 
-    for (const [id, connection] of this.connections.entries()) {
+    for (const [id, connection] of Array.from(this.connections.entries())) {
       if (!connection.isInUse && !this.isConnectionValid(connection)) {
         connectionsToRemove.push(id);
       }
@@ -442,7 +371,7 @@ export class TursoConnectionPool {
     const totalQueries = connections.reduce((sum, conn) => sum + conn.queryCount, 0);
     const now = Date.now();
     const stuckConnections = connections.filter(conn => 
-      conn.isInUse && (now - conn.lastUsed) > 30000
+      conn.isInUse && (now - conn.lastUsed) > 5000
     ).length;
 
     return {
@@ -465,8 +394,8 @@ export class TursoConnectionPool {
     const now = Date.now();
     let recoveredCount = 0;
     
-    for (const connection of this.connections.values()) {
-      if (connection.isInUse && (now - connection.lastUsed) > 15000) { // 15 seconds
+    for (const [, connection] of Array.from(this.connections.entries())) {
+      if (connection.isInUse && (now - connection.lastUsed) > 5000) { // 5 seconds
         connection.isInUse = false;
         connection.lastUsed = now;
         recoveredCount++;
@@ -537,7 +466,8 @@ let globalPool: TursoConnectionPool | null = null;
 export async function initializeConnectionPool(databaseUrl: string, authToken: string, config?: Partial<PoolConfig>) {
   // Only proceed if we have valid credentials and are in a server environment
   if (!databaseUrl || !authToken || typeof window !== 'undefined') {
-    throw new Error('Connection pool requires valid credentials and server environment');
+    console.warn('Connection pool requires valid credentials and server environment, skipping initialization');
+    return null;
   }
 
   // Check if existing pool is healthy and not destroyed
@@ -567,8 +497,9 @@ export async function initializeConnectionPool(databaseUrl: string, authToken: s
     globalPool = new TursoConnectionPool(databaseUrl, authToken, config);
     return globalPool;
   } catch (error) {
-    console.error('❌ Failed to initialize connection pool:', error);
-    throw error;
+    console.warn('❌ Failed to initialize connection pool (will use direct connections):', error);
+    // Don't throw - allow fallback to direct connections
+    return null;
   }
 }
 

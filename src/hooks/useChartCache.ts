@@ -21,18 +21,34 @@ export const useChartCache = (selectedPerson?: Person | null) => {
   
   // Use a ref to track the last loaded birth data to prevent unnecessary reloads
   const lastLoadedDataRef = useRef<string>('');
-  const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Determine which person's data to use
-  // PRIORITY: selectedPerson > user's own birthData > defaultPerson (only if same user)
+  // PRIORITY: selectedPerson > defaultPerson (only if same user and is self) > user's own birthData
   const activePerson = selectedPerson || (defaultPerson?.userId === user?.id ? defaultPerson : null);
   
-  // For forms/user mode: user's birthData takes precedence over defaultPerson
-  // For people mode: person's birthData takes precedence
-  // CRITICAL FIX: Only use defaultPerson birthData if it belongs to current user
-  const activePersonData = selectedPerson?.birthData || 
-                           user?.birthData || 
-                           (defaultPerson?.userId === user?.id ? defaultPerson?.birthData : null);
+  // CRITICAL FIX: When viewing own chart (no selectedPerson or selectedPerson is self), 
+  // prioritize fresh user birthData over potentially stale person data
+  const activePersonData = (() => {
+    // If selectedPerson exists and it's NOT representing the user's own data, use it
+    if (selectedPerson && selectedPerson.relationship !== 'self') {
+      return selectedPerson.birthData;
+    }
+    
+    // For user's own chart (selectedPerson is null or is 'self'), prioritize user birthData
+    // This ensures fresh data from forms takes precedence over stale person cache
+    if (user?.birthData?.dateOfBirth && user?.birthData?.timeOfBirth && 
+        user?.birthData?.coordinates?.lat && user?.birthData?.coordinates?.lon) {
+      return user.birthData;
+    }
+    
+    // Fall back to selectedPerson data if user data is incomplete
+    if (selectedPerson?.birthData) {
+      return selectedPerson.birthData;
+    }
+    
+    // Final fallback to defaultPerson if it belongs to current user
+    return (defaultPerson?.userId === user?.id ? defaultPerson?.birthData : null);
+  })();
 
   /**
    * Load cached chart or fetch from API
@@ -55,16 +71,9 @@ export const useChartCache = (selectedPerson?: Person | null) => {
     
     try {
       // First, check local cache
-      console.log('🔍 useChartCache: Checking cache with key:', cacheKey);
       const cached = await ChartCacheManager.getCache(cacheKey);
       
       if (cached) {
-        console.log('🔍 useChartCache: Found local cache:', {
-          chartId: cached.id,
-          chartName: cached.metadata?.name,
-          chartUserId: (cached as any).userId,
-          currentUserId: user.id
-        });
         
         // CRITICAL: Verify the cached chart belongs to the current user
         // Multiple validation layers to prevent cross-user contamination
@@ -109,9 +118,12 @@ export const useChartCache = (selectedPerson?: Person | null) => {
           const dataMatches = ChartCacheManager.isChartDataMatching(cached, activePersonData);
           if (!dataMatches) {
             console.warn('⚠️ Cached chart birth data mismatch, clearing cache');
+            console.warn('📊 Cached birth data:', cached.metadata.birthData);
+            console.warn('📊 Current birth data:', activePersonData);
             await ChartCacheManager.deleteCache(cacheKey);
             setCachedChart(null);
             setHasExistingChart(false);
+            setIsLoadingCache(false); // CRITICAL: Stop loading state so chart can regenerate
             return;
           }
         }
@@ -126,12 +138,7 @@ export const useChartCache = (selectedPerson?: Person | null) => {
       } else {
         // Try to load from API if no local cache
         try {
-          console.log('🔍 useChartCache: DEBUG - Starting chart load for user:', user.id);
-          console.log('🔍 useChartCache: DEBUG - activePersonData:', activePersonData);
-          
           const charts = await ChartApiService.getUserCharts(user.id);
-          console.log('🔍 useChartCache: Loading charts for userId:', user.id);
-          console.log('🔍 useChartCache: Found charts:', charts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
           
           // CRITICAL DEBUG: Check if any charts don't belong to current user
           const invalidCharts = charts.filter(c => c.userId !== user.id);
@@ -144,14 +151,11 @@ export const useChartCache = (selectedPerson?: Person | null) => {
           if (charts.length > 0) {
             // Find matching chart with precise coordinate matching
             const matchingChart = ChartApiService.findMatchingChart(charts, activePersonData);
-            console.log('useChartCache: Matching chart found:', matchingChart ? { id: matchingChart.id, userId: matchingChart.userId, subjectName: matchingChart.subjectName } : 'none');
             
             // CRITICAL FIX: Only use charts that actually belong to this user
             const userCharts = charts.filter(chart => chart.userId === user.id);
-            console.log('useChartCache: Filtered user charts:', userCharts.map(c => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
             
             if (userCharts.length === 0) {
-              console.log('useChartCache: No user-specific charts found, clearing cached chart');
               setCachedChart(null);
               setHasExistingChart(false);
               return;
@@ -169,10 +173,6 @@ export const useChartCache = (selectedPerson?: Person | null) => {
             // Transform API chart to local format
             const chartData = ChartApiService.transformApiChartToLocal(chartToLoad);
             
-            console.log('🔍 DEBUG: About to set cached chart:');
-            console.log('🔍 DEBUG: chartToLoad userId:', chartToLoad.userId);
-            console.log('🔍 DEBUG: current user.id:', user.id);
-            console.log('🔍 DEBUG: chartData.metadata.name:', chartData?.metadata?.name);
             
             // CRITICAL: Store userId with chart data for validation
             (chartData as any).userId = chartToLoad.userId;
@@ -259,9 +259,6 @@ export const useChartCache = (selectedPerson?: Person | null) => {
         if (!alreadyCleaned) {
           // Clear all cache for this user to remove contaminated entries
           const cleared = await ChartCacheManager.clearUserCache(user.id);
-          if (cleared > 0) {
-            console.log('🧽 Cleaned up', cleared, 'old contaminated cache entries for user', user.id);
-          }
           sessionStorage.setItem(cleanupKey, 'true');
         }
       }
@@ -276,15 +273,32 @@ export const useChartCache = (selectedPerson?: Person | null) => {
       `${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${activePersonData.coordinates?.lat}_${activePersonData.coordinates?.lon}` : 
       '';
     
-    // Skip if this is the same data we just loaded
-    if (currentDataString === lastLoadedDataRef.current) {
+    console.log('🔍 useChartCache effect triggered:', {
+      currentDataString,
+      lastLoadedData: lastLoadedDataRef.current,
+      willSkip: currentDataString === lastLoadedDataRef.current,
+      hasActivePersonData: !!activePersonData,
+      hasCachedChart: !!cachedChart,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Skip if this is the same data we just loaded AND we already have a cached chart
+    // This prevents unnecessary loads but allows loading when no chart is cached
+    if (currentDataString === lastLoadedDataRef.current && cachedChart) {
       return;
     }
     
-    // Clear any pending load
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
+    // If same data but no cached chart, we need to load
+    if (currentDataString === lastLoadedDataRef.current && !cachedChart) {
     }
+    
+    // CRITICAL FIX: If birth data has changed, immediately clear cached chart
+    // This forces fresh chart generation with new data instead of using stale cache
+    if (lastLoadedDataRef.current && currentDataString !== lastLoadedDataRef.current && cachedChart) {
+      setCachedChart(null);
+      setHasExistingChart(false);
+    }
+    
     
     // If we don't have complete data, clear immediately
     if (!activePersonData?.dateOfBirth || !activePersonData?.timeOfBirth || 
@@ -296,18 +310,9 @@ export const useChartCache = (selectedPerson?: Person | null) => {
       return;
     }
     
-    // Debounce the load to prevent rapid reloads when typing
-    loadTimeoutRef.current = setTimeout(() => {
-      lastLoadedDataRef.current = currentDataString;
-      loadCachedChart();
-    }, 200); // Reduced to 200ms for faster response
-    
-    // Cleanup timeout on unmount or when dependencies change
-    return () => {
-      if (loadTimeoutRef.current) {
-        clearTimeout(loadTimeoutRef.current);
-      }
-    };
+    // Immediate load for fastest performance
+    lastLoadedDataRef.current = currentDataString;
+    loadCachedChart();
   }, [activePersonData, loadCachedChart]);
 
   return {

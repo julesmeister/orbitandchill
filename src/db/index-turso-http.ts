@@ -3,6 +3,7 @@
 /* eslint-disable prefer-const */
 // Pure HTTP implementation for Turso without native dependencies
 import * as schema from './schema';
+import { dbCircuitBreaker } from '../utils/circuitBreaker';
 
 let client: any = null;
 let db: any = null;
@@ -13,15 +14,20 @@ import { TursoConnectionPool, initializeConnectionPool, getConnectionPool } from
 
 // Initialize Turso connection with HTTP-only client
 async function initializeTurso() {
+  const startTime = Date.now();
+  console.log('🔍 initializeTurso: Starting at', new Date().toISOString());
+  
   try {
+    console.log('🔍 initializeTurso: Loading environment variables...');
     // Try to load environment variables, with fallback loading
     let databaseUrl = process.env.TURSO_DATABASE_URL;
     let authToken = process.env.TURSO_AUTH_TOKEN;
+    console.log('🔍 initializeTurso: Environment check - hasUrl:', !!databaseUrl, 'hasToken:', !!authToken);
     
     // If environment variables are missing, try to load them manually from .env.local
     // Only attempt this on server-side (Node.js environment)
     if (!databaseUrl || !authToken) {
-      console.log('🔍 Environment variables missing, attempting manual load...');
+      console.log('🔍 initializeTurso: Environment variables missing, attempting manual load...');
       
       // Check if we're in a server environment (Node.js)
       if (typeof window === 'undefined' && typeof process !== 'undefined' && process.cwd) {
@@ -58,8 +64,8 @@ async function initializeTurso() {
     }
     
     if (!databaseUrl || !authToken) {
-      console.warn('⚠️  Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN environment variables');
-      console.warn('⚠️  Environment check:', {
+      console.warn('⚠️ initializeTurso: Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN environment variables');
+      console.warn('⚠️ initializeTurso: Environment check:', {
         hasDatabaseUrl: !!databaseUrl,
         hasAuthToken: !!authToken,
         databaseUrlLength: databaseUrl ? databaseUrl.length : 0,
@@ -69,10 +75,11 @@ async function initializeTurso() {
         nodeEnv: process.env.NODE_ENV,
         allEnvVars: Object.keys(process.env).filter(key => key.startsWith('TURSO'))
       });
-      console.warn('⚠️  Database will not be available - using fallback mode');
+      console.warn('⚠️ initializeTurso: Database will not be available - using fallback mode');
       return null;
     }
     
+    console.log('🔍 initializeTurso: Creating client...');
     // Use direct client approach for now (connection pool available on demand)
     const { createClient } = await import('@libsql/client/http');
     
@@ -80,59 +87,112 @@ async function initializeTurso() {
       url: databaseUrl,
       authToken: authToken,
     });
+    console.log('🔍 initializeTurso: Client created after', Date.now() - startTime, 'ms');
     
+    console.log('🔍 initializeTurso: Testing connection...');
     // Test connection with retry mechanism
     let retries = 3;
     while (retries > 0) {
       try {
+        const testStartTime = Date.now();
         await client.execute('SELECT 1 as test');
+        console.log('🔍 initializeTurso: Connection test successful in', Date.now() - testStartTime, 'ms');
         break; // Success, exit retry loop
-      } catch (testError) {
+      } catch (testError: any) {
         retries--;
+        console.warn(`⚠️ initializeTurso: Database connection test failed (attempt ${4 - retries}/3):`, testError?.message);
         if (retries === 0) throw testError;
-        console.warn(`⚠️ Database connection test failed, retrying... (${3 - retries}/3)`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+        console.warn(`⚠️ initializeTurso: Retrying immediately...`);
       }
     }
     
+    console.log('🔍 initializeTurso: Initializing connection pool...');
     // Initialize connection pool after successful client creation
     try {
+      const poolStartTime = Date.now();
       pool = await initializeConnectionPool(databaseUrl, authToken, {
         maxConnections: 20,        // Increase to handle higher load
-        minConnections: 2,         // Keep minimum connections ready
-        acquireTimeoutMs: 3000     // Faster timeout for queue management
+        minConnections: 2          // Keep minimum connections ready
       });
-      console.log('✅ Connection pool initialized successfully');
-    } catch (poolError) {
-      console.warn('⚠️ Connection pool initialization failed, falling back to single client:', poolError);
+      console.log('🔍 initializeTurso: Connection pool initialized in', Date.now() - poolStartTime, 'ms');
+    } catch (poolError: any) {
+      console.warn('⚠️ initializeTurso: Connection pool initialization failed, falling back to single client:', poolError?.message);
     }
     
+    const totalDuration = Date.now() - startTime;
+    console.log('🔍 initializeTurso: Completed successfully in', totalDuration, 'ms');
     return client;
-  } catch (error) {
-    console.error('❌ Failed to connect to Turso database after retries:', error);
+  } catch (error: any) {
+    const totalDuration = Date.now() - startTime;
+    console.error('🔍 initializeTurso: Failed after', totalDuration, 'ms:', error);
+    console.error('🔍 initializeTurso: Error message:', error?.message);
+    console.error('🔍 initializeTurso: Error stack:', error?.stack);
     return null;
   }
 }
 
-// Use connection pool for database operations if available
-const executeQuery = async (sql: string, args?: any[]): Promise<any> => {
-  // Try to use connection pool first
-  try {
-    const pool = getConnectionPool();
-    if (pool) {
-      return await pool.execute(sql, args);
+// Use connection pool for database operations with circuit breaker, retry logic and better error handling
+const executeQuery = async (sql: string, args?: any[], maxRetries = 3): Promise<any> => {
+  return await dbCircuitBreaker.execute(async () => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const pool = getConnectionPool();
+      if (pool) {
+        return await pool.execute(sql, args);
+      }
+    } catch (poolError: any) {
+      lastError = poolError;
+      
+      // Check if it's a server error that might be retryable
+      const isRetryableError = 
+        poolError?.code === 'SERVER_ERROR' || 
+        poolError?.cause?.status === 502 ||
+        poolError?.cause?.status === 503 ||
+        poolError?.cause?.status === 504;
+      
+      if (isRetryableError && attempt < maxRetries) {
+        console.warn(`⚠️ Database error (attempt ${attempt}/${maxRetries}):`, poolError.message);
+        console.warn(`⚠️ Retrying immediately...`);
+        continue;
+      }
+      
+      // Fall back to direct client if pool fails
+      console.warn('⚠️ Connection pool failed, using direct client:', poolError);
     }
-  } catch (poolError) {
-    // Fall back to direct client if pool fails
-    console.warn('⚠️ Connection pool failed, using direct client:', poolError);
+    
+    // Fallback to direct client with retry logic
+    try {
+      if (!client) throw new Error('Database not available');
+      
+      return args && args.length > 0 
+        ? await client.execute({ sql, args })
+        : await client.execute(sql);
+    } catch (clientError: any) {
+      lastError = clientError;
+      
+      // Check if it's a server error that might be retryable
+      const isRetryableError = 
+        clientError?.code === 'SERVER_ERROR' || 
+        clientError?.cause?.status === 502 ||
+        clientError?.cause?.status === 503 ||
+        clientError?.cause?.status === 504;
+      
+      if (isRetryableError && attempt < maxRetries) {
+        console.warn(`⚠️ Direct client error (attempt ${attempt}/${maxRetries}):`, clientError.message);
+        console.warn(`⚠️ Retrying immediately...`);
+        continue;
+      }
+      
+      // If it's the last attempt or non-retryable error, throw
+      throw clientError;
+    }
   }
   
-  // Fallback to direct client
-  if (!client) throw new Error('Database not available');
-  
-  return args && args.length > 0 
-    ? await client.execute({ sql, args })
-    : await client.execute(sql);
+  // If we exhausted all retries, throw the last error
+  throw lastError || new Error('Database query failed after all retries');
+  });
 };
 
 // Create a mock db object that uses the connection pool
@@ -874,8 +934,6 @@ const ensureInitialized = async () => {
               const pool = await initializeConnectionPool(databaseUrl, authToken, {
                 minConnections: 1,
                 maxConnections: 4,     // Conservative pool size
-                acquireTimeoutMs: 3000, // 3 second timeout
-                idleTimeoutMs: 120000,  // 2 minute idle timeout
                 maxLifetimeMs: 600000   // 10 minute max lifetime
               });
               
@@ -934,8 +992,6 @@ const startupInitialization = async () => {
         await initializeConnectionPool(databaseUrl, authToken, {
           minConnections: 1,
           maxConnections: 6,
-          acquireTimeoutMs: 4000,
-          idleTimeoutMs: 180000,  // 3 minutes
           maxLifetimeMs: 900000   // 15 minutes
         });
       }
@@ -1539,8 +1595,6 @@ export async function enableConnectionPool() {
     const pool = await initializeConnectionPool(databaseUrl, authToken, {
       minConnections: 1,
       maxConnections: 4,
-      acquireTimeoutMs: 3000,
-      idleTimeoutMs: 60000,
       maxLifetimeMs: 600000,
       retryAttempts: 2
     });
