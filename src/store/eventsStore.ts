@@ -725,12 +725,28 @@ export const useEventsStore = create<EventsState>()(
           const data = await response.json();
           if (data.success) {
             set((state) => {
+              // Remove from regular events
               const newEvents = { ...state.events };
               delete newEvents[id];
               const newEventIds = state.eventIds.filter(eventId => eventId !== id);
+              
+              // CRITICAL FIX: Also remove from generated events (events can exist in both collections)
+              const newGeneratedEvents = { ...state.generatedEvents };
+              delete newGeneratedEvents[id];
+              const newGeneratedEventIds = state.generatedEventIds.filter(eventId => eventId !== id);
+              
+              // CRITICAL FIX: Clear all cached months to prevent deleted events from reappearing on refresh
+              // The cache was preserving deleted events when the page reloaded
+              const clearedCachedMonths = new Map();
+              const clearedLoadedMonths = new Set<string>();
+              
               return { 
                 events: newEvents,
-                eventIds: newEventIds
+                eventIds: newEventIds,
+                generatedEvents: newGeneratedEvents,
+                generatedEventIds: newGeneratedEventIds,
+                cachedMonths: clearedCachedMonths,
+                loadedMonths: clearedLoadedMonths
               };
             });
           } else {

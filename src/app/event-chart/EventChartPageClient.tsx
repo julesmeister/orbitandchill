@@ -116,7 +116,7 @@ function EventChartContent() {
         console.log('🚀 Generating EVENT chart directly (no cache):', {
           eventDate,
           selectedTime,
-          location: user.birthData.locationOfBirth
+          location: user.birthData?.locationOfBirth
         });
         
         // Call API directly, bypassing all chart caching systems
