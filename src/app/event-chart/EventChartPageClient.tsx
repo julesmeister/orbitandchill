@@ -12,7 +12,8 @@ declare global {
 import { useSearchParams } from 'next/navigation';
 import { useUserStore } from '../../store/userStore';
 import { useEventsStore } from '../../store/eventsStore';
-import { useNatalChart } from '../../hooks/useNatalChart';
+import { ChartApiService } from '../../services/chartApiService';
+import { GenerateChartRequest } from '../../types/chart';
 import { useErrorToast } from '../../hooks/useErrorToast';
 import { useEventLoader } from '../../hooks/useEventLoader';
 import { useEventBookmark } from '../../hooks/useEventBookmark';
@@ -43,7 +44,7 @@ function EventChartContent() {
 
   const { user } = useUserStore();
   const { getAllEvents } = useEventsStore();
-  const { generateChart, isGenerating } = useNatalChart();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Find if this event is already in the events store  
   const existingEvent = eventDate ? findExistingEvent(Object.values(getAllEvents()), eventDate, eventTime, eventTitle) : undefined;
@@ -92,67 +93,85 @@ function EventChartContent() {
 
   const [chartData, setChartData] = useState<{ svg: string; metadata?: { chartData?: import('../../utils/natalChart').NatalChartData } } | null>(null);
 
-  // Use refs to avoid function dependencies causing loops
-  const generateChartRef = useRef(generateChart);
-  const showErrorRef = useRef(showError);
-  const clearErrorIfVisibleRef = useRef(clearErrorIfVisible);
-
-  // Update refs when functions change
+  // Generate chart when dependencies change
   useEffect(() => {
-    generateChartRef.current = generateChart;
-    showErrorRef.current = showError;
-    clearErrorIfVisibleRef.current = clearErrorIfVisible;
-  });
-
-  // Generate chart for the event date and time
-  useEffect(() => {
-    // Add client-side loop detection
-    const now = Date.now();
-    const lastCall = window.lastChartGeneration || 0;
+    if (!eventDate || !user?.id || !user?.birthData || isGenerating) return;
     
-    if (now - lastCall < 2000) {
-      console.warn('🔄 CLIENT LOOP DETECTED - Skipping chart generation', {
-        timeSinceLastCall: now - lastCall,
-        dependencies: { eventDate, eventTitle, selectedTime, hasBirthData: !!user?.birthData }
-      });
-      return;
-    }
-    
-    if (!eventDate || !user || !user.birthData) return;
-    
-    window.lastChartGeneration = now;
-
-    const executeChartGeneration = async () => {
+    const generateEventChart = async () => {
+      setIsGenerating(true);
+      
       try {
-        // TypeScript needs explicit assertion since the check is in outer scope
-        if (!user.birthData) return;
+        // Create direct API request for the event chart
+        const requestData: GenerateChartRequest = {
+          userId: user.id,
+          subjectName: `${eventTitle} - ${eventDate}`,
+          dateOfBirth: eventDate,        // Use EVENT date, not user's birth date
+          timeOfBirth: selectedTime,     // Use EVENT time, not user's birth time
+          locationOfBirth: user.birthData!.locationOfBirth,  // Use user's location
+          coordinates: user.birthData!.coordinates,          // Use user's coordinates
+          chartType: 'natal',
+          forceRegenerate: true         // Always force regeneration for events
+        };
         
-        const chartParams = buildChartParameters({
-          eventTitle,
+        console.log('🚀 Generating EVENT chart directly (no cache):', {
           eventDate,
           selectedTime,
-          userBirthData: user.birthData
+          location: user.birthData.locationOfBirth
         });
-
-        const chartResult = await generateChartRef.current(chartParams, true); // Force regeneration for different times
-        setChartData(chartResult);
-
-        // Clear any previous errors
-        clearErrorIfVisibleRef.current();
+        
+        // Call API directly, bypassing all chart caching systems
+        const result = await ChartApiService.generateChart(requestData);
+        
+        if (result?.success && result?.chart) {
+          // Debug: Log the actual API response structure
+          console.log('🔍 API Response structure:', {
+            hasChart: !!result.chart,
+            chartDataType: typeof result.chart.chartData,
+            chartDataLength: result.chart.chartData?.length,
+            chartDataPreview: result.chart.chartData?.substring(0, 100),
+            metadataType: typeof result.chart.metadata,
+            metadataKeys: result.chart.metadata ? Object.keys(result.chart.metadata) : null,
+            metadataContent: result.chart.metadata
+          });
+          
+          // Transform API response to expected format for EventChartContainer
+          const transformedChartData = {
+            svg: result.chart.chartData, // The SVG is stored in chartData field
+            metadata: {
+              chartData: result.chart.metadata.chartData // Extract the actual chart data from metadata
+            }
+          };
+          
+          console.log('🔍 Transformed chart data:', {
+            hasSvg: !!transformedChartData.svg,
+            svgLength: transformedChartData.svg?.length,
+            hasMetadata: !!transformedChartData.metadata,
+            hasChartData: !!transformedChartData.metadata?.chartData,
+            chartDataKeys: transformedChartData.metadata?.chartData ? Object.keys(transformedChartData.metadata.chartData) : null,
+            planetsCount: transformedChartData.metadata?.chartData?.planets?.length,
+            aspectsCount: transformedChartData.metadata?.chartData?.aspects?.length
+          });
+          
+          setChartData(transformedChartData);
+          clearErrorIfVisible();
+          console.log('✅ Event chart generated successfully');
+        } else {
+          throw new Error('Invalid chart data received from API');
+        }
       } catch (error) {
-        // Show error toast
-        showErrorRef.current(
-          'Chart Generation Failed',
-          error instanceof Error ? error.message : 'Unable to generate chart. Please check your birth data and try again.'
+        console.error('❌ Event chart generation failed:', error);
+        showError(
+          'Event Chart Generation Failed',
+          error instanceof Error ? error.message : 'Unable to generate event chart. Please try again.'
         );
-
-        // Clear the chart data to show the placeholder
         setChartData(null);
+      } finally {
+        setIsGenerating(false);
       }
     };
 
-    executeChartGeneration();
-  }, [eventDate, eventTitle, selectedTime, user, user?.birthData]);
+    generateEventChart();
+  }, [eventDate, eventTitle, selectedTime, user?.id, user?.birthData?.locationOfBirth, user?.birthData?.coordinates?.lat, user?.birthData?.coordinates?.lon, showError, clearErrorIfVisible]);
 
   // Validate props early
   const validation = validateEventChartProps(eventDate, user);

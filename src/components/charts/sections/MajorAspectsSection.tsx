@@ -106,11 +106,28 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
     { value: 'communication', label: 'Communication', icon: '💬' },
   ];
 
-  const typeOptions: { value: AspectType; label: string; color: string }[] = [
-    { value: 'all', label: 'All Types', color: 'bg-slate-100 text-slate-700' },
-    { value: 'harmonious', label: 'Harmonious', color: getAspectTypeStyle('harmonious').badge },
-    { value: 'challenging', label: 'Challenging', color: getAspectTypeStyle('challenging').badge },
-    { value: 'neutral', label: 'Neutral', color: getAspectTypeStyle('neutral').badge },
+  // Calculate counts for each aspect type
+  const aspectCounts = useMemo(() => {
+    const counts = {
+      all: majorAspects.length,
+      harmonious: 0,
+      challenging: 0,
+      neutral: 0
+    };
+    
+    majorAspects.forEach(aspect => {
+      const aspectInfo = getFullAspectInfo(aspect);
+      counts[aspectInfo.type]++;
+    });
+    
+    return counts;
+  }, [majorAspects]);
+
+  const typeOptions: { value: AspectType; label: string; color: string; count: number }[] = [
+    { value: 'all', label: 'All Types', color: 'bg-slate-100 text-slate-700', count: aspectCounts.all },
+    { value: 'harmonious', label: 'Harmonious', color: getAspectTypeStyle('harmonious').badge, count: aspectCounts.harmonious },
+    { value: 'challenging', label: 'Challenging', color: getAspectTypeStyle('challenging').badge, count: aspectCounts.challenging },
+    { value: 'neutral', label: 'Neutral', color: getAspectTypeStyle('neutral').badge, count: aspectCounts.neutral },
   ];
 
   if (!chartData?.aspects || majorAspects.length === 0) {
@@ -238,6 +255,12 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
                         <div className="w-1.5 h-1.5 bg-white"></div>
                       )}
                       <span className="truncate">{option.label}</span>
+                      <span className={`ml-1 px-1.5 py-0.5 text-xs font-semibold border border-current ${selectedType === option.value
+                          ? 'bg-white text-black'
+                          : 'bg-gray-100 text-gray-700'
+                        }`}>
+                        {option.count}
+                      </span>
                     </button>
                   ))}
                 </div>

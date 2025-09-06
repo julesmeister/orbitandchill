@@ -249,7 +249,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                       </div>
                     </div>
                   }>
-                    <ChartInterpretation />
+                    <ChartInterpretation chartData={stableChartData} />
                   </Suspense>
                 </div>
               );

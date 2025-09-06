@@ -22,14 +22,32 @@ const CorePersonality = lazy(() => import("@/components/charts/sections/CorePers
  * Chart interpretation module - lazy loaded with intersection observer
  * Uses virtual scrolling to only render visible sections
  */
-const ChartInterpretation = memo(function ChartInterpretation() {
-  const { cachedChart } = useChartCache();
+interface ChartInterpretationProps {
+  /** Override chart data (for event charts). If not provided, uses cached natal chart data. */
+  chartData?: import('@/utils/natalChart').NatalChartData | null;
+}
+
+const ChartInterpretation = memo(function ChartInterpretation({ chartData: propChartData }: ChartInterpretationProps = {}) {
   const { user } = useUserStore();
   const { shouldShowFeature, isFeaturePremium, features } = usePremiumFeatures();
   const { orderedSections } = useInterpretationSections();
+  
+  // If we have event/external chart data, use it directly and skip cache entirely
+  const isEventChart = propChartData !== undefined;
+  const { cachedChart } = useChartCache();
 
-  // Get chart data from cache
-  const chartData = cachedChart?.metadata?.chartData || null;
+  // Use prop chart data if provided (event charts), otherwise use cached natal chart data
+  const chartData = isEventChart ? propChartData : (cachedChart?.metadata?.chartData || null);
+  
+  // Debug logging for event charts
+  if (isEventChart) {
+    console.log('🔍 ChartInterpretation (Event Chart):', {
+      isEventChart,
+      hasPropData: !!propChartData,
+      chartDataType: typeof chartData,
+      chartDataKeys: chartData ? Object.keys(chartData) : null
+    });
+  }
   
   // Premium user check
   const userIsPremium = user?.subscriptionTier === 'premium' || false;
