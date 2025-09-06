@@ -1473,7 +1473,6 @@ export async function generateNatalChart(birthData: {
   coordinates: { lat: string; lon: string };
   locationOfBirth: string;
 }): Promise<{ svg: string; metadata: ChartMetadata }> {
-  console.log('🔍 ENTRY: generateNatalChart called with:', birthData);
   // Process birth time with proper timezone handling
   const processedTime = processBirthTime({
     dateOfBirth: birthData.dateOfBirth,

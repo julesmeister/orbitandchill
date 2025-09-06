@@ -96,8 +96,24 @@ const UserProfile = ({
       { type: "divider" as const },
     ];
 
-    // Show admin dashboard to users with admin role or master admin email
-    if (user?.role === "admin" || user?.email === 'orbitandchill@gmail.com') {
+    // Show admin dashboard to users with admin role or master admin emails
+    const MASTER_ADMIN_EMAILS = [
+      'orbitandchill@gmail.com',
+      'orbitchill@gmail.com' // Alternative admin email
+    ];
+    
+    const isAdminRole = user?.role === "admin" || user?.role === "moderator";
+    const isAdminEmail = user?.email && MASTER_ADMIN_EMAILS.includes(user.email);
+    
+    // Fallback admin check for known admin user ID and username
+    const MASTER_ADMIN_USER_IDS = ['113425479876942125321']; // Your Google ID
+    const isAdminUserId = user?.id && MASTER_ADMIN_USER_IDS.includes(user.id);
+    const isAdminUsername = user?.username === "Orbit Chill" && user?.authProvider === "google";
+    
+    const shouldShowAdmin = isAdminRole || isAdminEmail || isAdminUserId || isAdminUsername;
+    
+    
+    if (shouldShowAdmin) {
       items.push({
         type: "link" as const,
         label: "Admin Dashboard",
@@ -143,7 +159,7 @@ const UserProfile = ({
     });
 
     return items;
-  }, [isAnonymousUser, isLoading, onGoogleSignIn, onSignOut, user?.username, user?.role]);
+  }, [isAnonymousUser, isLoading, onGoogleSignIn, onSignOut, user?.username, user?.role, user?.email]);
 
   if (isMobile) {
     return (

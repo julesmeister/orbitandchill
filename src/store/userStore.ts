@@ -287,9 +287,9 @@ export const useUserStore = create<UserState>()(
                   createdAt: new Date(result.user.createdAt),
                   updatedAt: new Date(result.user.updatedAt),
                   preferredAvatar: result.user.preferredAvatar, // Include preferred avatar
-                  // Prevent admin data contamination
-                  username: result.user.username === 'Orbit Chill' ? localUser.username : result.user.username,
-                  email: result.user.email === 'orbitandchill@gmail.com' ? undefined : result.user.email,
+                  // Keep the original data from server
+                  username: result.user.username,
+                  email: result.user.email,
                   birthData: result.user.dateOfBirth ? {
                     dateOfBirth: result.user.dateOfBirth,
                     timeOfBirth: result.user.timeOfBirth || '',
@@ -431,8 +431,8 @@ export const useUserStore = create<UserState>()(
                   authProvider: result.user.authProvider || newUser.authProvider,
                   createdAt: result.user.createdAt ? new Date(result.user.createdAt) : newUser.createdAt,
                   updatedAt: result.user.updatedAt ? new Date(result.user.updatedAt) : newUser.updatedAt,
-                  // Explicitly prevent admin data contamination
-                  email: result.user.email === 'orbitandchill@gmail.com' ? undefined : result.user.email,
+                  // Keep the original email data
+                  email: result.user.email,
                   profilePictureUrl: result.user.profilePictureUrl || newUser.profilePictureUrl,
                 };
                 
