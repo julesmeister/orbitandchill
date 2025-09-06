@@ -71,6 +71,24 @@ async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg:
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if request has body content
+    const contentLength = request.headers.get('content-length');
+    const contentType = request.headers.get('content-type');
+    
+    console.log('🔍 Chart Generation API: Request headers:', {
+      contentLength,
+      contentType,
+      hasBody: contentLength !== '0'
+    });
+    
+    if (!contentLength || contentLength === '0') {
+      console.error('🔍 Chart Generation API: Empty request body');
+      return NextResponse.json(
+        { error: 'Request body is required' },
+        { status: 400 }
+      );
+    }
+    
     const body: ChartGenerationRequest = await request.json();
 
     // Only log if we detect potential issues or it's a fresh request

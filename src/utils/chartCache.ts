@@ -4,7 +4,7 @@ import { BirthData } from '@/types/user';
 import { NatalChartData } from '@/types/chart';
 
 // Cache version - increment this to invalidate all old cache entries
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v6';
 
 /**
  * Generates a unique, collision-resistant cache key for chart data
@@ -33,28 +33,35 @@ export const generateCacheKey = (
 };
 
 /**
- * Cache management utilities for chart data
+ * Cache management utilities for chart data with offline mode support
  */
 export class ChartCacheManager {
+  // Memory cache for offline fallback
+  private static memoryCache = new Map<string, { data: NatalChartData; expiry: number }>();
   /**
    * Get cached chart data
    */
   static async getCache(cacheKey: string): Promise<NatalChartData | null> {
     try {
-      console.log('🔍 ChartCacheManager.getCache: Fetching key:', cacheKey);
       const cached = await db.getCache<NatalChartData>(cacheKey);
       if (cached) {
-        console.log('🔍 ChartCacheManager.getCache: Found cached chart:', {
-          chartId: cached.id,
-          chartName: cached.metadata?.name,
-          userId: (cached as any).userId
-        });
+        console.log('✅ ChartCacheManager: Found cached chart for offline use');
+        return cached;
       }
-      return cached;
     } catch (error) {
-      console.error('Error getting cache:', error);
-      return null;
+      console.warn('⚠️ ChartCacheManager: Database cache failed, trying memory cache:', error);
     }
+    
+    // Fallback to memory cache
+    const memoryEntry = this.memoryCache.get(cacheKey);
+    if (memoryEntry && memoryEntry.expiry > Date.now()) {
+      console.log('✅ ChartCacheManager: Found chart in memory cache (offline mode)');
+      return memoryEntry.data;
+    }
+    
+    // Clean expired memory entries
+    this.cleanMemoryCache();
+    return null;
   }
 
   /**
@@ -66,14 +73,12 @@ export class ChartCacheManager {
     ttlMinutes: number = 1440
   ): Promise<void> {
     try {
-      console.log('🔍 ChartCacheManager.setCache: Storing key:', cacheKey, {
-        chartId: chartData.id,
-        chartName: chartData.metadata?.name,
-        userId: (chartData as any).userId
-      });
       await db.setCache(cacheKey, chartData, ttlMinutes);
+      console.log('✅ ChartCacheManager: Chart cached for offline use');
     } catch (error) {
-      console.error('Error setting cache:', error);
+      console.warn('⚠️ ChartCacheManager: Failed to cache chart, will operate in memory only:', error);
+      // Store in memory as fallback for offline mode
+      this.memoryCache.set(cacheKey, { data: chartData, expiry: Date.now() + (ttlMinutes * 60 * 1000) });
     }
   }
 
@@ -107,6 +112,30 @@ export class ChartCacheManager {
       await db.cache.delete(cacheKey);
     } catch (error) {
       console.error('Error deleting cache entry:', error);
+    }
+  }
+
+  /**
+   * Clean expired entries from memory cache
+   */
+  static cleanMemoryCache(): void {
+    const now = Date.now();
+    for (const [key, entry] of Array.from(this.memoryCache.entries())) {
+      if (entry.expiry <= now) {
+        this.memoryCache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Check if system is in offline mode (database unavailable)
+   */
+  static async isOfflineMode(): Promise<boolean> {
+    try {
+      await db.getCache<any>('test_connection');
+      return false;
+    } catch (error) {
+      return true;
     }
   }
 

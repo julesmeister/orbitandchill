@@ -14,6 +14,7 @@ import PlanetaryPositionsSection from './sections/PlanetaryPositionsSection';
 import MajorAspectsSection from './sections/MajorAspectsSection';
 import PlanetaryDignitiesSection from './sections/PlanetaryDignitiesSection';
 import HousesSection from './sections/HousesSection';
+import CelestialPointsSection from './sections/CelestialPointsSection';
 
 interface ChartInterpretationProps {
   birthData?: {
@@ -34,26 +35,19 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
   const isOwnChart = useMemo(() => {
     // If no person selected, assume it's user's own chart
     if (!selectedPerson && !defaultPerson) {
-      console.log('🔍 ChartInterpretation: No person selected, assuming own chart');
       return true;
     }
     
     // If selected person is the default person (represents user), it's own chart
     if (selectedPerson && defaultPerson && selectedPerson.id === defaultPerson.id) {
-      console.log('🔍 ChartInterpretation: Selected person is default person (own chart)');
       return true;
     }
     
     // If only default person exists and no other selection, it's own chart
     if (!selectedPerson && defaultPerson) {
-      console.log('🔍 ChartInterpretation: Using default person (own chart)');
       return true;
     }
     
-    console.log('🔍 ChartInterpretation: Viewing other person\'s chart', { 
-      selectedPerson: selectedPerson?.name, 
-      defaultPerson: defaultPerson?.name 
-    });
     return false;
   }, [selectedPerson, defaultPerson]);
   
@@ -127,13 +121,26 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
   // If premium features haven't loaded yet (0 features), show all visible sections to prevent empty state
   const filteredSections = features.length === 0 
     ? orderedSections.filter(section => section.isVisible)
-    : orderedSections.filter(section => section.isVisible && shouldShowFeature(section.id, userIsPremium));
+    : orderedSections.filter(section => {
+        if (!section.isVisible) return false;
+        
+        // CRITICAL FIX: For non-premium sections in the chart store, always show them
+        // regardless of what the premium features API says
+        if (!section.isPremium) {
+          return true;
+        }
+        
+        // For premium sections, check the shouldShowFeature function
+        return shouldShowFeature(section.id, userIsPremium);
+      });
+  
+  
 
   const renderResult = (
     <>
       <div className="mb-6">
-        <div className="bg-white border border-black">
-          <div className="flex items-center p-3 sm:p-6 border-b border-black">
+        <div className="bg-white sm:border sm:border-black">
+          <div className="flex items-center p-3 sm:p-6 sm:border-b sm:border-black">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black flex items-center justify-center mr-3 sm:mr-4">
               <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -146,7 +153,7 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
           </div>
 
           {/* Interpretation Content */}
-          <div className="p-3 sm:p-6 space-y-0">
+          <div className="p-0 sm:p-6 space-y-0">
             {filteredSections.map((section) => {
                 const sectionId = `section-${section.id}`;
                 
@@ -225,6 +232,15 @@ const ChartInterpretation: React.FC<ChartInterpretationProps> = ({ chartData }) 
                       <div key={section.id}>
                         <div id={sectionId} className="scroll-mt-4">
                           <HousesSection chartData={chartData} />
+                        </div>
+                      </div>
+                    );
+                    
+                  case 'celestial-points':
+                    return chartData && (
+                      <div key={section.id}>
+                        <div id={sectionId} className="scroll-mt-4">
+                          <CelestialPointsSection chartData={chartData} />
                         </div>
                       </div>
                     );

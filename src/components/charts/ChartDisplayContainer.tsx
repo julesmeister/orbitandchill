@@ -103,17 +103,43 @@ export default function ChartDisplayContainer({
         )}
 
         {/* Interpretation Sidebar - Show when interpretation tab is active */}
-        {activeTab === 'interpretation' && (
-          <div className="border-t border-black">
-            <InterpretationSidebar
-              onSectionClick={(sectionId) => {
-                // Scroll to section or handle section navigation
-                const element = document.getElementById(`section-${sectionId}`);
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-            />
+        {activeTab === 'interpretation' && cachedChart?.metadata?.chartData && (
+          <div className="border-t border-black p-4 max-h-96 overflow-y-auto">
+            <h4 className="font-bold mb-3">Chart Interpretation</h4>
+            
+            {/* Quick interpretation preview */}
+            <div className="space-y-3 text-sm">
+              {cachedChart.metadata.chartData.planets && (
+                <div>
+                  <h5 className="font-semibold">Planetary Positions</h5>
+                  <p className="text-gray-600">
+                    {cachedChart.metadata.chartData.planets.length} planets calculated
+                  </p>
+                </div>
+              )}
+              
+              {cachedChart.metadata.chartData.houses && (
+                <div>
+                  <h5 className="font-semibold">Houses</h5>
+                  <p className="text-gray-600">
+                    {cachedChart.metadata.chartData.houses.length} houses calculated
+                  </p>
+                </div>
+              )}
+              
+              {cachedChart.metadata.chartData.aspects && (
+                <div>
+                  <h5 className="font-semibold">Aspects</h5>
+                  <p className="text-gray-600">
+                    {cachedChart.metadata.chartData.aspects.length} aspects found
+                  </p>
+                </div>
+              )}
+              
+              <div className="mt-4 p-2 bg-gray-50 rounded text-xs">
+                <p>Full interpretations will be displayed here. Chart data is available and ready for detailed analysis.</p>
+              </div>
+            </div>
           </div>
         )}
         

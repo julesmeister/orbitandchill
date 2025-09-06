@@ -38,7 +38,7 @@ const NatalChartSection: React.FC<NatalChartSectionProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 bg-white border border-black">
           {/* Left Side - Form */}
           <div className="p-8 border-r border-black">
-            {shouldShowChart && cachedChart ? (
+            {shouldShowChart && cachedChart && cachedChart.svg && cachedChart.metadata?.birthData ? (
               <div className="space-y-6">
                 <ChartPreview
                   svgContent={cachedChart.svg}

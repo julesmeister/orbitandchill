@@ -222,70 +222,104 @@ export class ChartService {
    * Get all charts for a user
    */
   static async getUserCharts(userId: string): Promise<ChartData[]> {
-    // Bypass resilience wrapper - direct database access
+    const startTime = Date.now();
+    console.log('🔍 ChartService.getUserCharts: Starting at', new Date().toISOString(), 'for userId:', userId);
+    
+    // Bypass resilience wrapper - direct database access with timeout protection
     try {
-      console.log('ChartService.getUserCharts: Querying database for userId:', userId);
+      console.log('🔍 ChartService.getUserCharts: Checking database connection...');
       
-      const charts = await db
-        .select()
+      // Check if db is available
+      if (!db) {
+        console.error('🔍 ChartService.getUserCharts: Database connection is null');
+        await initializeDatabase();
+        if (!db) {
+          throw new Error('Database connection could not be established');
+        }
+      }
+      console.log('🔍 ChartService.getUserCharts: Database connection confirmed after', Date.now() - startTime, 'ms');
+      
+      console.log('🔍 ChartService.getUserCharts: Executing optimized database query (no timeout)...');
+      const queryStartTime = Date.now();
+      
+      // CRITICAL FIX: Let the query complete naturally without artificial timeout
+      const charts = await db.select()
         .from(natalCharts)
-        .where(eq(natalCharts.userId, userId))
-        .orderBy(desc(natalCharts.createdAt));
+        .where(eq(natalCharts.userId, userId)) // Use eq() instead of sql template for better performance
+        .orderBy(desc(natalCharts.createdAt))
+        .limit(50); // Limit results to prevent excessive data loading
 
-      console.log('ChartService.getUserCharts: Database returned charts:', charts.map((c: any) => ({ 
+      const queryDuration = Date.now() - queryStartTime;
+      console.log('🔍 ChartService.getUserCharts: Database query completed in', queryDuration, 'ms');
+      console.log('🔍 ChartService.getUserCharts: Database returned', charts.length, 'charts:', charts.map((c: any) => ({ 
         id: c.id, 
         userId: c.userId, 
         subjectName: c.subjectName, 
         dateOfBirth: c.dateOfBirth 
       })));
 
+      console.log('🔍 ChartService.getUserCharts: Validating chart ownership...');
       // CRITICAL FIX: Verify that all returned charts actually belong to the requested user
       const invalidCharts = charts.filter((chart: any) => chart.userId !== userId);
       if (invalidCharts.length > 0) {
-        console.error('ChartService.getUserCharts: WARNING - Database query returned charts that do not belong to the requested user!');
-        console.error('ChartService.getUserCharts: Requested userId:', userId);
-        console.error('ChartService.getUserCharts: Invalid charts found:', invalidCharts.map((c: any) => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
+        console.error('🔍 ChartService.getUserCharts: WARNING - Database query returned charts that do not belong to the requested user!');
+        console.error('🔍 ChartService.getUserCharts: Requested userId:', userId);
+        console.error('🔍 ChartService.getUserCharts: Invalid charts found:', invalidCharts.map((c: any) => ({ id: c.id, userId: c.userId, subjectName: c.subjectName })));
       }
 
-      // Filter to only include charts that actually belong to the user (failsafe)
-      const validCharts = charts.filter((chart: any) => chart.userId === userId);
-
-      // Deduplicate charts using Set based on unique chart fingerprint
-      // Create fingerprint: birth data + subject name (charts with identical birth data are duplicates)
-      const uniqueCharts = new Map();
+      console.log('🔍 ChartService.getUserCharts: Deduplicating charts...');
+      // Filter and deduplicate in one efficient pass
+      const seen = new Set();
+      const deduplicatedCharts = charts
+        .filter((chart: any) => chart.userId === userId) // Only user's charts
+        .filter((chart: any) => {
+          // More aggressive fingerprint - just date + time + location (ignore subject name variations)
+          const fingerprint = `${chart.dateOfBirth}_${chart.timeOfBirth || 'no-time'}_${chart.latitude || 0}_${chart.longitude || 0}`;
+          if (seen.has(fingerprint)) return false;
+          seen.add(fingerprint);
+          return true;
+        });
       
-      for (const chart of validCharts) {
-        const fingerprint = `${chart.dateOfBirth}_${chart.timeOfBirth}_${chart.latitude}_${chart.longitude}_${chart.subjectName}`;
-        
-        // Keep the most recently created chart if duplicates exist
-        if (!uniqueCharts.has(fingerprint) || 
-            new Date(chart.createdAt) > new Date(uniqueCharts.get(fingerprint).createdAt)) {
-          uniqueCharts.set(fingerprint, chart);
-        }
+      console.log('🔍 ChartService.getUserCharts: Deduplication complete');
+      // Log deduplication results  
+      const userChartsCount = charts.filter((chart: any) => chart.userId === userId).length;
+      if (userChartsCount > deduplicatedCharts.length) {
+        console.log(`🔍 ChartService.getUserCharts: Deduplicated ${userChartsCount - deduplicatedCharts.length} duplicate charts for user ${userId}`);
       }
 
-      const deduplicatedCharts = Array.from(uniqueCharts.values());
-      
-      // Log deduplication results
-      if (validCharts.length > deduplicatedCharts.length) {
-        console.log(`ChartService.getUserCharts: Deduplicated ${validCharts.length - deduplicatedCharts.length} duplicate charts for user ${userId}`);
-      }
-
-      return deduplicatedCharts.map((chart: any) => ({
+      console.log('🔍 ChartService.getUserCharts: Transforming chart data...');
+      const transformedCharts = deduplicatedCharts.map((chart: any) => ({
         ...chart,
         metadata: JSON.parse(chart.metadata),
         // Timestamps are already Date objects from Drizzle
         createdAt: chart.createdAt,
         updatedAt: chart.updatedAt,
       }));
-    } catch (error) {
-      console.error('ChartService.getUserCharts: Database operation failed:', error);
       
-      // If database is truly unavailable, return empty array
+      const totalDuration = Date.now() - startTime;
+      console.log('🔍 ChartService.getUserCharts: Completed successfully in', totalDuration, 'ms, returning', transformedCharts.length, 'charts');
+      return transformedCharts;
+    } catch (error: any) {
+      const totalDuration = Date.now() - startTime;
+      console.error('🔍 ChartService.getUserCharts: Error after', totalDuration, 'ms:', error);
+      console.error('🔍 ChartService.getUserCharts: Error message:', error?.message);
+      console.error('🔍 ChartService.getUserCharts: Error stack:', error?.stack);
+      
+      // Enhanced error detection for localhost development
       if (error && typeof error === 'object' && 'message' in error) {
         const message = (error as Error).message;
-        if (message.includes('Database not available') || message.includes('Connection failed')) {
-          // Database unavailable, return empty array
+        if (message.includes('Database not available') || 
+            message.includes('Connection failed') || 
+            message.includes('ECONNREFUSED') ||
+            message.includes('SERVER_ERROR') ||
+            message.includes('502') ||
+            message.includes('Service Unavailable') ||
+            message.includes('Connection acquisition timeout') ||
+            message.includes('Pool') ||
+            message.includes('queue') ||
+            message.includes('Request cleared due to queue overflow')) {
+          console.log('🔍 ChartService.getUserCharts: Database/connection pool issue, returning empty array to prevent hanging');
+          // Database or connection pool issue, return empty array to prevent hanging
           return [];
         }
       }

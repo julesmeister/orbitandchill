@@ -58,7 +58,7 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
       const planetInfo = PLANET_MEANINGS[primaryPlanet.name as keyof typeof PLANET_MEANINGS];
       const planetKeywords = planetInfo?.keywords.slice(0, 3).join(', ') || 'concentrated energy';
       
-      return `This powerful stellium concentrates ${stellium.planets.length} planets in ${sign.charAt(0).toUpperCase() + sign.slice(1)} (${planetNames}), amplifying themes of ${planetKeywords}. You have ${SIGN_MEANINGS[sign as keyof typeof SIGN_MEANINGS] || 'concentrated energy in this sign'}, making ${sign} a dominant force in your personality and life expression.`;
+      return `This powerful stellium concentrates ${stellium.planets.length} planets in ${sign ? sign.charAt(0).toUpperCase() + sign.slice(1) : 'Unknown'} (${planetNames}), amplifying themes of ${planetKeywords}. You have ${SIGN_MEANINGS[sign as keyof typeof SIGN_MEANINGS] || 'concentrated energy in this sign'}, making ${sign} a dominant force in your personality and life expression.`;
     } else {
       const house = stellium.house;
       const planetNames = stellium.planets.map(p => p.name).join(', ');
@@ -136,7 +136,7 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
       <div className="space-y-4">
         {/* Sign Stelliums */}
         {stelliums?.signStelliums?.map((stellium) => (
-          <div key={`sign-${stellium.sign}`} className="bg-white border border-black p-3 sm:p-5" 
+          <div key={`sign-${stellium.sign}`} className="bg-white sm:border sm:border-black p-2 sm:p-5" 
                style={{ backgroundColor: stelliumColors[stellium.sign] || '#f8f9fa' }}>
             <div className="flex items-center mb-4">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">
@@ -144,7 +144,7 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <h6 className="font-space-grotesk text-base sm:text-lg font-bold text-black">
-                  {stellium.sign.charAt(0).toUpperCase() + stellium.sign.slice(1)} Stellium
+                  {stellium.sign ? stellium.sign.charAt(0).toUpperCase() + stellium.sign.slice(1) : 'Unknown'} Stellium
                 </h6>
                 <p className="font-open-sans text-xs sm:text-sm text-black/70">
                   {stellium.planets.length} planets concentrated in {stellium.sign}
@@ -177,7 +177,7 @@ const StelliumsSection: React.FC<StelliumsSectionProps> = ({ chartData }) => {
 
         {/* House Stelliums */}
         {stelliums?.houseStelliums?.map((stellium) => (
-          <div key={`house-${stellium.house}`} className="bg-white border border-black p-3 sm:p-5" 
+          <div key={`house-${stellium.house}`} className="bg-white sm:border sm:border-black p-2 sm:p-5" 
                style={{ backgroundColor: getHouseColor(stellium.house) }}>
             <div className="flex items-center mb-4">
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">

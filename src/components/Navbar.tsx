@@ -44,47 +44,27 @@ export default function Navbar() {
   // User display information
   const displayName = user?.username || "Anonymous User";
   
-  // Debug logging for user state
-  useEffect(() => {
-    console.log('🔍 Navbar user state:', {
-      user,
-      displayName,
-      authProvider: user?.authProvider,
-      isAnonymous: user?.authProvider === 'anonymous',
-      isGoogle: user?.authProvider === 'google'
-    });
-  }, [user, displayName]);
 
   // Initialize user on mount - run only once
   useEffect(() => {
     const initializeUser = async () => {
       // Don't run if authentication is in progress
       if (isAuthenticating) {
-        console.log('🔐 Authentication in progress, skipping initialization');
         return;
       }
       
-      // Check localStorage directly to debug
+      // Check localStorage directly to fix corrupted data
       const storedData = localStorage.getItem('luckstrology-user-storage');
       if (storedData) {
         try {
           const parsed = JSON.parse(storedData);
           const storedUser = parsed?.state?.user;
           
-          console.log('🔍 localStorage data:', {
-            hasUser: !!storedUser,
-            authProvider: storedUser?.authProvider,
-            username: storedUser?.username,
-            email: storedUser?.email
-          });
-          
           // CRITICAL: Fix corrupted data - Google email with anonymous authProvider
           if (storedUser && 
               storedUser.email && 
               storedUser.email.includes('@gmail.com') && 
               storedUser.authProvider === 'anonymous') {
-            console.log('🔧 FIXING corrupted localStorage: Google email with anonymous authProvider');
-            
             // Fix the authProvider
             storedUser.authProvider = 'google';
             
@@ -98,7 +78,6 @@ export default function Navbar() {
             };
             
             localStorage.setItem('luckstrology-user-storage', JSON.stringify(fixedData));
-            console.log('✅ Fixed localStorage authProvider to "google"');
             
             // Force Zustand to rehydrate with the fixed data
             await useUserStore.persist.rehydrate();
@@ -113,15 +92,9 @@ export default function Navbar() {
       
       // Check if we have a user from localStorage rehydration
       let currentUser = useUserStore.getState().user;
-      console.log('🔍 User after rehydration:', {
-        hasUser: !!currentUser,
-        authProvider: currentUser?.authProvider,
-        username: currentUser?.username
-      });
       
       // IMPORTANT: If we already have a Google user, don't mess with it!
       if (currentUser?.authProvider === 'google') {
-        console.log('🔐 Google user already authenticated, skipping initialization');
         return;
       }
       

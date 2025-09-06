@@ -1,9 +1,39 @@
 # Chart Sharing Documentation
 
 > **📚 Related Documentation:**
-> - **Chart System**: See [README.md](./README.md) for chart architecture
+> - **Chart System**: See [README.md](./README.md) for chart architecture updates and celestial points fixes
 > - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
 > - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
+
+## Recent Critical Fixes (Round 23)
+
+### Birth Data Persistence & Celestial Points Resolution
+
+> **🚨 IMPORTANT**: The chart system underwent critical fixes to resolve birth data persistence issues and restore missing celestial points in chart interpretations.
+
+**Key Issues Resolved:**
+```
+Critical Chart System Fixes
+├── ✅ Birth Data Persistence Fix
+│   ├── Problem: Birth year reverting to 1993 despite form updates
+│   ├── Root Cause: useChartCache skip condition preventing proper data loading
+│   └── Solution: Fixed skip logic to only skip when both same data AND cached chart exists
+│
+├── ✅ Celestial Points Display Fix  
+│   ├── Problem: Missing Lilith, Chiron, North Node, South Node, Part of Fortune
+│   ├── Root Cause: Premium feature filtering removing non-premium sections incorrectly
+│   └── Solution: Always show non-premium sections regardless of premium API status
+│
+└── ✅ Celestial Points Data Processing Fix
+    ├── Problem: Filtering by undefined `isPlanet` property
+    ├── Root Cause: Chart data structure missing `isPlanet` field
+    └── Solution: Filter celestial points by planet names using exclusion list
+```
+
+**Impact on Chart Sharing:**
+- Shared charts now display complete astrological information including celestial points
+- Birth data persistence ensures shared charts maintain accurate user data
+- Enhanced chart completeness improves the value of shared chart interpretations
 
 ## Overview
 

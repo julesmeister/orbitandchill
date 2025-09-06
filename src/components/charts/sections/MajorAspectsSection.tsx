@@ -41,23 +41,24 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
       categories.push('personality');
     }
 
-    // Relationship aspects (Venus, Moon, Mars)
-    if (planets.includes('venus') || (planets.includes('moon') && planets.includes('mars'))) {
+    // Relationship aspects (Venus, Moon, Mars, Lilith)
+    if (planets.includes('venus') || (planets.includes('moon') && planets.includes('mars')) || planets.includes('lilith')) {
       categories.push('relationships');
     }
 
-    // Money/resources aspects (Venus, Jupiter, Saturn)
-    if (planets.includes('venus') || planets.includes('jupiter') || planets.includes('saturn')) {
+    // Money/resources aspects (Venus, Jupiter, Saturn, Part of Fortune)
+    if (planets.includes('venus') || planets.includes('jupiter') || planets.includes('saturn') || planets.includes('partoffortune')) {
       categories.push('money');
     }
 
-    // Career aspects (Mars, Jupiter, Saturn, Sun)
-    if (planets.includes('mars') || planets.includes('jupiter') || planets.includes('saturn') || planets.includes('sun')) {
+    // Career aspects (Mars, Jupiter, Saturn, Sun, North Node)
+    if (planets.includes('mars') || planets.includes('jupiter') || planets.includes('saturn') || planets.includes('sun') || planets.includes('northnode')) {
       categories.push('career');
     }
 
-    // Spirituality aspects (Neptune, Pluto, Jupiter)
-    if (planets.includes('neptune') || planets.includes('pluto') || planets.includes('jupiter')) {
+    // Spirituality aspects (Neptune, Pluto, Jupiter, Chiron, Nodes)
+    if (planets.includes('neptune') || planets.includes('pluto') || planets.includes('jupiter') || 
+        planets.includes('chiron') || planets.includes('northnode') || planets.includes('southnode')) {
       categories.push('spirituality');
     }
 
@@ -117,9 +118,9 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
   }
 
   return (
-    <div id={id} className="bg-white border border-black border-b-0">
+    <div id={id} className="bg-white sm:border sm:border-black sm:border-b-0">
       {/* Mobile-first header */}
-      <div className="p-3 sm:p-6 border-black">
+      <div className="p-2 sm:p-6 sm:border-black">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center">
@@ -187,7 +188,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
       {/* Collapsible Filter System - Only show if feature is available */}
       {shouldShowFeature('aspect-filtering', userIsPremium) && showFilters && (
         <div className="animate-in slide-in-from-top-2 duration-200">
-          <div className="bg-white border-t border-black p-3 sm:p-4">
+          <div className="bg-white sm:border-t sm:border-black p-2 sm:p-4">
             <div className="space-y-3 sm:space-y-4">
               {/* Life Areas */}
               <div>
@@ -247,8 +248,8 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
       )}
       {/* Aspects List */}
       {filteredAspects.length > 0 ? (
-        <div className=" space-y-0 border-t border-black">
-          <div className="divide-y divide-black">
+        <div className="space-y-0 sm:border-t sm:border-black">
+          <div className="sm:divide-y sm:divide-black">
             {filteredAspects.map((aspect, index) => {
               const aspectInfo = getFullAspectInfo(aspect);
               const typeStyle = getAspectTypeStyle(aspectInfo.type);
@@ -264,7 +265,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
               };
 
               return (
-                <div key={index} className="py-4 px-3 sm:py-6 sm:px-10">
+                <div key={index} className="py-3 px-2 sm:py-6 sm:px-10">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-2">
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-black flex items-center justify-center flex-shrink-0">
@@ -293,7 +294,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
           </div>
         </div>
       ) : (
-        <div className="text-center py-6 sm:py-8 border-t border-black px-3">
+        <div className="text-center py-4 sm:py-8 sm:border-t sm:border-black px-2 sm:px-3">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black flex items-center justify-center mx-auto mb-3">
             <FontAwesomeIcon icon={faFilter} className="text-white text-sm sm:text-base" />
           </div>

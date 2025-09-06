@@ -58,7 +58,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
           const dignityBadge = dignityBadges[sunDignity];
 
           return (
-            <div className="bg-white border border-black p-5" style={{ backgroundColor: '#f2e356' }}>
+            <div className="bg-white sm:border sm:border-black p-3 sm:p-5" style={{ backgroundColor: '#f2e356' }}>
               <div className="flex items-center mb-3">
                 <div className="w-7 h-7 bg-black flex items-center justify-center mr-3">
                   <span className="text-white text-sm">☉</span>
@@ -87,7 +87,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                         );
 
                         openModal(
-                          `Sun in ${sunPlanet.sign.charAt(0).toUpperCase() + sunPlanet.sign.slice(1)}`,
+                          `Sun in ${sunPlanet.sign ? sunPlanet.sign.charAt(0).toUpperCase() + sunPlanet.sign.slice(1) : 'Unknown'}`,
                           `${sunPlanet.house}th House • Your Core Identity${sunDignity !== 'neutral' && dignityBadge ? ` • ${dignityBadge.icon} ${dignityBadge.label}` : ''}`,
                           comprehensiveInterpretation,
                           '☉',
@@ -104,7 +104,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                       />
                     </button>
                   </div>
-                  <p className="font-open-sans text-xs text-black/60">{sunPlanet.sign.charAt(0).toUpperCase() + sunPlanet.sign.slice(1)} • House {sunPlanet.house}</p>
+                  <p className="font-open-sans text-xs text-black/60">{sunPlanet.sign ? sunPlanet.sign.charAt(0).toUpperCase() + sunPlanet.sign.slice(1) : 'Unknown'} • House {sunPlanet.house}</p>
                 </div>
               </div>
               <p className="font-open-sans text-sm text-black leading-relaxed">
@@ -120,7 +120,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
           const dignityBadge = dignityBadges[moonDignity];
 
           return (
-            <div className="bg-white border border-black p-5" style={{ backgroundColor: '#6bdbff' }}>
+            <div className="bg-white sm:border sm:border-black p-3 sm:p-5" style={{ backgroundColor: '#6bdbff' }}>
               <div className="flex items-center mb-3">
                 <div className="w-7 h-7 bg-black flex items-center justify-center mr-3">
                   <span className="text-white text-sm">☽</span>
@@ -149,7 +149,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                         );
 
                         openModal(
-                          `Moon in ${moonPlanet.sign.charAt(0).toUpperCase() + moonPlanet.sign.slice(1)}`,
+                          `Moon in ${moonPlanet.sign ? moonPlanet.sign.charAt(0).toUpperCase() + moonPlanet.sign.slice(1) : 'Unknown'}`,
                           `${moonPlanet.house}th House • Your Emotional Nature${moonDignity !== 'neutral' && dignityBadge ? ` • ${dignityBadge.icon} ${dignityBadge.label}` : ''}`,
                           comprehensiveInterpretation,
                           '☽',
@@ -163,7 +163,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                       <FontAwesomeIcon icon={faEye} className="relative text-black group-hover:text-white text-xs group-hover:scale-110 transition-all duration-300" />
                     </button>
                   </div>
-                  <p className="font-open-sans text-xs text-black/60">{moonPlanet.sign.charAt(0).toUpperCase() + moonPlanet.sign.slice(1)} • House {moonPlanet.house}</p>
+                  <p className="font-open-sans text-xs text-black/60">{moonPlanet.sign ? moonPlanet.sign.charAt(0).toUpperCase() + moonPlanet.sign.slice(1) : 'Unknown'} • House {moonPlanet.house}</p>
                 </div>
               </div>
               <p className="font-open-sans text-sm text-black leading-relaxed">
@@ -175,7 +175,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
 
         {/* Rising Sign */}
         {ascendantSign && (
-          <div className="bg-white border border-black p-5" style={{ backgroundColor: '#ff91e9' }}>
+          <div className="bg-white sm:border sm:border-black p-3 sm:p-5" style={{ backgroundColor: '#ff91e9' }}>
             <div className="flex items-center mb-3">
               <div className="w-7 h-7 bg-black flex items-center justify-center mr-3">
                 <span className="text-white text-sm">↗</span>
@@ -185,7 +185,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                   <h6 className="font-space-grotesk text-md font-semibold text-black">Rising</h6>
                   <button
                     onClick={() => openModal(
-                      `${ascendantSign.charAt(0).toUpperCase() + ascendantSign.slice(1)} Rising`,
+                      `${ascendantSign ? ascendantSign.charAt(0).toUpperCase() + ascendantSign.slice(1) : 'Unknown'} Rising`,
                       `${formatAstrologicalDegree(chartData.ascendant)} • Your Public Persona`,
                       getRisingSignInterpretation(ascendantSign),
                       '↗',
@@ -198,7 +198,7 @@ const CorePersonalitySection: React.FC<CorePersonalitySectionProps> = ({
                     <FontAwesomeIcon icon={faEye} className="relative text-black group-hover:text-white text-xs group-hover:scale-110 transition-all duration-300" />
                   </button>
                 </div>
-                <p className="font-open-sans text-xs text-black/60">{ascendantSign.charAt(0).toUpperCase() + ascendantSign.slice(1)} • {formatAstrologicalDegree(chartData.ascendant)}</p>
+                <p className="font-open-sans text-xs text-black/60">{ascendantSign ? ascendantSign.charAt(0).toUpperCase() + ascendantSign.slice(1) : 'Unknown'} • {formatAstrologicalDegree(chartData.ascendant)}</p>
               </div>
             </div>
             <p className="font-open-sans text-sm text-black leading-relaxed">

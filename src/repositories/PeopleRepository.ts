@@ -7,9 +7,7 @@ export class PeopleRepository {
   constructor(private people: Table<PersonStorage>) {}
 
   async save(person: PersonStorage): Promise<void> {
-    console.log('PeopleRepository - save called with:', person);
     await this.people.put(person);
-    console.log('PeopleRepository - save completed successfully');
   }
 
   async getById(id: string): Promise<PersonStorage | null> {
@@ -18,14 +16,11 @@ export class PeopleRepository {
   }
 
   async getByUserId(userId: string): Promise<PersonStorage[]> {
-    console.log('PeopleRepository - getByUserId called for userId:', userId);
     const people = await this.people
       .where("userId")
       .equals(userId)
       .toArray();
     
-    console.log('PeopleRepository - getByUserId raw results:', people);
-
     // Sort by updatedAt in descending order, with default person first
     const sortedPeople = people.sort((a, b) => {
       if (a.isDefault && !b.isDefault) return -1;
@@ -33,7 +28,6 @@ export class PeopleRepository {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
     
-    console.log('PeopleRepository - getByUserId sorted results:', sortedPeople);
     return sortedPeople;
   }
 
@@ -47,21 +41,16 @@ export class PeopleRepository {
   }
 
   async setDefault(userId: string, personId: string): Promise<void> {
-    console.log('PeopleRepository - setDefault called:', { userId, personId });
-    
     // First, remove default flag from all user's people
     const userPeople = await this.getByUserId(userId);
-    console.log('PeopleRepository - setDefault userPeople:', userPeople);
     
     const updatePromises = userPeople.map(person => 
       this.people.update(person.id, { isDefault: false })
     );
     await Promise.all(updatePromises);
-    console.log('PeopleRepository - setDefault cleared all defaults');
 
     // Then set the new default
     await this.people.update(personId, { isDefault: true });
-    console.log('PeopleRepository - setDefault set new default:', personId);
   }
 
   async delete(personId: string): Promise<void> {

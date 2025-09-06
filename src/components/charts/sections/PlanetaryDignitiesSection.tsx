@@ -33,7 +33,13 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
     saturn: '♄',
     uranus: '♅',
     neptune: '♆',
-    pluto: '♇'
+    pluto: '♇',
+    // Additional celestial points
+    lilith: '⚸',
+    chiron: '⚷',
+    northNode: '☊',
+    southNode: '☋',
+    partOfFortune: '⊕'
   };
 
   const getDignityDescription = (dignity: string) => {
@@ -47,8 +53,8 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
   };
 
   return (
-    <div className="bg-white border border-black">
-      <div className="flex items-center p-3 sm:p-6 border-b border-black">
+    <div className="bg-white sm:border sm:border-black">
+      <div className="flex items-center p-3 sm:p-6 sm:border-b sm:border-black">
         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">
           <span className="text-white text-sm sm:text-lg">✨</span>
         </div>
@@ -65,12 +71,12 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
           const dignityBadge = dignityBadges[dignity];
 
           return (
-            <div key={planet.name} className="border border-black p-3 hover:bg-gray-50 transition-colors">
+            <div key={planet.name} className="sm:border sm:border-black p-2 sm:p-3 hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-base">{planetSymbols[planet.name] || '●'}</span>
                 <span className="font-space-grotesk font-medium capitalize text-sm">{planet.name}</span>
                 {planet.retrograde && <span className="text-red-500 text-xs font-bold">R</span>}
-                <span className="font-open-sans text-xs text-black/60">in {planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}</span>
+                <span className="font-open-sans text-xs text-black/60">in {planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown'}</span>
               </div>
               
               <div className="mb-2">
@@ -104,7 +110,7 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
                   );
 
                   openModal(
-                    `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+                    `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown'}`,
                     `${dignity !== 'neutral' && dignityBadge ? `${dignityBadge.icon} ${dignityBadge.label} • ` : ''}${planet.house}th House`,
                     comprehensiveInterpretation,
                     planetSymbols[planet.name] || '●',
@@ -179,7 +185,7 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
                         );
 
                         openModal(
-                          `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+                          `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown'}`,
                           `${dignity !== 'neutral' && dignityBadge ? `${dignityBadge.icon} ${dignityBadge.label} • ` : ''}${planet.house}th House`,
                           comprehensiveInterpretation,
                           planetSymbols[planet.name] || '●',

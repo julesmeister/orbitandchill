@@ -84,7 +84,6 @@ export const useUserStore = create<UserState>()(
         // IMPORTANT: Preserve authProvider if we're updating a Google user
         // Don't let anonymous overwrites happen after Google auth
         if (currentUser?.authProvider === 'google' && !data.authProvider) {
-          console.warn('⚠️ Attempted to update Google user without authProvider, preserving Google auth');
           data = { ...data, authProvider: 'google' };
         }
 
@@ -143,7 +142,6 @@ export const useUserStore = create<UserState>()(
                 };
                 
                 set({ user: convertedUser });
-                console.log('✅ User profile updated successfully and synced with server');
               }
             } else {
               console.error('Failed to update user profile:', response.statusText);
@@ -495,7 +493,6 @@ export const useUserStore = create<UserState>()(
       
       // Force set user (bypasses any checks - used for Google auth)
       forceSetUser: (user: User) => {
-        console.log('🔐 Force setting user:', user.authProvider, user.username);
         set({ user, isAuthenticating: false });
         
         // Manually trigger persistence with the full user object
@@ -521,10 +518,6 @@ export const useUserStore = create<UserState>()(
           version: 0
         };
         
-        console.log('🔐 Persisting to localStorage:', { 
-          authProvider: persistedUser.authProvider,
-          username: persistedUser.username 
-        });
         
         storage.setItem('luckstrology-user-storage', JSON.stringify(stateToStore));
       },

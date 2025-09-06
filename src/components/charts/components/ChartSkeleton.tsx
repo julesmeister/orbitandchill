@@ -4,12 +4,74 @@ import React, { memo } from 'react';
 interface ChartSkeletonProps {
   showPeopleSelector?: boolean;
   showActionButtons?: boolean;
+  variant?: 'full' | 'chart' | 'interpretation' | 'section' | 'minimal';
 }
 
 const ChartSkeleton = memo(function ChartSkeleton({ 
   showPeopleSelector = true, 
-  showActionButtons = true 
+  showActionButtons = true,
+  variant = 'full'
 }: ChartSkeletonProps) {
+  // Minimal skeleton for quick loads
+  if (variant === 'minimal') {
+    return (
+      <div className="chart-skeleton-minimal animate-pulse">
+        <div className="h-12 bg-gray-200 rounded" />
+      </div>
+    );
+  }
+
+  // Section skeleton for individual chart sections
+  if (variant === 'section') {
+    return (
+      <div className="chart-skeleton-section">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-3" />
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-5/6" />
+            <div className="h-4 bg-gray-200 rounded w-4/6" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Interpretation skeleton for analysis sections
+  if (variant === 'interpretation') {
+    return (
+      <div className="chart-skeleton-interpretation">
+        <div className="space-y-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-3" />
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-4 bg-gray-200 rounded w-5/6" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Chart-only skeleton
+  if (variant === 'chart') {
+    return (
+      <div className="chart-skeleton-chart">
+        <div className="w-full max-w-2xl mx-auto animate-pulse">
+          <div className="aspect-square bg-gray-200 rounded-lg" />
+          <div className="mt-4 flex justify-center gap-2">
+            <div className="h-10 w-24 bg-gray-200 rounded" />
+            <div className="h-10 w-24 bg-gray-200 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full skeleton (default)
   return (
     <div className="bg-white overflow-visible animate-pulse">
       {/* Header Skeleton */}

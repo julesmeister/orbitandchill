@@ -9,6 +9,7 @@ import { ChartQuickActionsProps } from './types';
 import { useChartActions } from './hooks/useChartActions';
 import { usePersonFormState } from './hooks/usePersonFormState';
 import { usePerformanceMonitor } from './hooks/usePerformanceMonitor';
+import { useNatalChart } from '../../hooks/useNatalChart';
 import RegenerateButton from './components/RegenerateButton';
 import ChartActionButton from './components/ChartActionButton';
 import ChartErrorBoundary from './components/ChartErrorBoundary';
@@ -16,7 +17,8 @@ import ChartSkeleton from './components/ChartSkeleton';
 
 // Dynamically imported components for better bundle splitting
 const PersonFormModal = lazy(() => import('./components/PersonFormModal'));
-const PeopleSelector = lazy(() => import('../people/PeopleSelector'));
+// Temporary fix: Use direct import instead of lazy loading to avoid chunk loading issues
+import PeopleSelector from '../people/PeopleSelector';
 
 export default function ChartQuickActions({
   onRegenerateChart,
@@ -30,6 +32,7 @@ export default function ChartQuickActions({
   const { people, selectedPersonId, defaultPerson } = usePeopleAPI();
   const { toast, hideStatus } = useStatusToast();
   const { measureRender } = usePerformanceMonitor('ChartQuickActions');
+  const { cachedChart } = useNatalChart();
   
   // Custom hooks for logic separation
   const {
@@ -57,17 +60,6 @@ export default function ChartQuickActions({
     measureRender();
   });
 
-  // Debug log people changes
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('ChartQuickActions - People array changed:', {
-        peopleCount: people.length,
-        people: people.map(p => ({ id: p.id, name: p.name, relationship: p.relationship, isDefault: p.isDefault })),
-        selectedPersonId,
-        defaultPerson: defaultPerson ? { id: defaultPerson.id, name: defaultPerson.name } : null
-      });
-    }
-  }, [people, selectedPersonId, defaultPerson]);
 
   const handleAddPersonClick = () => {
     openAddPersonForm();
@@ -98,7 +90,18 @@ export default function ChartQuickActions({
       return;
     }
 
-    openEditPersonForm(personToEdit);
+    // CRITICAL FIX: Use current chart's birth data if available, as it's the most up-to-date
+    // This solves the issue where form shows stale data (1993) while chart shows current data (1994)
+    const currentChartData = cachedChart?.metadata?.birthData;
+    if (currentChartData) {
+      const updatedPersonToEdit = {
+        ...personToEdit,
+        birthData: currentChartData
+      };
+      openEditPersonForm(updatedPersonToEdit);
+    } else {
+      openEditPersonForm(personToEdit);
+    }
   };
 
   const handlePersonEdited = (person: Person) => {

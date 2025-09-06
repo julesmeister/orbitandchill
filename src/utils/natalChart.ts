@@ -36,13 +36,37 @@ export const PLANETS = [
   "pluto",
 ];
 
+// Additional celestial points (not planets but important in astrology)
+export const CELESTIAL_POINTS = [
+  "lilith",      // Black Moon Lilith (Moon's apogee)
+  "chiron",      // The wounded healer asteroid
+  "partOfFortune", // Arabic Part (Lot of Fortune)
+  "northNode",   // North Node (Rahu)
+  "southNode",   // South Node (Ketu)
+];
+
 export const HOUSES = Array.from({ length: 12 }, (_, i) => i + 1);
 
 // Utility function to format degrees in astrological notation
-export function formatAstrologicalDegree(longitude: number): string {
-  const signIndex = Math.floor(longitude / 30);
-  const degreeInSign = longitude % 30;
+export function formatAstrologicalDegree(longitude: number | undefined): string {
+  if (longitude === undefined || longitude === null || isNaN(longitude)) {
+    return 'Unknown°';
+  }
+  
+  // Normalize longitude to 0-360 range
+  let normalizedLongitude = longitude % 360;
+  if (normalizedLongitude < 0) {
+    normalizedLongitude += 360;
+  }
+  
+  const signIndex = Math.floor(normalizedLongitude / 30) % 12;
+  const degreeInSign = normalizedLongitude % 30;
   const sign = SIGNS[signIndex];
+  
+  if (!sign) {
+    return `${Math.abs(degreeInSign).toFixed(1)}° Aries`; // Default to Aries if sign not found
+  }
+  
   return `${degreeInSign.toFixed(1)}° ${sign.charAt(0).toUpperCase() + sign.slice(1)}`;
 }
 
@@ -66,6 +90,10 @@ export interface PlanetPosition {
   rightAscension?: number; // RA in hours
   declination?: number;    // Dec in degrees
   distance?: number;       // Distance in AU
+  // Additional metadata for celestial points
+  isPlanet?: boolean;      // True for actual planets, false for calculated points
+  pointType?: 'planet' | 'asteroid' | 'node' | 'arabicPart' | 'apogee'; // Type of celestial point
+  symbol?: string;         // Astrological symbol
 }
 
 export interface HousePosition {
@@ -131,6 +159,7 @@ export async function calculatePlanetaryPositions(
   // Debug logging disabled for production
 
   try {
+    console.log('🔍 ENTRY: calculatePlanetaryPositions called with:', { date, latitude, longitude });
     // Starting planetary calculations - debug logging disabled
 
     // Try different Observer creation methods for astronomy-engine v2.1.19
@@ -272,19 +301,160 @@ export async function calculatePlanetaryPositions(
         rightAscension: rightAscension,
         declination: declination,
         distance: distance,
+        isPlanet: true,  // Mark as actual planet
+        pointType: 'planet',
       };
     });
 
     // Calculate houses using Placidus system
     const housesData = calculatePlacidusHouses(date, latitude, longitude);
   
-    // Assign houses to planets
-    planets.forEach(planet => {
-      planet.house = determineHouse(planet.longitude, housesData.houses);
+    // Calculate additional celestial points
+    const celestialPoints: PlanetPosition[] = [];
+    
+    // Add Lilith (Black Moon Lilith)
+    const lilith = calculateLilith(date);
+    lilith.house = determineHouse(lilith.longitude!, housesData.houses);
+    // Calculate the correct sign from longitude
+    const lilithSignIndex = Math.floor((lilith.longitude || 0) / 30) % 12;
+    const lilithSign = SIGNS[lilithSignIndex] || 'aries';
+    
+    // Ensure all required properties are present
+    const lilithComplete: PlanetPosition = {
+      name: lilith.name || 'lilith',
+      longitude: lilith.longitude || 0,
+      sign: lilithSign, // Use calculated sign, not the one from the function
+      house: lilith.house || 1,
+      retrograde: lilith.retrograde || false,
+      isPlanet: false,
+      pointType: lilith.pointType,
+      symbol: lilith.symbol
+    };
+    
+    
+    celestialPoints.push(lilithComplete);
+    
+    // Add Chiron
+    const chiron = calculateChiron(date);
+    chiron.house = determineHouse(chiron.longitude!, housesData.houses);
+    
+    // Calculate the correct sign from longitude
+    const chironSignIndex = Math.floor((chiron.longitude || 0) / 30) % 12;
+    const chironSign = SIGNS[chironSignIndex] || 'aries';
+    
+    // Ensure all required properties are present
+    const chironComplete: PlanetPosition = {
+      name: chiron.name || 'chiron',
+      longitude: chiron.longitude || 0,
+      sign: chironSign, // Use calculated sign
+      house: chiron.house || 1,
+      retrograde: chiron.retrograde || false,
+      isPlanet: false,
+      pointType: chiron.pointType,
+      symbol: chiron.symbol
+    };
+    celestialPoints.push(chironComplete);
+    
+    // Calculate Lunar Nodes
+    const { northNode, southNode } = calculateLunarNodes(date);
+    northNode.house = determineHouse(northNode.longitude!, housesData.houses);
+    southNode.house = determineHouse(southNode.longitude!, housesData.houses);
+    
+    // Calculate the correct signs from longitudes
+    const northNodeSignIndex = Math.floor((northNode.longitude || 0) / 30) % 12;
+    const northNodeSign = SIGNS[northNodeSignIndex] || 'aries';
+    const southNodeSignIndex = Math.floor((southNode.longitude || 0) / 30) % 12;
+    const southNodeSign = SIGNS[southNodeSignIndex] || 'libra';
+    
+    // Ensure all required properties are present for north node
+    const northNodeComplete: PlanetPosition = {
+      name: northNode.name || 'northNode',
+      longitude: northNode.longitude || 0,
+      sign: northNodeSign, // Use calculated sign
+      house: northNode.house || 1,
+      retrograde: northNode.retrograde || true,
+      isPlanet: false,
+      pointType: northNode.pointType,
+      symbol: northNode.symbol
+    };
+    celestialPoints.push(northNodeComplete);
+    
+    // Ensure all required properties are present for south node
+    const southNodeComplete: PlanetPosition = {
+      name: southNode.name || 'southNode',
+      longitude: southNode.longitude || 0,
+      sign: southNodeSign, // Use calculated sign
+      house: southNode.house || 7,
+      retrograde: southNode.retrograde || true,
+      isPlanet: false,
+      pointType: southNode.pointType,
+      symbol: southNode.symbol
+    };
+    celestialPoints.push(southNodeComplete);
+    
+    // Calculate Part of Fortune
+    const sun = planets.find(p => p.name === 'sun');
+    const moon = planets.find(p => p.name === 'moon');
+    if (sun && moon) {
+      // Determine if it's a day birth (sun above horizon)
+      // Houses 7-12 are ABOVE the horizon (western half of chart)
+      // Houses 1-6 are BELOW the horizon (eastern half of chart)
+      const sunHouse = sun.house;
+      const isDayBirth = sunHouse >= 7 && sunHouse <= 12; // Sun in houses 7-12 = day birth
+      
+      const partOfFortune = calculatePartOfFortune(
+        sun.longitude,
+        moon.longitude,
+        housesData.ascendant,
+        isDayBirth
+      );
+      partOfFortune.house = determineHouse(partOfFortune.longitude!, housesData.houses);
+      
+      console.log('🔍 Part of Fortune calculation:', {
+        sunLongitude: sun.longitude,
+        sunSign: sun.sign,
+        sunHouse: sun.house,
+        moonLongitude: moon.longitude,
+        moonSign: moon.sign,
+        ascendant: housesData.ascendant,
+        isDayBirth,
+        formula: isDayBirth ? 'ASC + Moon - Sun' : 'ASC + Sun - Moon',
+        resultLongitude: partOfFortune.longitude,
+        resultSign: partOfFortune.sign
+      });
+      
+      // Calculate the correct sign from longitude
+      const pofSignIndex = Math.floor((partOfFortune.longitude || 0) / 30) % 12;
+      const pofSign = SIGNS[pofSignIndex] || 'aries';
+      
+      // Ensure all required properties are present for Part of Fortune
+      const partOfFortuneComplete: PlanetPosition = {
+        name: partOfFortune.name || 'partOfFortune',
+        longitude: partOfFortune.longitude || 0,
+        sign: pofSign, // Use calculated sign
+        house: partOfFortune.house || 1,
+        retrograde: partOfFortune.retrograde || false,
+        isPlanet: false,
+        pointType: partOfFortune.pointType,
+        symbol: partOfFortune.symbol
+      };
+      celestialPoints.push(partOfFortuneComplete);
+    }
+    
+    // Combine regular planets with celestial points
+    const allCelestialBodies = [...planets, ...celestialPoints];
+    
+    
+  
+    // Assign houses to all celestial bodies
+    allCelestialBodies.forEach(body => {
+      if (!body.house) {
+        body.house = determineHouse(body.longitude, housesData.houses);
+      }
     });
 
-    // Calculate aspects
-    const aspects = calculateAspects(planets);
+    // Calculate aspects including celestial points
+    const aspects = calculateAspects(allCelestialBodies);
     // console.log('🔍 Chart generation - aspects calculated:', {
     //   aspectsCount: aspects.length,
     //   firstFewAspects: aspects.slice(0, 3),
@@ -294,7 +464,7 @@ export async function calculatePlanetaryPositions(
     // Planetary positions calculation completed
 
     return {
-      planets,
+      planets: allCelestialBodies,  // Now includes planets + celestial points
       houses: housesData.houses,
       aspects,
       ascendant: housesData.ascendant,
@@ -442,6 +612,178 @@ function calculatePlacidusHouses(date: Date, latitude: number, longitude: number
     houses,
     ascendant: asc,
     midheaven: mc,
+  };
+}
+
+/**
+ * Calculate Black Moon Lilith (Mean Lunar Apogee)
+ * This is the Moon's mean apogee - the farthest point in the Moon's orbit
+ */
+function calculateLilith(date: Date): Partial<PlanetPosition> {
+  // Lilith completes a full orbit in approximately 8.85 years (3232.5 days)
+  // More accurate period: 3232.0 days
+  const cycleInDays = 3232.0;
+  
+  // Reference date: January 1, 1993 at 00:00 UTC when Lilith was at approximately 27° Pisces (357°)
+  // Using a closer reference date for better accuracy
+  const referenceDate = new Date('1993-01-01T00:00:00Z');
+  const referenceLongitude = 357; // 27° Pisces
+  
+  // Calculate days since reference
+  const daysSinceReference = (date.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
+  
+  // Calculate current position (Lilith moves about 0.111 degrees per day)
+  const dailyMotion = 360 / cycleInDays;
+  let rawLongitude = referenceLongitude + (daysSinceReference * dailyMotion);
+  
+  // Normalize to 0-360 range
+  let longitude = rawLongitude % 360;
+  if (longitude < 0) {
+    longitude += 360;
+  }
+  
+  // Ensure we have a valid sign index
+  const signIndex = Math.floor(Math.abs(longitude) / 30) % 12;
+  const sign = SIGNS[signIndex] || 'aries';
+  
+  
+  return {
+    name: 'lilith',
+    longitude: longitude,
+    sign: sign,
+    retrograde: false, // Lilith doesn't go retrograde
+    isPlanet: false,
+    pointType: 'apogee',
+    symbol: '⚸'
+  };
+}
+
+/**
+ * Calculate Part of Fortune (Lot of Fortune)
+ * Formula: Ascendant + Moon - Sun (for day births)
+ *         Ascendant + Sun - Moon (for night births)
+ */
+function calculatePartOfFortune(
+  sunLongitude: number,
+  moonLongitude: number,
+  ascendant: number,
+  isDayBirth: boolean
+): Partial<PlanetPosition> {
+  let longitude: number;
+  
+  if (isDayBirth) {
+    // Day formula: ASC + Moon - Sun
+    longitude = (ascendant + moonLongitude - sunLongitude + 360) % 360;
+  } else {
+    // Night formula: ASC + Sun - Moon
+    longitude = (ascendant + sunLongitude - moonLongitude + 360) % 360;
+  }
+  
+  // Ensure we have a valid sign index
+  const signIndex = Math.floor(longitude / 30) % 12;
+  const sign = SIGNS[signIndex] || 'aries';
+  
+  return {
+    name: 'partOfFortune',
+    longitude: longitude,
+    sign: sign,
+    retrograde: false,
+    isPlanet: false,
+    pointType: 'arabicPart',
+    symbol: '⊕'
+  };
+}
+
+/**
+ * Calculate Lunar Nodes (North Node and South Node)
+ * Using the mean node calculation
+ */
+function calculateLunarNodes(date: Date): { northNode: Partial<PlanetPosition>, southNode: Partial<PlanetPosition> } {
+  // The nodes move retrograde and complete a cycle in approximately 18.6 years (6798.3 days)
+  const cycleInDays = 6798.3;
+  
+  // Reference date: January 1, 2000 at 00:00 UTC when North Node was at 25° Cancer (115°)
+  const referenceDate = new Date('2000-01-01T00:00:00Z');
+  const referenceNorthNodeLongitude = 115; // 25° Cancer
+  
+  // Calculate days since reference
+  const daysSinceReference = (date.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
+  
+  // Calculate current position (Nodes move retrograde, about -0.0529 degrees per day)
+  const dailyMotion = -360 / cycleInDays;
+  const northNodeLongitude = (referenceNorthNodeLongitude + (daysSinceReference * dailyMotion) + 360) % 360;
+  
+  // South Node is always exactly opposite North Node
+  const southNodeLongitude = (northNodeLongitude + 180) % 360;
+  
+  // Ensure we have valid sign indices
+  const northNodeSignIndex = Math.floor(northNodeLongitude / 30) % 12;
+  const southNodeSignIndex = Math.floor(southNodeLongitude / 30) % 12;
+  const northNodeSign = SIGNS[northNodeSignIndex] || 'aries';
+  const southNodeSign = SIGNS[southNodeSignIndex] || 'libra';
+  
+  return {
+    northNode: {
+      name: 'northNode',
+      longitude: northNodeLongitude,
+      sign: northNodeSign,
+      retrograde: true, // Nodes are always retrograde
+      isPlanet: false,
+      pointType: 'node',
+      symbol: '☊'
+    },
+    southNode: {
+      name: 'southNode',
+      longitude: southNodeLongitude,
+      sign: southNodeSign,
+      retrograde: true,
+      isPlanet: false,
+      pointType: 'node',
+      symbol: '☋'
+    }
+  };
+}
+
+/**
+ * Calculate Chiron position (approximation)
+ * Note: For precise Chiron position, we would need ephemeris data
+ * This is a simplified calculation based on its orbital period
+ */
+function calculateChiron(date: Date): Partial<PlanetPosition> {
+  // Chiron has an orbital period of approximately 50.4 years (18,396 days)
+  const cycleInDays = 18396;
+  
+  // Reference date: January 1, 2000 at 00:00 UTC when Chiron was at 11° Sagittarius (251°)
+  const referenceDate = new Date('2000-01-01T00:00:00Z');
+  const referenceLongitude = 251; // 11° Sagittarius
+  
+  // Calculate days since reference
+  const daysSinceReference = (date.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24);
+  
+  // Calculate current position (Chiron moves about 0.0196 degrees per day on average)
+  const dailyMotion = 360 / cycleInDays;
+  let longitude = (referenceLongitude + (daysSinceReference * dailyMotion)) % 360;
+  
+  // Ensure longitude is positive
+  if (longitude < 0) {
+    longitude += 360;
+  }
+  
+  // Ensure we have a valid sign index
+  const signIndex = Math.floor(longitude / 30) % 12;
+  const sign = SIGNS[signIndex] || 'aries';
+  
+  // Chiron can go retrograde, but for simplicity we're not calculating that here
+  // In a production system, you'd want to use proper ephemeris data
+  
+  return {
+    name: 'chiron',
+    longitude: longitude,
+    sign: sign,
+    retrograde: false, // Simplified - actual retrograde calculation would need ephemeris
+    isPlanet: false,
+    pointType: 'asteroid',
+    symbol: '⚷'
   };
 }
 
@@ -812,6 +1154,12 @@ function generatePlanetWheel(
     uranus: "♅",
     neptune: "♆",
     pluto: "♇",
+    // Additional celestial points
+    lilith: "⚸",
+    chiron: "⚷",
+    northNode: "☊",
+    southNode: "☋",
+    partOfFortune: "⊕",
   };
 
   const planetColors: { [key: string]: string } = {
@@ -825,6 +1173,12 @@ function generatePlanetWheel(
     uranus: "#4169E1",
     neptune: "#00CED1",
     pluto: "#8B0000",
+    // Additional celestial points
+    lilith: "#800080",      // Purple for Lilith
+    chiron: "#228B22",      // Forest green for Chiron
+    northNode: "#4682B4",   // Steel blue for North Node
+    southNode: "#708090",   // Slate gray for South Node
+    partOfFortune: "#DAA520", // Goldenrod for Part of Fortune
   };
 
   // Sort planets by longitude to avoid overlaps
@@ -1027,6 +1381,7 @@ export async function generateNatalChart(birthData: {
   coordinates: { lat: string; lon: string };
   locationOfBirth: string;
 }): Promise<{ svg: string; metadata: ChartMetadata }> {
+  console.log('🔍 ENTRY: generateNatalChart called with:', birthData);
   // Process birth time with proper timezone handling
   const processedTime = processBirthTime({
     dateOfBirth: birthData.dateOfBirth,

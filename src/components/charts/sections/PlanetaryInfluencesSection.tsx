@@ -34,7 +34,13 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
     saturn: '♄',
     uranus: '♅',
     neptune: '♆',
-    pluto: '♇'
+    pluto: '♇',
+    // Additional celestial points
+    lilith: '⚸',
+    chiron: '⚷',
+    northNode: '☊',
+    southNode: '☋',
+    partOfFortune: '⊕'
   };
 
   const planetColors: Record<string, string> = {
@@ -45,7 +51,13 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
     saturn: 'from-amber-400 to-yellow-500',
     uranus: 'from-cyan-400 to-blue-500',
     neptune: 'from-teal-400 to-cyan-500',
-    pluto: 'from-indigo-400 to-purple-500'
+    pluto: 'from-indigo-400 to-purple-500',
+    // Additional celestial points
+    lilith: 'from-purple-500 to-purple-700',
+    chiron: 'from-green-600 to-green-800',
+    northNode: 'from-blue-500 to-blue-700',
+    southNode: 'from-gray-500 to-gray-700',
+    partOfFortune: 'from-yellow-500 to-amber-600'
   };
 
   if (!chartData?.planets) {
@@ -76,7 +88,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
             const dignity = getPlanetaryDignity(planet.name, planet.sign);
 
             return (
-              <div key={planet.name} className="bg-white border border-black p-3 sm:p-4">
+              <div key={planet.name} className="bg-white sm:border sm:border-black p-2 sm:p-4">
                 {/* Clean vertical layout for mobile */}
                 <div className="flex flex-col gap-2 sm:gap-0">
                   {/* Row 1: Planet icon and name */}
@@ -88,7 +100,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
                       {/* Mobile: Vertical stack */}
                       <div className="sm:hidden">
                         <div className="font-space-grotesk text-sm font-semibold text-black capitalize">
-                          {planet.name} in {planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}
+                          {planet.name} in {planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown Sign'}
                           {planet.retrograde && <span className="text-red-500 ml-1 text-xs">R</span>}
                         </div>
                         <div className="font-open-sans text-xs text-black/60 mt-0.5">
@@ -117,7 +129,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
                               );
 
                               openModal(
-                                `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+                                `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown'}`,
                                 `${planet.house}th House • ${formatAstrologicalDegree(planet.longitude)}${planet.retrograde ? ' (Retrograde)' : ''}${dignity !== 'neutral' ? ` • ${dignityBadges[dignity].icon} ${dignityBadges[dignity].label}` : ''}`,
                                 comprehensiveInterpretation,
                                 planetIcons[planet.name] || '●',
@@ -137,7 +149,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
                       <div className="hidden sm:flex sm:items-center sm:justify-between">
                         <div>
                           <h6 className="font-space-grotesk text-md font-semibold text-black capitalize">
-                            {planet.name} in {planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}
+                            {planet.name} in {planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown Sign'}
                             {planet.retrograde && <span className="text-red-500 ml-1 text-xs">R</span>}
                           </h6>
                           <div className="flex items-center gap-2 mt-1">
@@ -165,7 +177,7 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
                             );
 
                             openModal(
-                              `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1)}`,
+                              `${planet.name.charAt(0).toUpperCase() + planet.name.slice(1)} in ${planet.sign ? planet.sign.charAt(0).toUpperCase() + planet.sign.slice(1) : 'Unknown'}`,
                               `${planet.house}th House • ${formatAstrologicalDegree(planet.longitude)}${planet.retrograde ? ' (Retrograde)' : ''}${dignity !== 'neutral' ? ` • ${dignityBadges[dignity].icon} ${dignityBadges[dignity].label}` : ''}`,
                               comprehensiveInterpretation,
                               planetIcons[planet.name] || '●',

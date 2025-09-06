@@ -25,6 +25,7 @@ const CompactNatalChartForm = ({
   onCancel
 }: CompactNatalChartFormProps) => {
   
+  
   // Use the unified form hook
   const {
     formData,

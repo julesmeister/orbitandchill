@@ -20,7 +20,7 @@ interface PremiumFeatureState {
   updateFeature: (featureId: string, updates: Partial<PremiumFeature>) => void;
 }
 
-// Minimal fallback features for core functionality only
+// Fallback features that match the sections defined in chartStore.ts
 const FALLBACK_FEATURES: PremiumFeature[] = [
   {
     id: 'core-personality',
@@ -31,6 +31,76 @@ const FALLBACK_FEATURES: PremiumFeature[] = [
     isPremium: false,
     component: 'ChartInterpretation',
     section: 'core'
+  },
+  {
+    id: 'stellium-analysis',
+    name: 'Stellium Analysis',
+    description: 'Groups of 3+ planets in signs or houses',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: true,
+    component: 'ChartInterpretation',
+    section: 'stellium'
+  },
+  {
+    id: 'planetary-influences',
+    name: 'Planetary Influences',
+    description: 'How planets affect your personality',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: false,
+    component: 'ChartInterpretation',
+    section: 'planetary'
+  },
+  {
+    id: 'planetary-positions',
+    name: 'Planetary Positions',
+    description: 'Detailed planetary placements',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: true,
+    component: 'ChartInterpretation',
+    section: 'positions'
+  },
+  {
+    id: 'detailed-aspects',
+    name: 'Major Aspects',
+    description: 'Planetary relationships and energies',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: true,
+    component: 'ChartInterpretation',
+    section: 'aspects'
+  },
+  {
+    id: 'planetary-dignities',
+    name: 'Planetary Dignities',
+    description: 'Planet strength and weaknesses',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: true,
+    component: 'ChartInterpretation',
+    section: 'dignities'
+  },
+  {
+    id: 'house-analysis',
+    name: 'Houses Analysis',
+    description: 'Life areas and themes',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: true,
+    component: 'ChartInterpretation',
+    section: 'houses'
+  },
+  {
+    id: 'celestial-points',
+    name: 'Celestial Points',
+    description: 'Lilith, Chiron, Nodes & Part of Fortune',
+    category: 'interpretation',
+    isEnabled: true,
+    isPremium: false,
+    component: 'ChartInterpretation',
+    section: 'celestial'
   },
   {
     id: 'aspect-filtering',

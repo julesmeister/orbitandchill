@@ -41,18 +41,18 @@ const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
   };
 
   return (
-    <div className="bg-white border border-black">
-      <div className="flex items-center p-6 border-b border-black">
-        <div className="w-8 h-8 bg-black flex items-center justify-center mr-3">
+    <div className="bg-white sm:border sm:border-black">
+      <div className="flex items-center p-3 sm:p-6 sm:border-b sm:border-black">
+        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">
           <span className="text-white text-lg">🏠</span>
         </div>
         <div>
-          <h5 className="font-space-grotesk text-lg font-bold text-black">Houses & Cusps</h5>
-          <p className="font-open-sans text-sm text-black/60">The twelve life areas and their ruling signs</p>
+          <h5 className="font-space-grotesk text-base sm:text-lg font-bold text-black">Houses & Cusps</h5>
+          <p className="font-open-sans text-xs sm:text-sm text-black/60">The twelve life areas and their ruling signs</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border border-black">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 sm:border sm:border-black">
         {chartData.houses.map((house, index) => {
           const houseNumber = index + 1;
           const backgroundColor = getHouseColors(houseNumber);
@@ -62,9 +62,9 @@ const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
           return (
             <div
               key={houseNumber}
-              className={`p-4 hover:bg-opacity-80 transition-colors ${!isRightEdge ? 'lg:border-r' : ''
-                } ${!isBottomEdge ? 'border-b' : ''
-                } border-black`}
+              className={`p-2 sm:p-4 hover:bg-opacity-80 transition-colors ${!isRightEdge ? 'lg:border-r' : ''
+                } ${!isBottomEdge ? 'sm:border-b' : ''
+                } sm:border-black`}
               style={{ backgroundColor }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -91,7 +91,7 @@ const HousesSection: React.FC<HousesSectionProps> = ({ chartData }) => {
       </div>
 
       {/* House Legend */}
-      <div className="mt-6 p-4 bg-gray-50 border-t border-black">
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 sm:border-t sm:border-black">
         <h6 className="font-space-grotesk text-sm font-semibold text-black mb-3">Understanding the Houses</h6>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-3">

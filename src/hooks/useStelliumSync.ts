@@ -39,14 +39,8 @@ export function useStelliumSync(chartData?: NatalChartData, isOwnChart: boolean 
 
     // If user already has chart data, don't need to sync UNLESS this is their own chart
     if (hasChartData && !isOwnChart) {
-      console.log('🔄 useStelliumSync: User has existing data, skipping sync for non-own chart');
       setHasAttempted(true);
       return;
-    }
-
-    // Force sync if this is user's own chart (to update potentially incorrect cached data)
-    if (isOwnChart && hasChartData) {
-      console.log('🔄 useStelliumSync: Force syncing stelliums for user\'s own chart');
     }
 
     // Detect stelliums from chart data
@@ -57,16 +51,7 @@ export function useStelliumSync(chartData?: NatalChartData, isOwnChart: boolean 
       setHasAttempted(true);
 
       try {
-        // Syncing stelliums and sun sign from chart data
-        console.log('🔄 useStelliumSync: Detecting stelliums from chart data...', {
-          isOwnChart,
-          hasExistingData: hasChartData,
-          forceSync: isOwnChart && hasChartData
-        });
-        
         const stelliumResult = detectStelliums(chartData);
-        
-        console.log('⭐ useStelliumSync: Stellium detection complete:', stelliumResult);
         
         // Prepare update data
         const updateData: any = { hasNatalChart: true };
@@ -87,7 +72,6 @@ export function useStelliumSync(chartData?: NatalChartData, isOwnChart: boolean 
           updateData.detailedStelliums = stelliumResult.detailedStelliums;
         }
         
-        // Chart data extracted for sync
         
         // Update via API first (which will persist to database)
         const response = await fetch('/api/users/preferences', {
@@ -104,8 +88,6 @@ export function useStelliumSync(chartData?: NatalChartData, isOwnChart: boolean 
         if (response.ok) {
           // Update local user store
           await updateUserRef.current(updateData);
-          
-          // Chart data synced successfully
         } else {
           console.warn('⚠️ Failed to sync chart data via API, updating locally only');
           // Update local store even if API fails

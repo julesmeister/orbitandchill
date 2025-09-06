@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Person, PersonFormData } from '../types/people';
 import { db } from './database';
+import { useUserStore } from './userStore';
 
 interface PeopleState {
   // State
@@ -63,8 +64,7 @@ export const usePeopleStore = create<PeopleState>()(
           set({ isLoading: true, error: null });
           
           // Get current user from user store
-          const userStore = await import('./userStore');
-          const user = userStore.useUserStore.getState().user;
+          const user = useUserStore.getState().user;
           
           // Check if user exists before loading people
           
@@ -88,12 +88,18 @@ export const usePeopleStore = create<PeopleState>()(
       },
 
       addPerson: async (personData: PersonFormData) => {
+        console.log('🚀 PeopleStore.addPerson called with:', { 
+          name: personData.name, 
+          relationship: personData.relationship 
+        });
+        
         try {
           set({ isLoading: true, error: null });
           
           // Get current user from user store
-          const userStore = await import('./userStore');
-          const user = userStore.useUserStore.getState().user;
+          const user = useUserStore.getState().user;
+          
+          console.log('👤 PeopleStore: Got user:', user?.id);
           
           // Verify user exists before adding person
           

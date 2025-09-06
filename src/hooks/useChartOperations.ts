@@ -91,7 +91,17 @@ export const useChartOperations = (
       };
       
       // Call API to generate chart
+      console.log('🚀 Calling ChartApiService.generateChart with:', {
+        userId: requestData.userId,
+        subjectName: requestData.subjectName,
+        forceRegenerate: requestData.forceRegenerate
+      });
       const result = await ChartApiService.generateChart(requestData);
+      console.log('✅ API call successful, received result:', {
+        hasChart: !!result.chart,
+        chartId: result.chart?.id,
+        success: result.success
+      });
       
       if (!result.chart) {
         throw new Error('No chart data returned from API');
@@ -114,8 +124,14 @@ export const useChartOperations = (
       
       return chartData;
 
-    } catch (error) {
-      console.error('Error generating natal chart:', error);
+    } catch (error: any) {
+      console.error('❌ Error generating natal chart:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+      
+      // No more offline mode - just return null and let the UI handle the error state
+      // This ensures consistent chart generation - either real charts or clear errors
       return null;
     } finally {
       setIsGenerating(false);

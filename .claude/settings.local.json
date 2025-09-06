@@ -180,7 +180,21 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/charts/ChartTabs.tsx src/components/charts/ChartInterpretation.tsx src/components/charts/sections/StelliumsSection.tsx src/components/charts/sections/PlanetaryInfluencesSection.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryInfluencesSection.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryPositionsSection.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryDignitiesSection.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/sections/PlanetaryDignitiesSection.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/db/services/chartService.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/services/chartService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/natalChart.ts src/components/charts/sections/PlanetaryPositionsSection.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useChartPage.ts src/hooks/useChartOperations.ts src/utils/offlineChartMode.ts src/utils/circuitBreaker.ts --quiet)",
+      "WebSearch",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/offlineChartMode.ts src/hooks/useChartOperations.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/useNatalChartForm.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/hooks/useNatalChartForm.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/hooks/usePremiumFeatures.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/ChartContentRenderer.tsx src/db/connectionPool.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/charts/ChartContentRenderer.tsx src/db/connectionPool.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/connectionPool.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/ChartQuickActions.tsx src/hooks/useChartCache.ts src/hooks/useChartPage.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/chart/components/modules/ChartInterpretation.tsx src/components/charts/ChartInterpretation.tsx --quiet)"
     ],
     "deny": [],
     "additionalDirectories": [

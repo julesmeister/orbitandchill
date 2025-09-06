@@ -12,6 +12,7 @@ export interface NatalChartData {
     birthData: BirthData;
     generatedAt: string;
     chartData?: import('../utils/natalChart').NatalChartData;
+    isOffline?: boolean;
   };
 }
 

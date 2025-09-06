@@ -31,7 +31,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [isAutoAdding, setIsAutoAdding] = useState(false); // Prevent concurrent auto-add attempts
   
-  // Hook initialization logging removed for cleaner output
   
   // Computed values - CRITICAL FIX: Only find default person for current user
   const defaultPerson = people.find(p => p.isDefault && p.userId === user?.id) || null;
@@ -74,7 +73,15 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   
   // Add person via API
   const addPerson = useCallback(async (personData: PersonFormData): Promise<Person> => {
+    console.log('🚀 addPerson called with data:', { 
+      name: personData.name, 
+      relationship: personData.relationship,
+      userId: user?.id,
+      isDefault: personData.isDefault 
+    });
+    
     if (!user?.id) {
+      console.error('❌ addPerson failed: No user found');
       throw new Error('No user found');
     }
     
@@ -87,6 +94,8 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         ...personData,
       };
       
+      console.log('📡 Making API call to /api/people with body:', requestBody);
+      
       const response = await fetch('/api/people', {
         method: 'POST',
         headers: {
@@ -95,9 +104,13 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         body: JSON.stringify(requestBody),
       });
       
+      console.log('📡 API response received:', response.status, response.statusText);
+      
       const result = await response.json();
+      console.log('📊 API result:', result);
       
       if (result.success) {
+        console.log('✅ Person added successfully:', result.person?.id);
         const newPerson = {
           ...result.person,
           createdAt: new Date(result.person.createdAt),
@@ -118,9 +131,11 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         
         return newPerson;
       } else {
+        console.error('❌ API error:', result.error);
         throw new Error(result.error || 'Failed to add person');
       }
     } catch (err) {
+      console.error('❌ addPerson catch block:', err);
       setError(err instanceof Error ? err.message : 'Failed to add person');
       throw err;
     } finally {
@@ -251,19 +266,16 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       // This prevents the race condition where adding a person triggers loadPeople
       // which changes people.length back to 0, triggering another autoAddUser
       if (people.length === 0 && isLoading) {
-        console.log('autoAddUser: Still loading initial people, skipping auto-add');
         return;
       }
       
       // Validate user has proper ID and is not corrupted/cached admin data
       if (user.id.length < 10) {
-        console.warn('autoAddUser: Invalid user ID length, skipping auto-add');
         return;
       }
       
       // Check for suspicious admin data contamination
       if (user.username === 'Orbit Chill' && user.email === 'orbitandchill@gmail.com') {
-        console.warn('autoAddUser: Detected admin data contamination, skipping auto-add');
         return;
       }
       
@@ -273,17 +285,9 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
           !user.birthData.locationOfBirth ||
           !user.birthData.coordinates?.lat || 
           !user.birthData.coordinates?.lon) {
-        console.warn('autoAddUser: Incomplete birth data, skipping auto-add');
         return;
       }
       
-      console.log('autoAddUser: Checking for existing user person', {
-        userId: user.id,
-        hasData: !!user.birthData,
-        peopleLength: people.length,
-        isLoading,
-        isAutoAdding
-      });
       
       // Check if user already exists as a person (by birth data)
       const existingUserPerson = people.find(p => 
@@ -295,10 +299,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       );
       
       if (existingUserPerson) {
-        console.log('autoAddUser: Existing user person found, skipping auto-add', {
-          personId: existingUserPerson.id,
-          name: existingUserPerson.name
-        });
         return;
       }
       
@@ -306,7 +306,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       // CRITICAL FIX: Only auto-add if we truly have no people AND have not found existing user person
       // Additional fix: Ensure we have completed initial load to prevent race conditions
       if (people.length === 0 && !isLoading && !isAutoAdding && user?.id) {
-        console.log('autoAddUser: Starting auto-add process for user', user.id);
         setIsAutoAdding(true);
         
         try {
@@ -318,14 +317,7 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
             notes: 'Your personal birth data',
           };
           
-          console.log('autoAddUser: Adding person with data', {
-            name: userPersonData.name,
-            relationship: userPersonData.relationship,
-            hasData: !!userPersonData.birthData
-          });
-          
           const result = await addPerson(userPersonData);
-          console.log('autoAddUser: Successfully added person', { personId: result.id });
         } catch (error) {
           console.error('autoAddUser failed:', error);
           
@@ -334,16 +326,14 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
               (error.message.includes('UNIQUE constraint') || 
                error.message.includes('Person with this birth data already exists') ||
                error.message.includes('409'))) {
-            console.log('autoAddUser: Duplicate person detected - this is expected behavior when the person already exists.');
             // Don't treat this as an error - the person already exists
             // Reload people to get the existing person
             try {
               await loadPeople();
             } catch (reloadError) {
-              console.error('autoAddUser: Failed to reload people after duplicate detection:', reloadError);
             }
           } else {
-            console.error('autoAddUser: Unexpected error:', error);
+            console.error('autoAddUser failed:', error);
           }
         } finally {
           setIsAutoAdding(false);

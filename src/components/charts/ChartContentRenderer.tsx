@@ -63,6 +63,7 @@ export default function ChartContentRenderer({
 }: ChartContentRendererProps) {
   const { user } = useUserStore();
   
+  
   // CRITICAL: Final validation layer before rendering
   // Prevent displaying wrong user's chart
   if (cachedChart && user) {
@@ -78,15 +79,14 @@ export default function ChartContentRenderer({
       return <ChartEmptyState />;
     }
   }
-  // Loading state
+  // Loading state - use dynamic ChartEmptyState instead of blank spinner
   if (isLoading) {
     return (
-      <LoadingSpinner
-        variant="dots"
-        size="lg"
-        title={loadingTitle}
-        subtitle={loadingDescription}
-        screenCentered={true}
+      <ChartEmptyState 
+        isLoading={true}
+        loadingTitle={loadingTitle}
+        loadingDescription={loadingDescription}
+        isGenerating={isGenerating}
       />
     );
   }
@@ -110,6 +110,13 @@ export default function ChartContentRenderer({
     );
   }
 
-  // Empty state - no chart available
-  return <ChartEmptyState />;
+  // Empty state - no chart available (but might be loading/generating)
+  return (
+    <ChartEmptyState 
+      isLoading={isLoading || isGenerating}
+      loadingTitle={loadingTitle}
+      loadingDescription={loadingDescription}
+      isGenerating={isGenerating}
+    />
+  );
 }

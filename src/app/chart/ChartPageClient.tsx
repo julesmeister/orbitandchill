@@ -2,7 +2,6 @@
 "use client";
 
 import React, { Suspense } from "react";
-import StatusToast from "../../components/reusable/StatusToast";
 import LoadingSpinner from "../../components/reusable/LoadingSpinner";
 import ChartContentRenderer from "../../components/charts/ChartContentRenderer";
 import { useChartPage } from "../../hooks/useChartPage";
@@ -16,7 +15,6 @@ function ChartContent() {
     cachedChart,
     personToShow,
     birthDataToShow,
-    statusToast,
     isLoading,
     isGenerating,
     loadingTitle,
@@ -26,7 +24,6 @@ function ChartContent() {
     handlePersonChange,
     handleAddPersonClick,
     handleShare,
-    hideStatus,
     setActiveTab,
   } = useChartPage();
 
@@ -60,15 +57,6 @@ function ChartContent() {
         </section>
       </main>
 
-      {/* Status Toast */}
-      <StatusToast
-        title={statusToast.title}
-        message={statusToast.message}
-        status={statusToast.status}
-        isVisible={statusToast.isVisible}
-        onHide={hideStatus}
-        duration={statusToast.duration}
-      />
     </>
   );
 }

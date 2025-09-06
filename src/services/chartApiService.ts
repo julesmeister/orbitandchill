@@ -16,6 +16,7 @@ export class ChartApiService {
    */
   static async generateChart(request: GenerateChartRequest): Promise<GenerateChartResponse> {
     try {
+      
       const response = await fetch('/api/charts/generate', {
         method: 'POST',
         headers: {
@@ -63,7 +64,12 @@ export class ChartApiService {
    */
   static async getUserCharts(userId: string): Promise<ChartData[]> {
     try {
-      const response = await fetch(`/api/charts/user/${userId}`);
+      // No timeout - let the database query complete naturally
+      const response = await fetch(`/api/charts/user/${userId}`, {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch user charts');
@@ -75,9 +81,9 @@ export class ChartApiService {
         throw new Error('Failed to fetch user charts');
       }
 
-      return result.charts || [];
-    } catch (error) {
-      console.error('Error fetching user charts:', error);
+      const charts = result.charts || [];
+      return charts;
+    } catch (error: any) {
       throw error;
     }
   }
@@ -144,6 +150,7 @@ export class ChartApiService {
    * Transform API chart data to local format
    */
   static transformApiChartToLocal(apiChart: ChartData): NatalChartData {
+    
     const transformed: any = {
       id: apiChart.id,
       svg: apiChart.chartData,

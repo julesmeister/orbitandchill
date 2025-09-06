@@ -90,6 +90,15 @@ export const DEFAULT_SECTIONS: InterpretationSection[] = [
     isVisible: true,
     order: 7,
     isPremium: true
+  },
+  {
+    id: 'celestial-points',
+    name: 'Celestial Points',
+    description: 'Lilith, Chiron, Nodes & Part of Fortune',
+    icon: '🌙',
+    isVisible: true,
+    order: 8,
+    isPremium: false
   }
 ];
 
@@ -275,10 +284,16 @@ export const useChartStore = create<ChartStore>()(
           });
           
           // Add any new sections that weren't in the stored config
-          const existingIds = currentSections.map(s => s.id);
-          const newSections = DEFAULT_SECTIONS.filter(s => !existingIds.includes(s.id));
+          const mergedIds = mergedSections.map(s => s.id);
+          const newSections = DEFAULT_SECTIONS.filter(s => !mergedIds.includes(s.id));
           
-          state.interpretationSections = [...mergedSections, ...newSections]
+          // Deduplicate sections by ID and sort by order
+          const allSections = [...mergedSections, ...newSections];
+          const deduplicatedSections = allSections.filter((section, index, arr) => 
+            arr.findIndex(s => s.id === section.id) === index
+          );
+          
+          state.interpretationSections = deduplicatedSections
             .sort((a, b) => a.order - b.order);
             
           // In development, always default to interpretation tab to help with debugging
