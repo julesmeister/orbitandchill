@@ -93,10 +93,10 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
           if (!info) return null;
 
           return (
-            <div key={point.name} className="border border-gray-200 sm:border-black p-3 sm:p-4 hover:bg-gray-50 transition-colors">
+            <div key={point.name} className="border border-black p-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${pointColors[point.name] || 'from-gray-400 to-gray-600'} flex items-center justify-center`}>
+                  <div className="w-10 h-10 bg-black border border-black flex items-center justify-center">
                     <span className="text-white text-lg font-bold">
                       {pointIcons[point.name] || '●'}
                     </span>
@@ -125,11 +125,11 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
                     </p>
                     
                     {/* Dynamic interpretation based on sign */}
-                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                      <p className="font-open-sans text-sm text-blue-800 leading-relaxed">
+                    <div className="mt-3 p-3 bg-black border border-black text-white">
+                      <p className="font-open-sans text-sm leading-relaxed">
                         <strong>{displayNames[point.name] || point.name} in {capitalizeFirst(point.sign)}:</strong>
                       </p>
-                      <p className="font-open-sans text-xs text-blue-700 leading-relaxed mt-1">
+                      <p className="font-open-sans text-xs text-white/80 leading-relaxed mt-1">
                         {getSignInterpretation(point.sign, point.name)}
                       </p>
                     </div>
@@ -142,8 +142,8 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
       </div>
 
       <div className="px-3 sm:px-6 pb-3 sm:pb-6">
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded">
-          <p className="font-open-sans text-xs sm:text-sm text-blue-800">
+        <div className="bg-white border border-black p-3">
+          <p className="font-open-sans text-xs sm:text-sm text-black">
             <strong>💡 Note:</strong> These celestial points provide additional layers of meaning to your chart. 
             While not planets themselves, they represent important mathematical points and calculated positions 
             that reveal deeper insights about your spiritual path, healing journey, and life purpose.
