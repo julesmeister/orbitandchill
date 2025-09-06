@@ -396,6 +396,15 @@ export const getFullAspectInfo = (aspect: ChartAspect): AspectInfo => {
         trine: "Revolutionary energy and transformative power complement each other naturally. This brings ability to transform through innovation and implement breakthrough changes that regenerate rather than destroy.",
         opposition: "Need for complete freedom faces intense transformation and power dynamics. This develops awareness of the difference between authentic liberation and destructive rebellion.",
         quincunx: "Revolutionary energy needs constant adjustment to transformative pressures and power dynamics. This develops the ability to modify innovative approaches based on deep psychological insights."
+      },
+      // CELESTIAL POINT ASPECTS
+      lilith: {
+        conjunction: "Innovation and revolution merge with shadow self and wild feminine power. This creates explosive breakthroughs in authentic expression but may manifest as shocking rebellion or sudden unleashing of suppressed power.",
+        sextile: "Revolutionary change and shadow integration support each other through conscious awakening. This brings the ability to innovate authentically and break free from suppression when inner work is actively pursued.",
+        square: "Revolutionary urges conflict with shadow aspects and wild instincts, creating unpredictable tension between freedom and authentic power. This develops genuine liberation through learning to channel instinctual rebellion constructively.",
+        trine: "Innovation and shadow integration flow together naturally. This creates natural ability to break free from limitations and express authentic power without destructive rebellion or social upheaval.",
+        opposition: "Revolutionary freedom faces shadow self and suppressed power. This creates sudden awareness of what has been denied or rejected and the need to liberate authentic expression without destructive consequences.",
+        quincunx: "Revolutionary energy requires ongoing adjustment to shadow aspects and authentic power. This develops the ability to channel innovative rebellion appropriately while honoring wild, instinctual nature."
       }
     },
     neptune: {
@@ -406,6 +415,35 @@ export const getFullAspectInfo = (aspect: ChartAspect): AspectInfo => {
         trine: "Spiritual inspiration and transformative power flow together harmoniously. This generational aspect brings natural ability to transform through spiritual understanding and serve regenerative purposes without manipulation.",
         opposition: "Spiritual transcendence faces intense transformation and power dynamics. This rare generational aspect creates awareness of the balance between spiritual surrender and psychological empowerment.",
         quincunx: "Spiritual influences require ongoing adjustment to transformative pressures and power dynamics. This creates the ability to adapt transcendent understanding to serve deep psychological transformation."
+      },
+      // CELESTIAL POINT ASPECTS  
+      lilith: {
+        conjunction: "Spiritual transcendence merges with shadow self and wild feminine power. This creates mystical rebellion and spiritual authenticity but may manifest as spiritual delusion or escapist shadow work.",
+        sextile: "Spiritual inspiration and shadow integration support each other through conscious transcendence. This brings the ability to access mystical insights while integrating authentic power when spiritual practices actively include shadow work.",
+        square: "Spiritual idealism conflicts with shadow aspects and wild instincts, creating confusion between transcendence and authentic power. This develops genuine spirituality through learning to integrate rather than transcend instinctual wisdom.",
+        trine: "Spiritual inspiration and shadow integration flow together naturally. This creates natural mystical abilities and the capacity to access higher wisdom while remaining grounded in authentic, instinctual power.",
+        opposition: "Spiritual transcendence faces shadow self and earthly authenticity. This creates awareness of spiritual bypassing and the need to integrate mystical insights with wild, instinctual wisdom rather than escape from it.",
+        quincunx: "Spiritual inspiration requires ongoing adjustment to shadow aspects and authentic power. This develops the ability to maintain mystical connection while honoring wild, instinctual nature and earthy authenticity."
+      }
+    },
+    
+    // PLUTO - Adding celestial point aspects
+    pluto: {
+      northnode: {
+        conjunction: "Transformative power aligns with soul purpose and karmic destiny. This creates personalities whose deep psychological insights and regenerative abilities naturally serve evolutionary growth and transformative spiritual service.",
+        sextile: "Transformative power and soul purpose support each other through conscious evolution. This brings opportunities to fulfill life mission through facilitating deep transformation when psychological insights are actively applied to spiritual growth.",
+        square: "Transformative pressure conflicts with soul purpose, creating tension between psychological control and karmic evolution. This develops authentic spiritual power through learning to serve transformation rather than control evolutionary process.",
+        trine: "Transformative power and soul purpose flow together harmoniously. This creates natural ability to fulfill karmic destiny through facilitating deep psychological transformation and regenerative spiritual service without manipulative control.",
+        opposition: "Transformative control faces karmic destiny and evolutionary responsibility. This creates awareness of spiritual power dynamics and the need to use psychological depth to serve rather than control soul evolution and spiritual growth.",
+        quincunx: "Transformative power requires ongoing adjustment to soul purpose and evolutionary requirements. This develops the ability to channel deep psychological transformation while serving spiritual growth and evolutionary responsibility."
+      },
+      southnode: {
+        conjunction: "Transformative power draws on past-life knowledge of deep psychological work and regenerative abilities. This creates natural transformative talents but may manifest as repeating past patterns of psychological control or power struggles.",
+        sextile: "Transformative power and past psychological wisdom support each other when consciously balanced. This brings the ability to use natural regenerative talents while ensuring they serve current evolution rather than past control patterns.",
+        square: "Transformative pressure conflicts with over-reliance on past psychological patterns, creating challenges around spiritual evolution versus familiar power dynamics. This develops authentic transformation through using past regenerative gifts for current evolutionary service.",
+        trine: "Transformative power and past psychological patterns flow together effortlessly. This creates natural regenerative abilities and comfortable psychological depth, though conscious effort is needed to ensure transformative talents serve current spiritual evolution.",
+        opposition: "Transformative control faces past-life psychological comfort and familiar power patterns. This creates awareness of how natural regenerative abilities may need to serve evolution rather than repeat familiar control dynamics or power struggles.",
+        quincunx: "Transformative power requires ongoing adjustment between past psychological patterns and current evolutionary needs. This develops the ability to use regenerative gifts in service of spiritual growth rather than psychological manipulation or control repetition."
       }
     }
   };
