@@ -273,14 +273,6 @@ export const useChartCache = (selectedPerson?: Person | null) => {
       `${activePersonData.dateOfBirth}_${activePersonData.timeOfBirth}_${activePersonData.coordinates?.lat}_${activePersonData.coordinates?.lon}` : 
       '';
     
-    console.log('🔍 useChartCache effect triggered:', {
-      currentDataString,
-      lastLoadedData: lastLoadedDataRef.current,
-      willSkip: currentDataString === lastLoadedDataRef.current,
-      hasActivePersonData: !!activePersonData,
-      hasCachedChart: !!cachedChart,
-      timestamp: new Date().toISOString()
-    });
     
     // Skip if this is the same data we just loaded AND we already have a cached chart
     // This prevents unnecessary loads but allows loading when no chart is cached

@@ -8,10 +8,6 @@ import { generateSlug } from '@/utils/slugify';
  * Transform discussion data from API to Thread interface
  */
 const transformDiscussionToThread = (discussion: any): Thread => {
-  // Debug tags transformation for specific discussion
-  if (discussion.id === 'disc_1755547727770_209pzwo6y') {
-    console.log('🔄 Raw discussion tags from API:', discussion.tags, typeof discussion.tags);
-  }
   
   return {
     id: discussion.id,
@@ -86,11 +82,6 @@ export const createThreadsSlice = (set: any, get: any) => ({
       if (data.success && data.discussions) {
         const threads: Thread[] = data.discussions.map(transformDiscussionToThread);
         
-        // Debug: Check if the updated discussion has the correct tags
-        const updatedDiscussion = threads.find(t => t.id === 'disc_1755547727770_209pzwo6y'); // Your test discussion ID
-        if (updatedDiscussion) {
-          console.log('🔄 Reloaded discussion tags:', updatedDiscussion.tags);
-        }
 
         set({
           threads,

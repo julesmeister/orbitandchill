@@ -159,7 +159,6 @@ export async function calculatePlanetaryPositions(
   // Debug logging disabled for production
 
   try {
-    console.log('🔍 ENTRY: calculatePlanetaryPositions called with:', { date, latitude, longitude });
     // Starting planetary calculations - debug logging disabled
 
     // Try different Observer creation methods for astronomy-engine v2.1.19
@@ -396,18 +395,6 @@ export async function calculatePlanetaryPositions(
       );
       partOfFortune.house = determineHouse(partOfFortune.longitude!, housesData.houses);
       
-      console.log('🔍 Part of Fortune calculation:', {
-        sunLongitude: sun.longitude,
-        sunSign: sun.sign,
-        sunHouse: sun.house,
-        moonLongitude: moon.longitude,
-        moonSign: moon.sign,
-        ascendant: housesData.ascendant,
-        isDayBirth,
-        formula: isDayBirth ? 'ASC + Moon - Sun' : 'ASC + Sun - Moon',
-        resultLongitude: partOfFortune.longitude,
-        resultSign: partOfFortune.sign
-      });
       
       // Ensure all required properties are present for Part of Fortune
       const partOfFortuneComplete: PlanetPosition = {

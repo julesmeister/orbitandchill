@@ -55,17 +55,6 @@ export default function CommunityStats({
         if (data.success && data.discussions) {
           const discussions = data.discussions;
 
-          // Debug logging to see what's being returned
-          console.log('=== COMMUNITY STATS DEBUG ===');
-          console.log('Total discussions returned:', discussions.length);
-          console.log('Sample discussions:', discussions.slice(0, 3).map((d: any) => ({
-            id: d.id,
-            title: d.title,
-            author: d.author,
-            authorId: d.authorId,
-            authorName: d.authorName
-          })));
-          
           // Collect all unique authors from discussions and replies
           const discussionAuthors = discussions.map((d: any) => d.authorId || d.author).filter(Boolean);
           const replyAuthors = repliesData.success && repliesData.replies ? 
@@ -73,13 +62,6 @@ export default function CommunityStats({
           
           const allAuthors = [...discussionAuthors, ...replyAuthors];
           const uniqueAuthors = [...new Set(allAuthors)];
-          
-          console.log('Discussion authors:', discussionAuthors);
-          console.log('Reply authors:', replyAuthors);
-          console.log('All authors combined:', allAuthors);
-          console.log('Unique authors:', uniqueAuthors);
-          console.log('Replies API response:', repliesData);
-          console.log('=============================');
 
           // Calculate real statistics
           const discussionStats: DiscussionStats = {
