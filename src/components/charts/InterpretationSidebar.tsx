@@ -89,9 +89,13 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
       // Show all sections in reorder mode, otherwise only show accessible ones
       if (isReorderMode) return true;
       
-      // If premium features haven't loaded yet (0 features), show all visible sections as fallback
-      if (features.length === 0) return section.isVisible;
+      // Must be visible first
+      if (!section.isVisible) return false;
       
+      // If premium features haven't loaded yet (0 features), show all visible sections as fallback
+      if (features.length === 0) return true;
+      
+      // For sections that are visible, check if user has access
       return shouldShowFeature(section.id, userIsPremium);
     });
   };

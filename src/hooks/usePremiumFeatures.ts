@@ -214,12 +214,37 @@ export const usePremiumFeatures = (): PremiumFeatureState => {
 
   const isFeaturePremium = useCallback((featureId: string): boolean => {
     const feature = features.find(f => f.id === featureId);
-    return feature?.isPremium ?? false;
+    if (!feature) {
+      const fallbackFeature = FALLBACK_FEATURES.find(f => f.id === featureId);
+      return fallbackFeature?.isPremium ?? false;
+    }
+    return feature.isPremium;
   }, [features]);
 
   const shouldShowFeature = useCallback((featureId: string, userIsPremium: boolean = false): boolean => {
     const feature = features.find(f => f.id === featureId);
-    if (!feature || !feature.isEnabled) {
+    
+    // If feature not found, check FALLBACK_FEATURES
+    if (!feature) {
+      const fallbackFeature = FALLBACK_FEATURES.find(f => f.id === featureId);
+      if (!fallbackFeature) {
+        return false; // Feature doesn't exist at all
+      }
+      
+      // Use fallback feature settings
+      if (!fallbackFeature.isEnabled) {
+        return false;
+      }
+      
+      if (fallbackFeature.isPremium && !userIsPremium) {
+        return false;
+      }
+      
+      return true;
+    }
+    
+    // Feature found in loaded features
+    if (!feature.isEnabled) {
       return false;
     }
     

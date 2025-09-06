@@ -35,19 +35,22 @@ const ChartInterpretation = memo(function ChartInterpretation() {
   const userIsPremium = user?.subscriptionTier === 'premium' || false;
   
   // Filter sections based on visibility and premium status
-  const filteredSections = features.length === 0 
-    ? orderedSections.filter(section => section.isVisible)
-    : orderedSections.filter(section => {
-        if (!section.isVisible) return false;
-        
-        // Always show non-premium sections
-        if (!section.isPremium) {
-          return true;
-        }
-        
-        // For premium sections, check user access
-        return shouldShowFeature(section.id, userIsPremium);
-      });
+  const filteredSections = orderedSections.filter(section => {
+    if (!section.isVisible) return false;
+    
+    // Always show non-premium sections
+    if (!section.isPremium) {
+      return true;
+    }
+    
+    // For premium sections, check user access
+    // If features array is empty, fall back to simple premium check
+    if (features.length === 0) {
+      return userIsPremium;
+    }
+    
+    return shouldShowFeature(section.id, userIsPremium);
+  });
 
   // Show loading skeleton while chart data is loading
   if (!chartData) {

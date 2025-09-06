@@ -352,6 +352,45 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
     return () => clearTimeout(timeoutId);
   }, [user?.id, user?.birthData, user?.username, people.length, isLoading, isAutoAdding, addPerson]);
   
+  // CRITICAL FIX: Sync defaultPerson birth data with user birth data changes
+  useEffect(() => {
+    const syncDefaultPersonWithUser = async () => {
+      if (!user?.id || !user.birthData || !defaultPerson || isLoading) {
+        return;
+      }
+      
+      // Check if defaultPerson birth data is different from user birth data
+      const needsSync = 
+        defaultPerson.birthData?.dateOfBirth !== user.birthData.dateOfBirth ||
+        defaultPerson.birthData?.timeOfBirth !== user.birthData.timeOfBirth ||
+        defaultPerson.birthData?.locationOfBirth !== user.birthData.locationOfBirth ||
+        defaultPerson.birthData?.coordinates?.lat !== user.birthData.coordinates?.lat ||
+        defaultPerson.birthData?.coordinates?.lon !== user.birthData.coordinates?.lon;
+      
+      if (needsSync) {
+        try {
+          console.log('🔄 Syncing defaultPerson birth data with user data changes');
+          await updatePerson(defaultPerson.id, {
+            name: defaultPerson.name, // Keep existing name
+            relationship: 'self',
+            birthData: user.birthData, // Update with latest user birth data
+            isDefault: true,
+            notes: defaultPerson.notes || 'Your personal birth data'
+          });
+          
+          // Reload people to get updated data
+          await loadPeople();
+        } catch (error) {
+          console.error('Failed to sync defaultPerson with user data:', error);
+        }
+      }
+    };
+    
+    // Debounce to avoid excessive API calls
+    const timeoutId = setTimeout(syncDefaultPersonWithUser, 500);
+    return () => clearTimeout(timeoutId);
+  }, [user?.id, user?.birthData, defaultPerson?.birthData, defaultPerson?.id, updatePerson, loadPeople, isLoading]);
+  
   return {
     people,
     isLoading,
