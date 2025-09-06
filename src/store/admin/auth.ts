@@ -155,11 +155,14 @@ export const createAuthSlice = (set: any, get: any) => ({
       return false;
     }
 
-    // Master admin account - orbitandchill@gmail.com
-    const MASTER_ADMIN_EMAIL = 'orbitandchill@gmail.com';
+    // Master admin accounts - both emails work
+    const MASTER_ADMIN_EMAILS = [
+      'orbitandchill@gmail.com',
+      'orbitchill@gmail.com' // Alternative admin email
+    ];
     
-    // Check if current user is the master admin
-    if (currentUser.email === MASTER_ADMIN_EMAIL) {
+    // Check if current user is one of the master admins
+    if (MASTER_ADMIN_EMAILS.includes(currentUser.email)) {
       try {
         // Set loading state to prevent duplicate calls
         set({ authLoading: true });
