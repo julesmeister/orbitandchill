@@ -46,11 +46,6 @@ export function useEventBookmark({
                           currentEvent.id.startsWith('astro_') ||
                           currentEvent.isGenerated;
       
-      console.log('Toggling bookmark for event:', {
-        id: currentEvent.id,
-        isLocalEvent,
-        currentBookmarkState: currentEvent.isBookmarked
-      });
       
       // Toggle bookmark through the store (handles both local and API events)
       await toggleBookmark(currentEvent.id, userId);
@@ -61,7 +56,6 @@ export function useEventBookmark({
       }
     } else if (eventDate) {
       // If event doesn't exist, add it as a new bookmarked event
-      console.log('Creating new bookmarked event');
       const newEvent = createNewBookmarkedEvent(eventTitle, eventDate, eventTime, userId, isOptimal, optimalScore);
       await addEvent(newEvent);
     }

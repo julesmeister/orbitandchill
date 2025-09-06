@@ -83,7 +83,8 @@ function EventChartContent() {
   // Initialize bookmark state
   useEffect(() => {
     const currentEvent = existingEvent || eventFromDb;
-    setLocalBookmarkState(currentEvent?.isBookmarked || isBookmarked || false);
+    const bookmarkState = currentEvent?.isBookmarked || isBookmarked || false;
+    setLocalBookmarkState(bookmarkState);
   }, [existingEvent, eventFromDb, isBookmarked]);
 
   const { handleBookmarkToggle: originalHandleBookmarkToggle } = useEventBookmark({

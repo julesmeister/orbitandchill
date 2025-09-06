@@ -26,6 +26,7 @@ export default function EventHeader({
   isBookmarked,
   onBookmarkToggle
 }: EventHeaderProps) {
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-4">
