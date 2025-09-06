@@ -194,7 +194,10 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/charts/ChartContentRenderer.tsx src/db/connectionPool.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/db/connectionPool.ts --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/charts/ChartQuickActions.tsx src/hooks/useChartCache.ts src/hooks/useChartPage.ts --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/chart/components/modules/ChartInterpretation.tsx src/components/charts/ChartInterpretation.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/chart/components/modules/ChartInterpretation.tsx src/components/charts/ChartInterpretation.tsx --quiet)",
+      "Bash(git log:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/natalChart.ts)"
     ],
     "deny": [],
     "additionalDirectories": [

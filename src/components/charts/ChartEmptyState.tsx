@@ -26,18 +26,20 @@ export default function ChartEmptyState({
   const getContent = () => {
     if (isLoading || isGenerating) {
       return {
-        title: loadingTitle || (isGenerating ? "Crafting Your Cosmic Map" : "Preparing Your Chart"),
+        title: loadingTitle || (isGenerating ? "Generating Your Chart" : "Loading Chart"),
         description: loadingDescription || (isGenerating 
-          ? "The stars are aligning to create your personalized birth chart..." 
-          : "Loading your celestial data and preparing the cosmic calculations..."),
-        icon: isGenerating ? "✨" : "🔮"
+          ? "Calculating planetary positions and aspects..." 
+          : "Loading your chart data..."),
+        icon: isGenerating ? "✨" : "🔮",
+        showFeatureCards: false
       };
     }
     
     return {
       title: "Your Cosmic Journey Awaits",
       description: "Unlock the mysteries of your birth chart and discover the celestial blueprint that makes you uniquely you.",
-      icon: "⭐"
+      icon: "⭐",
+      showFeatureCards: true
     };
   };
 
@@ -67,7 +69,8 @@ export default function ChartEmptyState({
           {content.description}
         </p>
 
-        {/* Feature Cards */}
+        {/* Feature Cards - Only show when not loading */}
+        {content.showFeatureCards && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black mb-12">
           <div className="p-8 border-black md:border-r" style={{ backgroundColor: '#f0e3ff' }}>
             <div className="w-12 h-12 bg-black flex items-center justify-center mb-6 mx-auto">
@@ -99,6 +102,7 @@ export default function ChartEmptyState({
             <p className="font-open-sans text-sm text-black/80">Understand the unique energy patterns in your cosmic design</p>
           </div>
         </div>
+        )}
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">

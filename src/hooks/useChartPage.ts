@@ -244,17 +244,29 @@ export const useChartPage = () => {
     setSelectedPerson(person);
     setGlobalSelectedPerson(person?.id || null);
     
-    if (person?.birthData && user && !cachedChart) {
-      try {
-        await generateChart({
-          name: person.name || "",
-          dateOfBirth: person.birthData.dateOfBirth,
-          timeOfBirth: person.birthData.timeOfBirth,
-          locationOfBirth: person.birthData.locationOfBirth,
-          coordinates: person.birthData.coordinates,
-        });
-      } catch (error) {
-        // Error generating chart for selected person
+    // Check if birth data actually changed before regenerating
+    if (person?.birthData && user) {
+      const currentData = cachedChart?.metadata?.birthData;
+      const hasDataChanged = !currentData || 
+        currentData.dateOfBirth !== person.birthData.dateOfBirth ||
+        currentData.timeOfBirth !== person.birthData.timeOfBirth ||
+        currentData.locationOfBirth !== person.birthData.locationOfBirth ||
+        currentData.coordinates?.lat !== person.birthData.coordinates?.lat ||
+        currentData.coordinates?.lon !== person.birthData.coordinates?.lon;
+      
+      if (hasDataChanged) {
+        try {
+          await generateChart({
+            name: person.name || "",
+            dateOfBirth: person.birthData.dateOfBirth,
+            timeOfBirth: person.birthData.timeOfBirth,
+            locationOfBirth: person.birthData.locationOfBirth,
+            coordinates: person.birthData.coordinates,
+          });
+        } catch (error) {
+          // Error generating chart for selected person
+          console.error('Error generating chart after person change:', error);
+        }
       }
     }
   };
@@ -313,7 +325,8 @@ export const useChartPage = () => {
   // Use the activeSelectedPerson which properly includes the default person with relationship: 'self'
   const personToShow = activeSelectedPerson;
   
-  const birthDataToShow = cachedChart?.metadata?.birthData || personToShow?.birthData;
+  // Always prefer the current person's birth data over cached data for immediate updates
+  const birthDataToShow = personToShow?.birthData || cachedChart?.metadata?.birthData;
   
   const loadingTitle = isUserLoading ? 'Loading Your Profile' :
     isGenerating && !cachedChart ? 'Generating Your Chart' :
