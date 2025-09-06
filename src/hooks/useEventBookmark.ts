@@ -29,48 +29,41 @@ export function useEventBookmark({
   isOptimal,
   optimalScore
 }: UseEventBookmarkProps): UseEventBookmarkReturn {
-  const { toggleBookmark } = useEventsStore();
+  const { toggleBookmark, addEvent } = useEventsStore();
 
-  const handleBookmarkToggle = () => {
+  const handleBookmarkToggle = async () => {
     if (!userId) {
       console.error('User ID is not available for bookmark toggle. User state:', { userId });
-      return;
+      throw new Error('User ID is required to bookmark events');
     }
     
     const currentEvent = existingEvent || eventFromDb;
     
     if (currentEvent) {
-      // Check if this is a local event (starts with 'bookmark_' or 'local_') or a database event
-      const isLocalEvent = currentEvent.id.startsWith('bookmark_') || currentEvent.id.startsWith('local_');
+      // Check if this is a local/generated event or a database event
+      const isLocalEvent = currentEvent.id.startsWith('bookmark_') || 
+                          currentEvent.id.startsWith('local_') || 
+                          currentEvent.id.startsWith('astro_') ||
+                          currentEvent.isGenerated;
       
-      if (isLocalEvent) {
-        // For local events, update the local state directly without API calls
-        console.log('Event is local, updating local state:', currentEvent.id);
-        const store = useEventsStore.getState();
-        const updatedEvent = { ...currentEvent, isBookmarked: !currentEvent.isBookmarked };
-        
-        // Update the events store directly
-        store.events = {
-          ...store.events,
-          [currentEvent.id]: updatedEvent
-        };
-        
-        // Force a re-render by setting the state
-        useEventsStore.setState({ events: store.events });
-      } else {
-        // For database events, use the API
-        console.log('Event is in database, toggling bookmark via API:', currentEvent.id);
-        toggleBookmark(currentEvent.id, userId);
-        
-        // Update the eventFromDb state optimistically
-        if (eventFromDb) {
-          setEventFromDb({ ...eventFromDb, isBookmarked: !eventFromDb.isBookmarked });
-        }
+      console.log('Toggling bookmark for event:', {
+        id: currentEvent.id,
+        isLocalEvent,
+        currentBookmarkState: currentEvent.isBookmarked
+      });
+      
+      // Toggle bookmark through the store (handles both local and API events)
+      await toggleBookmark(currentEvent.id, userId);
+      
+      // Update the eventFromDb state optimistically for immediate UI feedback
+      if (eventFromDb) {
+        setEventFromDb({ ...eventFromDb, isBookmarked: !eventFromDb.isBookmarked });
       }
     } else if (eventDate) {
       // If event doesn't exist, add it as a new bookmarked event
+      console.log('Creating new bookmarked event');
       const newEvent = createNewBookmarkedEvent(eventTitle, eventDate, eventTime, userId, isOptimal, optimalScore);
-      useEventsStore.getState().addEvent(newEvent);
+      await addEvent(newEvent);
     }
   };
 

@@ -62,13 +62,31 @@ function EventChartContent() {
   });
 
   const [eventFromDbState, setEventFromDbState] = useState<any>(null);
+  const [localBookmarkState, setLocalBookmarkState] = useState<boolean>(false);
+  const [bookmarkToast, setBookmarkToast] = useState<{
+    isVisible: boolean;
+    status: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({
+    isVisible: false,
+    status: 'success',
+    title: '',
+    message: ''
+  });
 
   // Update local state when eventFromDb changes
   useEffect(() => {
     setEventFromDbState(eventFromDb);
   }, [eventFromDb]);
 
-  const { handleBookmarkToggle } = useEventBookmark({
+  // Initialize bookmark state
+  useEffect(() => {
+    const currentEvent = existingEvent || eventFromDb;
+    setLocalBookmarkState(currentEvent?.isBookmarked || isBookmarked || false);
+  }, [existingEvent, eventFromDb, isBookmarked]);
+
+  const { handleBookmarkToggle: originalHandleBookmarkToggle } = useEventBookmark({
     userId: user?.id,
     existingEvent,
     eventFromDb: eventFromDbState,
@@ -79,6 +97,40 @@ function EventChartContent() {
     isOptimal,
     optimalScore
   });
+
+  // Wrap bookmark toggle with toast notification
+  const handleBookmarkToggle = useCallback(async () => {
+    try {
+      // Toggle local state immediately for instant UI feedback
+      const newBookmarkState = !localBookmarkState;
+      setLocalBookmarkState(newBookmarkState);
+      
+      // Show immediate feedback
+      setBookmarkToast({
+        isVisible: true,
+        status: 'success',
+        title: newBookmarkState ? 'Event Bookmarked' : 'Bookmark Removed',
+        message: newBookmarkState 
+          ? 'Event has been saved to your bookmarks'
+          : 'Event has been removed from your bookmarks'
+      });
+
+      // Execute the actual toggle
+      await originalHandleBookmarkToggle();
+      
+    } catch (error) {
+      console.error('Bookmark toggle error:', error);
+      // Revert local state on error
+      setLocalBookmarkState(!localBookmarkState);
+      
+      setBookmarkToast({
+        isVisible: true,
+        status: 'error',
+        title: 'Bookmark Failed',
+        message: 'Unable to update bookmark. Please try again.'
+      });
+    }
+  }, [localBookmarkState, originalHandleBookmarkToggle]);
 
   const {
     selectedTime,
@@ -193,7 +245,7 @@ function EventChartContent() {
             selectedTime={selectedTime}
             isOptimal={isOptimal}
             optimalScore={optimalScore}
-            isBookmarked={isBookmarked}
+            isBookmarked={localBookmarkState}
             onBookmarkToggle={handleBookmarkToggle}
           />
         </div>
@@ -239,6 +291,16 @@ function EventChartContent() {
         isVisible={errorToast.isVisible}
         onHide={hideError}
         duration={6000} // Auto-hide after 6 seconds
+      />
+
+      {/* Bookmark Toast */}
+      <StatusToast
+        title={bookmarkToast.title}
+        message={bookmarkToast.message}
+        status={bookmarkToast.status}
+        isVisible={bookmarkToast.isVisible}
+        onHide={() => setBookmarkToast(prev => ({ ...prev, isVisible: false }))}
+        duration={3000} // Auto-hide after 3 seconds
       />
     </div>
   );
