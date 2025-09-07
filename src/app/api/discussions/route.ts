@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
       const isPublished = !drafts;
 
       // Fetch discussions from database with increased timeout
-      console.log('🔍 Fetching discussions with params:', { category, isBlogPost, isPublished, drafts, userId, limit, offset, sortBy, page });
       
       // Fetch both discussions and total count in parallel
       const [discussions, totalCount] = await Promise.all([
@@ -51,8 +50,6 @@ export async function GET(request: NextRequest) {
           authorId: drafts ? userId : undefined,
         })
       ]);
-      
-      console.log('✅ Successfully fetched', discussions.length, 'discussions');
 
       // Filter discussions received from database
       

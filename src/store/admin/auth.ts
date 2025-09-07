@@ -151,7 +151,7 @@ export const createAuthSlice = (set: any, get: any) => ({
     const { useUserStore } = await import('@/store/userStore');
     const currentUser = useUserStore.getState().user;
     
-    if (!currentUser || !currentUser.email) {
+    if (!currentUser) {
       return false;
     }
 
@@ -161,19 +161,27 @@ export const createAuthSlice = (set: any, get: any) => ({
       'orbitchill@gmail.com' // Alternative admin email
     ];
     
-    // Check if current user is one of the master admins
-    if (MASTER_ADMIN_EMAILS.includes(currentUser.email)) {
+    // Fallback admin check for known admin user ID and username (in case email is missing)
+    const MASTER_ADMIN_USER_IDS = ['113425479876942125321']; // Your Google ID
+    const isAdminEmail = currentUser.email && MASTER_ADMIN_EMAILS.includes(currentUser.email);
+    const isAdminUserId = currentUser.id && MASTER_ADMIN_USER_IDS.includes(currentUser.id);
+    const isAdminUsername = currentUser.username === "Orbit Chill" && currentUser.authProvider === "google";
+    
+    const isAdminUser = isAdminEmail || isAdminUserId || isAdminUsername;
+    
+    // Check if current user is one of the master admins (by email, ID, or username)
+    if (isAdminUser) {
       try {
         // Set loading state to prevent duplicate calls
         set({ authLoading: true });
 
-        const data = await authApi.masterLogin(currentUser.id, currentUser.email);
+        const data = await authApi.masterLogin(currentUser.id, currentUser.email || 'orbitandchill@gmail.com');
 
         if (data.success && data.token) {
           const adminUser: AdminUser = {
             id: currentUser.id,
             username: currentUser.username || 'Master Admin',
-            email: currentUser.email,
+            email: currentUser.email || 'orbitandchill@gmail.com',
             role: 'master_admin',
             permissions: ['all'] // Master admin has all permissions
           };

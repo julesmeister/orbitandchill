@@ -187,12 +187,14 @@ export class DiscussionService {
     sql += ' LIMIT ? OFFSET ?';
     sqlParams.push(limit, offset);
     
+    
     const rawResult = await client.execute({
       sql,
       args: sqlParams
     });
     
     const results = rawResult.rows || [];
+    
 
     // Ensure results is an array before mapping
     if (!Array.isArray(results)) {

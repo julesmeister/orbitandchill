@@ -201,7 +201,8 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/astrological/aspectInterpretations.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/astrological/aspectInterpretations.ts src/utils/astrological/planetaryAspects.ts src/utils/astrological/celestialPointAspects.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/chart/components/modules/ChartInterpretation.tsx src/components/charts/NatalChartDisplay.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/event-chart/EventChartPageClient.tsx --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/event-chart/EventChartPageClient.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/natalChart.ts --quiet)"
     ],
     "deny": [],
     "additionalDirectories": [

@@ -64,6 +64,7 @@ export const createThreadsSlice = (set: any, get: any) => ({
     const state = get();
     const now = Date.now();
     
+    
     // Prevent concurrent loads and frequent requests (min 30 seconds between loads)
     if (state.isLoadingThreads || (!options.forceRefresh && now - state.lastLoadTime < 30000)) {
       return;
@@ -78,6 +79,7 @@ export const createThreadsSlice = (set: any, get: any) => ({
         ...options,
         cacheBuster
       });
+      
       
       if (data.success && data.discussions) {
         const threads: Thread[] = data.discussions.map(transformDiscussionToThread);
@@ -96,6 +98,7 @@ export const createThreadsSlice = (set: any, get: any) => ({
         throw new Error('Failed to fetch discussions');
       }
     } catch (error) {
+      console.error('Error loading threads:', error);
       // Fall back to empty array if API fails
       set({
         threads: [],
