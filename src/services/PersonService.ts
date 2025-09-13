@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Person, CreatePersonRequest, UpdatePersonRequest, DeletePersonRequest } from '@/types/person';
+import { Person, CreatePersonRequest, UpdatePersonRequest, DeletePersonRequest } from '@/types/people';
 import { PersonRepository } from '@/repositories/PersonRepository';
 import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 import { PersonValidationService } from '@/services/personValidationService';

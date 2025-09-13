@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Person, PersonFormData, CreatePersonRequest } from '@/types/person';
+import { Person, PersonFormData, CreatePersonRequest } from '@/types/people';
 import { useUserStore } from '@/store/userStore';
 
 interface UsePeopleState {

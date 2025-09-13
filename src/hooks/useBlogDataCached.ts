@@ -71,13 +71,13 @@ export function useBlogDataCached(): UseBlogDataReturn {
       try {
         const cached = await db.getCache<BlogPost[]>(BLOG_CACHE_KEY);
         if (cached && cached.length > 0) {
-          setCachedBlogPosts(cached.map(post => ({
+          setCachedBlogPosts(cached.map((post: any) => ({
             ...post,
             publishedAt: new Date(post.publishedAt)
           })));
         }
         setIsCacheLoaded(true);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error loading cached blog data:', err);
         setIsCacheLoaded(true);
       }
@@ -125,7 +125,7 @@ export function useBlogDataCached(): UseBlogDataReturn {
 
     // Cache the processed data
     if (processed.length > 0) {
-      db.setCache(BLOG_CACHE_KEY, processed, CACHE_TTL_MINUTES).catch(err => {
+      db.setCache(BLOG_CACHE_KEY, processed, CACHE_TTL_MINUTES).catch((err: any) => {
         console.error('Error caching blog data:', err);
       });
     }
@@ -198,7 +198,7 @@ export function useBlogDataCached(): UseBlogDataReturn {
     
     // Cache featured articles separately for home page
     if (featured.length > 0) {
-      db.setCache(FEATURED_CACHE_KEY, featured, CACHE_TTL_MINUTES).catch(err => {
+      db.setCache(FEATURED_CACHE_KEY, featured, CACHE_TTL_MINUTES).catch((err: any) => {
         console.error('Error caching featured articles:', err);
       });
     }

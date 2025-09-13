@@ -211,7 +211,10 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/forms/CompactNatalChartForm.tsx src/components/forms/NatalChartForm.tsx)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/charts/generate/route.ts src/utils/natalChart.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/api/charts/generate/route.ts src/components/charts/NatalChartDisplay.tsx src/hooks/useNatalChart.ts --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/charts/generate/route.ts src/components/charts/NatalChartDisplay.tsx src/hooks/useNatalChart.ts)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/charts/generate/route.ts src/components/charts/NatalChartDisplay.tsx src/hooks/useNatalChart.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/people/PeopleSelector.tsx src/utils/formatters/relationshipFormatters.ts src/services/duplicateDetectionService.ts src/hooks/usePersonActions.ts src/components/ui/PersonDropdown.tsx --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/people/PeopleSelector.tsx src/utils/formatters/relationshipFormatters.ts src/services/duplicateDetectionService.ts src/hooks/usePersonActions.ts src/components/ui/PersonDropdown.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/components/people/ src/hooks/useDropdownState.ts src/hooks/useAutoSelection.ts --quiet)"
     ],
     "deny": [],
     "additionalDirectories": [

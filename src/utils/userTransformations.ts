@@ -36,7 +36,7 @@ export class UserTransformations {
       hasNatalChart: profile.hasNatalChart ?? false,
       
       // Subscription tier
-      subscriptionTier: profile.subscriptionTier,
+      subscriptionTier: profile.subscriptionTier as "free" | "premium" | "pro" | undefined,
       
       // Convert privacy settings to nested object
       privacy: this.extractPrivacySettings(profile)
@@ -67,7 +67,7 @@ export class UserTransformations {
       hasNatalChart: user.hasNatalChart,
       
       // Subscription tier
-      subscriptionTier: user.subscriptionTier,
+      subscriptionTier: user.subscriptionTier as "free" | "premium" | "pro" | undefined,
       
       // Flatten privacy settings
       ...this.flattenPrivacySettings(user.privacy)

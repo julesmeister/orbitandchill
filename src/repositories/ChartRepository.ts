@@ -48,7 +48,7 @@ export class ChartRepository {
     const charts = await this.natalCharts
       .where("userId")
       .equals(userId)
-      .and(chart => chart.metadata?.personId === personId)
+      .and(chart => chart.metadata?.userId === personId)
       .toArray();
 
     return charts.sort(

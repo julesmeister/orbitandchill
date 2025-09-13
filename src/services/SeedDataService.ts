@@ -112,7 +112,12 @@ export class SeedDataService {
     return [
       {
         id: 'config_astromaven',
+        batchId: 'batch_default',
         userId: 'seed_user_astromaven',
+        name: 'AstroMaven',
+        personality: 'professional_educator',
+        astroProfile: 'Experienced astrologer with focus on natal charts',
+        status: 'active',
         writingStyle: 'professional_educational',
         expertiseAreas: ['natal_charts', 'transits', 'aspects', 'houses'],
         responsePattern: 'detailed_explanations',
@@ -125,7 +130,12 @@ export class SeedDataService {
       },
       {
         id: 'config_starseeker23',
+        batchId: 'batch_default',
         userId: 'seed_user_starseeker23',
+        name: 'StarSeeker23',
+        personality: 'curious_enthusiast',
+        astroProfile: 'Enthusiastic beginner learning astrology',
+        status: 'active',
         writingStyle: 'enthusiastic_personal',
         expertiseAreas: ['relationships', 'personal_experience', 'learning'],
         responsePattern: 'questions_and_sharing',
@@ -271,7 +281,7 @@ export class SeedDataService {
     }
 
     for (const config of configs) {
-      if (config.replyProbability < 0 || config.replyProbability > 1) {
+      if ((config.replyProbability ?? 0) < 0 || (config.replyProbability ?? 0) > 1) {
         errors.push(`Config ${config.id} has invalid replyProbability: ${config.replyProbability}`);
       }
       if (!config.aiPromptTemplate?.trim()) {

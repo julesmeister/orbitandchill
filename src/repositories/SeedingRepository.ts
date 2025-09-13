@@ -25,7 +25,7 @@ export class SeedingRepository {
       .toArray();
     
     return configs.sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
     );
   }
 
@@ -61,7 +61,7 @@ export class SeedingRepository {
   async updateSeedingBatchStatus(
     id: string, 
     status: SeedingBatch['status'], 
-    stats?: Partial<Pick<SeedingBatch, 'createdDiscussions' | 'createdReplies' | 'createdVotes' | 'errorMessage'>>
+    stats?: Partial<Pick<SeedingBatch, 'errorMessage' | 'createdDiscussions' | 'createdReplies' | 'createdVotes'>>
   ): Promise<void> {
     const updateData: Partial<SeedingBatch> = { status };
     

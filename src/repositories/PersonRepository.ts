@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Person, PersonRow, PersonFilters, CreatePersonRequest } from '@/types/person';
+import { Person, PersonRow, PersonFilters, CreatePersonRequest } from '@/types/people';
 import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 import { SQLQueryBuilder } from '@/utils/sqlQueryBuilder';
 import { DatabaseConnectionService } from '@/services/databaseConnectionService';
@@ -121,8 +121,8 @@ export class PersonRepository {
 
     return {
       ...personData,
-      createdAt: timestamp,
-      updatedAt: timestamp
+      createdAt: new Date(timestamp),
+      updatedAt: new Date(timestamp)
     };
   }
 
@@ -162,8 +162,8 @@ export class PersonRepository {
 
     return {
       ...defaultPersonData,
-      createdAt: timestamp,
-      updatedAt: timestamp
+      createdAt: new Date(timestamp),
+      updatedAt: new Date(timestamp)
     };
   }
 
@@ -179,7 +179,7 @@ export class PersonRepository {
     const flattenedUpdates: Record<string, any> = {};
     
     Object.entries(updates).forEach(([key, value]) => {
-      if (key === 'birthData' && value && typeof value === 'object') {
+      if (key === 'birthData' && value && typeof value === 'object' && 'dateOfBirth' in value) {
         flattenedUpdates.dateOfBirth = value.dateOfBirth;
         flattenedUpdates.timeOfBirth = value.timeOfBirth;
         flattenedUpdates.locationOfBirth = value.locationOfBirth;

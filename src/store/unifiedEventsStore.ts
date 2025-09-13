@@ -15,7 +15,9 @@ import { eventCache, EventCacheImpl } from '../services/EventCache';
 const eventPersistence = {
   async loadEvents() { return []; },
   async saveEvents() { return true; },
-  async clearCache() { return true; }
+  async clearCache() { return true; },
+  async saveEvent(event: any) { return true; },
+  async removeEvent(id: string) { return true; }
 };
 import {
   toUnifiedEvent,

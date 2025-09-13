@@ -179,7 +179,7 @@ export function useNatalChartForm({
   useEffect(() => {
     if (mode === 'person' && editingPerson && people.length === 0) {
       const loadAndWait = async () => {
-        await loadPeople();
+        await loadPeople(user?.id || 'anonymous');
       };
       loadAndWait();
     }
@@ -365,22 +365,46 @@ export function useNatalChartForm({
         
         let savedPerson: Person;
         if (editingPerson) {
-          await loadPeople();
-          const { people: freshPeople } = usePeopleStore.getState();
+          await loadPeople(user?.id || 'anonymous');
+          const freshPeople = people;
           const personExistsInStore = freshPeople.some((p: any) => p.id === editingPerson.id);
           
           if (personExistsInStore) {
             try {
-              await updatePerson(editingPerson.id, personFormData);
+              updatePerson(editingPerson.id, personFormData);
               savedPerson = { ...editingPerson, ...personFormData, updatedAt: new Date() };
             } catch (error) {
-              savedPerson = await addPerson(personFormData);
+              const newPerson: Person = {
+                id: crypto.randomUUID(),
+                userId: user?.id || 'anonymous',
+                ...personFormData,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+              addPerson(newPerson);
+              savedPerson = newPerson;
             }
           } else {
-            savedPerson = await addPerson(personFormData);
+            const newPerson: Person = {
+              id: crypto.randomUUID(),
+              userId: user?.id || 'anonymous',
+              ...personFormData,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            addPerson(newPerson);
+            savedPerson = newPerson;
           }
         } else {
-          savedPerson = await addPerson(personFormData);
+          const newPerson: Person = {
+            id: crypto.randomUUID(),
+            userId: user?.id || 'anonymous',
+            ...personFormData,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          addPerson(newPerson);
+          savedPerson = newPerson;
         }
         
         // If this person represents the user ('self'), sync data to user store
@@ -401,7 +425,7 @@ export function useNatalChartForm({
           console.log('🔄 useNatalChartForm: Triggering store reloads after person save');
           const { loadPeople: reloadPeopleStore } = usePeopleStore.getState();
           await Promise.all([
-            loadPeople(), // Reload people store
+            loadPeople(user?.id || 'anonymous'), // Reload people store
             // Note: usePeopleAPI will be reloaded by ChartQuickActions
           ]);
           console.log('✅ useNatalChartForm: Store reloads completed');
