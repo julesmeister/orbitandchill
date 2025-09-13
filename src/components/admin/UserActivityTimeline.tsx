@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { formatFullTimestamp } from '@/utils/dateFormatting';
 
 interface UserActivity {
   id: string;
@@ -128,31 +129,6 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
     return '#6bdbff'; // Default blue
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) {
-      return 'No date';
-    }
-    
-    // Handle both string and numeric timestamps
-    const date = new Date(typeof dateString === 'number' ? dateString * 1000 : dateString);
-    
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    
-    // Long form date format
-    const formatted = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    
-    return formatted;
-  };
 
   const getFilteredActivities = () => {
     if (filter === 'all') return activities;
@@ -282,7 +258,7 @@ export default function UserActivityTimeline({ userId, isOpen, onClose }: UserAc
                         {activity.description}
                       </p>
                       <p className="font-open-sans text-xs text-black/60 ml-2">
-                        {getCreatedAt(activity) ? formatDate(getCreatedAt(activity)) : 'No date'}
+                        {getCreatedAt(activity) ? formatFullTimestamp(getCreatedAt(activity)) : 'No date'}
                       </p>
                     </div>
                     <div className="mt-1">

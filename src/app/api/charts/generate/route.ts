@@ -39,6 +39,14 @@ interface ChartGenerationRequest {
  */
 async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg: string; metadata: any }> {
   try {
+    console.log('🚀 API generateChartSVG: Starting chart generation with data:', {
+      name: request.subjectName,
+      dateOfBirth: request.dateOfBirth,
+      timeOfBirth: request.timeOfBirth,
+      locationOfBirth: request.locationOfBirth,
+      coordinates: request.coordinates
+    });
+
     // Use the same chart generation logic as the frontend
     const result = await generateNatalChart({
       name: request.subjectName,
@@ -46,6 +54,29 @@ async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg:
       timeOfBirth: request.timeOfBirth,
       locationOfBirth: request.locationOfBirth,
       coordinates: request.coordinates
+    });
+
+    const allPlanetNames = result.metadata?.chartData?.planets?.map(p => p.name) || [];
+    const celestialPointsFound = result.metadata?.chartData?.planets?.filter(p => {
+      const name = p.name?.toLowerCase() || '';
+      return ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune', 'northNode', 'southNode', 'partOfFortune'].includes(name);
+    }) || [];
+
+    console.log('✅ API generateChartSVG: Chart generation completed:', {
+      hasSvg: !!result.svg,
+      svgLength: result.svg?.length || 0,
+      hasMetadata: !!result.metadata,
+      hasChartData: !!result.metadata?.chartData,
+      totalPlanetsInResult: allPlanetNames.length,
+      allPlanetNames: allPlanetNames,
+      celestialPointsInResult: celestialPointsFound.length,
+      celestialPointsFound: celestialPointsFound.map(p => ({
+        name: p.name,
+        originalName: p.name,
+        lowerName: p.name?.toLowerCase(),
+        isPlanet: p.isPlanet,
+        pointType: p.pointType
+      }))
     });
 
     return {
@@ -64,7 +95,7 @@ async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg:
       }
     };
   } catch (error) {
-    console.error('Error generating chart:', error);
+    console.error('❌ API generateChartSVG error:', error);
     throw new Error(`Chart generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -199,6 +230,19 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Debug what's being saved to database
+    console.log('💾 Saving to database with metadata:', {
+      hasSvg: !!svg,
+      hasMetadata: !!metadata,
+      metadataKeys: metadata ? Object.keys(metadata) : null,
+      hasChartDataInMetadata: !!metadata?.chartData,
+      planetsCountInSaveMetadata: metadata?.chartData?.planets?.length || 0,
+      celestialPointsInSaveMetadata: metadata?.chartData?.planets?.filter((p: any) => {
+        const name = p.name?.toLowerCase() || '';
+        return ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune', 'northNode', 'southNode', 'partOfFortune'].includes(name);
+      })?.length || 0
+    });
 
     // Save to database
     const savedChart = await ChartService.createChart({

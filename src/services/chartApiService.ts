@@ -150,7 +150,21 @@ export class ChartApiService {
    * Transform API chart data to local format
    */
   static transformApiChartToLocal(apiChart: ChartData): NatalChartData {
-    
+    console.log('🔍 transformApiChartToLocal: Input API chart structure:', {
+      id: apiChart.id,
+      hasChartData: !!apiChart.chartData,
+      hasMetadata: !!apiChart.metadata,
+      metadataKeys: apiChart.metadata ? Object.keys(apiChart.metadata) : null,
+      hasChartDataInMetadata: !!apiChart.metadata?.chartData,
+      chartDataInMetadataType: typeof apiChart.metadata?.chartData,
+      chartDataInMetadataKeys: apiChart.metadata?.chartData ? Object.keys(apiChart.metadata.chartData) : null,
+      planetsCount: apiChart.metadata?.chartData?.planets?.length || 0,
+      // DETAILED DEBUGGING:
+      metadataContent: apiChart.metadata,
+      chartDataContent: apiChart.metadata?.chartData,
+      planetsArray: apiChart.metadata?.chartData?.planets
+    });
+
     const transformed: any = {
       id: apiChart.id,
       svg: apiChart.chartData,
@@ -169,10 +183,18 @@ export class ChartApiService {
         chartData: apiChart.metadata?.chartData
       }
     };
-    
+
+    console.log('🔍 transformApiChartToLocal: Transformed chart structure:', {
+      id: transformed.id,
+      hasSvg: !!transformed.svg,
+      hasMetadata: !!transformed.metadata,
+      hasChartDataInMetadata: !!transformed.metadata?.chartData,
+      planetsInTransformed: transformed.metadata?.chartData?.planets?.length || 0
+    });
+
     // CRITICAL: Preserve userId for validation
     transformed.userId = apiChart.userId;
-    
+
     return transformed as NatalChartData;
   }
 

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { formatRelativeTime } from '@/utils/dateFormatting';
 
 interface UserActivity {
   id: string;
@@ -160,30 +161,6 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
     return '#6bdbff'; // Default blue
   };
 
-  const formatDate = (dateString: string | number) => {
-    if (!dateString) return 'Unknown date';
-    
-    // Handle Unix timestamps (numbers) vs ISO strings
-    let date: Date;
-    if (typeof dateString === 'number') {
-      date = new Date(dateString * 1000); // Convert Unix timestamp to milliseconds
-    } else {
-      date = new Date(dateString);
-    }
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return 'Unknown date';
-    }
-    
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays <= 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
-  };
 
   if (isLoading) {
     return (
@@ -296,7 +273,7 @@ export default function UserActivitySection({ userId }: UserActivitySectionProps
                         {(activity.activityType || 'unknown').replace('_', ' ').toUpperCase()}
                       </span>
                       <span className="font-open-sans text-sm text-black/60 font-medium">
-                        {formatDate(activity.createdAt)}
+                        {formatRelativeTime(activity.createdAt)}
                       </span>
                     </div>
                   </div>

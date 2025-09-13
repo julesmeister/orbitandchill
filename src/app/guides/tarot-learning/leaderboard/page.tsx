@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useUserStore } from '@/store/userStore';
 import { hasPremiumAccess } from '@/utils/premiumHelpers';
 import LevelBadge, { calculateLevel } from '@/components/tarot/LevelBadge';
+import { formatShortDate } from '@/utils/dateFormatting';
 
 interface LeaderboardEntry {
   id: string;
@@ -87,13 +88,6 @@ export default function TarotLeaderboardPage() {
     return 'bg-white text-black border border-black';
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   const getStreakIcon = (streak: number) => {
     if (streak >= 30) return '🔥🔥🔥';
@@ -288,7 +282,7 @@ export default function TarotLeaderboardPage() {
                             <LevelBadge level={calculateLevel(entry.score)} size="small" showLabel={false} />
                           </div>
                           <div className="text-xs text-black/50 font-inter">
-                            Joined {formatDate(entry.joinedDate)}
+                            Joined {formatShortDate(entry.joinedDate)}
                           </div>
                         </div>
                       </div>
@@ -318,7 +312,7 @@ export default function TarotLeaderboardPage() {
                           <span className="text-xs">{getStreakIcon(entry.streak)}</span>
                         </div>
                         <div className="text-xs text-black/50 font-inter">
-                          Last: {formatDate(entry.lastPlayed)}
+                          Last: {formatShortDate(entry.lastPlayed)}
                         </div>
                       </div>
                     </div>

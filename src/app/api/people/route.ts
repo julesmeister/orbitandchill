@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PersonService } from '@/services/PersonService';
 import { PersonValidationService } from '@/services/personValidationService';
-import { PersonDataTransformers } from '@/utils/personDataTransformers';
 import { HttpResponseUtils } from '@/utils/httpResponseUtils';
+import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 
 /**
  * GET /api/people - Get all people for a user
@@ -35,8 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Return successful response
-    const response = PersonDataTransformers.createPeopleResponse(result.data!);
-    return HttpResponseUtils.success(response, {
+    return HttpResponseUtils.success({ people: result.data! }, {
       'Cache-Control': 'private, max-age=300' // Cache for 5 minutes
     });
 

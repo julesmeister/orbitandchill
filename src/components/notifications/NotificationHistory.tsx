@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUserStore } from '@/store/userStore';
 import type { NotificationRecord } from '@/db/services/notificationService';
+import { formatDateTime } from '@/utils/dateFormatting';
 
 interface ArchiveStats {
   total: number;
@@ -164,10 +165,6 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
     setSelectedNotifications(new Set());
   };
 
-  // Format date
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
 
   // Get notification icon
   const getNotificationIcon = (notification: NotificationRecord) => {
@@ -360,7 +357,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                           {notification.priority}
                         </span>
                         <span className="text-sm text-gray-500">
-                          {formatDate(notification.createdAt)}
+                          {formatDateTime(notification.createdAt)}
                         </span>
                       </div>
                     </div>
@@ -370,7 +367,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <span>Category: {notification.category}</span>
                       {notification.archivedAt && (
-                        <span>Archived: {formatDate(notification.archivedAt)}</span>
+                        <span>Archived: {formatDateTime(notification.archivedAt)}</span>
                       )}
                     </div>
                   </div>

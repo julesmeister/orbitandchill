@@ -31,6 +31,14 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
   
   const userIsPremium = user?.subscriptionTier === 'premium' || false;
 
+  // TEMPORARY: Force reset to ensure sidebar gets updated sections
+  React.useEffect(() => {
+    if (orderedSections.length === 0) {
+      console.log('🔄 InterpretationSidebar: Forcing section reset');
+      resetSectionsToDefault();
+    }
+  }, [orderedSections.length, resetSectionsToDefault]);
+
   const handleDragStart = (e: React.DragEvent, sectionId: string) => {
     if (!isReorderMode) return;
     setDraggedItem(sectionId);
@@ -85,19 +93,37 @@ const InterpretationSidebar: React.FC<InterpretationSidebarProps> = ({
   };
 
   const getVisibleSections = () => {
-    return orderedSections.filter(section => {
+    console.log('🔍 InterpretationSidebar: Debug sections:', {
+      totalOrderedSections: orderedSections.length,
+      orderedSectionIds: orderedSections.map(s => s.id),
+      featuresLength: features.length,
+      userIsPremium
+    });
+
+    const filteredSections = orderedSections.filter(section => {
       // Show all sections in reorder mode, otherwise only show accessible ones
       if (isReorderMode) return true;
-      
+
       // Must be visible first
-      if (!section.isVisible) return false;
-      
-      // If premium features haven't loaded yet (0 features), show all visible sections as fallback
-      if (features.length === 0) return true;
-      
-      // For sections that are visible, check if user has access
-      return shouldShowFeature(section.id, userIsPremium);
+      if (!section.isVisible) {
+        console.log(`🔍 Section ${section.id} filtered out: not visible`);
+        return false;
+      }
+
+      // FIXED: Use the same logic as ChartInterpretation - always show non-premium sections
+      if (!section.isPremium) {
+        console.log(`🔍 Section ${section.id}: Free section, showing`);
+        return true;
+      }
+
+      // For premium sections, check user access
+      const hasAccess = shouldShowFeature(section.id, userIsPremium);
+      console.log(`🔍 Section ${section.id}: isPremium=${section.isPremium}, hasAccess=${hasAccess}`);
+      return hasAccess;
     });
+
+    console.log(`🔍 InterpretationSidebar: Final filtered sections: ${filteredSections.length}/${orderedSections.length}`, filteredSections.map(s => s.id));
+    return filteredSections;
   };
 
   if (sidebarCollapsed) {

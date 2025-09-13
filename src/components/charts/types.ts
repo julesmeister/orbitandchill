@@ -7,7 +7,6 @@ export interface ChartQuickActionsProps {
   onPersonChange?: (person: Person | null) => void;
   onAddPersonClick?: () => void;
   onDropdownToggle?: (isOpen: boolean) => void;
-  onClearCache?: () => void;
   chartId?: string;
 }
 

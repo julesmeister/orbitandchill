@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '../store/userStore';
-import { usePeopleStore } from '../store/peopleStore';
 import { useChartTab } from '../store/chartStore';
 import { useNatalChart } from './useNatalChart';
 import { usePeopleAPI } from './usePeopleAPI';
@@ -14,16 +13,15 @@ export const useChartPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isProfileComplete, isLoading: isUserLoading, loadProfile } = useUserStore();
-  const { setSelectedPerson: setGlobalSelectedPerson, selectedPerson: globalSelectedPerson } = usePeopleStore();
   const { activeTab, setActiveTab } = useChartTab();
-  const { defaultPerson, selectedPerson: peopleSelectedPerson, loadPeople } = usePeopleAPI();
+  const { defaultPerson, selectedPerson: peopleSelectedPerson, setSelectedPerson: setApiSelectedPerson, loadPeople } = usePeopleAPI();
   
   // Local state
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [sharedChartLoaded, setSharedChartLoaded] = useState(false);
   
-  // Use people system's selected person, or global selected person, or local state, or default person
-  const activeSelectedPerson = peopleSelectedPerson || globalSelectedPerson || selectedPerson || defaultPerson;
+  // Use people system's selected person, or local state, or default person
+  const activeSelectedPerson = peopleSelectedPerson || selectedPerson || defaultPerson;
   
   // Chart management
   const {
@@ -34,6 +32,7 @@ export const useChartPage = () => {
     getUserCharts,
     hasExistingChart,
     isLoadingCache,
+    clearCache,
   } = useNatalChart(activeSelectedPerson);
   
   
@@ -73,69 +72,46 @@ export const useChartPage = () => {
     initializeData();
   }, [user, isUserLoading, loadProfile, loadPeople]);
   
-  // OPTIMIZED: More aggressive chart loading with reduced delays
+  // Load existing charts and generate ONE chart if needed (NO LOOPS)
   useEffect(() => {
-    
-    // Start chart operations as soon as we have user data
-    if (cachedChart || isGenerating || !user?.id) {
+    if (!user?.id || isGenerating) {
       return;
     }
-    
-    // Immediate load for fastest performance
-    const loadOrGenerateChart = async () => {
-      // Double-check these conditions  
-      if (isGenerating || cachedChart) {
-        return;
+
+    const loadChartsOnce = async () => {
+      try {
+        console.log('📊 Loading existing charts (controlled generation)');
+        const existingCharts = await getUserCharts();
+        console.log('📊 Found existing charts:', existingCharts.length);
+
+        // ALWAYS CLEAR CACHE AND GENERATE FRESH FROM API (no cache usage)
+        if (cachedChart) {
+          console.log('🔄 CLEARING CACHE - API-only generation as requested');
+          clearCache();
+        }
+
+        // ALWAYS generate fresh chart from API
+        if (activeSelectedPerson?.birthData) {
+          console.log('🚀 GENERATING FRESH CHART WITH CELESTIAL POINTS for:', activeSelectedPerson.name);
+          const chartData = await generateChart({
+            name: activeSelectedPerson.name || '',
+            dateOfBirth: activeSelectedPerson.birthData.dateOfBirth,
+            timeOfBirth: activeSelectedPerson.birthData.timeOfBirth,
+            locationOfBirth: activeSelectedPerson.birthData.locationOfBirth || 'Unknown',
+            coordinates: activeSelectedPerson.birthData.coordinates
+          }, true); // FORCE REGENERATION to ensure celestial points
+
+          if (chartData) {
+            console.log('✅ ONE-TIME chart generation completed:', chartData.id);
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ Error in controlled chart loading:', error);
       }
-        
-        try {
-          // OPTIMIZED: Remove artificial timeout and load charts naturally
-          const existingCharts = await getUserChartsRef.current();
-          
-          if (existingCharts.length > 0) {
-            return;
-          }
-        } catch (error: any) {
-          
-          if (error.message?.includes('Circuit breaker is OPEN')) {
-            return;
-          } else if (error.message?.includes('timeout') || error.message?.includes('Connection') || error.message?.includes('getUserCharts timeout')) {
-            // Continue to generation - don't return here
-          } else {
-            // Continue to generation - don't return here  
-          }
-        }
-        
-        // Use the default person if available, otherwise fall back to user data
-        const chartPerson = defaultPerson || (user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat ? {
-          name: user.username || '',
-          birthData: user.birthData
-        } : null);
-        
-        if (chartPerson?.birthData) {
-          try {
-            const chartData = await generateChartRef.current({
-              name: chartPerson.name || '',
-              dateOfBirth: chartPerson.birthData.dateOfBirth,
-              timeOfBirth: chartPerson.birthData.timeOfBirth,
-              locationOfBirth: chartPerson.birthData.locationOfBirth || 'Unknown',
-              coordinates: chartPerson.birthData.coordinates
-            });
-            
-            // Track chart generation with essential metadata
-            trackChartGeneration('natal', {
-              isAutoGenerated: true,
-              hasCompleteProfile: !!(user.birthData?.dateOfBirth && user.birthData?.timeOfBirth && user.birthData?.coordinates?.lat)
-            });
-            
-          } catch (error: any) {
-            console.error('Error generating chart:', error);
-          }
-        }
-      };
-      
-      loadOrGenerateChart();
-  }, [cachedChart, isGenerating, user?.id, user?.birthData, defaultPerson]);
+    };
+
+    loadChartsOnce();
+  }, [user?.id, activeSelectedPerson?.id]); // Only trigger on user/person change
   
   // Handle share token from URL
   useEffect(() => {
@@ -170,7 +146,7 @@ export const useChartPage = () => {
             
             // Set as selected person
             setSelectedPerson(sharedPerson);
-            setGlobalSelectedPerson(sharedPerson.id);
+            setApiSelectedPerson(sharedPerson.id);
             setSharedChartLoaded(true);
             
             // Show success message
@@ -188,7 +164,7 @@ export const useChartPage = () => {
       
       loadSharedChart();
     }
-  }, [searchParams, sharedChartLoaded, router, setGlobalSelectedPerson]);
+  }, [searchParams, sharedChartLoaded, router, setApiSelectedPerson]);
 
   // Track page view analytics
   useEffect(() => {
@@ -207,12 +183,17 @@ export const useChartPage = () => {
   
   const handleRegenerateChart = async () => {
     const personToUse = activeSelectedPerson;
-    
+    console.log('🔄 API-only chart regeneration started with person:', personToUse?.name);
+
     if (!personToUse?.birthData) {
+      console.warn('🔄 Chart regeneration cancelled: No person or birth data available');
       return;
     }
-    
+
     try {
+      // Clear existing chart first for clean state
+      clearCache();
+
       const chartData = await generateChart(
         {
           name: personToUse.name || "",
@@ -223,51 +204,57 @@ export const useChartPage = () => {
         },
         true // forceRegenerate
       );
-      
+
       trackChartGeneration('natal', {
         isRegeneration: true,
         personName: personToUse.name
       });
-      
+
       if (chartData) {
+        console.log('✅ API-only chart regeneration successful:', {
+          personName: personToUse.name,
+          chartId: chartData.id,
+          hasData: !!chartData
+        });
+      } else {
+        console.warn('⚠️ Chart regeneration returned null - API may be unavailable');
       }
     } catch (error: any) {
-      console.error('Regeneration error:', error);
-      if (error.message?.includes('Circuit breaker is OPEN')) {
-      } else if (error.message?.includes('timeout') || error.message?.includes('Connection')) {
-      } else {
-      }
+      console.error('❌ Chart regeneration error:', error.message);
     }
   };
   
   const handlePersonChange = async (person: Person | null) => {
+    console.log('👤 API-only person change requested:', {
+      personId: person?.id,
+      personName: person?.name,
+      hasCurrentChart: !!cachedChart
+    });
+
     setSelectedPerson(person);
-    setGlobalSelectedPerson(person?.id || null);
-    
-    // Check if birth data actually changed before regenerating
-    if (person?.birthData && user) {
-      const currentData = cachedChart?.metadata?.birthData;
-      const hasDataChanged = !currentData || 
-        currentData.dateOfBirth !== person.birthData.dateOfBirth ||
-        currentData.timeOfBirth !== person.birthData.timeOfBirth ||
-        currentData.locationOfBirth !== person.birthData.locationOfBirth ||
-        currentData.coordinates?.lat !== person.birthData.coordinates?.lat ||
-        currentData.coordinates?.lon !== person.birthData.coordinates?.lon;
-      
-      if (hasDataChanged) {
-        try {
-          await generateChart({
-            name: person.name || "",
-            dateOfBirth: person.birthData.dateOfBirth,
-            timeOfBirth: person.birthData.timeOfBirth,
-            locationOfBirth: person.birthData.locationOfBirth,
-            coordinates: person.birthData.coordinates,
-          });
-        } catch (error) {
-          // Error generating chart for selected person
-          console.error('Error generating chart after person change:', error);
-        }
-      }
+    setApiSelectedPerson(person?.id || null);
+
+    // Clear existing chart when switching people
+    clearCache();
+
+    // If no person selected, stop here
+    if (!person?.birthData) {
+      console.log('👤 No person selected or no birth data');
+      return;
+    }
+
+    // Generate chart for the new person
+    try {
+      console.log('👤 Generating chart for person:', person.name);
+      await generateChart({
+        name: person.name || "",
+        dateOfBirth: person.birthData.dateOfBirth,
+        timeOfBirth: person.birthData.timeOfBirth,
+        locationOfBirth: person.birthData.locationOfBirth,
+        coordinates: person.birthData.coordinates,
+      });
+    } catch (error) {
+      console.error('❌ Error generating chart for new person:', error);
     }
   };
   

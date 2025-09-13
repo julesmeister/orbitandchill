@@ -2,7 +2,7 @@
 
 import { Person, CreatePersonRequest, UpdatePersonRequest, DeletePersonRequest } from '@/types/person';
 import { PersonRepository } from '@/repositories/PersonRepository';
-import { PersonDataTransformers } from '@/utils/personDataTransformers';
+import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 import { PersonValidationService } from '@/services/personValidationService';
 import { checkAndHandleMemoryPressure } from '@/utils/memoryPressure';
 
@@ -100,7 +100,7 @@ export class PersonService {
       console.log('PersonService.createPerson: No duplicate found, proceeding to create new person');
 
       // Generate person ID
-      const personId = PersonDataTransformers.generatePersonId();
+      const personId = PersonDataTransformers.generateId();
       const personToCreate: Omit<Person, 'createdAt' | 'updatedAt'> = {
         id: personId,
         userId: sanitizedData.userId,

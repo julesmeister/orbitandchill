@@ -202,7 +202,16 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/utils/astrological/aspectInterpretations.ts src/utils/astrological/planetaryAspects.ts src/utils/astrological/celestialPointAspects.ts)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/chart/components/modules/ChartInterpretation.tsx src/components/charts/NatalChartDisplay.tsx --quiet)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/event-chart/EventChartPageClient.tsx --quiet)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/natalChart.ts --quiet)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/natalChart.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/services/integrationServices/storeSyncService.ts src/utils/dataTransformers/personDataTransformers.ts src/hooks/dataHooks/usePeopleData.ts src/services/businessServices/personManagementService.ts src/components/charts/components/ChartActionsGrid.tsx src/components/charts/components/PeopleSelectorSection.tsx src/components/charts/components/ClearCacheSection.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/services/integrationServices/storeSyncService.ts src/utils/dataTransformers/personDataTransformers.ts src/hooks/dataHooks/usePeopleData.ts src/services/businessServices/personManagementService.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/forms/CompactNatalChartForm.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/dataTransformers/personDataTransformers.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/utils/dateFormatting.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/components/forms/CompactNatalChartForm.tsx src/components/forms/NatalChartForm.tsx)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/charts/generate/route.ts src/utils/natalChart.ts)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx eslint src/app/api/charts/generate/route.ts src/components/charts/NatalChartDisplay.tsx src/hooks/useNatalChart.ts --quiet)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npx tsc --noEmit --skipLibCheck src/app/api/charts/generate/route.ts src/components/charts/NatalChartDisplay.tsx src/hooks/useNatalChart.ts)"
     ],
     "deny": [],
     "additionalDirectories": [

@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useEffect, Suspense } from 'react';
-import { usePeopleStore } from '../../store/peopleStore';
+import { usePeopleAPI } from '../../hooks/usePeopleAPI';
 import { useUserStore } from '../../store/userStore';
 import { Person } from '../../types/people';
 import { useAstrocartography } from '../../hooks/useAstrocartography';
@@ -47,7 +47,7 @@ const sliderStyles = `
 `;
 
 export default function AstrocartographyPageClient() {
-  const { defaultPerson, people, selectedPersonId } = usePeopleStore();
+  const { defaultPerson, people, selectedPersonId } = usePeopleAPI();
   const { user } = useUserStore();
   const [astroPersonData, setAstroPersonData] = React.useState<Person | null>(null);
 

@@ -3,7 +3,9 @@
 
 import React from 'react';
 import { Person } from '../../types/people';
-import { useNatalChartForm } from '../../hooks/useNatalChartForm';
+import { useFormData } from '../../hooks/dataHooks/useFormData';
+import { useDateTimeInput } from '../../hooks/useDateTimeInput';
+import { useLocationSearch } from '../../hooks/useLocationSearch';
 
 // Import modular components
 import RelationshipSelector from './components/RelationshipSelector';
@@ -19,37 +21,63 @@ interface CompactNatalChartFormProps {
   onCancel?: () => void;
 }
 
-const CompactNatalChartForm = ({ 
+const CompactNatalChartForm = ({
   editingPerson = null,
   onPersonSaved,
   onCancel
 }: CompactNatalChartFormProps) => {
-  
-  
-  // Use the unified form hook
+
+  // Use the new unified form data hook with service architecture
   const {
     formData,
     relationship,
     notes,
     isDefault,
-    isLocationFocused,
     isSaving,
+    isFormValid,
     handleInputChange,
     handleRelationshipChange,
     handleNotesChange,
     handleIsDefaultChange,
-    handleSubmit,
-    handleLocationFocus,
-    handleLocationBlur,
-    dateTimeInput,
-    locationSearch,
-    isFormValid,
-    statusToast
-  } = useNatalChartForm({
+    handleSubmit
+  } = useFormData({
     mode: 'person',
     editingPerson,
     onPersonSaved
   });
+
+  // Date/Time input integration
+  const dateTimeInput = useDateTimeInput({
+    initialDate: formData.dateOfBirth,
+    initialTime: formData.timeOfBirth,
+    onChange: (dateString, timeString) => {
+      handleInputChange('dateOfBirth', dateString);
+      handleInputChange('timeOfBirth', timeString);
+    }
+  });
+
+  // Location search integration
+  const locationSearch = useLocationSearch((location) => {
+    // Update location name and coordinates
+    handleInputChange('locationOfBirth', location.display_name);
+    handleInputChange('coordinates', {
+      lat: location.lat,
+      lon: location.lon
+    });
+  });
+
+  // Location focus state
+  const [isLocationFocused, setIsLocationFocused] = React.useState(false);
+
+  const handleLocationFocus = () => {
+    setIsLocationFocused(true);
+  };
+
+  const handleLocationBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!locationSearch.dropdownRef.current?.contains(e.relatedTarget as Node)) {
+      setTimeout(() => setIsLocationFocused(false), 150);
+    }
+  };
 
   return (
     <div className="w-full bg-white" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
@@ -101,7 +129,10 @@ const CompactNatalChartForm = ({
           locationOptions={locationSearch.locationOptions}
           showLocationDropdown={locationSearch.showLocationDropdown && isLocationFocused}
           isLoadingLocations={locationSearch.isLoadingLocations}
-          onLocationInputChange={locationSearch.handleLocationInputChange}
+          onLocationInputChange={(value) => {
+            locationSearch.setLocationQuery(value);
+            handleInputChange('locationOfBirth', value);
+          }}
           onLocationSelect={locationSearch.handleLocationSelect}
           onFocus={handleLocationFocus}
           onBlur={handleLocationBlur}

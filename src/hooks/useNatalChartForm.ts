@@ -367,7 +367,7 @@ export function useNatalChartForm({
         if (editingPerson) {
           await loadPeople();
           const { people: freshPeople } = usePeopleStore.getState();
-          const personExistsInStore = freshPeople.some(p => p.id === editingPerson.id);
+          const personExistsInStore = freshPeople.some((p: any) => p.id === editingPerson.id);
           
           if (personExistsInStore) {
             try {
@@ -388,22 +388,66 @@ export function useNatalChartForm({
           const { name: _name, ...birthData } = formData;
           await updateBirthData(birthData);
         }
-        
+
+        console.log('✅ useNatalChartForm: Person saved successfully', {
+          personId: savedPerson.id,
+          personName: savedPerson.name,
+          relationship: savedPerson.relationship,
+          isDefault: savedPerson.isDefault
+        });
+
+        // Trigger both people stores to reload
+        try {
+          console.log('🔄 useNatalChartForm: Triggering store reloads after person save');
+          const { loadPeople: reloadPeopleStore } = usePeopleStore.getState();
+          await Promise.all([
+            loadPeople(), // Reload people store
+            // Note: usePeopleAPI will be reloaded by ChartQuickActions
+          ]);
+          console.log('✅ useNatalChartForm: Store reloads completed');
+        } catch (reloadError) {
+          console.warn('Failed to reload stores after person save:', reloadError);
+        }
+
         if (onPersonSaved) {
+          console.log('📞 useNatalChartForm: Calling onPersonSaved callback');
           onPersonSaved(savedPerson);
         }
       } else {
-        // USER MODE - DIRECT NAVIGATION
-        console.log('🚀 User mode: Saving data and navigating directly to chart');
-        
-        // Save user data quickly
+        // USER MODE - FORCE CHART REGENERATION WITH CELESTIAL POINTS
+        console.log('🚀 User mode: Saving data and regenerating chart with celestial points');
+
+        // Save user data
         await saveDataIfNeeded();
-        
-        // Navigate immediately - let chart page handle everything else
-        console.log('✅ Navigating to chart page immediately');
-        setIsSaving(false);
-        router.push('/chart');
-        return;
+
+        // RESTORED: Force chart regeneration to ensure celestial points are included
+        // This was removed in commit b8e5198 but is essential for celestial points
+        const chartFormData = {
+          name: formData.name || user?.username || 'Natal Chart',
+          dateOfBirth: formData.dateOfBirth,
+          timeOfBirth: formData.timeOfBirth,
+          locationOfBirth: formData.locationOfBirth,
+          coordinates: formData.coordinates
+        };
+
+        console.log('🔮 Forcing chart regeneration to include celestial points...');
+        const chartData = await generateChart(chartFormData, true); // forceRegenerate = true
+
+        if (chartData) {
+          trackChartGeneration('natal');
+          console.log('✅ Chart generated with celestial points, navigating to chart page');
+          router.push('/chart');
+        } else {
+          showError(
+            "Chart Generation Failed",
+            "Unable to generate your natal chart. Please check your data and try again.",
+            5000
+          );
+        }
+
+        if (onSubmit) {
+          await onSubmit(formData);
+        }
       }
     } catch (error) {
       console.error('Failed to save:', error);

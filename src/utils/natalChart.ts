@@ -412,8 +412,15 @@ export async function calculatePlanetaryPositions(
     
     // Combine regular planets with celestial points
     const allCelestialBodies = [...planets, ...celestialPoints];
-    
-    
+
+    // Debug log for celestial points investigation
+    console.log('🔍 generateNatalChart: Regular planets count:', planets.length);
+    console.log('🔍 generateNatalChart: Celestial points count:', celestialPoints.length);
+    console.log('🔍 generateNatalChart: Celestial points names:', celestialPoints.map(p => p.name));
+    console.log('🔍 generateNatalChart: All celestial bodies count:', allCelestialBodies.length);
+    console.log('🔍 generateNatalChart: All celestial bodies names:', allCelestialBodies.map(p => p.name));
+
+
   
     // Assign houses to all celestial bodies
     allCelestialBodies.forEach(body => {
@@ -1473,6 +1480,14 @@ export async function generateNatalChart(birthData: {
   coordinates: { lat: string; lon: string };
   locationOfBirth: string;
 }): Promise<{ svg: string; metadata: ChartMetadata }> {
+  console.log('🌟 generateNatalChart: FUNCTION CALLED with data:', {
+    name: birthData.name,
+    dateOfBirth: birthData.dateOfBirth,
+    timeOfBirth: birthData.timeOfBirth,
+    coordinates: birthData.coordinates,
+    locationOfBirth: birthData.locationOfBirth
+  });
+
   // Process birth time with proper timezone handling
   const processedTime = processBirthTime({
     dateOfBirth: birthData.dateOfBirth,
@@ -1490,7 +1505,29 @@ export async function generateNatalChart(birthData: {
   const longitude = parseFloat(birthData.coordinates.lon);
 
   // Calculate planetary positions
+  console.log('🔮 generateNatalChart: About to calculate planetary positions for date:', birthDate);
   const chartData = await calculatePlanetaryPositions(birthDate, latitude, longitude);
+
+  const allPlanetNames = chartData.planets?.map(p => p.name) || [];
+  const celestialPointsFound = chartData.planets?.filter(p =>
+    ['lilith', 'chiron', 'northNode', 'southNode', 'partOfFortune'].includes(p.name?.toLowerCase() || '')
+  ) || [];
+
+  console.log('📊 generateNatalChart: Planetary positions calculated:', {
+    planetsCount: chartData.planets?.length || 0,
+    housesCount: chartData.houses?.length || 0,
+    aspectsCount: chartData.aspects?.length || 0,
+    allPlanetNames: allPlanetNames,
+    celestialPointsInResult: celestialPointsFound.length,
+    celestialPointsDetails: celestialPointsFound.map(p => ({
+      name: p.name,
+      lowerName: p.name?.toLowerCase(),
+      isPlanet: p.isPlanet,
+      pointType: p.pointType,
+      longitude: p.longitude,
+      sign: p.sign
+    }))
+  });
 
   // Generate SVG with larger size for better display
   const svg = generateNatalChartSVG(chartData, 1000, 1000);

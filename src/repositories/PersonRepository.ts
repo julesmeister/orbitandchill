@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Person, PersonRow, PersonFilters, CreatePersonRequest } from '@/types/person';
-import { PersonDataTransformers } from '@/utils/personDataTransformers';
+import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 import { SQLQueryBuilder } from '@/utils/sqlQueryBuilder';
 import { DatabaseConnectionService } from '@/services/databaseConnectionService';
 

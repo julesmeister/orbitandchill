@@ -8,8 +8,9 @@ import { getAvatarByIdentifier } from '../../utils/avatarUtils';
 import ChartTabs from './ChartTabs';
 import ChartActions from './ChartActions';
 
-// Use the new micro-frontend ChartInterpretation module with section controls
-const ChartInterpretation = lazy(() => import('../../app/chart/components/modules/ChartInterpretation'));
+// TEMPORARILY DISABLED LAZY LOADING TO FIX CHUNK ERROR
+// const ChartInterpretation = lazy(() => import('../../app/chart/components/modules/ChartInterpretation'));
+import ChartInterpretation from '../../app/chart/components/modules/ChartInterpretation';
 import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
 import TransitAspectsTab from './TransitAspectsTab';
 
@@ -71,7 +72,30 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
     birthData?.coordinates?.lon
   ]);
   
-  const stableChartData = React.useMemo(() => chartData, [
+  const stableChartData = React.useMemo(() => {
+    // FIXED: Chart data structure - chartData IS the chart data, no double nesting
+    if (chartData?.planets) {
+      console.log('✅ NatalChartDisplay: Chart data planets count:', chartData.planets.length);
+      console.log('✅ NatalChartDisplay: Chart data planets names:', chartData.planets.map((p: any) => p.name));
+      console.log('🌟 NatalChartDisplay: CELESTIAL POINTS FOUND:', chartData.planets.filter((p: any) => {
+        const name = p.name?.toLowerCase() || '';
+        return ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune', 'northNode', 'southNode', 'partOfFortune'].includes(name);
+      }).map((p: any) => p.name));
+      console.log('🔍 NatalChartDisplay: ALL PLANET NAMES (to check celestial naming):', chartData.planets.map((p: any) => p.name));
+    } else {
+      console.log('🔍 NatalChartDisplay: No planets in chart data', {
+        hasChartData: !!chartData,
+        chartDataKeys: chartData ? Object.keys(chartData) : null,
+        hasPlanets: !!chartData?.planets,
+        hasHouses: !!chartData?.houses,
+        // OLD WRONG PATH: hasMetadata: !!chartData?.metadata,
+        // OLD WRONG PATH: hasChartDataInMetadata: !!chartData?.metadata?.chartData,
+        // OLD WRONG PATH: hasPlanets: !!chartData?.metadata?.chartData?.planets
+      });
+    }
+
+    return chartData;
+  }, [
     (chartData as any)?.id,
     JSON.stringify(chartData?.planets || []),
     JSON.stringify(chartData?.houses || [])

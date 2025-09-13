@@ -197,43 +197,61 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   
   // Delete person via API
   const deletePerson = useCallback(async (personId: string) => {
+    console.log('🗑️ deletePerson called with:', { personId, userId: user?.id });
+
     if (!user?.id) {
       throw new Error('No user found');
     }
-    
+
+    // Check if person exists in local state first
+    const personToDelete = people.find(p => p.id === personId);
+    console.log('👤 Person to delete:', personToDelete ? { id: personToDelete.id, name: personToDelete.name, userId: personToDelete.userId } : 'NOT FOUND');
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const response = await fetch(`/api/people?personId=${personId}&userId=${user.id}`, {
+      console.log('📡 Making DELETE request to:', `/api/people/${personId}`);
+
+      const response = await fetch(`/api/people/${personId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
       });
-      
+
+      console.log('📡 DELETE response status:', response.status);
+
       const result = await response.json();
-      
+      console.log('📊 DELETE response data:', result);
+
       if (result.success) {
+        console.log('✅ Person deleted successfully, updating local state');
         // Update local state
         setPeople(prev => {
           const filtered = prev.filter(p => p.id !== personId);
-          
+
           // If we deleted the selected person, clear selection
           if (selectedPersonId === personId) {
             setSelectedPersonId(null);
           }
-          
+
           return filtered;
         });
-        
+
       } else {
+        console.error('❌ DELETE failed:', result.error);
         throw new Error(result.error || 'Failed to delete person');
       }
     } catch (err) {
+      console.error('❌ deletePerson catch block:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete person');
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, selectedPersonId]);
+  }, [user?.id, selectedPersonId, people]);
   
   // Set default person via API
   const setDefaultPerson = useCallback(async (personId: string) => {
@@ -352,44 +370,12 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
     return () => clearTimeout(timeoutId);
   }, [user?.id, user?.birthData, user?.username, people.length, isLoading, isAutoAdding, addPerson]);
   
-  // CRITICAL FIX: Sync defaultPerson birth data with user birth data changes
+  // TEMPORARILY DISABLED: Sync defaultPerson birth data with user birth data changes
+  // This was causing excessive PATCH /api/people loops
   useEffect(() => {
-    const syncDefaultPersonWithUser = async () => {
-      if (!user?.id || !user.birthData || !defaultPerson || isLoading) {
-        return;
-      }
-      
-      // Check if defaultPerson birth data is different from user birth data
-      const needsSync = 
-        defaultPerson.birthData?.dateOfBirth !== user.birthData.dateOfBirth ||
-        defaultPerson.birthData?.timeOfBirth !== user.birthData.timeOfBirth ||
-        defaultPerson.birthData?.locationOfBirth !== user.birthData.locationOfBirth ||
-        defaultPerson.birthData?.coordinates?.lat !== user.birthData.coordinates?.lat ||
-        defaultPerson.birthData?.coordinates?.lon !== user.birthData.coordinates?.lon;
-      
-      if (needsSync) {
-        try {
-          console.log('🔄 Syncing defaultPerson birth data with user data changes');
-          await updatePerson(defaultPerson.id, {
-            name: defaultPerson.name, // Keep existing name
-            relationship: 'self',
-            birthData: user.birthData, // Update with latest user birth data
-            isDefault: true,
-            notes: defaultPerson.notes || 'Your personal birth data'
-          });
-          
-          // Reload people to get updated data
-          await loadPeople();
-        } catch (error) {
-          console.error('Failed to sync defaultPerson with user data:', error);
-        }
-      }
-    };
-    
-    // Debounce to avoid excessive API calls
-    const timeoutId = setTimeout(syncDefaultPersonWithUser, 500);
-    return () => clearTimeout(timeoutId);
-  }, [user?.id, user?.birthData, defaultPerson?.birthData, defaultPerson?.id, updatePerson, loadPeople, isLoading]);
+    console.log('⚠️ PEOPLE SYNC TEMPORARILY DISABLED TO PREVENT API LOOPS');
+    // Sync logic completely disabled until data structure issues are resolved
+  }, []); // Empty dependencies to prevent any triggering
   
   return {
     people,

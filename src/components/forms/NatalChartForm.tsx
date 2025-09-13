@@ -3,8 +3,19 @@
 
 import React from 'react';
 import { Person } from '../../types/people';
-import { useNatalChartForm, NatalChartFormData } from '../../hooks/useNatalChartForm';
-import StatusToast from '../reusable/StatusToast';
+import { useFormData } from '../../hooks/dataHooks/useFormData';
+import { useDateTimeInput } from '../../hooks/useDateTimeInput';
+import { useLocationSearch } from '../../hooks/useLocationSearch';
+import { useUserStore } from '../../store/userStore';
+
+// Keep the NatalChartFormData type for backward compatibility
+export interface NatalChartFormData {
+  name: string;
+  dateOfBirth: string;
+  timeOfBirth: string;
+  locationOfBirth: string;
+  coordinates: { lat: string; lon: string };
+}
 import DateInput from './DateInput';
 import TimeInput from './TimeInput';
 import UnifiedLocationInput from './UnifiedLocationInput';
@@ -28,38 +39,61 @@ const NatalChartForm = ({
   editingPerson = null,
   onPersonSaved
 }: NatalChartFormProps) => {
-  
-  // Use the unified form hook
+
+  // Get hasStoredData from userStore
+  const { hasStoredData } = useUserStore();
+
+  // Use the new unified form data hook with service architecture
   const {
     formData,
     relationship,
     notes,
     isDefault,
-    isLocationFocused,
+    isSaving,
+    isFormValid,
     handleInputChange,
     handleRelationshipChange,
     handleNotesChange,
     handleIsDefaultChange,
-    handleSubmit,
-    handleLocationFocus,
-    handleLocationBlur,
-    dateTimeInput,
-    locationSearch,
-    isFormValid,
-    statusToast,
-    cachedChart,
-    isChartGenerating,
-    hasExistingChart,
-    isLoadingCache,
-    user,
-    hasStoredData,
-  } = useNatalChartForm({
+    handleSubmit
+  } = useFormData({
     mode,
     editingPerson,
     onPersonSaved,
-    onSubmit,
-    submitText
+    onSubmit: onSubmit ? (data) => onSubmit(data as NatalChartFormData) : undefined
   });
+
+  // Date/Time input integration
+  const dateTimeInput = useDateTimeInput({
+    initialDate: formData.dateOfBirth,
+    initialTime: formData.timeOfBirth,
+    onChange: (dateString, timeString) => {
+      handleInputChange('dateOfBirth', dateString);
+      handleInputChange('timeOfBirth', timeString);
+    }
+  });
+
+  // Location search integration
+  const locationSearch = useLocationSearch((location) => {
+    handleInputChange('locationOfBirth', location.display_name);
+    handleInputChange('coordinates', {
+      lat: location.lat,
+      lon: location.lon
+    });
+  });
+
+  // Location focus state and handlers
+  const [isLocationFocused, setIsLocationFocused] = React.useState(false);
+
+  const handleLocationFocus = () => {
+    setIsLocationFocused(true);
+  };
+
+  const handleLocationBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!locationSearch.dropdownRef.current?.contains(e.relatedTarget as Node)) {
+      setTimeout(() => setIsLocationFocused(false), 150);
+    }
+  };
 
   return (
     <div className="max-w-lg">
@@ -153,7 +187,10 @@ const NatalChartForm = ({
           locationOptions={locationSearch.locationOptions}
           showLocationDropdown={locationSearch.showLocationDropdown && isLocationFocused}
           isLoadingLocations={locationSearch.isLoadingLocations}
-          onLocationInputChange={locationSearch.handleLocationInputChange}
+          onLocationInputChange={(value) => {
+            locationSearch.setLocationQuery(value);
+            handleInputChange('locationOfBirth', value);
+          }}
           onLocationSelect={locationSearch.handleLocationSelect}
           onFocus={handleLocationFocus}
           onBlur={handleLocationBlur}
@@ -165,11 +202,11 @@ const NatalChartForm = ({
         {showSubmitButton && (
           <SubmitButton
             isFormValid={isFormValid}
-            isGenerating={isChartGenerating}
-            isChartGenerating={isChartGenerating}
-            cachedChart={cachedChart}
-            hasExistingChart={hasExistingChart}
-            isLoadingCache={isLoadingCache}
+            isGenerating={isSaving}
+            isChartGenerating={isSaving}
+            cachedChart={null}
+            hasExistingChart={false}
+            isLoadingCache={false}
             mode={mode}
             editingPerson={editingPerson}
             submitText={submitText}
@@ -177,15 +214,6 @@ const NatalChartForm = ({
         )}
       </form>
 
-      {/* Status Toast */}
-      <StatusToast
-        title={statusToast.title}
-        message={statusToast.message}
-        status={statusToast.status}
-        isVisible={statusToast.isVisible}
-        onHide={() => {}}
-        duration={statusToast.duration}
-      />
 
       {/* Styles moved to global CSS - see globals.css for .synapsas-* classes */}
     </div>

@@ -11,7 +11,12 @@ import type {
 } from '../types/events';
 import { eventService } from '../services/EventService';
 import { eventCache, EventCacheImpl } from '../services/EventCache';
-import { eventPersistence } from '../services/EventPersistence';
+// EventPersistence removed - using direct API calls only
+const eventPersistence = {
+  async loadEvents() { return []; },
+  async saveEvents() { return true; },
+  async clearCache() { return true; }
+};
 import {
   toUnifiedEvent,
   toAstrologicalEvent,

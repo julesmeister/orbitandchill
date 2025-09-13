@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { BRAND } from '@/config/brand';
+import { formatShortDate } from '@/utils/dateFormatting';
 
 // Thread interface matching PostsTab.tsx
 interface Thread {
@@ -185,14 +186,6 @@ export default function SearchPageClient() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
 
   return (
     <div className="bg-white">
@@ -324,7 +317,7 @@ export default function SearchPageClient() {
                               )}
                               {result.createdAt && (
                                 <span className="font-inter">
-                                  {formatDate(result.createdAt)}
+                                  {formatShortDate(result.createdAt)}
                                 </span>
                               )}
                               {result.tags && result.tags.length > 0 && (

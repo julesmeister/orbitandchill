@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { CreatePersonRequest, UpdatePersonRequest, DeletePersonRequest, BirthData } from '@/types/person';
-import { PersonDataTransformers } from '@/utils/personDataTransformers';
+import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 
 export interface ValidationResult {
   isValid: boolean;

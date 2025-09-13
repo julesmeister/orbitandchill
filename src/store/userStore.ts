@@ -472,13 +472,7 @@ export const useUserStore = create<UserState>()(
           console.warn('Error clearing localStorage:', error);
         }
         
-        // Clear IndexedDB cached data
-        try {
-          const { db } = await import('../store/database');
-          await db.cache.clear();
-        } catch (error) {
-          console.warn('Error clearing IndexedDB cache:', error);
-        }
+        // IndexedDB removed - using direct API calls only
         
         // Note: For now, we keep the user in Turso database for data persistence
         // In the future, we could add a DELETE endpoint if needed

@@ -5,26 +5,25 @@
  * especially important after timezone handling fixes.
  */
 
-import { db } from '@/store/database';
+// Database import removed - using direct API calls only
 import { toast } from 'sonner';
 
 /**
  * Clear all natal chart caches for a specific user
+ * Using API endpoint to clear server-side caches
  */
 export async function clearAllNatalChartCaches(userId: string): Promise<void> {
   try {
-    // Get all cache keys that start with "natal_chart_"
-    const allCacheEntries = await db.cache.toArray();
-    const natalChartCacheKeys = allCacheEntries
-      .filter(entry => entry.key.startsWith(`natal_chart_${userId}_`))
-      .map(entry => entry.key);
+    // Call API endpoint to clear server-side caches
+    const response = await fetch(`/api/charts/user/${userId}/clear-cache`, {
+      method: 'DELETE',
+    });
 
-    // Delete all natal chart caches for this user
-    for (const key of natalChartCacheKeys) {
-      await db.cache.delete(key);
+    if (!response.ok) {
+      throw new Error(`Failed to clear caches: ${response.status}`);
     }
 
-    console.log(`Cleared ${natalChartCacheKeys.length} natal chart caches for user ${userId}`);
+    console.log(`Cleared all natal chart caches for user ${userId}`);
   } catch (error) {
     console.error('Error clearing natal chart caches:', error);
     throw error;
@@ -41,9 +40,31 @@ export async function clearSpecificNatalChartCache(
   lat: string,
   lon: string
 ): Promise<void> {
-  const cacheKey = `natal_chart_${personId}_${dateOfBirth}_${timeOfBirth}_${lat}_${lon}`;
-  await db.cache.delete(cacheKey);
-  console.log(`Cleared cache for key: ${cacheKey}`);
+  try {
+    // Call API endpoint to clear specific chart cache
+    const response = await fetch(`/api/charts/clear-cache`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personId,
+        dateOfBirth,
+        timeOfBirth,
+        latitude: lat,
+        longitude: lon,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to clear specific cache: ${response.status}`);
+    }
+
+    console.log(`Cleared cache for person ${personId} chart`);
+  } catch (error) {
+    console.error('Error clearing specific chart cache:', error);
+    throw error;
+  }
 }
 
 /**
@@ -51,42 +72,27 @@ export async function clearSpecificNatalChartCache(
  * (e.g., if cache was created before timezone fix was deployed)
  */
 export async function isChartCacheOutdated(cacheKey: string): Promise<boolean> {
-  try {
-    const cacheEntry = await db.cache.get(cacheKey);
-    if (!cacheEntry) return false;
-
-    // Timezone fix deployment date (adjust this to your actual deployment date)
-    const TIMEZONE_FIX_DEPLOYMENT_DATE = new Date('2025-01-14T00:00:00Z');
-    
-    const cacheCreatedAt = new Date(cacheEntry.createdAt);
-    return cacheCreatedAt < TIMEZONE_FIX_DEPLOYMENT_DATE;
-  } catch (error) {
-    console.error('Error checking cache date:', error);
-    return true; // Assume outdated if we can't check
-  }
+  // Without local caching, assume all requests need fresh data
+  return true;
 }
 
 /**
  * Clear all outdated natal chart caches
+ * API-based approach
  */
 export async function clearOutdatedNatalChartCaches(): Promise<number> {
   try {
-    const allCacheEntries = await db.cache.toArray();
-    const TIMEZONE_FIX_DEPLOYMENT_DATE = new Date('2025-01-14T00:00:00Z');
-    let clearedCount = 0;
+    const response = await fetch('/api/charts/clear-outdated-cache', {
+      method: 'DELETE',
+    });
 
-    for (const entry of allCacheEntries) {
-      if (entry.key.startsWith('natal_chart_')) {
-        const cacheCreatedAt = new Date(entry.createdAt);
-        if (cacheCreatedAt < TIMEZONE_FIX_DEPLOYMENT_DATE) {
-          await db.cache.delete(entry.key);
-          clearedCount++;
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`Failed to clear outdated caches: ${response.status}`);
     }
 
-    console.log(`Cleared ${clearedCount} outdated natal chart caches`);
-    return clearedCount;
+    const result = await response.json();
+    console.log(`Cleared ${result.clearedCount || 0} outdated natal chart caches`);
+    return result.clearedCount || 0;
   } catch (error) {
     console.error('Error clearing outdated caches:', error);
     return 0;

@@ -3,8 +3,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useUserStore } from "@/store/userStore";
-import { useChartCache } from "@/hooks/useChartCache";
-import { useChartOperations } from "@/hooks/useChartOperations";
+import { useNatalChart } from "@/hooks/useNatalChart";
 import { getAvatarByIdentifier } from "@/utils/avatarUtils";
 
 interface StatusToast {
@@ -16,8 +15,8 @@ interface StatusToast {
 }
 
 /**
- * Core chart hook - handles essential chart state and operations
- * Split from the monolithic useChartPage for better performance
+ * Core chart hook - simplified to use API-only approach
+ * No more caching complexity - always fresh data from Supabase
  */
 export function useChartCore(initialData?: any) {
   const { user } = useUserStore();
@@ -28,18 +27,14 @@ export function useChartCore(initialData?: any) {
     isVisible: false,
   });
 
-  // Chart data management
+  // Unified chart operations - API-only, no cache
   const {
     cachedChart,
     isLoadingCache,
-    hasExistingChart: hasCachedChart,
-  } = useChartCache();
-
-  // Chart operations
-  const {
     isGenerating,
     generateChart,
-  } = useChartOperations();
+    hasExistingChart,
+  } = useNatalChart();
 
   // Current person and birth data (memoized for performance)
   const personToShow = useMemo(() => {

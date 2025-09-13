@@ -17,6 +17,8 @@ interface PeopleSelectorProps {
   showAddNew?: boolean;
   onAddNew?: () => void;
   onDropdownToggle?: (isOpen: boolean) => void;
+  people?: Person[];  // Optional external people data
+  defaultPerson?: Person | null;  // Optional external default person
 }
 
 const PeopleSelector: React.FC<PeopleSelectorProps> = ({
@@ -26,21 +28,27 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
   className = '',
   showAddNew = true,
   onAddNew,
-  onDropdownToggle
+  onDropdownToggle,
+  people: externalPeople,
+  defaultPerson: externalDefaultPerson
 }) => {
-  const { 
-    people, 
-    loadPeople, 
+  const {
+    people: apiPeople,
+    loadPeople,
     addPerson,
     deletePerson,
     updatePerson,
     setDefaultPerson,
-    isLoading, 
+    isLoading,
     error,
-    defaultPerson,
+    defaultPerson: apiDefaultPerson,
     selectedPersonId: storeSelectedPersonId,
-    setSelectedPerson 
+    setSelectedPerson
   } = usePeopleAPI();
+
+  // Use external data if provided, otherwise use API data
+  const people = externalPeople || apiPeople;
+  const defaultPerson = externalDefaultPerson || apiDefaultPerson;
   
   const { user } = useUserStore();
   const { sharedCharts, isLoading: isSharedChartsLoading } = useSharedCharts();
@@ -105,31 +113,58 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
 
   // Deduplicate people to prevent React key errors and find duplicates
   const { uniquePeople, duplicateGroups } = useMemo(() => {
+    console.log('🔍 Starting duplicate detection with', people.length, 'people');
+
+    // First, remove any obviously invalid or malformed entries
+    const validPeople = people.filter(person => {
+      const isValid = person && person.id && person.name && person.userId;
+      if (!isValid) {
+        console.log('❌ Filtering out invalid person:', person);
+      }
+      return isValid;
+    });
+
+    console.log('// DEBUG: After filtering invalid entries:', validPeople.length, 'people remain');
+
     const seen = new Set();
-    const unique = people.filter(person => {
+    const unique = validPeople.filter(person => {
       if (seen.has(person.id)) {
+        console.log('🔄 Duplicate ID found, keeping first instance:', person.id, person.name);
         return false;
       }
       seen.add(person.id);
       return true;
     });
 
-    // Find duplicate names
-    const nameCount = new Map();
+    console.log('// DEBUG: After removing duplicate IDs:', unique.length, 'unique people');
+
+    // Find duplicates by birth data (more accurate than just names)
+    const birthDataMap = new Map();
     unique.forEach(person => {
-      const name = person.name.toLowerCase().trim();
-      if (!nameCount.has(name)) {
-        nameCount.set(name, []);
+      const birthKey = `${person.birthData?.dateOfBirth || 'no-date'}_${person.birthData?.timeOfBirth || 'no-time'}_${person.birthData?.locationOfBirth || 'no-location'}`;
+      if (!birthDataMap.has(birthKey)) {
+        birthDataMap.set(birthKey, []);
       }
-      nameCount.get(name).push(person);
+      birthDataMap.get(birthKey).push(person);
     });
 
     const duplicates = new Map();
-    nameCount.forEach((persons, name) => {
+    birthDataMap.forEach((persons, birthKey) => {
       if (persons.length > 1) {
-        duplicates.set(name, persons);
+        // Group by name for display purposes
+        const displayName = persons[0].name || 'Unknown';
+        console.log(`🔍 Found ${persons.length} duplicates for "${displayName}" with birth key: ${birthKey}`);
+        console.log('📋 Duplicate persons:', persons.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          isDefault: p.isDefault,
+          userId: p.userId
+        })));
+        duplicates.set(displayName, persons);
       }
     });
+
+    console.log('📊 Final results: unique =', unique.length, ', duplicate groups =', duplicates.size);
 
     return { uniquePeople: unique, duplicateGroups: duplicates };
   }, [people]);
@@ -357,6 +392,7 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
             position: 'relative'
           }}
         >
+
           {/* Duplicate Management Section */}
           {duplicateGroups.size > 0 && (
             <div className="border-b border-gray-200 bg-yellow-50 p-3">
@@ -373,19 +409,67 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
                   </div>
                   <button
                     onClick={async () => {
+                      console.log('🧹 Starting duplicate cleanup for:', name);
+                      console.log('👥 All persons in group:', persons.map((p: any) => ({ id: p.id, name: p.name, isDefault: p.isDefault, userId: p.userId })));
+
                       // Keep the default person, or the first one if none is default
-                      const defaultPerson = persons.find((p: { isDefault: any; }) => p.isDefault);
+                      const defaultPerson = persons.find((p: any) => p.isDefault);
                       const keep = defaultPerson || persons[0];
-                      const toDelete = persons.filter((p: { id: any; }) => p.id !== keep.id);
-                      
+                      const toDelete = persons.filter((p: any) => p.id !== keep.id);
+
+                      console.log('✅ Keeping person:', { id: keep.id, name: keep.name, isDefault: keep.isDefault });
+                      console.log('🗑️ Will delete persons:', toDelete.map((p: any) => ({ id: p.id, name: p.name, isDefault: p.isDefault })));
+
                       try {
-                        // Delete them one by one with proper error handling
-                        for (const person of toDelete) {
-                          await deletePerson(person.id);
+                        console.log('🔍 PHANTOM CHECK: Verifying people exist in database before cleanup...');
+
+                        // First, check what's actually in the database
+                        const dbResponse = await fetch(`/api/people?userId=${user?.id}`);
+                        const dbResult = await dbResponse.json();
+                        const realPeople = dbResult.success ? (dbResult.people || []) : [];
+                        const realPeopleIds = new Set(realPeople.map((p: any) => p.id));
+
+                        console.log(`📊 Database has ${realPeople.length} real people, UI shows ${people.length} people`);
+
+                        // Filter out phantom entries (exist in UI but not in database)
+                        const phantomEntries = toDelete.filter((p: any) => !realPeopleIds.has(p.id));
+                        const realEntries = toDelete.filter((p: any) => realPeopleIds.has(p.id));
+
+                        if (phantomEntries.length > 0) {
+                          console.log(`👻 Found ${phantomEntries.length} phantom entries that don't exist in database`);
+                          toast.warning(`Found ${phantomEntries.length} phantom entries. Forcing cache refresh...`);
                         }
-                        toast.success(`Cleaned up ${toDelete.length} duplicate${toDelete.length > 1 ? 's' : ''} for ${keep.name}${defaultPerson ? ' (kept default)' : ''}`);
+
+                        let deletedCount = 0;
+
+                        // Only attempt to delete entries that actually exist in the database
+                        for (const person of realEntries) {
+                          console.log(`🔥 Deleting real person: ${person.id} (${person.name})`);
+                          try {
+                            await deletePerson(person.id);
+                            console.log(`✅ Successfully deleted person: ${person.id}`);
+                            deletedCount++;
+                          } catch (personError) {
+                            console.error(`❌ Failed to delete person ${person.id}:`, personError);
+                          }
+                        }
+
+                        const totalPhantoms = phantomEntries.length;
+                        if (deletedCount > 0 || totalPhantoms > 0) {
+                          const message = deletedCount > 0
+                            ? `Cleaned up ${deletedCount} real duplicate${deletedCount > 1 ? 's' : ''}${totalPhantoms > 0 ? ` and cleared ${totalPhantoms} phantom entries` : ''}`
+                            : `Cleared ${totalPhantoms} phantom entries`;
+                          toast.success(message);
+                        } else {
+                          toast.info('No cleanup needed - all entries are valid');
+                        }
+
+                        // Force complete refresh to sync UI with database
+                        console.log('🔄 Force refreshing people list to clear phantom entries');
+                        await loadPeople();
+
                       } catch (error) {
-                        console.error('Failed to clean duplicates:', error);
+                        console.error('❌ Failed to clean duplicates:', error);
                         toast.error('Failed to clean up duplicates');
                       }
                     }}

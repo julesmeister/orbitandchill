@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { formatShortDate } from '@/utils/dateFormatting';
+
 // Synapsas color mapping for categories
 export const getCategoryColor = (category: string) => {
   switch (category) {
@@ -39,9 +41,5 @@ export const getValidDate = (dateValue: string | Date | number) => {
 
 // Format date for display without time to avoid "00:00" issue
 export const formatDate = (date: Date) => {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  return formatShortDate(date);
 };

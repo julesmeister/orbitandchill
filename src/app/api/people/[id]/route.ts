@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PersonService } from '@/services/PersonService';
 import { PersonValidationService } from '@/services/personValidationService';
-import { PersonDataTransformers } from '@/utils/personDataTransformers';
+import { PersonDataTransformers } from '@/utils/dataTransformers/personDataTransformers';
 import { HttpResponseUtils } from '@/utils/httpResponseUtils';
 
 /**
@@ -66,19 +66,25 @@ export async function DELETE(
     const personId = id;
     const body = await request.json();
     const { userId } = body;
-    
+
+    console.log('🔥 DELETE API called with:', { personId, userId });
+
     if (!userId) {
+      console.error('❌ DELETE API: Missing userId');
       return HttpResponseUtils.error(
         'User ID is required',
         undefined,
         400
       );
     }
-    
+
     // Delete person through service layer
+    console.log('📞 Calling PersonService.deletePerson with:', { personId, userId });
     const result = await PersonService.deletePerson({ personId, userId });
-    
+    console.log('📊 PersonService.deletePerson result:', result);
+
     if (!result.success) {
+      console.error('❌ PersonService.deletePerson failed:', result.error);
       return HttpResponseUtils.error(
         result.error!,
         undefined,
@@ -86,6 +92,7 @@ export async function DELETE(
       );
     }
 
+    console.log('✅ Person deleted successfully');
     return HttpResponseUtils.success({
       success: true,
       message: 'Person deleted successfully'

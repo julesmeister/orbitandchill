@@ -90,7 +90,6 @@ export default function ChartDisplayContainer({
           isGenerating={isGenerating}
           onPersonChange={onPersonChange}
           onAddPersonClick={onAddPersonClick}
-          onClearCache={onClearCache}
           chartId={cachedChart?.id}
         />
 

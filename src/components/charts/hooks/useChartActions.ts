@@ -5,7 +5,6 @@ import { Person } from '../../../types/people';
 import { usePeopleAPI } from '../../../hooks/usePeopleAPI';
 import { useStatusToast } from '../../../hooks/useStatusToast';
 import { useUserStore } from '../../../store/userStore';
-import { usePeopleStore } from '../../../store/peopleStore';
 
 interface UseChartActionsProps {
   chartId?: string;
@@ -15,7 +14,6 @@ interface UseChartActionsProps {
 export function useChartActions({ chartId, onPersonChange }: UseChartActionsProps) {
   const router = useRouter();
   const { selectedPerson, defaultPerson, setSelectedPerson } = usePeopleAPI();
-  const { setSelectedPerson: setGlobalSelectedPerson } = usePeopleStore();
   const { user } = useUserStore();
   const { showLoading, showSuccess, showError } = useStatusToast();
   
@@ -40,13 +38,12 @@ export function useChartActions({ chartId, onPersonChange }: UseChartActionsProp
     if (lastPersonIdRef.current === personId) return;
     lastPersonIdRef.current = personId;
     
-    // Sync both local and global stores
+    // Update selected person
     setSelectedPerson(personId);
-    setGlobalSelectedPerson(personId);
     
     // Notify parent component
     onPersonChange?.(person);
-  }, [setSelectedPerson, setGlobalSelectedPerson, onPersonChange]);
+  }, [setSelectedPerson, onPersonChange]);
 
   // Handle share chart button click
   const handleShareChart = useCallback(async () => {
@@ -155,8 +152,8 @@ export function useChartActions({ chartId, onPersonChange }: UseChartActionsProp
       sessionStorage.setItem('astro_person_data', JSON.stringify(personDataForAstro));
       console.log('⚡ ChartActions: Storing person data for astrocartography:', personDataForAstro);
       
-      // Also sync the selection to global store as fallback
-      setGlobalSelectedPerson(currentPerson.id);
+      // Store person selection for astrocartography
+      sessionStorage.setItem('selected_person_id', currentPerson.id);
       
       // Navigate to astrocartography page
       router.push('/astrocartography');
@@ -164,7 +161,7 @@ export function useChartActions({ chartId, onPersonChange }: UseChartActionsProp
       console.error('Error preparing person data for astrocartography:', error);
       showError('Navigation Error', 'Failed to prepare person data for astrocartography');
     }
-  }, [currentPerson, setGlobalSelectedPerson, router, showError]);
+  }, [currentPerson, router, showError]);
 
   return {
     currentPerson,

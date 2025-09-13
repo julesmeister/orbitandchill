@@ -29,7 +29,7 @@ export interface InterpretationSection {
 // Default sections configuration
 export const DEFAULT_SECTIONS: InterpretationSection[] = [
   {
-    id: 'core-personality',
+    id: 'corePersonality',
     name: 'Core Personality',
     description: 'Your sun, moon, and rising signs',
     icon: '🌟',
@@ -38,16 +38,16 @@ export const DEFAULT_SECTIONS: InterpretationSection[] = [
     isPremium: false
   },
   {
-    id: 'stellium-analysis',
+    id: 'stelliums',
     name: 'Stellium Analysis',
     description: 'Groups of 3+ planets in signs or houses',
     icon: '✨',
     isVisible: true,
     order: 2,
-    isPremium: true
+    isPremium: false
   },
   {
-    id: 'planetary-influences',
+    id: 'planetaryInfluences',
     name: 'Planetary Influences',
     description: 'How planets affect your personality',
     icon: '🪐',
@@ -56,50 +56,41 @@ export const DEFAULT_SECTIONS: InterpretationSection[] = [
     isPremium: false
   },
   {
-    id: 'planetary-positions',
+    id: 'planetaryPositions',
     name: 'Planetary Positions',
     description: 'Detailed planetary placements',
     icon: '📍',
     isVisible: true,
     order: 4,
-    isPremium: true
+    isPremium: false
   },
   {
-    id: 'detailed-aspects',
+    id: 'majorAspects',
     name: 'Major Aspects',
     description: 'Planetary relationships and energies',
     icon: '🔗',
     isVisible: true,
     order: 5,
-    isPremium: true
+    isPremium: false
   },
   {
-    id: 'planetary-dignities',
+    id: 'planetaryDignities',
     name: 'Planetary Dignities',
     description: 'Planet strength and weaknesses',
     icon: '👑',
     isVisible: true,
     order: 6,
-    isPremium: true
+    isPremium: false
   },
   {
-    id: 'house-analysis',
+    id: 'houses',
     name: 'Houses Analysis',
     description: 'Life areas and themes',
     icon: '🏠',
     isVisible: true,
     order: 7,
-    isPremium: true
-  },
-  {
-    id: 'celestial-points',
-    name: 'Celestial Points',
-    description: 'Lilith, Chiron, Nodes & Part of Fortune',
-    icon: '🌙',
-    isVisible: true,
-    order: 8,
     isPremium: false
-  }
+  },
 ];
 
 interface ChartStoreState {
