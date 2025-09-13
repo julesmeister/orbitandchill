@@ -105,6 +105,7 @@ export function useNatalChartForm({
   
   // Debounced update ref
   const debouncedUpdateRef = useRef<NodeJS.Timeout | null>(null);
+  const hasUserDataInitializedRef = useRef(false);
   
   // Status toast hook
   const { toast: statusToast, showError, showSuccess } = useStatusToast();
@@ -176,13 +177,13 @@ export function useNatalChartForm({
   
   // Load people when editing a person to ensure they exist in store
   useEffect(() => {
-    if (mode === 'person' && editingPerson) {
+    if (mode === 'person' && editingPerson && people.length === 0) {
       const loadAndWait = async () => {
         await loadPeople();
       };
       loadAndWait();
     }
-  }, [mode, editingPerson, loadPeople, people.length]);
+  }, [mode, editingPerson?.id]); // Only depend on editingPerson.id to prevent loops
 
   // Ensure anonymous user exists on mount for user mode
   useEffect(() => {
@@ -199,7 +200,7 @@ export function useNatalChartForm({
   const hasInitializedRef = useRef<string | null>(null);
   
   useEffect(() => {
-    if (mode === 'user' && user?.birthData) {
+    if (mode === 'user' && user?.birthData && !hasUserDataInitializedRef.current) {
       const newFormData = {
         name: user.username || '',
         dateOfBirth: user.birthData.dateOfBirth || '',
@@ -210,9 +211,11 @@ export function useNatalChartForm({
       
       setFormData(newFormData);
       
-      if (user.birthData.locationOfBirth && !isUserTypingLocation) {
+      if (user.birthData.locationOfBirth) {
         locationSearch.setLocationQuery(user.birthData.locationOfBirth);
       }
+      
+      hasUserDataInitializedRef.current = true;
     } else if (mode === 'person' && editingPerson) {
       // Only initialize if this is a different person or first time
       if (hasInitializedRef.current !== editingPerson.id) {
@@ -229,7 +232,7 @@ export function useNatalChartForm({
         setNotes(editingPerson.notes || '');
         setIsDefault(editingPerson.isDefault || false);
         
-        if (editingPerson.birthData.locationOfBirth && !isUserTypingLocation) {
+        if (editingPerson.birthData.locationOfBirth) {
           locationSearch.setLocationQuery(editingPerson.birthData.locationOfBirth);
         }
         
@@ -250,7 +253,7 @@ export function useNatalChartForm({
       locationSearch.setLocationQuery('');
       hasInitializedRef.current = null; // Reset initialization tracking
     }
-  }, [user?.id, mode, editingPerson?.id, isUserTypingLocation, locationSearch.setLocationQuery]);
+  }, [user?.id, mode, editingPerson?.id]);
   
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -271,10 +274,15 @@ export function useNatalChartForm({
     locationSearch.setLocationQuery(value);
     updateFormData({ locationOfBirth: value });
     
+    // Reset initialization flag when user starts typing to prevent reverting
+    if (mode === 'user') {
+      hasUserDataInitializedRef.current = true;
+    }
+    
     setTimeout(() => {
       setIsUserTypingLocation(false);
     }, 500);
-  }, [updateFormData, locationSearch.setLocationQuery]);
+  }, [updateFormData, locationSearch.setLocationQuery, mode]);
   
   const handleRelationshipChange = useCallback((value: Person['relationship']) => {
     setRelationship(value);
@@ -310,9 +318,18 @@ export function useNatalChartForm({
     return baseValid;
   }, [formData, mode])();
   
+  // Simple function to save data before navigation
+  const saveDataIfNeeded = useCallback(async () => {
+    if (mode === 'user') {
+      const { name: _name, ...birthData } = formData;
+      await updateBirthData(birthData);
+    }
+  }, [mode, formData, updateBirthData]);
+
   // Form submission
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🎯 Form submission started!', { mode, userId: user?.id });
     
     if (!formData.coordinates.lat || !formData.coordinates.lon) {
       showError(
@@ -329,57 +346,14 @@ export function useNatalChartForm({
     
     setIsSaving(true);
     
-    // Clear pending updates and save data immediately
+    // Clear pending updates
     if (debouncedUpdateRef.current) {
       clearTimeout(debouncedUpdateRef.current);
     }
     
-    if (mode === 'user') {
-      const { name: _name, ...birthData } = formData;
-      await updateBirthData(birthData);
-      
-      // CRITICAL FIX: Update default person to keep it in sync with user data
-      // This prevents the cache from using stale person data
-      try {
-        await loadPeople();
-        const { people: currentPeople } = usePeopleStore.getState();
-        const defaultPersonInStore = currentPeople.find(p => p.isDefault && p.userId === user?.id);
-        
-        if (defaultPersonInStore) {
-          // Update the default person with new birth data
-          const personFormData: PersonFormData = {
-            name: defaultPersonInStore.name,
-            relationship: 'self',
-            birthData,
-            notes: defaultPersonInStore.notes || 'Your personal birth data',
-            isDefault: true
-          };
-          
-          await updatePerson(defaultPersonInStore.id, personFormData);
-          
-          // CRITICAL FIX: Force chart regeneration using the same path as regenerate button
-          // This ensures celestial points and all chart features are preserved
-          if (cachedChart) {
-            const chartData = await generateChart(
-              {
-                name: defaultPersonInStore.name || user?.username || 'Natal Chart',
-                dateOfBirth: birthData.dateOfBirth,
-                timeOfBirth: birthData.timeOfBirth,
-                locationOfBirth: birthData.locationOfBirth,
-                coordinates: birthData.coordinates,
-              },
-              true // forceRegenerate - same as regenerate button
-            );
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to sync user data to default person:', error);
-        // Don't fail the form submission if person sync fails
-      }
-    }
-    
     try {
       if (mode === 'person') {
+        // Handle person mode
         const { name, ...birthData } = formData;
         const personFormData: PersonFormData = {
           name,
@@ -391,10 +365,7 @@ export function useNatalChartForm({
         
         let savedPerson: Person;
         if (editingPerson) {
-          // Always reload people to ensure fresh data before attempting update
           await loadPeople();
-          
-          // Get fresh people array after loading
           const { people: freshPeople } = usePeopleStore.getState();
           const personExistsInStore = freshPeople.some(p => p.id === editingPerson.id);
           
@@ -412,62 +383,27 @@ export function useNatalChartForm({
           savedPerson = await addPerson(personFormData);
         }
         
-        // CRITICAL FIX: If this person represents the user ('self'), sync data to user store AND regenerate chart
+        // If this person represents the user ('self'), sync data to user store
         if (savedPerson.relationship === 'self') {
           const { name: _name, ...birthData } = formData;
           await updateBirthData(birthData);
-          
-          // CRITICAL FIX: Force chart regeneration using the same path as regenerate button
-          // This ensures celestial points and all chart features are preserved  
-          if (cachedChart) {
-            const chartData = await generateChart(
-              {
-                name: savedPerson.name,
-                dateOfBirth: birthData.dateOfBirth,
-                timeOfBirth: birthData.timeOfBirth,
-                locationOfBirth: birthData.locationOfBirth,
-                coordinates: birthData.coordinates,
-              },
-              true // forceRegenerate - same as regenerate button
-            );
-          }
         }
         
         if (onPersonSaved) {
           onPersonSaved(savedPerson);
         }
       } else {
-        // User mode - chart generation should already be handled above in the sync logic
-        if (cachedChart) {
-          router.push('/chart');
-          return;
-        }
+        // USER MODE - DIRECT NAVIGATION
+        console.log('🚀 User mode: Saving data and navigating directly to chart');
         
-        // If no cached chart after sync, generate one using the same path as regenerate button
-        const chartFormData = {
-          name: formData.name || user?.username || 'Natal Chart',
-          dateOfBirth: formData.dateOfBirth,
-          timeOfBirth: formData.timeOfBirth,
-          locationOfBirth: formData.locationOfBirth,
-          coordinates: formData.coordinates
-        };
+        // Save user data quickly
+        await saveDataIfNeeded();
         
-        const chartData = await generateChart(chartFormData, true); // forceRegenerate to ensure fresh chart
-        
-        if (chartData) {
-          trackChartGeneration('natal');
-          router.push('/chart');
-        } else {
-          showError(
-            "Chart Generation Failed",
-            "Unable to generate your natal chart. Please check your data and try again.",
-            5000
-          );
-        }
-        
-        if (onSubmit) {
-          await onSubmit(formData);
-        }
+        // Navigate immediately - let chart page handle everything else
+        console.log('✅ Navigating to chart page immediately');
+        setIsSaving(false);
+        router.push('/chart');
+        return;
       }
     } catch (error) {
       console.error('Failed to save:', error);
@@ -482,8 +418,7 @@ export function useNatalChartForm({
   }, [
     formData, isFormValid, mode, relationship, notes, isDefault,
     editingPerson, addPerson, updatePerson, onPersonSaved,
-    cachedChart, generateChart, router, onSubmit,
-    showError, updateBirthData
+    router, showError, saveDataIfNeeded, user?.id
   ]);
   
   // Enhanced location search with form integration

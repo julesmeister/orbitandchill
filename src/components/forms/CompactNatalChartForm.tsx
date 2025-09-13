@@ -9,7 +9,7 @@ import { useNatalChartForm } from '../../hooks/useNatalChartForm';
 import RelationshipSelector from './components/RelationshipSelector';
 import DateInput from './components/DateInput';
 import TimeInput from './components/TimeInput';
-import LocationInput from './components/LocationInput';
+import UnifiedLocationInput from './UnifiedLocationInput';
 import FormActions from './components/FormActions';
 import FormStyles from './components/FormStyles';
 
@@ -52,14 +52,11 @@ const CompactNatalChartForm = ({
   });
 
   return (
-    <div className="w-full bg-white" style={{ overflow: 'visible' }}>
+    <div className="w-full bg-white" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
       <form onSubmit={handleSubmit} className="space-y-0" style={{ overflow: 'visible' }}>
         {/* Name & Relationship Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-b border-black"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-b border-black relative"
           style={{ 
-            zIndex: 15000,
-            isolation: 'isolate',
-            transform: 'translateZ(0)',
             overflow: 'visible'
           }}
         >
@@ -99,7 +96,7 @@ const CompactNatalChartForm = ({
         />
 
         {/* Location Section */}
-        <LocationInput
+        <UnifiedLocationInput
           locationQuery={locationSearch.locationQuery}
           locationOptions={locationSearch.locationOptions}
           showLocationDropdown={locationSearch.showLocationDropdown && isLocationFocused}
@@ -108,7 +105,8 @@ const CompactNatalChartForm = ({
           onLocationSelect={locationSearch.handleLocationSelect}
           onFocus={handleLocationFocus}
           onBlur={handleLocationBlur}
-          required
+          compact={true}
+          required={true}
         />
 
         {/* Notes Section */}

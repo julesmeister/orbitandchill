@@ -7,7 +7,7 @@ import { useNatalChartForm, NatalChartFormData } from '../../hooks/useNatalChart
 import StatusToast from '../reusable/StatusToast';
 import DateInput from './DateInput';
 import TimeInput from './TimeInput';
-import LocationInput from './LocationInput';
+import UnifiedLocationInput from './UnifiedLocationInput';
 import PersonModeFields from './PersonModeFields';
 import SubmitButton from './SubmitButton';
 
@@ -148,17 +148,17 @@ const NatalChartForm = ({
         </div>
 
         {/* Location of Birth */}
-        <LocationInput
+        <UnifiedLocationInput
           locationQuery={locationSearch.locationQuery}
-          onLocationChange={locationSearch.handleLocationInputChange}
-          isLocationFocused={isLocationFocused}
-          setIsLocationFocused={handleLocationFocus}
           locationOptions={locationSearch.locationOptions}
-          showLocationDropdown={locationSearch.showLocationDropdown}
+          showLocationDropdown={locationSearch.showLocationDropdown && isLocationFocused}
           isLoadingLocations={locationSearch.isLoadingLocations}
-          locationInputRef={locationSearch.locationInputRef}
-          dropdownRef={locationSearch.dropdownRef}
+          onLocationInputChange={locationSearch.handleLocationInputChange}
           onLocationSelect={locationSearch.handleLocationSelect}
+          onFocus={handleLocationFocus}
+          onBlur={handleLocationBlur}
+          compact={false}
+          required={true}
         />
 
         {/* Submit Button */}

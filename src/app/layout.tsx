@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import "@/styles/synapsas-forms.css"; // Import form styles
 import Layout from "@/components/Layout"; // Import the Layout component
 import StructuredData from "@/components/SEO/StructuredData";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
