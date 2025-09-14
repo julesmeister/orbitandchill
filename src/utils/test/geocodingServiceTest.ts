@@ -103,7 +103,8 @@ export class GeocodingServiceTest {
       const noFallbackResult = GeocodingService.processCoordinates(noFallbackBirthData);
       console.log('❌ No fallback processing: FAIL - should have thrown error', noFallbackResult);
     } catch (error) {
-      console.log('✅ No fallback processing: PASS - correctly threw error', error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log('✅ No fallback processing: PASS - correctly threw error', errorMessage);
     }
 
     return { validBirthData, fallbackBirthData, noFallbackBirthData };
