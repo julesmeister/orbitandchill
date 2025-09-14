@@ -96,6 +96,13 @@ src/
 │   │   ├── components/    # Chart sub-components
 │   │   ├── hooks/         # Chart-specific hooks
 │   │   └── types.ts       # Chart type definitions
+│   ├── events/            # Modular events system ⭐ **NEW REFACTORED ARCHITECTURE**
+│   │   ├── EventsTable.tsx        # Main orchestrator (refactored from 730→120 lines)
+│   │   └── modules/               # Modular EventsTable components
+│   │       ├── EventsTableTabs.tsx    # Tab navigation and filtering
+│   │       ├── EventsTableHeader.tsx  # Table header with sorting
+│   │       ├── EventsTableDesktop.tsx # Desktop table layout
+│   │       └── EventsTableMobile.tsx  # Mobile responsive layout
 │   ├── discussions/       # Discussion components ⭐
 │   │   ├── DiscussionsSearchFilters.tsx  # Refresh functionality
 │   │   └── DiscussionsPageContent.tsx    # Pagination integration
@@ -119,7 +126,9 @@ src/
 │   ├── useRealMetrics.ts      # Fixed to use totalThreads parameter
 │   ├── usePeople.ts           # Modern people CRUD with API integration ⭐ NEW
 │   ├── useAnalytics.ts        # Client-side event tracking system ⭐ NEW
-│   └── useMemoryMonitor.ts    # Memory monitoring & leak detection ⭐ NEW
+│   ├── useMemoryMonitor.ts    # Memory monitoring & leak detection ⭐ NEW
+│   ├── useEventsPagination.ts  # Events table pagination with filtering integration ⭐ NEW
+│   └── useEventsRename.ts     # Events table rename functionality ⭐ NEW
 ├── data/                  # Centralized data sources
 │   └── faqData.ts             # FAQ system with 24 questions ⭐
 ├── services/              # API service layers ⚡ **REFACTORED ARCHITECTURE**
@@ -141,6 +150,9 @@ src/
     ├── dataTransformers/      # Data transformation utilities ⭐ NEW
     │   └── personDataTransformers.ts # Person data shape converters & transformers
     ├── chartCache.ts          # Chart caching utilities ⭐
+    ├── events/                # Events table utilities ⭐ NEW
+    │   ├── eventStylingUtils.ts   # Event styling and visual utilities
+    │   └── eventFormattingUtils.ts # Event data formatting utilities
     └── threading/             # Threading utilities (legacy)
 ```
 
@@ -372,6 +384,24 @@ CODE_ARCHITECTURE_PROTOCOL.md Implementation - COMPLETED
 │   ├── formatDate Function Analysis: Identified 10+ duplicate implementations
 │   ├── Import Path Standardization: Updated 6 files to use consolidated transformers
 │   └── Architecture Layer Verification: Chart services confirmed as layer-specific
+├── EventsTable.tsx Refactoring ⭐ **NEW ARCHITECTURE IMPLEMENTATION**
+│   ├── File Size Reduction: 730 → 120 lines (84% reduction)
+│   ├── Modular Component Architecture Implementation
+│   │   ├── EventsTableTabs.tsx - Extracted tab navigation and filtering logic
+│   │   ├── EventsTableHeader.tsx - Isolated table header and sorting functionality
+│   │   ├── EventsTableDesktop.tsx - Dedicated desktop table layout component
+│   │   └── EventsTableMobile.tsx - Responsive mobile table implementation
+│   ├── Custom Hook Extraction
+│   │   ├── useEventsPagination.ts - Pagination logic with filtering integration
+│   │   └── useEventsRename.ts - Event renaming functionality and state management
+│   ├── Utility Service Creation
+│   │   ├── eventStylingUtils.ts - Event styling and visual utility functions
+│   │   └── eventFormattingUtils.ts - Event data formatting and display utilities
+│   └── Code Quality Improvements
+│       ├── Single responsibility principle applied across all modules
+│       ├── Eliminated monolithic component architecture patterns
+│       ├── Enhanced maintainability through component isolation
+│       └── Improved testability with focused, modular component structure
 ├── New Service Layer Architecture
 │   ├── /src/services/integrationServices/ - Integration & sync services
 │   ├── /src/services/businessServices/ - Business logic services
