@@ -6,6 +6,8 @@ import { Person } from '../../../types/people';
 import { processBirthTime } from '../../../utils/timeZoneHandler';
 import { PLANET_COLORS, coordinatesToWorldMapPath } from '../../../utils/astrocartographyLineRenderer';
 import { calculateParans } from '../../../utils/paranCalculations';
+import { GeocodingService, BirthDataWithCoordinates } from '../../../services/businessServices/geocodingService';
+import { CoordinateValidators } from '../../../utils/validators/coordinateValidators';
 
 interface UseAstrocartographyDataProps {
   currentPerson: Person | null;
@@ -39,57 +41,95 @@ export function useAstrocartographyData({
 
   // Process birth data with proper time zone handling
   const birthData = useMemo(() => {
-    if (!currentPerson?.birthData) return null;
+    if (!currentPerson?.birthData) {
+      console.log('🌍 ASTRO: No current person or birth data available');
+      return null;
+    }
 
-    return (() => {
-      // CRITICAL FIX: Use proper time zone handling instead of naive Date construction
-      // This addresses the #1 cause of inaccurate astrocartography lines
+    // Debug the actual structure
+    console.log('🌍 ASTRO: Current person structure:', {
+      id: currentPerson.id,
+      name: currentPerson.name,
+      birthDataExists: !!currentPerson.birthData,
+      birthDataKeys: currentPerson.birthData ? Object.keys(currentPerson.birthData) : [],
+      coordinates: currentPerson.birthData?.coordinates,
+      coordinatesType: typeof currentPerson.birthData?.coordinates,
+      rawBirthData: currentPerson.birthData
+    });
 
-      const rawLat = currentPerson.birthData.coordinates.lat;
-      const rawLon = currentPerson.birthData.coordinates.lon;
-      const parsedLat = parseFloat(rawLat);
-      const parsedLon = parseFloat(rawLon);
+    try {
+      // Use the new geocoding service for coordinate processing
+      const birthDataWithCoords: BirthDataWithCoordinates = {
+        dateOfBirth: currentPerson.birthData.dateOfBirth,
+        timeOfBirth: currentPerson.birthData.timeOfBirth,
+        locationOfBirth: currentPerson.birthData.locationOfBirth,
+        coordinates: currentPerson.birthData.coordinates || { lat: '', lon: '' }
+      };
 
-      // Use imported time zone handler
+      const coordResult = GeocodingService.processCoordinates(birthDataWithCoords);
+      const { coordinates, source, validationResult, description, accuracy } = coordResult;
+
+      // Parse validated coordinates
+      const { latitude, longitude } = GeocodingService.parseCoordinates(coordinates);
+
+      console.log('🌍 ASTRO: Coordinate processing result:', {
+        source,
+        description,
+        accuracy,
+        coordinates: { latitude, longitude },
+        validation: validationResult
+      });
+
+      // Process time zone with validated coordinates
       try {
         const processedTime = processBirthTime({
-          dateOfBirth: currentPerson.birthData.dateOfBirth,
-          timeOfBirth: currentPerson.birthData.timeOfBirth,
-          coordinates: currentPerson.birthData.coordinates,
-          locationOfBirth: currentPerson.birthData.locationOfBirth
+          dateOfBirth: birthDataWithCoords.dateOfBirth,
+          timeOfBirth: birthDataWithCoords.timeOfBirth,
+          coordinates: coordinates,
+          locationOfBirth: birthDataWithCoords.locationOfBirth
         });
 
         // Display warnings if accuracy is compromised
         if (processedTime.confidence === 'low' || processedTime.warnings.length > 2) {
-          console.warn('ASTROCARTOGRAPHY ACCURACY WARNING:', processedTime.warnings);
+          console.warn('🌍 ASTRO: ACCURACY WARNING:', processedTime.warnings);
         }
 
         const finalBirthData = {
-          date: processedTime.utcDate, // Use proper UTC date instead of naive construction
+          date: processedTime.utcDate,
           location: {
-            latitude: parsedLat,
-            longitude: parsedLon
+            latitude,
+            longitude
           },
-          timeZoneInfo: processedTime // Include time zone metadata for debugging
+          timeZoneInfo: processedTime,
+          coordinateSource: source,
+          coordinateDescription: description,
+          coordinateAccuracy: accuracy
         };
 
+        console.log('🌍 ASTRO: Birth data processed successfully');
         return finalBirthData;
-      } catch (error) {
-        console.error('Time zone processing failed, falling back to naive date construction:', error);
+      } catch (timeZoneError) {
+        console.error('🌍 ASTRO: Time zone processing failed, using fallback date construction:', timeZoneError);
 
-        // Fallback to original method with warning
-        const fallbackDate = new Date(`${currentPerson.birthData.dateOfBirth}T${currentPerson.birthData.timeOfBirth}:00`);
+        // Fallback to naive date construction
+        const fallbackDate = new Date(`${birthDataWithCoords.dateOfBirth}T${birthDataWithCoords.timeOfBirth}:00`);
 
         return {
           date: fallbackDate,
           location: {
-            latitude: parsedLat,
-            longitude: parsedLon
+            latitude,
+            longitude
           },
-          timeZoneInfo: null
+          timeZoneInfo: null,
+          coordinateSource: source,
+          coordinateDescription: description,
+          coordinateAccuracy: accuracy
         };
       }
-    })();
+    } catch (coordError) {
+      console.error('🌍 ASTRO: Failed to process coordinates:', coordError);
+      return null;
+    }
   }, [currentPerson?.birthData]);
 
   // Derive time zone info directly from birth data

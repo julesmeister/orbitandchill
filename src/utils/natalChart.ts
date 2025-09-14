@@ -135,16 +135,16 @@ export interface ChartMetadata {
 
 // Astronomy-engine body mapping
 const ASTRONOMY_BODIES: { [key: string]: any } = {
-  sun: Astronomy.Body?.Sun || 'Sun',
-  moon: Astronomy.Body?.Moon || 'Moon', 
-  mercury: Astronomy.Body?.Mercury || 'Mercury',
-  venus: Astronomy.Body?.Venus || 'Venus',
-  mars: Astronomy.Body?.Mars || 'Mars',
-  jupiter: Astronomy.Body?.Jupiter || 'Jupiter',
-  saturn: Astronomy.Body?.Saturn || 'Saturn',
-  uranus: Astronomy.Body?.Uranus || 'Uranus',
-  neptune: Astronomy.Body?.Neptune || 'Neptune',
-  pluto: Astronomy.Body?.Pluto || 'Pluto',
+  sun: Astronomy.Body.Sun,
+  moon: Astronomy.Body.Moon,
+  mercury: Astronomy.Body.Mercury,
+  venus: Astronomy.Body.Venus,
+  mars: Astronomy.Body.Mars,
+  jupiter: Astronomy.Body.Jupiter,
+  saturn: Astronomy.Body.Saturn,
+  uranus: Astronomy.Body.Uranus,
+  neptune: Astronomy.Body.Neptune,
+  pluto: Astronomy.Body.Pluto,
 };
 
 /**
@@ -156,31 +156,40 @@ export async function calculatePlanetaryPositions(
   latitude: number,
   longitude: number
 ): Promise<NatalChartData> {
-  // Debug logging disabled for production
+  // Validate inputs first
+  if (!date || isNaN(date.getTime())) {
+    throw new Error('Invalid date provided to calculatePlanetaryPositions');
+  }
+
+  if (isNaN(latitude) || isNaN(longitude)) {
+    throw new Error(`Invalid coordinates provided: lat=${latitude}, lng=${longitude}`);
+  }
+
+  if (latitude < -90 || latitude > 90) {
+    throw new Error(`Latitude out of range: ${latitude}. Must be between -90 and 90.`);
+  }
+
+  if (longitude < -180 || longitude > 180) {
+    throw new Error(`Longitude out of range: ${longitude}. Must be between -180 and 180.`);
+  }
 
   try {
-    // Starting planetary calculations - debug logging disabled
+    console.log('🔄 NATAL: Starting planetary calculations for', { date: date.toISOString(), latitude, longitude });
 
-    // Try different Observer creation methods for astronomy-engine v2.1.19
+    // Create Observer for astronomy-engine
     let observer;
     try {
-      // Method 1: Try as a constructor
+      // Method 1: Try as a constructor (most common)
       observer = new Astronomy.Observer(latitude, longitude, 0);
-      // Observer created with constructor
+      console.log('🔄 NATAL: Observer created successfully');
     } catch (e1) {
       try {
-        // Method 2: Try as a factory function
-        observer = new Astronomy.Observer(latitude, longitude, 0);
-        // Observer created with factory
+        // Method 2: Try with object literal (fallback)
+        observer = { latitude, longitude, height: 0 };
+        console.log('🔄 NATAL: Observer created with object literal');
       } catch (e2) {
-        try {
-          // Method 3: Try with object literal
-          observer = { latitude, longitude, height: 0 };
-          // Observer created with object literal
-        } catch (e3) {
-          console.error('All Observer creation methods failed:', { e1, e2, e3 });
-          throw new Error('Cannot create Observer object');
-        }
+        console.error('🔄 NATAL: All Observer creation methods failed:', { e1, e2 });
+        throw new Error('Cannot create Observer object with provided coordinates');
       }
     }
 
@@ -200,24 +209,39 @@ export async function calculatePlanetaryPositions(
       let distance: number | undefined;
       
       try {
-        if (body === 'Sun') {
+        if (planetName === 'sun') {
+          console.log('🔄 NATAL: Calculating Sun position');
+
           // For the Sun, use SunPosition which gives geocentric longitude
           const sunPos = Astronomy.SunPosition(date);
+          if (!sunPos || typeof sunPos.elon !== 'number' || isNaN(sunPos.elon)) {
+            throw new Error('SunPosition returned invalid longitude');
+          }
           longitude = sunPos.elon;
-          
+
           // For the Sun, use the Body directly with Astronomy.Equator
+          const astroTime = Astronomy.MakeTime(date);
+          if (!astroTime) {
+            throw new Error('Failed to convert Date to AstroTime');
+          }
+
           const equatorial = Astronomy.Equator(
             Astronomy.Body.Sun,             // Sun body
-            Astronomy.MakeTime(date),       // convert Date to AstroTime
+            astroTime,                      // convert Date to AstroTime
             observer,                       // observer
             true,                          // ofdate (use true for date-of-observation coordinates)
             true                           // aberration (include stellar aberration)
           );
+
+          if (!equatorial || typeof equatorial.ra !== 'number' || typeof equatorial.dec !== 'number') {
+            throw new Error('Equatorial coordinates calculation failed for Sun');
+          }
+
           rightAscension = equatorial.ra;
           declination = equatorial.dec;
           distance = 1.0; // 1 AU for Sun
-          
-          // Sun position calculated
+
+          console.log('🔄 NATAL: Sun position calculated successfully', { longitude, rightAscension, declination });
         } else {
           // For other bodies, use GeoVector and convert to ecliptic
           const geoVector = Astronomy.GeoVector(body, date, false);
@@ -264,7 +288,7 @@ export async function calculatePlanetaryPositions(
       let longitudeBefore: number;
       let longitudeAfter: number;
       
-      if (body === 'Sun') {
+      if (planetName === 'sun') {
         const sunPosBefore = Astronomy.SunPosition(dayBefore);
         const sunPosAfter = Astronomy.SunPosition(dayAfter);
         longitudeBefore = sunPosBefore.elon;
@@ -280,7 +304,7 @@ export async function calculatePlanetaryPositions(
     
       // If longitude is decreasing, planet is retrograde
       let retrograde = false;
-      if (body !== 'Sun' && body !== 'Moon') {
+      if (planetName !== 'sun' && planetName !== 'moon') {
         // Adjust for 360-degree wraparound
         let motion = longitudeAfter - longitudeBefore;
         if (motion > 180) motion -= 360;

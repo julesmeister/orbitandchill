@@ -82,8 +82,18 @@ export default function AstrocartographyPageClient() {
       selectedPerson: !!selectedPerson,
       defaultPerson: !!defaultPerson,
       peopleCount: people.length,
-      finalPerson: currentPerson ? { id: currentPerson.id, name: currentPerson.name } : null
+      finalPerson: currentPerson ? {
+        id: currentPerson.id,
+        name: currentPerson.name,
+        hasBirthData: !!currentPerson.birthData,
+        hasCoordinates: !!currentPerson.birthData?.coordinates
+      } : null
     });
+
+    // Also log the full person data if available
+    if (currentPerson) {
+      console.log('🌍 Astrocartography: Full current person data:', currentPerson);
+    }
   }, [astroPersonData, selectedPerson, defaultPerson, people.length, currentPerson]);
 
   // Use custom hooks for state management
@@ -165,14 +175,25 @@ export default function AstrocartographyPageClient() {
 
   // Calculate astrocartography when current person or birth data changes
   useEffect(() => {
-    if (birthData && (!hasInitialLoad || !astrocartographyData)) {
+    // Only calculate if we have valid birth data and haven't calculated for this person yet
+    if (birthData && !isCalculating && (!hasInitialLoad || !astrocartographyData)) {
+      console.log('🌍 ASTRO: Triggering astrocartography calculation for person:', currentPerson?.id);
       calculateAstrocartography(birthData).then(() => {
         if (!hasInitialLoad) {
           setHasInitialLoad(true);
+          console.log('🌍 ASTRO: Initial load completed');
         }
+      }).catch((error) => {
+        console.error('🌍 ASTRO: Calculation failed:', error);
       });
+    } else if (!birthData) {
+      console.log('🌍 ASTRO: No birth data available for calculation');
+    } else if (isCalculating) {
+      console.log('🌍 ASTRO: Calculation already in progress, skipping');
+    } else if (hasInitialLoad && astrocartographyData) {
+      console.log('🌍 ASTRO: Already have data, skipping calculation');
     }
-  }, [birthData, currentPerson?.id, calculateAstrocartography, hasInitialLoad, astrocartographyData, setHasInitialLoad]);
+  }, [birthData, currentPerson?.id, hasInitialLoad, astrocartographyData, isCalculating]);
 
 
   return (

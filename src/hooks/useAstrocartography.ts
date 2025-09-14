@@ -137,6 +137,7 @@ export function useAstrocartography({
     // Throttle calculations
     const now = Date.now();
     if (now - lastCalculation < throttleMs) {
+      console.log('🔄 ASTRO: Throttling calculation, too recent:', now - lastCalculation, 'ms ago');
       return astrocartographyData;
     }
 
@@ -192,9 +193,10 @@ export function useAstrocartography({
   // Auto-calculate when conditions are met
   useEffect(() => {
     if (autoCalculate && canCalculate && !isCalculating && !astrocartographyData) {
+      console.log('🔄 ASTRO: Auto-calculating astrocartography');
       calculateAstrocartography();
     }
-  }, [autoCalculate, canCalculate, isCalculating, astrocartographyData, calculateAstrocartography]);
+  }, [autoCalculate, canCalculate, isCalculating, astrocartographyData]);
 
   // Clear data when user changes
   useEffect(() => {
