@@ -6,7 +6,6 @@ import { Person } from '../../../types/people';
 import { processBirthTime } from '../../../utils/timeZoneHandler';
 import { PLANET_COLORS, coordinatesToWorldMapPath } from '../../../utils/astrocartographyLineRenderer';
 import { calculateParans } from '../../../utils/paranCalculations';
-import { clearOutdatedNatalChartCaches } from '../../../utils/cacheInvalidation';
 
 interface UseAstrocartographyDataProps {
   currentPerson: Person | null;
@@ -159,27 +158,15 @@ export function useAstrocartographyData({
     }
   }, [astrocartographyData, setParans]);
 
-  // Check for outdated caches on mount
+  // Initialize fresh data on mount
   useEffect(() => {
-    const checkCaches = async () => {
-      if (userId && !hasCheckedCache) {
-        setHasCheckedCache(true);
-        try {
-          const clearedCount = await clearOutdatedNatalChartCaches();
-          if (clearedCount > 0) {
-            // Cleared outdated caches on astrocartography page load
-            // Force a fresh calculation by setting hasInitialLoad to false
-            setHasInitialLoad(false);
-            // Reset fresh data flag to allow new calculations
-            hasFreshAstroData.current = false;
-          }
-        } catch (error) {
-          console.error('Error checking caches:', error);
-        }
-      }
-    };
-
-    checkCaches();
+    if (userId && !hasCheckedCache) {
+      setHasCheckedCache(true);
+      // Since we're using API-only architecture without caching,
+      // we always want fresh calculations
+      setHasInitialLoad(false);
+      hasFreshAstroData.current = false;
+    }
   }, [userId, hasCheckedCache, setHasCheckedCache, setHasInitialLoad, hasFreshAstroData]);
 
   // Reset fresh data flag and stable lines when person changes

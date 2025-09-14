@@ -78,25 +78,12 @@ export async function isChartCacheOutdated(cacheKey: string): Promise<boolean> {
 
 /**
  * Clear all outdated natal chart caches
- * API-based approach
+ * NOTE: This is now a no-op since we're using API-only architecture without caching
  */
 export async function clearOutdatedNatalChartCaches(): Promise<number> {
-  try {
-    const response = await fetch('/api/charts/clear-outdated-cache', {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to clear outdated caches: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log(`Cleared ${result.clearedCount || 0} outdated natal chart caches`);
-    return result.clearedCount || 0;
-  } catch (error) {
-    console.error('Error clearing outdated caches:', error);
-    return 0;
-  }
+  // API-only architecture doesn't use caching, so this is now a no-op
+  // Keeping the function for backward compatibility
+  return 0;
 }
 
 /**
