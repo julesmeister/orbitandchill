@@ -11,14 +11,8 @@ import type {
 } from '../types/events';
 import { eventService } from '../services/EventService';
 import { eventCache, EventCacheImpl } from '../services/EventCache';
-// EventPersistence removed - using direct API calls only
-const eventPersistence = {
-  async loadEvents() { return []; },
-  async saveEvents() { return true; },
-  async clearCache() { return true; },
-  async saveEvent(event: any) { return true; },
-  async removeEvent(id: string) { return true; }
-};
+// Using EventLoadingService for all persistence operations
+import { EventLoadingService } from '../services/businessServices/eventLoadingService';
 import {
   toUnifiedEvent,
   toAstrologicalEvent,
@@ -40,7 +34,7 @@ interface EventsStore extends EventsState {
   
   // Data loading
   loadMonthEvents: (userId: string, month: number, year: number) => Promise<void>;
-  loadPersistedEvents: () => Promise<void>;
+  loadPersistedEvents: (userId?: string) => Promise<void>;
   
   // Getters with filtering
   getEventsByFilter: (filter: EventFilter) => UnifiedEvent[];
@@ -102,14 +96,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           allEventIds: newEventIds
         });
         
-        // Persist if needed
-        if (unifiedEvent.metadata.isPersisted) {
-          try {
-            await eventPersistence.saveEvent(unifiedEvent);
-          } catch (error) {
-            console.error(`Failed to persist event ${event.id}:`, error);
-          }
-        }
+        // Note: API persistence happens via eventService.saveEvent below
         
         // Sync to API if not local
         if (!isLocalEvent(event.id)) {
@@ -155,14 +142,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         
         set({ allEvents: newEvents });
         
-        // Persist if needed
-        if (updatedEvent.metadata.isPersisted) {
-          try {
-            await eventPersistence.saveEvent(updatedEvent);
-          } catch (error) {
-            console.error(`Failed to persist event update ${id}:`, error);
-          }
-        }
+        // Note: API persistence happens via eventService.saveEvent below
         
         // Sync to API if not local
         if (!isLocalEvent(id)) {
@@ -196,12 +176,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
           allEventIds: newEventIds
         });
         
-        // Remove from persistence
-        try {
-          await eventPersistence.removeEvent(id);
-        } catch (error) {
-          console.error(`Failed to remove event ${id} from persistence:`, error);
-        }
+        // Note: API removal happens via eventService.deleteEvent below
         
         // Remove from API if not local
         if (!isLocalEvent(id)) {
@@ -232,12 +207,7 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         
         set({ allEvents: newEvents });
         
-        // Persist the change
-        try {
-          await eventPersistence.saveEvent(updatedEvent);
-        } catch (error) {
-          console.error(`Failed to persist bookmark change for ${id}:`, error);
-        }
+        // Note: API persistence happens via eventService.toggleBookmark below
         
         // Sync to API if not local
         if (!isLocalEvent(id)) {
@@ -275,8 +245,8 @@ export const useUnifiedEventsStore = create<EventsStore>()(
             return;
           }
           
-          // Load from API
-          const apiEvents = await eventService.loadMonthEvents(userId, month, year);
+          // Load from API using EventLoadingService
+          const apiEvents = await EventLoadingService.loadMonthEvents(userId, month, year);
           const unifiedEvents = apiEvents.map(event => toUnifiedEvent(event, 'api', event.isBookmarked));
           
           // Merge with existing events
@@ -315,31 +285,39 @@ export const useUnifiedEventsStore = create<EventsStore>()(
         }
       },
 
-      // Load persisted events from IndexedDB
-      loadPersistedEvents: async () => {
+      // Load persisted events from API
+      loadPersistedEvents: async (userId?: string) => {
         const state = get();
-        
+
         // Prevent multiple simultaneous loads
         if (state.isLoadingPersisted) {
-          // Already loading persisted events, skip
           return;
         }
-        
+
+        if (!userId) {
+          console.warn('loadPersistedEvents: No userId provided');
+          return;
+        }
+
         set({ isLoadingPersisted: true });
-        
+
         try {
-          const persistedEvents = await eventPersistence.loadEvents();
-          
+
+          const persistedEvents = await EventLoadingService.loadAllUserEvents(userId);
+
           if (persistedEvents.length === 0) {
-            // No persisted events found
             set({ isLoadingPersisted: false });
             return;
           }
-          
+
+          const unifiedEvents = persistedEvents.map(event =>
+            toUnifiedEvent(event, event.isGenerated ? 'generated' : 'manual', event.isBookmarked || false)
+          );
+
           // Merge with existing events
           const currentState = get();
           const existingEvents = Object.values(currentState.allEvents);
-          const mergedEvents = mergeEvents(existingEvents, persistedEvents);
+          const mergedEvents = mergeEvents(existingEvents, unifiedEvents);
           
           // Update store
           const eventsById = mergedEvents.reduce((acc, event) => {

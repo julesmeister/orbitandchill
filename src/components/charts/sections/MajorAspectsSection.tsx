@@ -135,7 +135,7 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
   }
 
   return (
-    <div id={id} className="bg-white sm:border sm:border-black sm:border-b-0">
+    <div id={id} className="bg-white sm:border sm:border-black">
       {/* Mobile-first header */}
       <div className="p-2 sm:p-6 sm:border-black">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

@@ -110,7 +110,7 @@ export function useEventsCompat() {
     loadEvents: async (userId: string, tab?: string) => {
       // For bookmarked/manual tabs, load persisted events instead of month events
       if (tab === 'bookmarked' || tab === 'manual') {
-        await store.loadPersistedEvents();
+        await store.loadPersistedEvents(userId);
       } else {
         // Load current month events for all/generated tabs
         const now = new Date();
@@ -119,8 +119,8 @@ export function useEventsCompat() {
     },
 
     // Initialize store (load persisted events once)
-    initializeStore: async () => {
-      await store.loadPersistedEvents();
+    initializeStore: async (userId: string) => {
+      await store.loadPersistedEvents(userId);
     },
 
     addEventsLocal: async (events: AstrologicalEvent[]) => {

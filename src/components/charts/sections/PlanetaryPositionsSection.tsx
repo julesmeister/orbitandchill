@@ -30,7 +30,7 @@ const PlanetaryPositionsSection: React.FC<PlanetaryPositionsSectionProps> = ({ c
   };
 
   return (
-    <div className="bg-white sm:border sm:border-black sm:border-b-0">
+    <div className="bg-white sm:border sm:border-black">
       <div className="flex items-center p-2 sm:p-6 sm:border-b sm:border-black">
         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black flex items-center justify-center mr-2 sm:mr-3">
           <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 24 24">

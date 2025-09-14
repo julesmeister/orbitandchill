@@ -7,6 +7,7 @@ import { usePDFGeneration } from '../../hooks/usePDFGeneration';
 import { getAvatarByIdentifier } from '../../utils/avatarUtils';
 import ChartTabs from './ChartTabs';
 import ChartActions from './ChartActions';
+import { ComponentErrorBoundary } from '../ErrorBoundary';
 
 // TEMPORARILY DISABLED LAZY LOADING TO FIX CHUNK ERROR
 // const ChartInterpretation = lazy(() => import('../../app/chart/components/modules/ChartInterpretation'));
@@ -14,7 +15,19 @@ import ChartInterpretation from '../../app/chart/components/modules/ChartInterpr
 import UnifiedAstrologicalChart from './UnifiedAstrologicalChart';
 import TransitAspectsTab from './TransitAspectsTab';
 
-const MatrixOfDestiny = lazy(() => import('./MatrixOfDestiny'));
+const MatrixOfDestiny = lazy(() =>
+  import('./MatrixOfDestiny').catch((err) => {
+    console.error('Failed to load MatrixOfDestiny chunk:', err);
+    // Return a fallback component
+    return {
+      default: () => (
+        <div className="p-8 bg-white border border-red-500">
+          <p className="text-red-600">Failed to load Matrix of Destiny. Please refresh the page.</p>
+        </div>
+      )
+    };
+  })
+);
 
 // Loading skeleton for Matrix of Destiny
 const MatrixLoadingSkeleton = () => (
@@ -289,12 +302,14 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                 // Matrix of Destiny View - Use event data for event charts
                 <div>
                   {stableBirthData ? (
-                    <Suspense fallback={<MatrixLoadingSkeleton />}>
-                      <MatrixOfDestiny 
-                        birthData={stableBirthData} 
-                        personName={personName}
-                      />
-                    </Suspense>
+                    <ComponentErrorBoundary componentName="Matrix of Destiny">
+                      <Suspense fallback={<MatrixLoadingSkeleton />}>
+                        <MatrixOfDestiny
+                          birthData={stableBirthData}
+                          personName={personName}
+                        />
+                      </Suspense>
+                    </ComponentErrorBoundary>
                   ) : (
                     <div className="p-8 text-center">
                       <p className="text-gray-600">Birth data is required for Matrix of Destiny calculation.</p>
