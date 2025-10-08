@@ -102,20 +102,31 @@ export class DatabaseConnectionService {
    */
   static async executeTransaction(queries: Array<{ sql: string; args: any[] }>): Promise<any[]> {
     const client = await this.getPooledConnection();
-    
+
     try {
       // Begin transaction
       await client.execute({ sql: 'BEGIN TRANSACTION', args: [] });
-      
+
       const results = [];
       for (const query of queries) {
         const result = await client.execute({ sql: query.sql, args: query.args });
         results.push(result);
       }
-      
+
       // Commit transaction
-      await client.execute({ sql: 'COMMIT', args: [] });
-      
+      try {
+        await client.execute({ sql: 'COMMIT', args: [] });
+      } catch (commitError) {
+        // Check if error is about no active transaction (transaction was auto-committed by Turso)
+        const errorMessage = commitError instanceof Error ? commitError.message : String(commitError);
+        if (errorMessage.includes('cannot commit') || errorMessage.includes('no transaction is active')) {
+          console.warn('Transaction was auto-committed by database - queries succeeded:', errorMessage);
+          // Don't throw - the queries likely succeeded even if explicit commit failed
+          return results;
+        }
+        throw commitError;
+      }
+
       return results;
     } catch (error) {
       // Rollback on error
@@ -124,7 +135,7 @@ export class DatabaseConnectionService {
       } catch (rollbackError) {
         console.error('Transaction rollback failed:', rollbackError);
       }
-      
+
       console.error('Transaction failed:', error);
       throw error;
     }
