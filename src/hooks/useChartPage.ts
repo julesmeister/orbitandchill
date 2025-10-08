@@ -81,8 +81,9 @@ export const useChartPage = () => {
       return;
     }
 
-    // Create a unique key that includes birth data to detect changes
-    const birthDataSource = activeSelectedPerson?.birthData || user?.birthData;
+    // PRIORITY: Use user.birthData first, as it's always the freshest source
+    // Only fall back to activeSelectedPerson.birthData if no user data exists
+    const birthDataSource = user?.birthData || activeSelectedPerson?.birthData;
     const personKey = `${user.id}_${activeSelectedPerson?.id || 'default'}_${birthDataSource?.dateOfBirth}_${birthDataSource?.timeOfBirth}_${birthDataSource?.coordinates?.lat}`;
 
     // Skip if we've already generated a chart with this exact data
@@ -100,8 +101,8 @@ export const useChartPage = () => {
         }
 
         // ALWAYS generate fresh chart from API (ONLY ONCE per person)
-        // Check both activeSelectedPerson and user.birthData for birth data
-        const birthDataSource = activeSelectedPerson?.birthData || user?.birthData;
+        // PRIORITY: Use user.birthData first (freshest), fallback to person data
+        const birthDataSource = user?.birthData || activeSelectedPerson?.birthData;
 
         if (birthDataSource) {
           // Mark this person as having a generated chart BEFORE generating
@@ -314,8 +315,8 @@ export const useChartPage = () => {
   // Use the activeSelectedPerson which properly includes the default person with relationship: 'self'
   const personToShow = activeSelectedPerson;
 
-  // Always prefer the current person's birth data over cached data for immediate updates
-  const birthDataToShow = personToShow?.birthData || cachedChart?.metadata?.birthData;
+  // PRIORITY: Always prefer fresh user.birthData first, then person data, then cached
+  const birthDataToShow = user?.birthData || personToShow?.birthData || cachedChart?.metadata?.birthData;
 
   // Determine if user has birth data (form was submitted)
   // Check both personToShow and user birthData to catch all cases
