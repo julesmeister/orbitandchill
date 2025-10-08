@@ -194,6 +194,16 @@ export function useFormData({
       clearTimeout(debouncedUpdateRef.current);
     }
 
+    // Validate user exists
+    if (!user || !user.id) {
+      showError(
+        "Profile Not Ready",
+        "Your user profile is still loading. Please wait a moment and try again.",
+        4000
+      );
+      return;
+    }
+
     // Validate coordinates
     if (!formData.coordinates?.lat || !formData.coordinates?.lon ||
         formData.coordinates.lat === '' || formData.coordinates.lon === '') {
@@ -280,7 +290,7 @@ export function useFormData({
   }, [
     formData, isFormValid, mode, relationship, notes, isDefault,
     editingPerson, addPerson, updatePerson, onPersonSaved,
-    router, showError, onSubmit, user?.id, updateBirthData
+    router, showError, onSubmit, user, updateBirthData, loadPeople
   ]);
 
   return {

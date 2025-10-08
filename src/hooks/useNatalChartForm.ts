@@ -330,7 +330,17 @@ export function useNatalChartForm({
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🎯 Form submission started!', { mode, userId: user?.id });
-    
+
+    // Validate user exists
+    if (!user || !user.id) {
+      showError(
+        "Profile Not Ready",
+        "Your user profile is still loading. Please wait a moment and try again.",
+        4000
+      );
+      return;
+    }
+
     if (!formData.coordinates.lat || !formData.coordinates.lon) {
       showError(
         "Location Required",
@@ -339,11 +349,11 @@ export function useNatalChartForm({
       );
       return;
     }
-    
+
     if (!isFormValid) {
       return;
     }
-    
+
     setIsSaving(true);
     
     // Clear pending updates
