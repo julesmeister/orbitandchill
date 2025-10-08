@@ -331,7 +331,7 @@ export const useChartPage = () => {
   const isLoading = isUserLoading ||
                     (!user && !cachedChart) ||
                     (isGenerating && !cachedChart && !hasExistingChart) ||
-                    (hasBirthData && !cachedChart && !isGenerating && user?.id);
+                    (hasBirthData && !cachedChart && !isGenerating && Boolean(user?.id));
 
   const loadingTitle = isUserLoading ? 'Loading Your Profile' :
     isGenerating && !cachedChart ? 'Generating Your Chart' :
