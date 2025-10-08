@@ -302,22 +302,33 @@ export const useChartPage = () => {
     }
   };
   
-  // OPTIMIZED: Smarter loading state that reduces perceived loading time
-  // Only show loading when we're actually waiting for essential data
-  const isLoading = isUserLoading || (!user && !cachedChart) || (isGenerating && !cachedChart && !hasExistingChart);
-  
   // Use the activeSelectedPerson which properly includes the default person with relationship: 'self'
   const personToShow = activeSelectedPerson;
-  
+
   // Always prefer the current person's birth data over cached data for immediate updates
   const birthDataToShow = personToShow?.birthData || cachedChart?.metadata?.birthData;
-  
+
   // Determine if user has birth data (form was submitted)
+  // Check both personToShow and user birthData to catch all cases
   const hasBirthData = Boolean(
-    personToShow?.birthData?.dateOfBirth &&
-    personToShow?.birthData?.timeOfBirth &&
-    personToShow?.birthData?.coordinates?.lat
+    (personToShow?.birthData?.dateOfBirth &&
+     personToShow?.birthData?.timeOfBirth &&
+     personToShow?.birthData?.coordinates?.lat) ||
+    (user?.birthData?.dateOfBirth &&
+     user?.birthData?.timeOfBirth &&
+     user?.birthData?.coordinates?.lat)
   );
+
+  // OPTIMIZED: Smarter loading state that reduces perceived loading time
+  // Show loading when:
+  // 1. User is loading
+  // 2. No user and no cached chart
+  // 3. Currently generating and no cached chart
+  // 4. Has birth data but no chart yet (post-form submission)
+  const isLoading = isUserLoading ||
+                    (!user && !cachedChart) ||
+                    (isGenerating && !cachedChart && !hasExistingChart) ||
+                    (hasBirthData && !cachedChart && !isGenerating && user?.id);
 
   const loadingTitle = isUserLoading ? 'Loading Your Profile' :
     isGenerating && !cachedChart ? 'Generating Your Chart' :
