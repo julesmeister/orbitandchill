@@ -119,8 +119,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    const body: ChartGenerationRequest = await request.json();
+
+    let body: ChartGenerationRequest;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error('🔍 Chart Generation API: Failed to parse JSON body:', jsonError);
+      console.error('Request headers:', {
+        contentLength,
+        contentType,
+        headers: Object.fromEntries(request.headers.entries())
+      });
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
 
     // Only log if we detect potential issues or it's a fresh request
     const isLikelyLoop = global.lastChartRequest && 
