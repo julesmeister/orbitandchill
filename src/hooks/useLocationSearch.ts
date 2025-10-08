@@ -43,9 +43,15 @@ export const useLocationSearch = (
 
       setIsLoadingLocations(true);
       try {
+        // Use our proxy API to avoid CORS issues
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}&limit=5&addressdetails=1`
+          `/api/geocode?q=${encodeURIComponent(locationQuery)}&limit=5`
         );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch locations');
+        }
+
         const data = await response.json();
         setLocationOptions(data);
         setShowLocationDropdown(true);
