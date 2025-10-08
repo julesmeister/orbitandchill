@@ -127,7 +127,7 @@ export const useChartPage = () => {
     };
 
     loadChartsOnce();
-  }, [user?.id, activeSelectedPerson?.id, user?.birthData?.dateOfBirth]); // Trigger on user/person change or birth data change
+  }, [user?.id, activeSelectedPerson?.id, user?.birthData?.dateOfBirth ?? '']); // Trigger on user/person change or birth data change
   
   // Handle share token from URL
   useEffect(() => {
