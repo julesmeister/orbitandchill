@@ -8,17 +8,19 @@ interface ChartEmptyStateProps {
   loadingTitle?: string;
   loadingDescription?: string;
   isGenerating?: boolean;
+  hasBirthData?: boolean;
 }
 
 /**
  * Empty state component displayed when no chart is available
  * Shows dynamic loading messages or onboarding experience
  */
-export default function ChartEmptyState({ 
-  isLoading = false, 
-  loadingTitle, 
+export default function ChartEmptyState({
+  isLoading = false,
+  loadingTitle,
   loadingDescription,
-  isGenerating = false 
+  isGenerating = false,
+  hasBirthData = false
 }: ChartEmptyStateProps = {}) {
   const router = useRouter();
 
@@ -27,14 +29,24 @@ export default function ChartEmptyState({
     if (isLoading || isGenerating) {
       return {
         title: loadingTitle || (isGenerating ? "Generating Your Chart" : "Loading Chart"),
-        description: loadingDescription || (isGenerating 
-          ? "Calculating planetary positions and aspects..." 
+        description: loadingDescription || (isGenerating
+          ? "Calculating planetary positions and aspects..."
           : "Loading your chart data..."),
         icon: isGenerating ? "✨" : "🔮",
         showFeatureCards: false
       };
     }
-    
+
+    // If birth data exists but chart isn't loading, show preparation message
+    if (hasBirthData) {
+      return {
+        title: "Preparing Your Chart",
+        description: "Your birth data is ready. We're calculating your cosmic blueprint...",
+        icon: "✨",
+        showFeatureCards: false
+      };
+    }
+
     return {
       title: "Your Cosmic Journey Awaits",
       description: "Unlock the mysteries of your birth chart and discover the celestial blueprint that makes you uniquely you.",

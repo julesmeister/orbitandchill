@@ -19,6 +19,7 @@ function ChartContent() {
     isGenerating,
     loadingTitle,
     loadingDescription,
+    hasBirthData,
     handleClearAllCaches,
     handleRegenerateChart,
     handlePersonChange,
@@ -47,6 +48,7 @@ function ChartContent() {
               chartSubjectAvatar={chartSubjectAvatar}
               activeTab={activeTab}
               isGenerating={isGenerating}
+              hasBirthData={hasBirthData}
               onRegenerateChart={handleRegenerateChart}
               onPersonChange={handlePersonChange}
               onAddPersonClick={handleAddPersonClick}

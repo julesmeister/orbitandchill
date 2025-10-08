@@ -312,14 +312,23 @@ export const useChartPage = () => {
   // Always prefer the current person's birth data over cached data for immediate updates
   const birthDataToShow = personToShow?.birthData || cachedChart?.metadata?.birthData;
   
+  // Determine if user has birth data (form was submitted)
+  const hasBirthData = Boolean(
+    personToShow?.birthData?.dateOfBirth &&
+    personToShow?.birthData?.timeOfBirth &&
+    personToShow?.birthData?.coordinates?.lat
+  );
+
   const loadingTitle = isUserLoading ? 'Loading Your Profile' :
     isGenerating && !cachedChart ? 'Generating Your Chart' :
     cachedChart && isGenerating ? 'Updating Chart' :
+    hasBirthData ? 'Preparing Your Chart' :
     'Loading Your Chart';
-  
+
   const loadingDescription = isUserLoading ? 'Retrieving your birth data and preferences...' :
     isGenerating && !cachedChart ? 'Creating your cosmic blueprint from the stars...' :
     cachedChart && isGenerating ? 'Refreshing your chart with latest calculations...' :
+    hasBirthData ? 'Calculating planetary positions and aspects...' :
     'Retrieving your cosmic blueprint...';
   
   
@@ -333,13 +342,14 @@ export const useChartPage = () => {
     cachedChart,
     personToShow,
     birthDataToShow,
-    
+
     // Loading states
     isLoading,
     isGenerating,
     loadingTitle,
     loadingDescription,
-    
+    hasBirthData,
+
     // Handlers
     handleClearAllCaches,
     handleRegenerateChart,

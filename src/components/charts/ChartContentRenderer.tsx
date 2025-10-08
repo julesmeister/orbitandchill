@@ -37,6 +37,7 @@ interface ChartContentRendererProps {
   chartSubjectAvatar: string;
   activeTab: string;
   isGenerating: boolean;
+  hasBirthData?: boolean;
   onRegenerateChart: () => void;
   onPersonChange: (person: any) => void;
   onAddPersonClick: () => void;
@@ -57,6 +58,7 @@ export default function ChartContentRenderer({
   chartSubjectAvatar,
   activeTab,
   isGenerating,
+  hasBirthData = false,
   onRegenerateChart,
   onPersonChange,
   onAddPersonClick,
@@ -92,11 +94,12 @@ export default function ChartContentRenderer({
   // Loading state - use dynamic ChartEmptyState instead of blank spinner
   if (isLoading) {
     return (
-      <ChartEmptyState 
+      <ChartEmptyState
         isLoading={true}
         loadingTitle={loadingTitle}
         loadingDescription={loadingDescription}
         isGenerating={isGenerating}
+        hasBirthData={hasBirthData}
       />
     );
   }
@@ -122,11 +125,12 @@ export default function ChartContentRenderer({
 
   // Empty state - no chart available (but might be loading/generating)
   return (
-    <ChartEmptyState 
+    <ChartEmptyState
       isLoading={isLoading || isGenerating}
       loadingTitle={loadingTitle}
       loadingDescription={loadingDescription}
       isGenerating={isGenerating}
+      hasBirthData={hasBirthData}
     />
   );
 }
