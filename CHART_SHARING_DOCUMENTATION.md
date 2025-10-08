@@ -5,6 +5,129 @@
 > - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
 > - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
 
+## Recent Critical Fixes (Round 30 - Chart Loading State & Generation)
+
+### Dynamic Chart Loading State & Generation Trigger Enhancement
+
+> **🎯 USER EXPERIENCE**: Fixed chart loading state messaging and generation triggers to provide accurate feedback throughout the chart creation process.
+
+```
+Chart Loading State & Generation Improvements
+├── Dynamic Loading Message System
+│   ├── Problem: "Your Cosmic Journey Awaits" shown even after form submission
+│   ├── Root Cause: Loading state didn't distinguish between "no data" vs "has data, loading chart"
+│   ├── Solution Implementation
+│   │   ├── Added hasBirthData detection (checks personToShow AND user.birthData)
+│   │   ├── Enhanced loadingTitle/loadingDescription logic with hasBirthData condition
+│   │   ├── New state: "Preparing Your Chart" when data exists but chart pending
+│   │   └── Passed hasBirthData through component hierarchy for state-aware rendering
+│   └── Impact: Contextual messaging shows preparation state instead of generic onboarding
+├── Chart Generation Trigger Fix
+│   ├── Problem: Chart stuck at "Preparing" indefinitely, never generates
+│   ├── Root Cause: Generation only checked activeSelectedPerson?.birthData (null during redirect)
+│   ├── Solution Implementation
+│   │   ├── Added birthDataSource fallback: activeSelectedPerson?.birthData || user?.birthData
+│   │   ├── Enhanced useEffect dependency: added user?.birthData?.dateOfBirth ?? ''
+│   │   ├── Nullish coalescing ensures constant dependency array size
+│   │   └── Generation triggers even when person data not yet loaded
+│   └── Impact: Chart generation triggers reliably after form submission
+└── API Error Handling Enhancement
+    ├── Problem: SyntaxError "Unexpected end of JSON input" when parsing request
+    ├── Root Cause: Next.js dev server hot-reload/caching issues
+    ├── Solution Implementation
+    │   ├── Added try-catch around request.json() parsing
+    │   ├── Enhanced error logging with detailed headers and diagnostics
+    │   └── Return 400 Bad Request with clear error message
+    └── Impact: Better debugging information for JSON parsing errors
+```
+
+**Message Hierarchy**:
+1. **Loading Profile**: "Loading Your Profile" (when user data loading)
+2. **Generating Chart**: "Generating Your Chart ✨" (active generation)
+3. **Updating Chart**: "Updating Chart" (refreshing existing)
+4. **Preparing Chart** ⭐ **NEW**: "Preparing Your Chart" (data ready, chart pending)
+5. **No Data**: "Your Cosmic Journey Awaits" (truly no data/first visit)
+
+**Files Modified**:
+- ✅ `/src/hooks/useChartPage.ts` - Enhanced hasBirthData detection, loading state logic, and generation trigger
+- ✅ `/src/components/charts/ChartEmptyState.tsx` - Added hasBirthData prop and preparation state
+- ✅ `/src/components/charts/ChartContentRenderer.tsx` - Passes hasBirthData to child components
+- ✅ `/src/app/chart/ChartPageClient.tsx` - Extracts and forwards hasBirthData from hook
+- ✅ `/src/app/api/charts/generate/route.ts` - Enhanced JSON parsing error handling
+
+**User Experience Impact**:
+- **Post-Form Submission**: Shows "Preparing Your Chart" → "Generating Your Chart" → Chart Display
+- **Page Refresh**: Properly detects existing data and shows appropriate loading states
+- **Chart Generation**: Triggers reliably even during person data initialization
+- **Error Feedback**: Clear error messages help diagnose API issues
+
+**Technical Excellence**:
+- **Fallback Logic**: Checks both personToShow and user birthData for reliability
+- **Type Safety**: Boolean() wrapper and nullish coalescing for type correctness
+- **Constant Dependencies**: useEffect dependency array size remains constant
+- **Error Resilience**: Comprehensive error handling with detailed diagnostics
+
+---
+
+## Recent Critical Fixes (Round 29 - Form UX & Database Reliability)
+
+### Form Data Persistence & Error Handling Enhancement
+
+> **🔧 USER EXPERIENCE**: Fixed location field prepopulation, user validation during logout, and SQLite transaction error handling.
+
+```
+Form UX & Database Reliability Improvements
+├── Location Field Prepopulation Fix
+│   ├── Problem: Location field not showing saved data while other fields (name, date, time) were correctly prepopulated
+│   ├── Root Cause: useLocationSearch hook initialized locationQuery as empty string without accepting initial value
+│   ├── Solution Implementation
+│   │   ├── Added optional initialValue parameter to useLocationSearch hook
+│   │   ├── Added useEffect to sync locationQuery when initialValue changes
+│   │   └── Updated all form components to pass formData.locationOfBirth as initial value
+│   └── Impact: Location field now properly displays saved location data on form load
+├── User Profile Validation During Logout
+│   ├── Problem: "User profile not found" error when generating charts during logout transition
+│   ├── Root Cause: Form submission handlers didn't validate user existence before chart generation
+│   ├── Solution Implementation
+│   │   ├── Added user validation check at start of handleSubmit in useFormData.ts
+│   │   ├── Added same validation to useNatalChartForm.ts (legacy hook)
+│   │   ├── User-friendly error message: "Your user profile is still loading. Please wait a moment and try again."
+│   │   └── Updated dependency arrays to include user object
+│   └── Impact: Graceful error handling during logout with clear user feedback
+└── SQLite Transaction Auto-Commit Error Handling
+    ├── Problem: Console error "SQLITE_UNKNOWN: SQLite error: cannot commit - no transaction is active"
+    ├── Root Cause: Turso/LibSQL auto-commits transactions before explicit COMMIT can be called
+    ├── Solution Implementation
+    │   ├── Added try-catch around COMMIT statement in executeTransaction method
+    │   ├── Error detection logic checks for "cannot commit" or "no transaction is active" messages
+    │   ├── Returns successful results array when auto-commit detected
+    │   └── Logs warning for debugging transparency without alarming developers
+    └── Impact: Eliminated console error while maintaining data integrity (queries succeed via auto-commit)
+```
+
+**Files Modified**:
+- ✅ `/src/hooks/useLocationSearch.ts` - Added initial value parameter and sync logic
+- ✅ `/src/components/forms/NatalChartForm.tsx` - Pass formData.locationOfBirth to hook
+- ✅ `/src/components/forms/CompactNatalChartForm.tsx` - Pass formData.locationOfBirth to hook
+- ✅ `/src/hooks/useNatalChartForm.ts` - Pass formData.locationOfBirth to hook
+- ✅ `/src/hooks/dataHooks/useFormData.ts` - Added user validation in handleSubmit
+- ✅ `/src/hooks/useNatalChartForm.ts` - Added user validation in handleSubmit
+- ✅ `/src/services/databaseConnectionService.ts` - Enhanced executeTransaction with auto-commit handling
+
+**User Experience Impact**:
+- **Location Prepopulation**: Saved location data now displays immediately in all forms
+- **Logout Transition**: Clear error messaging prevents confusion during profile loading
+- **Console Cleanliness**: Eliminated SQLite error messages that caused developer confusion
+- **Data Integrity**: All fixes maintain data reliability and persistence guarantees
+
+**Technical Excellence**:
+- **Graceful Error Handling**: User-friendly error messages with actionable guidance
+- **Database Resilience**: Proper handling of Turso-specific auto-commit behavior
+- **Form State Synchronization**: Consistent initial value handling across all form implementations
+- **Backward Compatibility**: No breaking changes to existing form or database functionality
+
+---
+
 ## Recent Critical Fixes (Round 28 - Modular Architecture)
 
 ### Natal Chart Modular Refactoring - CODE_ARCHITECTURE_PROTOCOL
