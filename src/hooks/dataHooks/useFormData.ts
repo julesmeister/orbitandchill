@@ -127,7 +127,7 @@ export function useFormData({
         setFormData(newFormData);
         setRelationship(editingPerson.relationship);
         setNotes(editingPerson.notes || '');
-        setIsDefault(editingPerson.isDefault || false);
+        setIsDefault(Boolean(editingPerson.isDefault)); // Ensure proper boolean conversion
 
         hasInitializedRef.current = editingPerson.id;
       }
@@ -220,7 +220,7 @@ export function useFormData({
           relationship,
           birthData,
           notes: notes || undefined,
-          isDefault
+          isDefault: Boolean(isDefault) // Ensure it's always a proper boolean
         };
 
         let savedPerson: Person;
