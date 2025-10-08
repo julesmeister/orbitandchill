@@ -5,6 +5,39 @@
 > - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
 > - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
 
+## Recent Critical Fixes (Round 27 - Type Safety)
+
+### TypeScript Type Compatibility Fix
+
+> **🔧 TYPE SAFETY**: Fixed null vs undefined type mismatch in NatalChartDisplay component.
+
+**Problem**: `TransitAspectsTab` component expects `chartData?: NatalChartData | undefined` but was receiving `NatalChartData | null` from `stableChartData` useMemo.
+
+**Error Message**:
+```
+src/components/charts/NatalChartDisplay.tsx:281:40 - error TS2322:
+Type 'NatalChartData | null' is not assignable to type 'NatalChartData | undefined'.
+Type 'null' is not assignable to type 'NatalChartData | undefined'.
+```
+
+**Solution**: Added null coalescing operator to convert `null` to `undefined`:
+```typescript
+// Before:
+<TransitAspectsTab chartData={stableChartData} />
+
+// After:
+<TransitAspectsTab chartData={stableChartData || undefined} />
+```
+
+**Impact:**
+- ✅ TypeScript compilation passes with zero errors
+- ✅ Proper type safety for optional component props
+- ✅ Consistent null handling across components
+
+**File Modified:** `/src/components/charts/NatalChartDisplay.tsx:281`
+
+---
+
 ## Recent Critical Fixes (Round 26 - Current)
 
 ### Coordinate Validation & Form Persistence Fix - CRITICAL

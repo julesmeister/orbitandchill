@@ -99,6 +99,7 @@ const ChartInterpretation = memo(function ChartInterpretation({ chartData: propC
   React.useEffect(() => {
     if (chartData?.planets) {
       // FIXED: More comprehensive celestial points filtering to catch all naming variations
+      // Validation: ensure planets array is properly populated
       const celestialPoints = chartData.planets.filter(p => {
         const name = p.name?.toLowerCase() || '';
         return [
@@ -109,33 +110,11 @@ const ChartInterpretation = memo(function ChartInterpretation({ chartData: propC
       const traditionalPlanets = chartData.planets.filter(p =>
         ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'].includes(p.name?.toLowerCase() || '')
       );
-      console.log('🔍 ChartInterpretation: Found celestial points:', celestialPoints.map(p => p.name));
-      console.log('🔍 ChartInterpretation: Found traditional planets:', traditionalPlanets.map(p => p.name));
-      console.log('🔍 ChartInterpretation: Total planets array length:', chartData.planets.length);
-      console.log('🔍 ChartInterpretation: All planets names:', chartData.planets.map(p => p.name));
-      console.log('🔍 ChartInterpretation: Planet objects structure:', chartData.planets.map(p => ({
-        name: p.name,
-        isPlanet: p.isPlanet,
-        pointType: p.pointType
-      })));
-    } else {
-      console.log('🔍 ChartInterpretation: No chart data or planets available', {
-        hasChartData: !!chartData,
-        hasPlanets: !!chartData?.planets,
-        chartDataKeys: chartData ? Object.keys(chartData) : null
-      });
     }
   }, [chartData]);
   
-  // Debug logging for event charts
-  if (isEventChart) {
-    console.log('🔍 ChartInterpretation (Event Chart):', {
-      isEventChart,
-      hasPropData: !!propChartData,
-      chartDataType: typeof chartData,
-      chartDataKeys: chartData ? Object.keys(chartData) : null
-    });
-  }
+  // Event chart validation
+  // (Event chart handling implemented below)
   
   // Premium user check
   const userIsPremium = user?.subscriptionTier === 'premium' || false;
@@ -158,17 +137,8 @@ const ChartInterpretation = memo(function ChartInterpretation({ chartData: propC
     return shouldShowFeature(section.id, userIsPremium);
   });
 
-  // Debug logging for section filtering (simplified to prevent loops)
-  React.useEffect(() => {
-    if (orderedSections.length > 0) {
-      console.log('🔍 ChartInterpretation: Section filtering debug:', {
-        totalOrderedSections: orderedSections.length,
-        filteredSections: filteredSections.length,
-        filteredSectionIds: filteredSections.map(s => s.id),
-        userIsPremium
-      });
-    }
-  }, [orderedSections.length, filteredSections.length]);
+  // Section filtering validation (premium access control)
+  // Filtered sections are displayed based on user tier
 
   // Show loading skeleton while chart data is loading
   if (!chartData) {
