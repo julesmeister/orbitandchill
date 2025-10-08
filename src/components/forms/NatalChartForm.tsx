@@ -73,14 +73,14 @@ const NatalChartForm = ({
     }
   });
 
-  // Location search integration
+  // Location search integration with initial value from form data
   const locationSearch = useLocationSearch((location) => {
     handleInputChange('locationOfBirth', location.display_name);
     handleInputChange('coordinates', {
       lat: location.lat,
       lon: location.lon
     });
-  });
+  }, formData.locationOfBirth);
 
   // Location focus state and handlers
   const [isLocationFocused, setIsLocationFocused] = React.useState(false);

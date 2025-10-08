@@ -148,15 +148,15 @@ export function useNatalChartForm({
     });
   }, [mode, debouncedUpdateBirthData]);
   
-  // Location search integration
+  // Location search integration with initial value from form data
   const locationSearch = useLocationSearch((location) => {
     setIsUserTypingLocation(false);
-    
+
     // Clear any pending debounced update
     if (debouncedUpdateRef.current) {
       clearTimeout(debouncedUpdateRef.current);
     }
-    
+
     const newFormData = {
       locationOfBirth: location.display_name,
       coordinates: {
@@ -164,16 +164,16 @@ export function useNatalChartForm({
         lon: location.lon
       }
     };
-    
+
     setFormData(prevFormData => ({ ...prevFormData, ...newFormData }));
-    
+
     // Immediately update birth data for location selection
     if (mode === 'user') {
       updateBirthData(newFormData);
     }
-    
+
     setIsLocationFocused(false);
-  });
+  }, formData.locationOfBirth);
   
   // Load people when editing a person to ensure they exist in store
   useEffect(() => {

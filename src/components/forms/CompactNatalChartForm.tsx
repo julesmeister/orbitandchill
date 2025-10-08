@@ -56,7 +56,7 @@ const CompactNatalChartForm = ({
     }
   });
 
-  // Location search integration
+  // Location search integration with initial value from form data
   const locationSearch = useLocationSearch((location) => {
     // Update location name and coordinates
     handleInputChange('locationOfBirth', location.display_name);
@@ -64,7 +64,7 @@ const CompactNatalChartForm = ({
       lat: location.lat,
       lon: location.lon
     });
-  });
+  }, formData.locationOfBirth);
 
   // Location focus state
   const [isLocationFocused, setIsLocationFocused] = React.useState(false);

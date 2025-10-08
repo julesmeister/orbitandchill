@@ -15,14 +15,22 @@ interface UseLocationSearchReturn {
 }
 
 export const useLocationSearch = (
-  onLocationSelect?: (location: LocationOption) => void
+  onLocationSelect?: (location: LocationOption) => void,
+  initialValue?: string
 ): UseLocationSearchReturn => {
-  const [locationQuery, setLocationQuery] = useState('');
+  const [locationQuery, setLocationQuery] = useState(initialValue || '');
   const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const locationInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Update location query when initial value changes (e.g., when form loads saved data)
+  useEffect(() => {
+    if (initialValue && initialValue !== locationQuery) {
+      setLocationQuery(initialValue);
+    }
+  }, [initialValue]);
 
   // Debounced location search
   useEffect(() => {
