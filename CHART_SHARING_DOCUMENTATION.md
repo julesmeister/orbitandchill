@@ -5,6 +5,77 @@
 > - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
 > - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
 
+## Recent Critical Fixes (Round 31 - Chart Data Priority & Display)
+
+### Chart Display Data Priority Fix
+
+> **🎯 USER EXPERIENCE**: Fixed chart displaying old cached data instead of newly submitted form data by reversing birth data source priority.
+
+```
+Chart Data Priority & Display Improvements
+├── Chart Data Source Priority Issue
+│   ├── Problem: Form submits new birth data, but chart displays old cached data
+│   │   ├── Example: Form shows 1987-11-03, Philippines (Scorpio)
+│   │   └── Chart displays 1987-02-03, Spain (Aquarius) - OLD DATA
+│   ├── Root Cause: Birth data priority was backwards
+│   │   ├── Old Priority: activeSelectedPerson?.birthData || user?.birthData
+│   │   ├── Issue: activeSelectedPerson had stale cached data from People API
+│   │   ├── Impact: Fresh user.birthData from form submission was ignored
+│   │   └── Result: Chart generated with old person data instead of new form data
+│   ├── Solution Implementation
+│   │   ├── Reversed Priority: user?.birthData || activeSelectedPerson?.birthData
+│   │   ├── Applied to personKey calculation (line 86 of useChartPage.ts)
+│   │   ├── Applied to chart generation source (line 105 of useChartPage.ts)
+│   │   └── Applied to birthDataToShow display (line 319 of useChartPage.ts)
+│   └── Impact: Newly submitted birth data immediately used for chart generation
+├── Person Key Enhancement
+│   ├── Problem: personKey only included user/person IDs, not birth data values
+│   │   ├── Old: `${user.id}_${person.id || 'default'}`
+│   │   └── Missing: dateOfBirth, timeOfBirth, coordinates from birth data
+│   ├── Solution: Enhanced personKey to include birth data
+│   │   ├── New: `${user.id}_${person.id}_${dateOfBirth}_${timeOfBirth}_${lat}`
+│   │   └── Ensures chart regeneration when birth data changes
+│   └── Impact: Chart regenerates properly when user edits birth data fields
+└── Display Data Priority
+    ├── Problem: Chart metadata display didn't prioritize fresh user data
+    │   ├── Old: personToShow?.birthData || cachedChart?.metadata?.birthData
+    │   └── Missing: user?.birthData as highest priority source
+    ├── Solution: Triple-layer priority for display
+    │   ├── New: user?.birthData || personToShow?.birthData || cachedChart?.metadata?.birthData
+    │   └── Always shows freshest data available
+    └── Impact: Chart displays correct birth data immediately after form submission
+```
+
+**Data Priority Architecture**:
+```
+Form Submission Flow (Fixed)
+├── User submits form → user.birthData updated (FRESH)
+├── Page redirects → useChartPage hook loads
+├── Birth data source selection:
+│   ├── 1st Priority: user?.birthData (FRESH from form)
+│   ├── 2nd Priority: activeSelectedPerson?.birthData (may be stale)
+│   └── 3rd Priority: cachedChart?.metadata?.birthData (fallback)
+├── Chart generation uses fresh user.birthData
+└── Display shows correct new birth data
+```
+
+**Files Modified**:
+- ✅ `/src/hooks/useChartPage.ts` - Reversed birth data priority in 3 locations (lines 86, 105, 319)
+
+**User Experience Impact**:
+- **Form Submission**: New birth data immediately used for chart generation
+- **Data Editing**: Chart regenerates with updated birth data when fields are edited
+- **Display Accuracy**: Chart metadata shows freshest available birth data
+- **No Cache Override**: Fresh form data always takes precedence over stale cached data
+
+**Technical Excellence**:
+- **Data Priority**: Clear three-tier priority system for data sourcing
+- **Cache Intelligence**: Fresh data prioritized, cache used only as fallback
+- **Regeneration Logic**: personKey includes birth data to detect changes
+- **Type Safety**: Maintained throughout refactoring with proper TypeScript types
+
+---
+
 ## Recent Critical Fixes (Round 30 - Chart Loading State & Generation)
 
 ### Dynamic Chart Loading State & Generation Trigger Enhancement
