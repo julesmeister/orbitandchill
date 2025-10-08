@@ -5,7 +5,139 @@
 > - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
 > - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
 
-## Recent Critical Fixes (Round 25 - Current)
+## Recent Critical Fixes (Round 26 - Current)
+
+### Coordinate Validation & Form Persistence Fix - CRITICAL
+
+> **🚨 CRITICAL FIX**: Resolved coordinate validation issues causing chart generation failures and infinite generation loops.
+
+**Key Issues Resolved:**
+```
+Coordinate Validation & Loop Prevention Implementation
+├── ✅ Empty Coordinates Bug Fix
+│   ├── Problem: Form submitting with empty coordinates {lat: '', lon: ''} causing generation failures
+│   ├── Root Cause: Debounced save timing issue - coordinates not persisted before chart generation
+│   └── Solution: Synchronous coordinate save on form submit, bypassing debounce delay
+│
+├── ✅ Infinite Chart Generation Loop Prevention
+│   ├── Problem: Chart generating repeatedly in endless loop on page load
+│   ├── Root Cause: useChartPage useEffect triggering multiple times without guards
+│   └── Solution: Added generatedChartsRef tracking to prevent duplicate generations per person
+│
+├── ✅ Automatic Geocoding Fallback System
+│   ├── Problem: Invalid coordinates (0,0) when form data incomplete
+│   ├── Root Cause: No fallback mechanism when coordinates missing from form
+│   └── Solution: Created /src/utils/geocoding.ts with Nominatim API integration
+│
+└── ✅ Enhanced Coordinate Validation
+    ├── areCoordinatesValid() - Validates lat/lon not empty and within valid ranges
+    ├── getValidCoordinates() - Returns valid coordinates or geocodes location string
+    └── geocodeLocation() - Fallback Nominatim API geocoding when coordinates missing
+```
+
+**Files Created/Modified:**
+- ✅ `/src/utils/geocoding.ts` - New geocoding utility with coordinate validation
+- ✅ `/src/hooks/useNatalChart.ts` - Integrated geocoding fallback for missing coordinates
+- ✅ `/src/hooks/useChartPage.ts` - Added generatedChartsRef to prevent infinite loops
+- ✅ `/src/hooks/dataHooks/useFormData.ts` - Synchronous coordinate save on submit
+- ✅ `/src/components/forms/NatalChartForm.tsx` - Clean coordinate flow from location selection
+
+**Technical Implementation:**
+
+**1. Geocoding Utility** (`/src/utils/geocoding.ts`):
+```typescript
+// Validate coordinates are not empty and within valid ranges
+export function areCoordinatesValid(coordinates?: Coordinates | null): boolean {
+  if (!coordinates?.lat || !coordinates?.lon) return false;
+  if (coordinates.lat === '' || coordinates.lon === '') return false;
+
+  const lat = parseFloat(coordinates.lat);
+  const lon = parseFloat(coordinates.lon);
+
+  if (isNaN(lat) || isNaN(lon)) return false;
+  if (lat < -90 || lat > 90) return false;
+  if (lon < -180 || lon > 180) return false;
+
+  return true;
+}
+
+// Get valid coordinates, geocoding if necessary
+export async function getValidCoordinates(
+  locationOfBirth: string,
+  coordinates?: Coordinates | null
+): Promise<Coordinates | null> {
+  // Use existing coordinates if valid
+  if (areCoordinatesValid(coordinates)) {
+    return coordinates!;
+  }
+
+  // Geocode location string as fallback
+  if (locationOfBirth?.trim().length > 0) {
+    return await geocodeLocation(locationOfBirth);
+  }
+
+  return null;
+}
+```
+
+**2. Loop Prevention** (`/src/hooks/useChartPage.ts`):
+```typescript
+// Track what charts we've already generated to prevent loops
+const generatedChartsRef = useRef<Set<string>>(new Set());
+
+useEffect(() => {
+  const personKey = `${user.id}_${activeSelectedPerson?.id || 'default'}`;
+
+  // Skip if already generated for this person
+  if (generatedChartsRef.current.has(personKey)) {
+    return;
+  }
+
+  // Mark as generated BEFORE starting
+  generatedChartsRef.current.add(personKey);
+
+  // Generate chart...
+
+  // Remove key on error to allow retry
+  if (!chartData) {
+    generatedChartsRef.current.delete(personKey);
+  }
+}, [user?.id, activeSelectedPerson?.id]);
+```
+
+**3. Synchronous Coordinate Save** (`/src/hooks/dataHooks/useFormData.ts`):
+```typescript
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // Clear debounced updates FIRST
+  if (debouncedUpdateRef.current) {
+    clearTimeout(debouncedUpdateRef.current);
+  }
+
+  // Validate coordinates before proceeding
+  if (!formData.coordinates?.lat || !formData.coordinates?.lon ||
+      formData.coordinates.lat === '' || formData.coordinates.lon === '') {
+    showError("Location Required", "Please select a location...");
+    return;
+  }
+
+  // Save SYNCHRONOUSLY (not debounced) on submit
+  const { name: _name, ...birthData } = formData;
+  await updateBirthData(birthData);
+
+  // Now safe to proceed with chart generation
+};
+```
+
+**Impact:**
+- ✅ Chart generation now works reliably with proper coordinates
+- ✅ No more infinite generation loops on page load
+- ✅ Automatic geocoding fallback for edge cases with missing coordinates
+- ✅ Clean, predictable coordinate flow from form → storage → chart generation
+- ✅ Improved user experience with proper validation and error messages
+
+## Previous Critical Fixes (Round 25)
 
 ### API-Only Celestial Points Architecture - REVOLUTIONARY
 

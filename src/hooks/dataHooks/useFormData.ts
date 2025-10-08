@@ -188,9 +188,15 @@ export function useFormData({
   // Form submission
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🎯 useFormData: Form submission started!', { mode, userId: user?.id });
 
-    if (!formData.coordinates.lat || !formData.coordinates.lon) {
+    // Clear pending updates FIRST to ensure debounced saves complete
+    if (debouncedUpdateRef.current) {
+      clearTimeout(debouncedUpdateRef.current);
+    }
+
+    // Validate coordinates
+    if (!formData.coordinates?.lat || !formData.coordinates?.lon ||
+        formData.coordinates.lat === '' || formData.coordinates.lon === '') {
       showError(
         "Location Required",
         "Please select a location from the dropdown to ensure accurate chart calculations.",
@@ -204,11 +210,6 @@ export function useFormData({
     }
 
     setIsSaving(true);
-
-    // Clear pending updates
-    if (debouncedUpdateRef.current) {
-      clearTimeout(debouncedUpdateRef.current);
-    }
 
     try {
       if (mode === 'person') {
@@ -241,11 +242,6 @@ export function useFormData({
           await updateBirthData(birthData);
         }
 
-        console.log('✅ useFormData: Person saved successfully', {
-          personId: savedPerson.id,
-          personName: savedPerson.name,
-          relationship: savedPerson.relationship
-        });
 
         // Reload people data
         try {
@@ -258,8 +254,10 @@ export function useFormData({
           onPersonSaved(savedPerson);
         }
       } else {
-        // User mode - save data and optionally call onSubmit
+        // User mode - save data SYNCHRONOUSLY (no debouncing on submit)
         const { name: _name, ...birthData } = formData;
+
+        // Save immediately, not debounced
         await updateBirthData(birthData);
 
         if (onSubmit) {

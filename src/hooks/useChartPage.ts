@@ -72,9 +72,21 @@ export const useChartPage = () => {
     initializeData();
   }, [user, isUserLoading, loadProfile, loadPeople]);
   
+  // Track what charts we've already generated to prevent loops
+  const generatedChartsRef = useRef<Set<string>>(new Set());
+
   // Load existing charts and generate ONE chart if needed (NO LOOPS)
   useEffect(() => {
     if (!user?.id || isGenerating) {
+      return;
+    }
+
+    // Create a unique key for this person's chart
+    const personKey = `${user.id}_${activeSelectedPerson?.id || 'default'}`;
+
+    // Skip if we've already generated a chart for this person
+    if (generatedChartsRef.current.has(personKey)) {
+      console.log('⏭️ Skipping chart generation - already generated for:', personKey);
       return;
     }
 
@@ -90,9 +102,13 @@ export const useChartPage = () => {
           clearCache();
         }
 
-        // ALWAYS generate fresh chart from API
+        // ALWAYS generate fresh chart from API (ONLY ONCE per person)
         if (activeSelectedPerson?.birthData) {
           console.log('🚀 GENERATING FRESH CHART WITH CELESTIAL POINTS for:', activeSelectedPerson.name);
+
+          // Mark this person as having a generated chart BEFORE generating
+          generatedChartsRef.current.add(personKey);
+
           const chartData = await generateChart({
             name: activeSelectedPerson.name || '',
             dateOfBirth: activeSelectedPerson.birthData.dateOfBirth,
@@ -103,10 +119,15 @@ export const useChartPage = () => {
 
           if (chartData) {
             console.log('✅ ONE-TIME chart generation completed:', chartData.id);
+          } else {
+            // If generation failed, remove the key so it can be retried
+            generatedChartsRef.current.delete(personKey);
           }
         }
       } catch (error: any) {
         console.error('❌ Error in controlled chart loading:', error);
+        // Remove key on error so it can be retried
+        generatedChartsRef.current.delete(personKey);
       }
     };
 

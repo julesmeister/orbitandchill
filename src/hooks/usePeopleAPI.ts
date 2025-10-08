@@ -50,18 +50,20 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       const response = await fetch(`/api/people?userId=${user.id}`);
       const result = await response.json();
       
-      if (result.success) {
-        // Convert date strings back to Date objects
-        const convertedPeople = result.people.map((person: any) => ({
-          ...person,
-          createdAt: new Date(person.createdAt),
-          updatedAt: new Date(person.updatedAt),
-        }));
-        
+      if (result.success && result.people) {
+        // Convert date strings back to Date objects, with validation
+        const convertedPeople = result.people
+          .filter((person: any) => person && person.createdAt && person.updatedAt)
+          .map((person: any) => ({
+            ...person,
+            createdAt: new Date(person.createdAt),
+            updatedAt: new Date(person.updatedAt),
+          }));
+
         setPeople(convertedPeople);
       } else {
         setError(result.error || 'Failed to load people');
-        setPeople(result.people || []); // Use fallback array
+        setPeople([]); // Use empty array as fallback
       }
     } catch (err) {
       setError('Network error occurred');
@@ -109,14 +111,14 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
       const result = await response.json();
       console.log('📊 API result:', result);
       
-      if (result.success) {
-        console.log('✅ Person added successfully:', result.person?.id);
+      if (result.success && result.person) {
+        console.log('✅ Person added successfully:', result.person.id);
         const newPerson = {
           ...result.person,
           createdAt: new Date(result.person.createdAt),
           updatedAt: new Date(result.person.updatedAt),
         };
-        
+
         // Update local state
         setPeople(prev => {
           // If this is the new default, clear other defaults
@@ -125,14 +127,14 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
           }
           return [...prev, newPerson];
         });
-        
+
         // Set as selected
         setSelectedPersonId(newPerson.id);
-        
+
         return newPerson;
       } else {
-        console.error('❌ API error:', result.error);
-        throw new Error(result.error || 'Failed to add person');
+        console.error('❌ API error:', result.error || 'No person data returned');
+        throw new Error(result.error || 'Failed to add person - no data returned');
       }
     } catch (err) {
       console.error('❌ addPerson catch block:', err);

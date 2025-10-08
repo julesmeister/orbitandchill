@@ -6,6 +6,7 @@ import { Person } from '@/types/people';
 import { BirthData } from '@/types/user';
 import { NatalChartData, ChartData, GenerateChartRequest, GenerateChartParams } from '@/types/chart';
 import { ChartApiService } from '@/services/chartApiService';
+import { getValidCoordinates, areCoordinatesValid } from '@/utils/geocoding';
 
 /**
  * Simplified chart hook that works directly with Supabase API
@@ -79,35 +80,34 @@ export const useNatalChart = (selectedPerson?: Person | null) => {
       coordinates: activePersonData.coordinates
     } : null);
 
-    // If coordinates are empty strings but we have a location, try to geocode
-    if (dataToUse && (!dataToUse.coordinates?.lat || !dataToUse.coordinates?.lon ||
-        dataToUse.coordinates.lat === '' || dataToUse.coordinates.lon === '') &&
-        dataToUse.locationOfBirth) {
-
-      console.log('🔍 Attempting to geocode location:', dataToUse.locationOfBirth);
-
+    // If coordinates are invalid or empty, try to geocode the location
+    if (dataToUse && !areCoordinatesValid(dataToUse.coordinates) && dataToUse.locationOfBirth) {
       try {
-        // Simple geocoding for Philippines location
-        if (dataToUse.locationOfBirth.toLowerCase().includes('zamboanga')) {
-          // Zamboanga del Sur approximate coordinates
+        const geocodedCoordinates = await getValidCoordinates(
+          dataToUse.locationOfBirth,
+          dataToUse.coordinates
+        );
+
+        if (geocodedCoordinates) {
           dataToUse = {
             ...dataToUse,
-            coordinates: {
-              lat: '7.3389',
-              lon: '122.0621'
-            }
+            coordinates: geocodedCoordinates
           };
-          console.log('✅ Applied Zamboanga coordinates:', dataToUse.coordinates);
         }
       } catch (error) {
-        console.warn('Failed to geocode location:', error);
+        console.error('Failed to geocode location:', error);
       }
     }
 
-    if (!dataToUse || !dataToUse.dateOfBirth || !dataToUse.timeOfBirth ||
-        !dataToUse.coordinates?.lat || !dataToUse.coordinates?.lon ||
-        dataToUse.coordinates.lat === '' || dataToUse.coordinates.lon === '') {
-      console.error('generateChart: Invalid or incomplete birth data', dataToUse);
+    // Final validation after geocoding attempt
+    if (!dataToUse || !dataToUse.dateOfBirth || !dataToUse.timeOfBirth || !areCoordinatesValid(dataToUse.coordinates)) {
+      console.error('generateChart: Invalid or incomplete birth data after geocoding attempt', {
+        hasData: !!dataToUse,
+        dateOfBirth: dataToUse?.dateOfBirth,
+        timeOfBirth: dataToUse?.timeOfBirth,
+        coordinates: dataToUse?.coordinates,
+        locationOfBirth: dataToUse?.locationOfBirth
+      });
       return null;
     }
 

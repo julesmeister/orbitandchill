@@ -41,18 +41,19 @@ export default function HomePageClient() {
 
   // Note: Background sync is already handled by useBlogData hook
 
-  // Auto-generate chart if user has complete data but no cached chart
-  useEffect(() => {
-    if (isProfileComplete && !cachedChart && !isGenerating && user?.birthData) {
-      generateChart({
-        name: user.username || '',
-        dateOfBirth: user.birthData.dateOfBirth,
-        timeOfBirth: user.birthData.timeOfBirth,
-        locationOfBirth: user.birthData.locationOfBirth,
-        coordinates: user.birthData.coordinates
-      }, true); // Force regenerate on auto-generation to ensure latest timezone handling
-    }
-  }, [isProfileComplete, cachedChart, isGenerating, user, generateChart]);
+  // Disabled auto-generation to prevent loops - users can generate from chart page
+  // The chart page (useChartPage.ts) already handles chart generation properly
+  // useEffect(() => {
+  //   if (isProfileComplete && !cachedChart && !isGenerating && user?.birthData) {
+  //     generateChart({
+  //       name: user.username || '',
+  //       dateOfBirth: user.birthData.dateOfBirth,
+  //       timeOfBirth: user.birthData.timeOfBirth,
+  //       locationOfBirth: user.birthData.locationOfBirth,
+  //       coordinates: user.birthData.coordinates
+  //     }, true);
+  //   }
+  // }, [isProfileComplete, cachedChart, isGenerating, user, generateChart]);
 
   const handleFormSubmit = useCallback(async (formData: NatalChartFormData) => {
     showLoading('Generating Chart', 'Creating your personalized natal chart...', true);
