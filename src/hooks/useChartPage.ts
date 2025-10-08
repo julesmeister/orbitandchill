@@ -81,10 +81,11 @@ export const useChartPage = () => {
       return;
     }
 
-    // Create a unique key for this person's chart
-    const personKey = `${user.id}_${activeSelectedPerson?.id || 'default'}`;
+    // Create a unique key that includes birth data to detect changes
+    const birthDataSource = activeSelectedPerson?.birthData || user?.birthData;
+    const personKey = `${user.id}_${activeSelectedPerson?.id || 'default'}_${birthDataSource?.dateOfBirth}_${birthDataSource?.timeOfBirth}_${birthDataSource?.coordinates?.lat}`;
 
-    // Skip if we've already generated a chart for this person
+    // Skip if we've already generated a chart with this exact data
     if (generatedChartsRef.current.has(personKey)) {
       return;
     }
@@ -127,7 +128,13 @@ export const useChartPage = () => {
     };
 
     loadChartsOnce();
-  }, [user?.id, activeSelectedPerson?.id, user?.birthData?.dateOfBirth ?? '']); // Trigger on user/person change or birth data change
+  }, [
+    user?.id,
+    activeSelectedPerson?.id,
+    user?.birthData?.dateOfBirth ?? '',
+    user?.birthData?.timeOfBirth ?? '',
+    user?.birthData?.coordinates?.lat ?? ''
+  ]); // Trigger on user/person change or any birth data change
   
   // Handle share token from URL
   useEffect(() => {
@@ -235,9 +242,8 @@ export const useChartPage = () => {
     // Clear existing chart when switching people
     clearCache();
 
-    // Clear the generation tracking to allow regeneration
-    const personKey = `${user?.id}_${person?.id || 'default'}`;
-    generatedChartsRef.current.delete(personKey);
+    // Clear ALL generation tracking to allow regeneration with new data
+    generatedChartsRef.current.clear();
 
     // If no person selected, stop here
     if (!person?.birthData) {
