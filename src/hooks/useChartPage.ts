@@ -99,16 +99,19 @@ export const useChartPage = () => {
         }
 
         // ALWAYS generate fresh chart from API (ONLY ONCE per person)
-        if (activeSelectedPerson?.birthData) {
+        // Check both activeSelectedPerson and user.birthData for birth data
+        const birthDataSource = activeSelectedPerson?.birthData || user?.birthData;
+
+        if (birthDataSource) {
           // Mark this person as having a generated chart BEFORE generating
           generatedChartsRef.current.add(personKey);
 
           const chartData = await generateChart({
-            name: activeSelectedPerson.name || '',
-            dateOfBirth: activeSelectedPerson.birthData.dateOfBirth,
-            timeOfBirth: activeSelectedPerson.birthData.timeOfBirth,
-            locationOfBirth: activeSelectedPerson.birthData.locationOfBirth || 'Unknown',
-            coordinates: activeSelectedPerson.birthData.coordinates
+            name: activeSelectedPerson?.name || user?.username || '',
+            dateOfBirth: birthDataSource.dateOfBirth,
+            timeOfBirth: birthDataSource.timeOfBirth,
+            locationOfBirth: birthDataSource.locationOfBirth || 'Unknown',
+            coordinates: birthDataSource.coordinates
           }, true); // FORCE REGENERATION to ensure celestial points
 
           if (!chartData) {
@@ -124,7 +127,7 @@ export const useChartPage = () => {
     };
 
     loadChartsOnce();
-  }, [user?.id, activeSelectedPerson?.id]); // Only trigger on user/person change
+  }, [user?.id, activeSelectedPerson?.id, user?.birthData?.dateOfBirth]); // Trigger on user/person change or birth data change
   
   // Handle share token from URL
   useEffect(() => {
