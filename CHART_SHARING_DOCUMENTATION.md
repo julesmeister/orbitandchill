@@ -231,243 +231,39 @@ Type 'null' is not assignable to type 'NatalChartData | undefined'.
 
 ---
 
-## Recent Critical Fixes (Round 26 - Current)
+## Recent Critical Fixes (Round 26)
 
-### Coordinate Validation & Form Persistence Fix - CRITICAL
+### Coordinate Validation & Form Persistence Fix
 
-> **🚨 CRITICAL FIX**: Resolved coordinate validation issues causing chart generation failures and infinite generation loops.
+> **🚨 CRITICAL**: Resolved coordinate validation issues causing chart generation failures and infinite loops.
 
-**Key Issues Resolved:**
-```
-Coordinate Validation & Loop Prevention Implementation
-├── ✅ Empty Coordinates Bug Fix
-│   ├── Problem: Form submitting with empty coordinates {lat: '', lon: ''} causing generation failures
-│   ├── Root Cause: Debounced save timing issue - coordinates not persisted before chart generation
-│   └── Solution: Synchronous coordinate save on form submit, bypassing debounce delay
-│
-├── ✅ Infinite Chart Generation Loop Prevention
-│   ├── Problem: Chart generating repeatedly in endless loop on page load
-│   ├── Root Cause: useChartPage useEffect triggering multiple times without guards
-│   └── Solution: Added generatedChartsRef tracking to prevent duplicate generations per person
-│
-├── ✅ Automatic Geocoding Fallback System
-│   ├── Problem: Invalid coordinates (0,0) when form data incomplete
-│   ├── Root Cause: No fallback mechanism when coordinates missing from form
-│   └── Solution: Created /src/utils/geocoding.ts with Nominatim API integration
-│
-└── ✅ Enhanced Coordinate Validation
-    ├── areCoordinatesValid() - Validates lat/lon not empty and within valid ranges
-    ├── getValidCoordinates() - Returns valid coordinates or geocodes location string
-    └── geocodeLocation() - Fallback Nominatim API geocoding when coordinates missing
-```
+**Solution Summary:**
+- ✅ Created `/src/utils/geocoding.ts` with validation utilities
+- ✅ Added `generatedChartsRef` in `useChartPage.ts` to prevent infinite loops
+- ✅ Implemented synchronous coordinate save on form submit
+- ✅ Automatic geocoding fallback with Nominatim API integration
 
-**Files Created/Modified:**
-- ✅ `/src/utils/geocoding.ts` - New geocoding utility with coordinate validation
-- ✅ `/src/hooks/useNatalChart.ts` - Integrated geocoding fallback for missing coordinates
-- ✅ `/src/hooks/useChartPage.ts` - Added generatedChartsRef to prevent infinite loops
-- ✅ `/src/hooks/dataHooks/useFormData.ts` - Synchronous coordinate save on submit
-- ✅ `/src/components/forms/NatalChartForm.tsx` - Clean coordinate flow from location selection
+**Impact:** Chart generation reliable with proper coordinate validation and loop prevention.
 
-**Technical Implementation:**
+## Previous Critical Fixes (Summary)
 
-**1. Geocoding Utility** (`/src/utils/geocoding.ts`):
-```typescript
-// Validate coordinates are not empty and within valid ranges
-export function areCoordinatesValid(coordinates?: Coordinates | null): boolean {
-  if (!coordinates?.lat || !coordinates?.lon) return false;
-  if (coordinates.lat === '' || coordinates.lon === '') return false;
+### Round 25: API-Only Celestial Points Architecture
+- ✅ Eliminated cache dependency issues
+- ✅ Direct API-only generation ensures 15 planets immediately
+- ✅ Unified naming convention support (lowercase/camelCase)
+- ✅ All celestial points (Lilith, Chiron, Nodes, Part of Fortune) guaranteed on first load
 
-  const lat = parseFloat(coordinates.lat);
-  const lon = parseFloat(coordinates.lon);
+### Round 24: Date Formatting & People Management
+- ✅ Consolidated date formatting into `/src/utils/dateFormatting.ts`
+- ✅ Fixed People Management API endpoint mismatches
+- ✅ Enhanced duplicate detection using birth data
+- ✅ Proper API patterns for chart sharing reliability
 
-  if (isNaN(lat) || isNaN(lon)) return false;
-  if (lat < -90 || lat > 90) return false;
-  if (lon < -180 || lon > 180) return false;
-
-  return true;
-}
-
-// Get valid coordinates, geocoding if necessary
-export async function getValidCoordinates(
-  locationOfBirth: string,
-  coordinates?: Coordinates | null
-): Promise<Coordinates | null> {
-  // Use existing coordinates if valid
-  if (areCoordinatesValid(coordinates)) {
-    return coordinates!;
-  }
-
-  // Geocode location string as fallback
-  if (locationOfBirth?.trim().length > 0) {
-    return await geocodeLocation(locationOfBirth);
-  }
-
-  return null;
-}
-```
-
-**2. Loop Prevention** (`/src/hooks/useChartPage.ts`):
-```typescript
-// Track what charts we've already generated to prevent loops
-const generatedChartsRef = useRef<Set<string>>(new Set());
-
-useEffect(() => {
-  const personKey = `${user.id}_${activeSelectedPerson?.id || 'default'}`;
-
-  // Skip if already generated for this person
-  if (generatedChartsRef.current.has(personKey)) {
-    return;
-  }
-
-  // Mark as generated BEFORE starting
-  generatedChartsRef.current.add(personKey);
-
-  // Generate chart...
-
-  // Remove key on error to allow retry
-  if (!chartData) {
-    generatedChartsRef.current.delete(personKey);
-  }
-}, [user?.id, activeSelectedPerson?.id]);
-```
-
-**3. Synchronous Coordinate Save** (`/src/hooks/dataHooks/useFormData.ts`):
-```typescript
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  // Clear debounced updates FIRST
-  if (debouncedUpdateRef.current) {
-    clearTimeout(debouncedUpdateRef.current);
-  }
-
-  // Validate coordinates before proceeding
-  if (!formData.coordinates?.lat || !formData.coordinates?.lon ||
-      formData.coordinates.lat === '' || formData.coordinates.lon === '') {
-    showError("Location Required", "Please select a location...");
-    return;
-  }
-
-  // Save SYNCHRONOUSLY (not debounced) on submit
-  const { name: _name, ...birthData } = formData;
-  await updateBirthData(birthData);
-
-  // Now safe to proceed with chart generation
-};
-```
-
-**Impact:**
-- ✅ Chart generation now works reliably with proper coordinates
-- ✅ No more infinite generation loops on page load
-- ✅ Automatic geocoding fallback for edge cases with missing coordinates
-- ✅ Clean, predictable coordinate flow from form → storage → chart generation
-- ✅ Improved user experience with proper validation and error messages
-
-## Previous Critical Fixes (Round 25)
-
-### API-Only Celestial Points Architecture - REVOLUTIONARY
-
-> **🚨 CRITICAL BREAKTHROUGH**: Completely eliminated cache dependency issues by implementing pure API-only chart generation architecture that guarantees celestial points from first load.
-
-**Key Issues Resolved:**
-```
-API-Only Celestial Points Implementation - COMPLETED
-├── ✅ Race Condition Elimination
-│   ├── Problem: Old cached charts (10 planets) showed first, then fresh charts (15 planets) seconds later
-│   ├── Root Cause: useNatalChart hook prioritized cached chart loading before API generation
-│   └── Solution: Eliminated ALL cache loading - direct API-only generation ensures 15 planets immediately
-│
-├── ✅ Celestial Points Naming Convention Standardization
-│   ├── Problem: Generated 'northnode' but filtered for 'northNode', causing points to be lost
-│   ├── Root Cause: astronomy-engine generates lowercase, but filters expected camelCase
-│   └── Solution: Unified filtering supporting both patterns: ['northnode', 'northNode', 'southnode', 'southNode']
-│
-├── ✅ Direct API-Only Architecture Implementation
-│   ├── useNatalChart: Skip cached chart loading entirely
-│   ├── useChartPage: Clear cache and force fresh generation always
-│   ├── API Route: Enhanced filtering logic for both naming conventions
-│   └── ChartInterpretation: Direct fresh chart data without cache dependencies
-│
-└── ✅ Guaranteed Celestial Points Display
-    ├── Lilith (Black Moon Lilith): Dark feminine energy and shadow aspects
-    ├── Chiron: Wounded healer and karmic lessons
-    ├── North Node: Soul's evolutionary direction and life purpose
-    ├── South Node: Past life karma and innate talents
-    └── Part of Fortune: Material prosperity and life fulfillment
-```
-
-**Impact on Chart Sharing:**
-- Shared charts now immediately display all 15 celestial bodies including celestial points
-- No more delayed appearance of celestial points causing user confusion
-- Fresh API generation ensures shared charts always reflect complete astrological information
-- Enhanced chart completeness improves the value and accuracy of shared chart interpretations
-- Revolutionary API-only architecture eliminates cache-related inconsistencies entirely
-
-## Previous Critical Fixes (Round 24)
-
-### Date Formatting Consolidation & People Management Enhancement
-
-> **🎯 LATEST UPDATE**: Code deduplication breakthrough with systematic elimination of duplicate date formatting implementations and critical API endpoint fixes.
-
-**Key Issues Resolved:**
-```
-Date Formatting & API Standardization Fixes
-├── ✅ Duplicate formatDate Functions Elimination
-│   ├── Problem: 10+ scattered date formatting implementations across components
-│   ├── Root Cause: No centralized date utility causing inconsistent formats
-│   └── Solution: Consolidated into `/src/utils/dateFormatting.ts` with TypeScript types
-│
-├── ✅ People Management API Endpoint Mismatch Fix
-│   ├── Problem: "Person not found or access denied" errors during duplicate cleanup
-│   ├── Root Cause: Client using query params, server expecting REST endpoint + body
-│   └── Solution: Updated usePeopleAPI.ts to use proper DELETE /api/people/[id] format
-│
-├── ✅ Runtime Error Resolution
-│   ├── Problem: hasStoredData undefined in NatalChartForm.tsx
-│   ├── Root Cause: Missing import after PersonDataTransformers consolidation
-│   └── Solution: Added proper useUserStore hook integration for data access
-│
-└── ✅ Enhanced Duplicate Detection
-    ├── Problem: Name-based duplicate detection missing similar birth data
-    ├── Root Cause: Users with same names but different birth information marked as duplicates
-    └── Solution: Birth data-based detection using dateOfBirth + timeOfBirth + location
-```
-
-**Impact on Chart Sharing:**
-- Date formatting consistency improves shared chart timestamp display across all contexts
-- Enhanced people management prevents duplicate person entries from corrupting shared charts
-- Proper API endpoints ensure reliable chart sharing functionality
-- Improved data integrity maintains accuracy of shared astrological information
-
-## Previous Critical Fixes (Round 23)
-
-### Birth Data Persistence & Celestial Points Resolution
-
-> **🚨 IMPORTANT**: The chart system underwent critical fixes to resolve birth data persistence issues and restore missing celestial points in chart interpretations.
-
-**Key Issues Resolved:**
-```
-Critical Chart System Fixes
-├── ✅ Birth Data Persistence Fix
-│   ├── Problem: Birth year reverting to 1993 despite form updates
-│   ├── Root Cause: useChartCache skip condition preventing proper data loading
-│   └── Solution: Fixed skip logic to only skip when both same data AND cached chart exists
-│
-├── ✅ Celestial Points Display Fix  
-│   ├── Problem: Missing Lilith, Chiron, North Node, South Node, Part of Fortune
-│   ├── Root Cause: Premium feature filtering removing non-premium sections incorrectly
-│   └── Solution: Always show non-premium sections regardless of premium API status
-│
-└── ✅ Celestial Points Data Processing Fix
-    ├── Problem: Filtering by undefined `isPlanet` property
-    ├── Root Cause: Chart data structure missing `isPlanet` field
-    └── Solution: Filter celestial points by planet names using exclusion list
-```
-
-**Impact on Chart Sharing:**
-- Shared charts now display complete astrological information including celestial points
-- Birth data persistence ensures shared charts maintain accurate user data
-- Enhanced chart completeness improves the value of shared chart interpretations
+### Round 23: Birth Data Persistence
+- ✅ Fixed birth year persistence issues
+- ✅ Restored missing celestial points display
+- ✅ Corrected premium feature filtering
+- ✅ Complete astrological data in shared charts
 
 ## Overview
 
@@ -921,199 +717,19 @@ const generateShareMetaTags = (chart: SharedChart) => ({
 
 #### Social Media Optimization Implementation
 
-**Chart Preview Images API (`/api/charts/[id]/preview/route.ts`)**
-- Generates 1200x630 SVG preview images optimized for social media
-- Branded design with chart information and astrological symbols
-- Proper Open Graph and Twitter Card dimensions
-- Cached for performance with chart ID-based URLs
+**Core Components**:
+- `/api/charts/[id]/preview/route.ts` - 1200x630 SVG preview generation with branding
+- `/chart/shared/[token]/page.tsx` - Dynamic Next.js metadata with Open Graph/Twitter Cards
+- `/src/components/charts/SocialShareModal.tsx` - Platform buttons with Web Share API fallback
+- `/src/utils/socialSharing.ts` - Platform-specific content generation
 
-**Server-Side Meta Tag Generation (`/chart/shared/[token]/page.tsx`)**
-- Dynamic `generateMetadata` function for Next.js 13+ App Router
-- Platform-specific Open Graph and Twitter Card meta tags
-- Structured data for SEO and social sharing
-- Automatic fallback handling for invalid tokens
+**Platform Support**: Twitter (with hashtags), Facebook (Open Graph), Instagram (clipboard), LinkedIn (professional tone), WhatsApp (emoji-rich messaging)
 
-**Social Sharing Modal (`/src/components/charts/SocialShareModal.tsx`)**
-- Platform-specific sharing buttons with branded colors
-- Web Share API integration with clipboard fallback
-- Instagram clipboard copying (no direct URL support)
-- Preview message generation for each platform
+**Performance**: SVG image caching, lazy loading, character limit optimization, async meta generation
 
-**Social Sharing Utilities (`/src/utils/socialSharing.ts`)**
-- Platform-specific content generation functions
-- Zodiac sign emoji integration
-- Multiple message templates for different contexts
-- URL encoding and parameter handling
+**Testing**: Debug tool at `/public/debug-chart.html` with test functions for preview images, meta tags, modal, and platform-specific sharing
 
-#### Social Media Platform Support
-
-**Twitter Integration**
-- Custom tweet composition with hashtags
-- Chart preview image display
-- Subject name and astrological details
-- Branded hashtags: `#astrology #natalchart #orbitandchill`
-
-**Facebook Integration**
-- Rich preview cards with Open Graph tags
-- Compelling description text
-- Automatic image and title extraction
-- Share dialog with custom messaging
-
-**Instagram Integration**
-- Clipboard-based sharing (no direct URL support)
-- Optimized content with emojis and hashtags
-- "Link in bio" format for story sharing
-- Visual-first messaging approach
-
-**LinkedIn Integration**
-- Professional-toned sharing content
-- Emphasis on personality insights and career astrology
-- Structured data for professional networks
-- Clean, business-appropriate messaging
-
-**WhatsApp Integration**
-- Personal messaging format
-- Emoji-rich content for mobile sharing
-- Direct URL sharing support
-- Conversational tone
-
-#### Technical Implementation Details
-
-**Preview Image Generation**
-```typescript
-// SVG-based preview generation
-const generatePreviewImage = (chart: Chart) => {
-  const svg = `
-    <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#f8f9fa"/>
-      <text x="600" y="200" text-anchor="middle" font-size="48" font-weight="bold">
-        ${chart.subjectName}'s Natal Chart
-      </text>
-      <text x="600" y="300" text-anchor="middle" font-size="24">
-        Born: ${chart.birthData.locationOfBirth}
-      </text>
-      <text x="600" y="400" text-anchor="middle" font-size="32">
-        ${chart.sunSign} Sun • ${chart.moonSign} Moon • ${chart.risingSign} Rising
-      </text>
-      <text x="600" y="500" text-anchor="middle" font-size="20">
-        Discover your cosmic blueprint at Orbit & Chill
-      </text>
-    </svg>
-  `;
-  return new Response(svg, {
-    headers: { 'Content-Type': 'image/svg+xml' }
-  });
-};
-```
-
-**Meta Tag Generation**
-```typescript
-// Dynamic meta tags for shared charts
-export async function generateMetadata({ params }: { params: { token: string } }) {
-  const chart = await getChartByShareToken(params.token);
-  
-  if (!chart) {
-    return {
-      title: 'Chart Not Found | Orbit & Chill',
-      description: 'The requested natal chart could not be found.'
-    };
-  }
-  
-  return {
-    title: `${chart.subjectName}'s Natal Chart | Orbit & Chill`,
-    description: `Explore ${chart.subjectName}'s cosmic blueprint created on ${chart.createdAt}. Discover planetary positions, houses, and astrological insights.`,
-    openGraph: {
-      title: `${chart.subjectName}'s Natal Chart`,
-      description: `${chart.subjectName} was born under ${chart.sunSign} in ${chart.birthLocation}. Explore their unique astrological profile.`,
-      images: [{
-        url: `/api/charts/${chart.id}/preview`,
-        width: 1200,
-        height: 630,
-        alt: `${chart.subjectName}'s natal chart preview`
-      }],
-      type: 'article',
-      siteName: 'Orbit & Chill'
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${chart.subjectName}'s Natal Chart | Orbit & Chill`,
-      description: `Discover ${chart.subjectName}'s cosmic blueprint - ${chart.sunSign} Sun sign from ${chart.birthLocation}`,
-      images: [`/api/charts/${chart.id}/preview`]
-    }
-  };
-}
-```
-
-**Platform-Specific Content Generation**
-```typescript
-// Generate tailored content for each platform
-export const generatePlatformSpecificContent = (data: ShareData, platform: string) => {
-  const templates = {
-    twitter: `🌟 Check out ${data.subjectName}'s natal chart! Born under ${data.sunSign} in ${data.birthLocation}. Discover your cosmic blueprint too! ${data.shareUrl} #astrology #natalchart #orbitandchill`,
-    
-    facebook: `✨ ${data.subjectName}'s cosmic journey revealed! This ${data.sunSign} chart shows fascinating planetary alignments from ${data.birthLocation}. Create your own natal chart and discover your celestial story! ${data.shareUrl}`,
-    
-    instagram: `🌟 ${data.subjectName}'s natal chart! ${data.sunSign} energy from ${data.birthLocation}. Link in bio: ${data.shareUrl} #astrology #natalchart #orbitandchill #cosmicblueprint`,
-    
-    linkedin: `Fascinating astrological insights for this ${data.sunSign} individual from ${data.birthLocation}. Explore the cosmic influences that shape personality and life path. ${data.shareUrl}`,
-    
-    whatsapp: `🌟 ${data.subjectName}'s natal chart is amazing! Born under ${data.sunSign}, check out their cosmic blueprint: ${data.shareUrl}`
-  };
-  
-  return templates[platform] || templates.twitter;
-};
-```
-
-#### Testing and Debug Support
-
-**Debug Tool Integration (`/public/debug-chart.html`)**
-- **Chart Preview Image Test**: Generates and displays preview images
-- **Meta Tag Generation Test**: Validates server-side meta tag generation
-- **Social Sharing Modal Test**: Tests modal functionality and content
-- **Platform-Specific Sharing Test**: Validates URL generation and content
-- **Social Media Optimization Test**: Comprehensive test suite
-- **Share Content Generation Test**: Tests various user scenarios
-
-**Test Functions Available**
-```javascript
-// Individual test functions
-testChartPreviewImage()     // Test preview image generation
-testMetaTagGeneration()     // Test meta tag structure
-testSocialSharingModal()    // Test modal functionality
-testPlatformSpecificSharing() // Test platform URLs
-
-// Combined test suites
-testSocialMediaOptimization() // Run all social media tests
-testShareContentGeneration()  // Test content generation scenarios
-```
-
-#### Performance Optimizations
-
-**Image Caching**
-- Preview images cached based on chart ID
-- SVG format for scalability and performance
-- Automatic regeneration on chart updates
-
-**Content Optimization**
-- Platform-specific character limits respected
-- Emoji integration for visual appeal
-- Hashtag optimization for discoverability
-
-**Loading Performance**
-- Lazy loading of social share components
-- Async generation of preview images
-- Cached meta tag generation
-
-#### Analytics and Tracking
-
-**Share Event Tracking**
-- Platform-specific share events
-- Content engagement metrics
-- Preview image impression tracking
-
-**Social Media Metrics**
-- Click-through rates from social platforms
-- Most effective content templates
+**Analytics**: Share event tracking, platform-specific metrics, impression tracking, click-through rate measurement
 - Platform performance comparison
 
 #### Browser Compatibility
@@ -1299,378 +915,44 @@ The debug tool (`/public/debug-chart.html`) provides comprehensive testing capab
 
 ### Recent Fixes & Improvements ✅ **COMPLETED**
 
-#### Chart Sharing Fresh Data Generation ✅ **COMPLETED** (2025-01-22)
+#### Chart Sharing Fresh Data (2025-01-22)
+- **Problem**: Stale chart data in share links when person selection changed
+- **Solution**: Two-step process: fresh chart generation with `forceRegenerate: true` → share token creation
+- **Impact**: Share links always reflect current person selection state
+- **Files**: `/src/components/charts/ChartQuickActions.tsx` (lines 133-230)
 
-**Problem**: Users experienced stale chart data in share links when they updated their person selection after initially creating a share link. The same share token was reused even when underlying person data changed, causing recipients to see outdated chart information.
+#### Database Persistence
+- **Problem**: Charts not persisting, causing sharing failures
+- **Solution**: Bypassed resilience wrapper, added `.returning()` calls, simplified WHERE clauses
+- **Impact**: Charts persist correctly, sharing works, dropdown populates properly
 
-**Root Cause Analysis**:
-- **Static Share Tokens**: Share tokens were generated for specific saved chart records and didn't change when user input changed
-- **No Change Detection**: No mechanism to detect when current form data differed from shared chart data  
-- **Database-driven Sharing**: Share system used persisted chart data, not live user form input
-- **Token Reuse**: Same token returned for repeated share requests on the same chart ID
+#### Dropdown State Management
+- **Problem**: Duplicate people entries, race conditions in auto-add
+- **Solution**: API-based people management (`/api/people`), race condition prevention, duplicate checking
+- **Impact**: Clean people list, proper state synchronization
 
-**Solution Implemented**:
-```typescript
-// ChartQuickActions.tsx - Enhanced handleShareChart (lines 133-230)
-const handleShareChart = React.useCallback(async () => {
-  // Step 1: Determine current person to share
-  const personToShare = selectedPerson || defaultPerson;
-  
-  // Step 2: Generate fresh chart with current person data
-  const generateResponse = await fetch('/api/charts/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      userId: user.id,
-      ...personToShare.birthData,
-      forceRegenerate: true, // Force fresh generation
-      isPublic: true,        // Make immediately shareable
-      subjectName: personToShare.name,
-    }),
-  });
-  
-  // Step 3: Generate share token for fresh chart
-  const shareResponse = await fetch(`/api/charts/${newChartId}/share`, {
-    method: 'POST',
-    body: JSON.stringify({ userId: user.id }),
-  });
-}, [selectedPerson, defaultPerson, user?.id]);
-```
+#### Database Architecture
+- **Storage**: `natal_charts` table + IndexedDB cache (24hr TTL)
+- **Pattern**: User Input → Chart Generation → Database → Cache → UI Display
+- **Reliability**: Direct database access, proper INSERT execution, comprehensive debugging
 
-**Implementation Status**: ✅ **FULLY IMPLEMENTED AND VERIFIED**
+### Chart System Architecture
 
-**Key Implementation Features**:
-- **Fresh Chart Generation**: Always generates new chart with current person data before sharing
-- **Force Regeneration**: Uses `forceRegenerate: true` to bypass existing chart caching
-- **Current Person Detection**: Smart logic to determine which person data to use for generation
-- **Two-Step Process**: Generate chart first, then create share token for guaranteed fresh data
-- **Enhanced User Feedback**: Updated messaging to indicate fresh chart generation process
-- **Comprehensive Error Handling**: Proper fallback mechanisms for clipboard and sharing failures
+**Frontend**: ChartQuickActions (regeneration, sharing), NatalChartDisplay (SVG rendering, share API), PeopleSelector (search, shared charts integration)
 
-**Technical Verification**:
-- ✅ Code implementation complete in ChartQuickActions.tsx
-- ✅ Two-step process working: fresh chart generation → share token creation
-- ✅ Share button properly disabled when no chart ID or user ID available
-- ✅ Enhanced user feedback with "Generating Share Link" status messages
-- ✅ Proper error handling with fallback clipboard functionality
-- ✅ Force regeneration bypassing stale chart cache
+**Hooks**: useNatalChart (generation, IndexedDB cache), useChartAPI (CRUD, share links), usePeopleAPI (API-based management, race prevention), userStore (auth, birth data, Dexie persistence)
 
-**Impact**: 
-- ✅ Share links now always reflect current person selection
-- ✅ Recipients see accurate chart data matching sharer's current state
-- ✅ No more confusion from stale share token reuse
-- ✅ Enhanced user feedback during fresh chart generation process
-- ✅ Improved reliability with comprehensive error handling
+**API**: `/api/charts/generate` (generation, deduplication), `/api/charts/[id]/share` (token generation), `/api/charts/shared` (public access), `/api/people` (CRUD with duplicate prevention)
 
-**Files Modified & Verified**:
-- `/src/components/charts/ChartQuickActions.tsx` - Complete implementation verified (lines 133-230)
+**Database**: chartService (CRUD, tokens, public retrieval), Dexie (local storage, cache TTL), Schema (natal_charts, users, people tables with constraints)
 
-#### 1. **Chart Database Persistence Issue** ✅ **RESOLVED**
+**Generation Engine**: natalChart.ts (astronomy-engine, SVG generation, planetary calculations, house system, aspects)
 
-**Problem**: Charts were being generated but not persisted to the database, causing sharing failures and empty chart lists.
+**Caching**: IndexedDB (24hr TTL, offline access), API-level deduplication, database query optimization
 
-**Root Cause Analysis**:
-- **Resilient Service Wrapper**: The resilience wrapper was incorrectly detecting database as unavailable
-- **Missing .returning() Call**: Database INSERT operations returned query builders instead of executing
-- **WHERE Clause Parsing**: Complex `and()` WHERE clauses weren't parsed correctly by mock database
-- **Database Availability Check**: Service layer checking `!!db` instead of `!!db.client`
+**Sharing**: Token system, public URLs, SEO optimization, community discovery
 
-**Solution Implemented**:
-```
-✅ Database Persistence Fixes
-  ├── ChartService.createChart - bypassed resilience wrapper, added .returning()
-  ├── ChartService.getUserCharts - direct database access for reliability
-  ├── ChartService.generateShareToken - simplified WHERE clause parsing
-  ├── ChartService.getChartById - consistent direct database approach
-  └── Enhanced database availability detection
-
-✅ Critical Fixes Applied
-  ├── Fixed INSERT execution: db.insert().values().returning()
-  ├── Simplified WHERE clauses: eq() instead of and(eq(), eq())
-  ├── Added comprehensive debugging with 🔧 emoji logging
-  ├── Bypassed resilience wrapper for critical operations
-  └── Fixed database INSERT/SELECT disconnect
-```
-
-**Impact**: 
-- ✅ Charts now persist correctly to database
-- ✅ Chart sharing works with proper share tokens
-- ✅ getUserCharts returns saved charts
-- ✅ ChartQuickActions dropdown populates properly
-
-#### 2. **Chart Persistence in ChartQuickActions Dropdown** ✅ **RESOLVED**
-
-**Problem**: The PeopleSelector dropdown in ChartQuickActions doesn't persist chart selections properly.
-
-**Root Cause Analysis**:
-- **Duplicate Creation**: Multiple concurrent auto-add operations created duplicate people entries
-- **Race Conditions**: `usePeopleAPI` hook had race conditions during user auto-add
-- **State Synchronization**: Global store and local component state became out of sync
-- **Missing Functions**: `setSelectedPerson` function was not properly defined in the hook
-
-**Solution Implemented**:
-```
-✅ API-Based People Management (/api/people)
-  ├── GET /api/people - Fetch user's people with proper ordering
-  ├── POST /api/people - Create new people with duplicate prevention
-  ├── PATCH /api/people - Update existing people
-  └── DELETE /api/people - Remove people with cascade handling
-
-✅ usePeopleAPI Hook Improvements
-  ├── Added isAutoAdding state to prevent race conditions
-  ├── Implemented client-side duplicate checking
-  ├── Fixed setSelectedPerson function mapping
-  ├── Added comprehensive error handling and logging
-
-✅ Database Layer Enhancements
-  ├── Applied unique constraints to prevent duplicates
-  ├── Cleaned up 12 duplicate records from database
-  ├── Added proper indexes for performance
-  └── Implemented server-side duplicate detection
-```
-
-#### 3. **Database Persistence Architecture** ✅ **ENHANCED**
-
-**Current Implementation**:
-- **Primary Storage**: `natal_charts` table with complete chart data
-- **Caching Layer**: IndexedDB via Dexie (24hr TTL) + API-level deduplication
-- **Resilience**: Direct database access for critical operations
-- **Sharing**: Public charts with share tokens for community access
-
-**Persistence Pattern**:
-```
-User Input → Chart Generation → Database Storage → Local Cache → UI Display
-     ↓              ↓                  ↓               ↓            ↓
-Birth Data    Astronomy Engine    natal_charts    IndexedDB   SVG Render
-```
-
-**Enhanced Reliability**:
-- ✅ Direct database connections bypass service layer issues
-- ✅ Proper INSERT execution with .returning() calls
-- ✅ Simplified WHERE clause parsing for better compatibility
-- ✅ Comprehensive debugging and error tracking
-
-### Tree Map: Chart System Architecture
-
-```
-📊 Chart System Architecture
-├── 🎯 Frontend Components
-│   ├── 📄 /src/app/chart/page.tsx
-│   │   ├── 🔄 Chart Loading & Auto-generation Logic
-│   │   ├── 👤 Person Selection Integration
-│   │   ├── 📱 Responsive Layout Management
-│   │   └── ⚡ Performance Optimizations
-│   │
-│   ├── 🛠️ /src/components/charts/ChartQuickActions.tsx
-│   │   ├── 🔄 Regeneration Controls
-│   │   ├── 👥 PeopleSelector Integration
-│   │   ├── 📤 Share Button Implementation
-│   │   └── 📝 Edit Person Form Management
-│   │
-│   ├── 🎨 /src/components/charts/NatalChartDisplay.tsx
-│   │   ├── 🖼️ SVG Chart Rendering
-│   │   ├── 📤 Native Share API Integration
-│   │   ├── 📋 Clipboard Fallback
-│   │   └── 🎯 Interactive Chart Elements
-│   │
-│   └── 👥 /src/components/people/PeopleSelector.tsx
-│       ├── 🔍 Person Search & Selection
-│       ├── 🌍 Shared Charts Integration
-│       ├── ➕ Add New Person Flow
-│       └── 📊 Chart Import from Shared
-│
-├── 🔗 State Management & Hooks
-│   ├── 🎯 /src/hooks/useNatalChart.ts
-│   │   ├── 🔄 Chart Generation Logic
-│   │   ├── 💾 Local Cache Management (IndexedDB)
-│   │   ├── 🔄 Cache Key Generation & Normalization
-│   │   ├── 📤 Share Token Generation
-│   │   ├── 🗑️ Cache Clearing & Cleanup
-│   │   └── 📊 Chart Persistence Logic
-│   │
-│   ├── 🔗 /src/hooks/useChartAPI.ts
-│   │   ├── 📡 Comprehensive API Wrapper
-│   │   ├── 🔄 Chart CRUD Operations
-│   │   ├── 📤 Share Link Generation
-│   │   ├── 🚨 Error Handling & Toasts
-│   │   └── 📊 Loading State Management
-│   │
-│   ├── 🌍 /src/hooks/useSharedCharts.ts
-│   │   ├── 📊 Community Charts Fetching
-│   │   ├── 🔄 Chart Format Conversion
-│   │   ├── 📊 Dropdown Population Logic
-│   │   └── 🔄 Auto-refresh Mechanism
-│   │
-│   ├── 👥 /src/hooks/usePeopleAPI.ts ✅ **UPDATED**
-│   │   ├── 👤 Person Selection State (API-based)
-│   │   ├── 🎯 Default Person Management
-│   │   ├── 📊 Person-Chart Associations
-│   │   ├── 🔄 Auto-add User Functionality
-│   │   ├── 🛡️ Race Condition Prevention
-│   │   └── 🔄 Global State Synchronization
-│   │
-│   └── 👤 /src/store/userStore.ts
-│       ├── 🔐 User Authentication State
-│       ├── 📊 Birth Data Management
-│       ├── 💾 Profile Persistence (Dexie)
-│       └── 🔄 Profile Completeness Logic
-│
-├── 🔌 API Layer
-│   ├── 🎯 /src/app/api/charts/generate/route.ts
-│   │   ├── 📊 Chart Generation Endpoint
-│   │   ├── 🔄 Deduplication Logic
-│   │   ├── 💾 Database Storage
-│   │   ├── 🔄 Cache Management
-│   │   ├── 📈 Analytics Integration
-│   │   └── 🛡️ Error Handling & Fallbacks
-│   │
-│   ├── 📤 /src/app/api/charts/[id]/share/route.ts
-│   │   ├── 🔐 Share Token Generation
-│   │   ├── 🌐 Public URL Construction
-│   │   ├── 🔐 Access Control Validation
-│   │   └── 📊 Share Analytics
-│   │
-│   ├── 📊 /src/app/api/charts/[id]/route.ts
-│   │   ├── 📖 Chart Retrieval (Private/Public)
-│   │   ├── ✏️ Chart Updates & Metadata
-│   │   ├── 🗑️ Chart Deletion
-│   │   └── 🔐 Permission Validation
-│   │
-│   ├── 🌍 /src/app/api/charts/shared/route.ts
-│   │   ├── 📊 Public Chart Access
-│   │   ├── 📋 Recent Shared Charts List
-│   │   ├── 🔐 Public Flag Enforcement
-│   │   └── 📊 Community Discovery
-│   │
-│   ├── 👤 /src/app/api/users/charts/route.ts
-│   │   ├── 📊 User Chart Collection
-│   │   ├── 📈 Chart History Management
-│   │   ├── 🔄 Chart Synchronization
-│   │   └── 📊 Chart Metadata Retrieval
-│   │
-│   └── 👥 /src/app/api/people/route.ts ✅ **NEW**
-│       ├── 📊 GET - Fetch user's people collection
-│       ├── ➕ POST - Create new people with duplicate prevention
-│       ├── ✏️ PATCH - Update existing people
-│       ├── 🗑️ DELETE - Remove people with cascade handling
-│       └── 🛡️ Server-side duplicate detection
-│
-├── 🗄️ Database Layer
-│   ├── 📊 /src/db/services/chartService.ts
-│   │   ├── 🔄 Chart CRUD Operations
-│   │   ├── 📤 Share Token Management
-│   │   ├── 🌍 Public Chart Retrieval
-│   │   ├── 🔄 Chart Deduplication Logic
-│   │   ├── 📊 Recent Charts Caching
-│   │   └── 🔐 Access Control Enforcement
-│   │
-│   ├── 💾 /src/store/database.ts (Dexie)
-│   │   ├── 📊 Local Chart Storage
-│   │   ├── 👤 User Profile Persistence
-│   │   ├── 🔄 Cache Management (TTL)
-│   │   └── 📊 Offline Data Synchronization
-│   │
-│   └── 🗄️ Database Schema
-│       ├── 📊 natal_charts table
-│       │   ├── 🔑 Primary Key (id)
-│       │   ├── 👤 User Association (userId)
-│       │   ├── 📊 Chart Data (SVG content)
-│       │   ├── 📈 Metadata (JSON calculations)
-│       │   ├── 🌍 Birth Details (date, time, location)
-│       │   ├── 📤 Sharing (isPublic, shareToken)
-│       │   └── 📅 Timestamps (createdAt, updatedAt)
-│       │
-│       ├── 👥 users table
-│       │   ├── 🔑 Primary Key (id)
-│       │   ├── 📊 Birth Data (coordinates, times)
-│       │   ├── 🔐 Authentication (provider, email)
-│       │   └── 📈 Chart Associations (hasNatalChart)
-│       │
-│       └── 👥 people table ✅ **NEW**
-│           ├── 🔑 Primary Key (id)
-│           ├── 👤 User Association (user_id)
-│           ├── 📊 Birth Data (date, time, location, coordinates)
-│           ├── 🔗 Relationship (self, family, friend, partner, etc.)
-│           ├── 🎯 Default Person Flag (is_default)
-│           ├── 📝 Notes Field
-│           ├── 🛡️ Unique Constraints (prevent duplicates)
-│           └── 📅 Timestamps (created_at, updated_at)
-│
-├── 🎯 Chart Generation Engine
-│   ├── 🌟 /src/utils/natalChart.ts
-│   │   ├── 🔭 Astronomy Engine Integration
-│   │   ├── 🎨 SVG Chart Generation
-│   │   ├── 🌍 Planetary Position Calculations
-│   │   ├── 🏠 House System Implementation
-│   │   ├── 📐 Aspect Calculations
-│   │   └── 🎨 Chart Styling & Themes
-│   │
-│   └── 📊 Chart Data Flow
-│       ├── 🌍 Birth Data Input
-│       ├── 🔭 Astronomical Calculations
-│       ├── 🎨 SVG Generation
-│       ├── 📊 Metadata Extraction
-│       ├── 💾 Database Storage
-│       └── 🖼️ UI Rendering
-│
-├── 🔄 Caching Architecture
-│   ├── 🏠 Local Cache (IndexedDB)
-│   │   ├── 🔑 Cache Key Strategy
-│   │   ├── ⏰ TTL Management (24hr)
-│   │   ├── 🔄 Cache Invalidation
-│   │   └── 💾 Offline Access
-│   │
-│   ├── 🌐 API-Level Cache
-│   │   ├── 🔄 Chart Deduplication
-│   │   ├── 📊 Existing Chart Detection
-│   │   ├── 🔄 Force Regeneration Logic
-│   │   └── 📈 Performance Optimization
-│   │
-│   └── 🗄️ Database Caching
-│       ├── 📊 Recent Charts Cache
-│       ├── 🌍 Shared Charts Cache
-│       ├── 🔄 Query Optimization
-│       └── 📈 Index Performance
-│
-├── 📤 Sharing System
-│   ├── 🔐 Share Token System
-│   │   ├── 🔑 Unique Token Generation
-│   │   ├── 🌐 Public URL Construction
-│   │   ├── 🔐 Access Control
-│   │   └── 📊 Share Analytics
-│   │
-│   ├── 🌍 Public Chart Display
-│   │   ├── 📄 /src/app/chart/shared/[token]/page.tsx
-│   │   ├── 🎨 Optimized Layout
-│   │   ├── 📱 SEO Optimization
-│   │   └── 🔄 Error Handling
-│   │
-│   └── 👥 Community Features
-│       ├── 📊 Recent Shared Charts
-│       ├── 🔍 Chart Discovery
-│       ├── 📥 Import to People
-│       └── 🌍 Public Chart Browser
-│
-└── 🚨 Issues & Solutions
-    ├── 🔄 Page Mount Regeneration
-    │   ├── 🔧 useEffect Dependency Management
-    │   ├── 💾 Cache Loading State Issues
-    │   ├── 🔄 User Store Rehydration
-    │   └── 📊 Profile Completeness Triggers
-    │
-    ├── 📊 Dropdown Persistence ✅ **RESOLVED**
-    │   ├── ✅ API-Based People Management
-    │   ├── ✅ Race Condition Prevention
-    │   ├── ✅ Duplicate Detection & Cleanup
-    │   ├── ✅ Database Constraints Applied
-    │   └── ✅ Proper State Management
-    │
-    └── 🔧 Additional Improvements
-        ├── 🔄 Cache State Optimization
-        ├── 📊 Dependency Array Refinement
-        ├── 🔄 Store Synchronization
-        └── 📈 Performance Improvements
-```
+**Issues Resolved**: ✅ Dropdown persistence via API-based people management, ✅ Race condition prevention, ✅ Duplicate detection with database constraints
 
 ### Key Findings
 
@@ -2043,153 +1325,21 @@ This comprehensive refactoring establishes a solid foundation for advanced shari
 
 ## Major Architecture Refactoring: Modular Chart System ✅ **COMPLETED**
 
-### Overview of Modular Chart System
+### User Isolation Security Fix
+- **Problem**: Anonymous users seeing admin's charts due to flawed cache key fallback (`activePerson?.id || user.id`)
+- **Solution**: User-first cache keys (`${userId}_person_${personId}` or `${userId}_self`) with hash-based identification
+- **Result**: Complete user isolation, no cross-contamination, fail-safe design
 
-The chart system has been completely refactored from a monolithic `useNatalChart` hook into a modular, composable architecture that provides better maintainability, performance, and user isolation.
+### Modular Architecture
+**Previous**: useNatalChart.ts (2000+ lines monolith)
+**New**: useNatalChart.ts (52 lines orchestrator) + useChartCache.ts + useChartOperations.ts + chartApiService.ts + chartCache.ts + chart.ts (types)
 
-### User Isolation Security Fix ✅ **RESOLVED**
-
-#### Critical Issue Resolved
-**Problem**: Anonymous users were seeing admin's charts instead of their own due to flawed cache key generation.
-
-**Root Cause**: 
-```typescript
-// PROBLEMATIC: Could fall back to wrong user ID
-const personId = activePerson?.id || user.id;  // ❌ Admin fallback
-```
-
-**Solution**:
-```typescript
-// SECURE: Always uses current user's ID as primary identifier
-const identifier = personId ? `${userId}_person_${personId}` : `${userId}_self`;
-const cacheKey = `natal_chart_${identifier}_${birthDataHash}`;
-```
-
-#### Security Results ✅
-- **Anonymous users**: Get unique cache keys based on their `anon_xxxxx` IDs
-- **Google users**: Get unique cache keys based on their Google IDs  
-- **No cross-contamination**: Each user's charts are completely isolated
-- **No admin fallback**: System fails safely rather than using wrong user data
-
-### New Modular Architecture
-
-#### Previous Architecture
-```
-useNatalChart.ts (2000+ lines) → Monolithic hook with mixed concerns
-```
-
-#### New Architecture ✅
-```
-useNatalChart.ts (52 lines) → Main orchestrator
-├── useChartCache.ts → Caching and persistence logic
-├── useChartOperations.ts → API operations and manipulation
-├── chartApiService.ts → API service layer
-├── chartCache.ts → Cache utilities and key generation
-└── chart.ts → Consolidated type definitions
-```
-
-### Key Improvements
-
-#### 1. **Secure Cache Key Generation** ✅
-**File**: `/src/utils/chartCache.ts`
-- **User-First Approach**: Always uses actual user ID as primary identifier
-- **No Fallback Conflicts**: Eliminates problematic fallback patterns
-- **Hash-Based Keys**: Short, reliable cache keys with birth data hash
-- **Coordinate Normalization**: Prevents floating-point precision cache misses
-
-#### 2. **Modular Hook Architecture** ✅
-**Files**: `/src/hooks/useChart*.ts`
-- **Single Responsibility**: Each hook handles one specific concern
-- **Composable Design**: Main hook orchestrates specialized sub-hooks
-- **Clean Interfaces**: Same external API, completely refactored internals
-- **Type Safety**: Full TypeScript coverage throughout
-
-#### 3. **API Service Layer** ✅
-**File**: `/src/services/chartApiService.ts`
-- **Clean API Interface**: Dedicated service layer for all chart operations
-- **Error Handling**: Comprehensive error handling with proper propagation
-- **Data Transformation**: Consistent transformation between API and local formats
-- **Reusability**: Service methods usable across different components
-
-#### 4. **Consolidated Type Definitions** ✅
-**File**: `/src/types/chart.ts`
-- **Single Source of Truth**: All chart-related types in one file
-- **Clear Separation**: Local vs API data structures clearly defined
-- **Request/Response Types**: Complete API interaction type coverage
-- **Documentation**: Comprehensive JSDoc comments for all interfaces
-
-### Performance Benefits ✅
-
-#### Modular Loading
-- **Lazy Evaluation**: Hooks only load when needed
-- **Dependency Optimization**: Cleaner dependency arrays prevent unnecessary re-renders
-- **Code Splitting**: Smaller, focused modules load faster
-
-#### Cache Optimization
-- **Smarter Cache Keys**: Hash-based keys prevent collisions
-- **Precise Invalidation**: Only invalidate cache when data actually changes
-- **Memory Management**: Better cleanup of unused cache entries
-
-#### Error Handling
-- **Graceful Degradation**: Comprehensive error handling at every level
-- **User Feedback**: Clear error messages for troubleshooting
-- **Debug Support**: Extensive logging for development
-
-### Maintainability Benefits ✅
-
-#### Single Responsibility Principle
-- **`useChartCache`**: Only handles caching and persistence
-- **`useChartOperations`**: Only handles API operations
-- **`chartApiService`**: Only handles API communication
-- **`chartCache`**: Only handles cache utilities
-
-#### Developer Experience
-- **Isolated Testing**: Each module can be tested independently
-- **Clear Responsibilities**: Easy to identify which module handles what
-- **Debug Friendly**: Comprehensive logging throughout all modules
-- **Type Safety**: Full TypeScript coverage with proper interfaces
-
-### Migration Impact
-
-#### No Breaking Changes ✅
-- **Same External API**: All existing code using `useNatalChart` works unchanged
-- **Backward Compatibility**: Existing chart functionality preserved
-- **Progressive Enhancement**: New features added without affecting existing ones
-
-#### Security Improvements ✅
-- **Complete User Isolation**: Each user gets unique cache namespace
-- **No Cross-Contamination**: Anonymous users can't access each other's charts
-- **Admin Protection**: Admin charts completely isolated from user charts
-- **Fail-Safe Design**: System fails safely rather than using wrong user data
-
-### Future Benefits
-
-#### Extensibility ✅
-- Easy to add new chart types (transit, synastry, composite)
-- Simple to enhance caching strategies
-- Straightforward to add new API operations
-- Clear path for additional user isolation features
-
-#### Performance ✅
-- Foundation for advanced performance optimizations
-- Better cache strategies with granular control
-- Optimized API usage patterns
-- Improved error recovery mechanisms
-
-#### Maintainability ✅
-- Much easier to understand and modify individual modules
-- Clear separation of concerns simplifies debugging
-- Better test coverage through isolated unit tests
-- Simplified onboarding for new developers
-
-### Files Created/Modified
-
-#### New Files ✅
-- `/src/hooks/useChartCache.ts` - Chart caching and persistence
-- `/src/hooks/useChartOperations.ts` - Chart API operations
-- `/src/services/chartApiService.ts` - API service layer
-- `/src/utils/chartCache.ts` - Cache utilities and management
-- `/src/types/chart.ts` - Consolidated type definitions
+### Benefits
+- **Performance**: Lazy evaluation, cleaner dependencies, hash-based cache keys prevent collisions
+- **Security**: User-isolated cache namespaces, admin protection, no fallback contamination
+- **Maintainability**: Single responsibility per module, isolated testing, clear separation of concerns
+- **Extensibility**: Easy to add chart types, enhance caching, add API operations
+- **No Breaking Changes**: Same external API, backward compatible
 
 #### Modified Files ✅
 - `/src/hooks/useNatalChart.ts` - Refactored from 2000+ lines to 52 lines
