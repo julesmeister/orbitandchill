@@ -5,6 +5,199 @@
 > - **User Data**: See [GOOGLE_AUTH_DOCUMENTATION.md](./GOOGLE_AUTH_DOCUMENTATION.md) for authentication
 > - **Database**: See [DATABASE.md](./DATABASE.md) for chart storage schema
 
+## Recent Critical Fixes (Round 28 - Modular Architecture)
+
+### Natal Chart Modular Refactoring - CODE_ARCHITECTURE_PROTOCOL
+
+> **🏗️ ARCHITECTURE**: Refactored monolithic natalChart.ts (1533 lines) into modular service architecture following CODE_ARCHITECTURE_PROTOCOL.md principles.
+
+**Problem**: Single massive file containing all chart generation logic made maintenance difficult and testing impossible.
+
+**Solution Implemented**:
+```
+Natal Chart Modular Service Architecture
+├── Core Module Extraction
+│   ├── src/constants/astrological.ts - Astrological constants (SIGNS, PLANETS, ASPECTS)
+│   ├── src/types/astrology.ts - Type definitions (PlanetPosition, NatalChartData)
+│   ├── src/utils/formatters/astroFormatters.ts - Formatting utilities
+│   └── src/utils/natalChart.ts - Main orchestration module (85 lines, was 1533)
+├── Business Services Layer
+│   ├── astroCalculationService.ts - Planetary position calculations (320 lines)
+│   ├── celestialPointsService.ts - Special point calculations (305 lines)
+│   └── houseSystemService.ts - Placidus house system (175 lines)
+└── Data Services Layer
+    └── chartRenderingService.ts - SVG chart generation (870 lines)
+```
+
+**Architecture Benefits**:
+- **95% reduction** in main module size (1533 → 85 lines)
+- **Clear separation of concerns**: Calculation vs rendering vs orchestration
+- **Improved testability**: Isolated services can be unit tested independently
+- **Maintained backward compatibility**: All exports preserved via re-exports
+- **Enhanced maintainability**: Focused modules with single responsibilities
+
+**Implementation Details**:
+
+**1. Constants Extraction** (`/src/constants/astrological.ts`):
+```typescript
+// Centralized astrological constants
+export const SIGNS = ["aries", "taurus", "gemini", ...];
+export const PLANETS = ["sun", "moon", "mercury", ...];
+export const CELESTIAL_POINTS = ["lilith", "chiron", "northNode", ...];
+export const ASPECTS = {
+  conjunction: { angle: 0, orb: 8, type: "major" },
+  // ... complete aspect definitions
+};
+```
+
+**2. Type Definitions** (`/src/types/astrology.ts`):
+```typescript
+// Consolidated type system
+export interface PlanetPosition {
+  name: string;
+  longitude: number;
+  sign: string;
+  house: number;
+  retrograde: boolean;
+  rightAscension?: number;
+  declination?: number;
+  distance?: number;
+  isPlanet?: boolean;
+  pointType?: 'planet' | 'asteroid' | 'centaur' | 'node' | 'arabicPart' | 'apogee';
+  symbol?: string;
+}
+
+export interface NatalChartData {
+  planets: PlanetPosition[];
+  houses: HousePosition[];
+  aspects: ChartAspect[];
+  ascendant: number;
+  midheaven: number;
+}
+```
+
+**3. Astronomical Calculation Service** (`/src/services/businessServices/astroCalculationService.ts`):
+```typescript
+// Core planetary position calculations
+export async function calculatePlanetaryPositions(
+  date: Date,
+  latitude: number,
+  longitude: number
+): Promise<NatalChartData> {
+  // Professional-grade accuracy using astronomy-engine
+  // Calculates planetary positions, houses, aspects
+  // Integrates celestial points (Lilith, Chiron, Nodes)
+}
+
+export function calculateAspects(planets: PlanetPosition[]): ChartAspect[] {
+  // Aspect detection with proper orbs
+}
+```
+
+**4. House System Service** (`/src/services/businessServices/houseSystemService.ts`):
+```typescript
+// Placidus house system implementation
+export function calculatePlacidusHouses(
+  date: Date,
+  latitude: number,
+  longitude: number
+): { houses: HousePosition[]; ascendant: number; midheaven: number; }
+
+export function determineHouse(
+  planetLongitude: number,
+  houses: HousePosition[]
+): number
+```
+
+**5. Celestial Points Service** (`/src/services/businessServices/celestialPointsService.ts`):
+```typescript
+// Special astrological point calculations
+export function calculateLilith(date: Date): Partial<PlanetPosition>
+export function calculateChiron(date: Date): Partial<PlanetPosition>
+export function calculateLunarNodes(date: Date): {
+  northNode: Partial<PlanetPosition>;
+  southNode: Partial<PlanetPosition>;
+}
+export function calculatePartOfFortune(
+  sunLongitude: number,
+  moonLongitude: number,
+  ascendant: number,
+  isDayBirth: boolean
+): Partial<PlanetPosition>
+```
+
+**6. Chart Rendering Service** (`/src/services/dataServices/chartRenderingService.ts`):
+```typescript
+// SVG chart generation with professional styling
+export function generateNatalChartSVG(
+  chartData: NatalChartData,
+  width: number = 800,
+  height: number = 800
+): string {
+  // Generates professional astrological chart visualizations
+  // Includes zodiac signs, houses, planets, aspects
+}
+```
+
+**7. Main Orchestration Module** (`/src/utils/natalChart.ts` - Reduced to 85 lines):
+```typescript
+// Clean orchestration with service composition
+export async function generateNatalChart(birthData: {
+  name: string;
+  dateOfBirth: string;
+  timeOfBirth: string;
+  coordinates: { lat: string; lon: string };
+  locationOfBirth: string;
+}): Promise<{ svg: string; metadata: ChartMetadata }> {
+  // Process birth time with timezone handling
+  const processedTime = processBirthTime(birthData);
+
+  // Calculate planetary positions via service
+  const chartData = await calculatePlanetaryPositions(
+    processedTime.utcDate,
+    parseFloat(birthData.coordinates.lat),
+    parseFloat(birthData.coordinates.lon)
+  );
+
+  // Generate SVG via rendering service
+  const svg = generateNatalChartSVG(chartData, 1000, 1000);
+
+  return { svg, metadata: { ...birthData, chartData } };
+}
+
+// Re-export all services and types for backward compatibility
+export { SIGNS, PLANETS, ASPECTS } from '@/constants/astrological';
+export type { PlanetPosition, NatalChartData } from '@/types/astrology';
+export { calculatePlanetaryPositions, calculateAspects } from '@/services/businessServices/astroCalculationService';
+// ... complete re-export list
+```
+
+**Impact on Chart Sharing**:
+- **Improved reliability**: Isolated services easier to debug and fix
+- **Better testability**: Each service can be tested independently
+- **Enhanced maintainability**: Clear module boundaries simplify modifications
+- **Performance potential**: Services can be optimized individually
+- **Future extensibility**: Easy to add new chart types or calculation methods
+
+**Files Created/Modified**:
+- ✅ `/src/constants/astrological.ts` - New constants module
+- ✅ `/src/types/astrology.ts` - New type definitions module
+- ✅ `/src/utils/formatters/astroFormatters.ts` - New formatting utilities
+- ✅ `/src/services/businessServices/astroCalculationService.ts` - New calculation service
+- ✅ `/src/services/businessServices/houseSystemService.ts` - New house system service
+- ✅ `/src/services/businessServices/celestialPointsService.ts` - New celestial points service
+- ✅ `/src/services/dataServices/chartRenderingService.ts` - New rendering service
+- ✅ `/src/utils/natalChart.ts` - Refactored to orchestration module (1533 → 85 lines)
+- ✅ `/src/app/chart/components/modules/ChartInterpretation.tsx` - Removed debug logs
+
+**Technical Verification**:
+- ✅ All exports maintained for backward compatibility
+- ✅ No breaking changes to external API
+- ✅ Type safety preserved throughout refactoring
+- ✅ Debug console logs removed for production readiness
+
+---
+
 ## Recent Critical Fixes (Round 27 - Type Safety)
 
 ### TypeScript Type Compatibility Fix
