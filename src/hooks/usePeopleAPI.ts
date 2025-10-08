@@ -75,29 +75,20 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   
   // Add person via API
   const addPerson = useCallback(async (personData: PersonFormData): Promise<Person> => {
-    console.log('🚀 addPerson called with data:', { 
-      name: personData.name, 
-      relationship: personData.relationship,
-      userId: user?.id,
-      isDefault: personData.isDefault 
-    });
-    
     if (!user?.id) {
-      console.error('❌ addPerson failed: No user found');
+      console.error('addPerson failed: No user found');
       throw new Error('No user found');
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const requestBody = {
         userId: user.id,
         ...personData,
       };
-      
-      console.log('📡 Making API call to /api/people with body:', requestBody);
-      
+
       const response = await fetch('/api/people', {
         method: 'POST',
         headers: {
@@ -105,14 +96,10 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         },
         body: JSON.stringify(requestBody),
       });
-      
-      console.log('📡 API response received:', response.status, response.statusText);
-      
+
       const result = await response.json();
-      console.log('📊 API result:', result);
-      
+
       if (result.success && result.person) {
-        console.log('✅ Person added successfully:', result.person.id);
         const newPerson = {
           ...result.person,
           createdAt: new Date(result.person.createdAt),
@@ -133,11 +120,11 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
 
         return newPerson;
       } else {
-        console.error('❌ API error:', result.error || 'No person data returned');
+        console.error('API error:', result.error || 'No person data returned');
         throw new Error(result.error || 'Failed to add person - no data returned');
       }
     } catch (err) {
-      console.error('❌ addPerson catch block:', err);
+      console.error('addPerson error:', err);
       setError(err instanceof Error ? err.message : 'Failed to add person');
       throw err;
     } finally {
@@ -199,22 +186,14 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   
   // Delete person via API
   const deletePerson = useCallback(async (personId: string) => {
-    console.log('🗑️ deletePerson called with:', { personId, userId: user?.id });
-
     if (!user?.id) {
       throw new Error('No user found');
     }
-
-    // Check if person exists in local state first
-    const personToDelete = people.find(p => p.id === personId);
-    console.log('👤 Person to delete:', personToDelete ? { id: personToDelete.id, name: personToDelete.name, userId: personToDelete.userId } : 'NOT FOUND');
 
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('📡 Making DELETE request to:', `/api/people/${personId}`);
-
       const response = await fetch(`/api/people/${personId}`, {
         method: 'DELETE',
         headers: {
@@ -223,13 +202,9 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         body: JSON.stringify({ userId: user.id }),
       });
 
-      console.log('📡 DELETE response status:', response.status);
-
       const result = await response.json();
-      console.log('📊 DELETE response data:', result);
 
       if (result.success) {
-        console.log('✅ Person deleted successfully, updating local state');
         // Update local state
         setPeople(prev => {
           const filtered = prev.filter(p => p.id !== personId);
@@ -243,11 +218,11 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
         });
 
       } else {
-        console.error('❌ DELETE failed:', result.error);
+        console.error('DELETE failed:', result.error);
         throw new Error(result.error || 'Failed to delete person');
       }
     } catch (err) {
-      console.error('❌ deletePerson catch block:', err);
+      console.error('deletePerson error:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete person');
       throw err;
     } finally {
@@ -375,7 +350,6 @@ export const usePeopleAPI = (): UsePeopleAPIReturn => {
   // TEMPORARILY DISABLED: Sync defaultPerson birth data with user birth data changes
   // This was causing excessive PATCH /api/people loops
   useEffect(() => {
-    console.log('⚠️ PEOPLE SYNC TEMPORARILY DISABLED TO PREVENT API LOOPS');
     // Sync logic completely disabled until data structure issues are resolved
   }, []); // Empty dependencies to prevent any triggering
   

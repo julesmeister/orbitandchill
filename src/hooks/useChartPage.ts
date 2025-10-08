@@ -86,26 +86,20 @@ export const useChartPage = () => {
 
     // Skip if we've already generated a chart for this person
     if (generatedChartsRef.current.has(personKey)) {
-      console.log('⏭️ Skipping chart generation - already generated for:', personKey);
       return;
     }
 
     const loadChartsOnce = async () => {
       try {
-        console.log('📊 Loading existing charts (controlled generation)');
         const existingCharts = await getUserCharts();
-        console.log('📊 Found existing charts:', existingCharts.length);
 
         // ALWAYS CLEAR CACHE AND GENERATE FRESH FROM API (no cache usage)
         if (cachedChart) {
-          console.log('🔄 CLEARING CACHE - API-only generation as requested');
           clearCache();
         }
 
         // ALWAYS generate fresh chart from API (ONLY ONCE per person)
         if (activeSelectedPerson?.birthData) {
-          console.log('🚀 GENERATING FRESH CHART WITH CELESTIAL POINTS for:', activeSelectedPerson.name);
-
           // Mark this person as having a generated chart BEFORE generating
           generatedChartsRef.current.add(personKey);
 
@@ -117,15 +111,13 @@ export const useChartPage = () => {
             coordinates: activeSelectedPerson.birthData.coordinates
           }, true); // FORCE REGENERATION to ensure celestial points
 
-          if (chartData) {
-            console.log('✅ ONE-TIME chart generation completed:', chartData.id);
-          } else {
+          if (!chartData) {
             // If generation failed, remove the key so it can be retried
             generatedChartsRef.current.delete(personKey);
           }
         }
       } catch (error: any) {
-        console.error('❌ Error in controlled chart loading:', error);
+        console.error('Error in controlled chart loading:', error);
         // Remove key on error so it can be retried
         generatedChartsRef.current.delete(personKey);
       }
@@ -204,10 +196,8 @@ export const useChartPage = () => {
   
   const handleRegenerateChart = async () => {
     const personToUse = activeSelectedPerson;
-    console.log('🔄 API-only chart regeneration started with person:', personToUse?.name);
 
     if (!personToUse?.birthData) {
-      console.warn('🔄 Chart regeneration cancelled: No person or birth data available');
       return;
     }
 
@@ -230,52 +220,38 @@ export const useChartPage = () => {
         isRegeneration: true,
         personName: personToUse.name
       });
-
-      if (chartData) {
-        console.log('✅ API-only chart regeneration successful:', {
-          personName: personToUse.name,
-          chartId: chartData.id,
-          hasData: !!chartData
-        });
-      } else {
-        console.warn('⚠️ Chart regeneration returned null - API may be unavailable');
-      }
     } catch (error: any) {
-      console.error('❌ Chart regeneration error:', error.message);
+      console.error('Chart regeneration error:', error.message);
     }
   };
   
   const handlePersonChange = async (person: Person | null) => {
-    console.log('👤 API-only person change requested:', {
-      personId: person?.id,
-      personName: person?.name,
-      hasCurrentChart: !!cachedChart
-    });
-
     setSelectedPerson(person);
     setApiSelectedPerson(person?.id || null);
 
     // Clear existing chart when switching people
     clearCache();
 
+    // Clear the generation tracking to allow regeneration
+    const personKey = `${user?.id}_${person?.id || 'default'}`;
+    generatedChartsRef.current.delete(personKey);
+
     // If no person selected, stop here
     if (!person?.birthData) {
-      console.log('👤 No person selected or no birth data');
       return;
     }
 
     // Generate chart for the new person
     try {
-      console.log('👤 Generating chart for person:', person.name);
       await generateChart({
         name: person.name || "",
         dateOfBirth: person.birthData.dateOfBirth,
         timeOfBirth: person.birthData.timeOfBirth,
         locationOfBirth: person.birthData.locationOfBirth,
         coordinates: person.birthData.coordinates,
-      });
+      }, true); // Force regenerate to ensure fresh data
     } catch (error) {
-      console.error('❌ Error generating chart for new person:', error);
+      console.error('Error generating chart for new person:', error);
     }
   };
   

@@ -98,21 +98,14 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
 
   // Deduplicate people and find duplicates using service
   const { uniquePeople, duplicateGroups } = useMemo(() => {
-    console.log('🔍 Starting duplicate detection with', people.length, 'people');
-
     // First, remove any obviously invalid or malformed entries
     const validPeople = people.filter(person => {
-      const isValid = person && person.id && person.name && person.userId;
-      if (!isValid) {
-        console.log('❌ Filtering out invalid person:', person);
-      }
-      return isValid;
+      return person && person.id && person.name && person.userId;
     });
 
     const seen = new Set();
     const unique = validPeople.filter(person => {
       if (seen.has(person.id)) {
-        console.log('🔄 Duplicate ID found, keeping first instance:', person.id, person.name);
         return false;
       }
       seen.add(person.id);
@@ -133,8 +126,6 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
         }
       }
     });
-
-    console.log('📊 Final results: unique =', unique.length, ', duplicate groups =', duplicates.size);
 
     return { uniquePeople: unique, duplicateGroups: duplicates };
   }, [people]);

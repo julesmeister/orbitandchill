@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { useEffect, useRef } from 'react';
 import { useUserStore } from '@/store/userStore';
 import LoadingSpinner from '@/components/reusable/LoadingSpinner';
 import ChartDisplayContainer from './ChartDisplayContainer';
@@ -18,6 +19,7 @@ interface CachedChart {
   metadata?: {
     name?: string;
     chartData?: any;
+    userId?: string; // Add userId for contamination checking
   };
 }
 
@@ -62,20 +64,28 @@ export default function ChartContentRenderer({
   onShare
 }: ChartContentRendererProps) {
   const { user } = useUserStore();
-  
-  
+
+  // CRITICAL: Clear contaminated cache in useEffect to prevent setState during render
+  useEffect(() => {
+    if (cachedChart && user) {
+      const chartUserId = cachedChart.metadata?.userId;
+      const currentUserId = user.id;
+
+      // Check if chart belongs to a different user (admin contamination)
+      if (chartUserId && chartUserId !== currentUserId) {
+        onClearCache();
+      }
+    }
+  }, [cachedChart?.id, user?.id, onClearCache]);
+
   // CRITICAL: Final validation layer before rendering
   // Prevent displaying wrong user's chart
   if (cachedChart && user) {
-    const chartName = cachedChart.metadata?.name;
-    const currentUsername = user.username;
-    
-    // Check for obvious contamination
-    if (chartName === 'Orbit Chill' && currentUsername !== 'Orbit Chill') {
-      console.error('🚨 CRITICAL: Prevented rendering admin chart for non-admin user!');
-      console.error('🚨 Chart name:', chartName, 'User:', currentUsername);
-      // Force empty state and clear cache
-      onClearCache();
+    const chartUserId = cachedChart.metadata?.userId;
+    const currentUserId = user.id;
+
+    // Check if chart belongs to a different user - show empty state, useEffect handles clearing
+    if (chartUserId && chartUserId !== currentUserId) {
       return <ChartEmptyState />;
     }
   }

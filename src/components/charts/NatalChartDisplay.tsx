@@ -87,24 +87,8 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
   
   const stableChartData = React.useMemo(() => {
     // FIXED: Chart data structure - chartData IS the chart data, no double nesting
-    if (chartData?.planets) {
-      console.log('✅ NatalChartDisplay: Chart data planets count:', chartData.planets.length);
-      console.log('✅ NatalChartDisplay: Chart data planets names:', chartData.planets.map((p: any) => p.name));
-      console.log('🌟 NatalChartDisplay: CELESTIAL POINTS FOUND:', chartData.planets.filter((p: any) => {
-        const name = p.name?.toLowerCase() || '';
-        return ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune', 'northNode', 'southNode', 'partOfFortune'].includes(name);
-      }).map((p: any) => p.name));
-      console.log('🔍 NatalChartDisplay: ALL PLANET NAMES (to check celestial naming):', chartData.planets.map((p: any) => p.name));
-    } else {
-      console.log('🔍 NatalChartDisplay: No planets in chart data', {
-        hasChartData: !!chartData,
-        chartDataKeys: chartData ? Object.keys(chartData) : null,
-        hasPlanets: !!chartData?.planets,
-        hasHouses: !!chartData?.houses,
-        // OLD WRONG PATH: hasMetadata: !!chartData?.metadata,
-        // OLD WRONG PATH: hasChartDataInMetadata: !!chartData?.metadata?.chartData,
-        // OLD WRONG PATH: hasPlanets: !!chartData?.metadata?.chartData?.planets
-      });
+    if (!chartData?.planets) {
+      return null;
     }
 
     return chartData;
@@ -294,7 +278,7 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
               return (
                 // Transit Effects View
                 <div>
-                  <TransitAspectsTab chartData={stableChartData} />
+                  <TransitAspectsTab chartData={stableChartData || undefined} />
                 </div>
               );
             } else if (activeTab === 'matrix-destiny') {

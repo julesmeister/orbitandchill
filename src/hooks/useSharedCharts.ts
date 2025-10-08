@@ -26,26 +26,8 @@ export const useSharedCharts = (): UseSharedChartsReturn => {
     setError(null);
     
     try {
-      console.log('🔍 DEBUGGING: Temporarily disabling shared charts API call');
-      // TEMPORARY DEBUG: Disable shared charts to isolate the issue
+      // TEMPORARY: Disable shared charts to isolate issues
       const result = { success: true, charts: [], error: undefined };
-      
-      // Debug log to see what shared charts are returned
-      console.log('=== SHARED CHARTS API DEBUG ===');
-      console.log('API response:', result);
-      console.log('Charts returned:', result.charts);
-      result.charts?.forEach((chart: any, index: number) => {
-        console.log(`Chart ${index + 1}:`, {
-          id: chart.id,
-          subjectName: chart.subjectName,
-          dateOfBirth: chart.dateOfBirth,
-          timeOfBirth: chart.timeOfBirth,
-          locationOfBirth: chart.locationOfBirth,
-          shareToken: chart.shareToken,
-          createdAt: chart.createdAt
-        });
-      });
-      console.log('===============================');
       
       if (result.success && result.charts) {
         // Convert chart data to SharedChart format

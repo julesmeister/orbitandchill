@@ -109,9 +109,26 @@ export default function ChartQuickActions({
     openEditPersonForm(personToEdit);
   };
 
-  const handlePersonEdited = (person: Person) => {
+  const handlePersonEdited = async (person: Person) => {
     closeEditPersonForm();
-    handlePersonSelect(person);
+
+    // Reload people data to get fresh data from database
+    await reloadApiPeople();
+
+    // Wait a bit for React state to update after reloadApiPeople
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Get the freshly loaded person from the API (not the stale form data)
+    const freshPerson = people.find(p => p.id === person.id) || person;
+
+    // Force chart regeneration with updated person data
+    handlePersonSelect(freshPerson);
+    onPersonChange?.(freshPerson);
+
+    // Trigger chart regeneration with fresh data
+    if (onRegenerateChart) {
+      setTimeout(() => onRegenerateChart(), 200); // Small delay to ensure person selection is updated
+    }
   };
 
   // Update editing person data when selected person changes while form is open

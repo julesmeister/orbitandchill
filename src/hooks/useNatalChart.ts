@@ -126,12 +126,6 @@ export const useNatalChart = (selectedPerson?: Person | null) => {
         forceRegenerate
       };
 
-      console.log('🚀 API-only chart generation:', {
-        userId: requestData.userId,
-        subjectName: requestData.subjectName,
-        forceRegenerate: requestData.forceRegenerate
-      });
-
       const result = await ChartApiService.generateChart(requestData);
 
       if (!result.chart) {
@@ -144,15 +138,10 @@ export const useNatalChart = (selectedPerson?: Person | null) => {
       // Immediately set the current chart
       setCurrentChart(chartData);
 
-      console.log('✅ Chart generated and set successfully:', {
-        chartId: chartData.id,
-        hasData: !!chartData
-      });
-
       return chartData;
 
     } catch (error: any) {
-      console.error('❌ Chart generation failed:', error);
+      console.error('Chart generation failed:', error);
       return null;
     } finally {
       setIsGenerating(false);
@@ -185,7 +174,6 @@ export const useNatalChart = (selectedPerson?: Person | null) => {
         }
 
         // SKIP CACHED CHARTS - Always generate fresh from API as requested
-        console.log('🚫 Skipping cached charts - generating fresh from API only');
       }
 
       return userCharts;
