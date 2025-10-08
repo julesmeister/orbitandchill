@@ -144,15 +144,7 @@ export class UserService {
         stelliumHouses: userData.stellium_houses ? JSON.parse(userData.stellium_houses) : [],
         detailedStelliums: userData.detailed_stelliums ? JSON.parse(userData.detailed_stelliums) : [],
       };
-      
-      // Debug: Check if authProvider is being properly transformed
-      console.log('🔍 DB getUserById result:', {
-        originalAuthProvider: userData.auth_provider,
-        transformedAuthProvider: finalUser.authProvider,
-        username: finalUser.username,
-        id: finalUser.id
-      });
-      
+
       return finalUser;
     });
   }

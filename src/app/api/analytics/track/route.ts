@@ -20,14 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log analytics event (in production, this would go to your analytics service)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Analytics Event:', {
-        event,
-        properties,
-        userId: userId ? `${userId.substring(0, 8)}...` : 'anonymous',
-        timestamp: timestamp || new Date().toISOString()
-      });
-    }
+    // Disabled for cleaner console output
 
     // Here you would typically:
     // 1. Validate the event data

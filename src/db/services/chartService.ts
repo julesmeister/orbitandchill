@@ -240,9 +240,6 @@ export class ChartService {
 
       // Security check: filter out any charts that don't belong to this user
       const invalidCharts = charts.filter((chart: any) => chart.userId !== userId);
-      if (invalidCharts.length > 0) {
-        console.warn('ChartService.getUserCharts: Filtered out', invalidCharts.length, 'invalid charts for user', userId);
-      }
 
       // Deduplicate charts by birth data (date + time + coordinates)
       const seen = new Set();

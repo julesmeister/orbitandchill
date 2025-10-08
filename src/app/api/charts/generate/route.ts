@@ -39,14 +39,6 @@ interface ChartGenerationRequest {
  */
 async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg: string; metadata: any }> {
   try {
-    console.log('🚀 API generateChartSVG: Starting chart generation with data:', {
-      name: request.subjectName,
-      dateOfBirth: request.dateOfBirth,
-      timeOfBirth: request.timeOfBirth,
-      locationOfBirth: request.locationOfBirth,
-      coordinates: request.coordinates
-    });
-
     // Use the same chart generation logic as the frontend
     const result = await generateNatalChart({
       name: request.subjectName,
@@ -54,29 +46,6 @@ async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg:
       timeOfBirth: request.timeOfBirth,
       locationOfBirth: request.locationOfBirth,
       coordinates: request.coordinates
-    });
-
-    const allPlanetNames = result.metadata?.chartData?.planets?.map(p => p.name) || [];
-    const celestialPointsFound = result.metadata?.chartData?.planets?.filter(p => {
-      const name = p.name?.toLowerCase() || '';
-      return ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune', 'northNode', 'southNode', 'partOfFortune'].includes(name);
-    }) || [];
-
-    console.log('✅ API generateChartSVG: Chart generation completed:', {
-      hasSvg: !!result.svg,
-      svgLength: result.svg?.length || 0,
-      hasMetadata: !!result.metadata,
-      hasChartData: !!result.metadata?.chartData,
-      totalPlanetsInResult: allPlanetNames.length,
-      allPlanetNames: allPlanetNames,
-      celestialPointsInResult: celestialPointsFound.length,
-      celestialPointsFound: celestialPointsFound.map(p => ({
-        name: p.name,
-        originalName: p.name,
-        lowerName: p.name?.toLowerCase(),
-        isPlanet: p.isPlanet,
-        pointType: p.pointType
-      }))
     });
 
     return {
@@ -105,15 +74,8 @@ export async function POST(request: NextRequest) {
     // Check if request has body content
     const contentLength = request.headers.get('content-length');
     const contentType = request.headers.get('content-type');
-    
-    console.log('🔍 Chart Generation API: Request headers:', {
-      contentLength,
-      contentType,
-      hasBody: contentLength !== '0'
-    });
-    
+
     if (!contentLength || contentLength === '0') {
-      console.error('🔍 Chart Generation API: Empty request body');
       return NextResponse.json(
         { error: 'Request body is required' },
         { status: 400 }
@@ -124,32 +86,18 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error('🔍 Chart Generation API: Failed to parse JSON body:', jsonError);
-      console.error('Request headers:', {
-        contentLength,
-        contentType,
-        headers: Object.fromEntries(request.headers.entries())
-      });
+      console.error('Chart Generation API: Failed to parse JSON body:', jsonError);
       return NextResponse.json(
         { error: 'Invalid JSON in request body' },
         { status: 400 }
       );
     }
 
-    // Only log if we detect potential issues or it's a fresh request
-    const isLikelyLoop = global.lastChartRequest && 
+    // Track requests to prevent loops
+    const isLikelyLoop = global.lastChartRequest &&
       global.lastChartRequest.userId === body.userId &&
       global.lastChartRequest.timestamp > Date.now() - 5000; // Within 5 seconds
-    
-    if (isLikelyLoop) {
-      console.warn('🔄 POTENTIAL LOOP DETECTED - Chart generation request:', {
-        userId: body.userId?.slice(-8),
-        coordinates: body.coordinates,
-        timeSinceLastRequest: global.lastChartRequest ? Date.now() - global.lastChartRequest.timestamp : 0,
-        callStack: new Error().stack?.split('\n').slice(1, 4).join('\n')
-      });
-    }
-    
+
     global.lastChartRequest = {
       userId: body.userId,
       timestamp: Date.now()
@@ -245,19 +193,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Debug what's being saved to database
-    console.log('💾 Saving to database with metadata:', {
-      hasSvg: !!svg,
-      hasMetadata: !!metadata,
-      metadataKeys: metadata ? Object.keys(metadata) : null,
-      hasChartDataInMetadata: !!metadata?.chartData,
-      planetsCountInSaveMetadata: metadata?.chartData?.planets?.length || 0,
-      celestialPointsInSaveMetadata: metadata?.chartData?.planets?.filter((p: any) => {
-        const name = p.name?.toLowerCase() || '';
-        return ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune', 'northNode', 'southNode', 'partOfFortune'].includes(name);
-      })?.length || 0
-    });
-
     // Save to database
     const savedChart = await ChartService.createChart({
       userId: body.userId,
@@ -305,41 +240,29 @@ export async function POST(request: NextRequest) {
     // Update user stellium data if this is their own chart and we have chart data
     if (savedChart && metadata?.chartData) {
       try {
-        // Only log stellium detection if not in a loop
-        if (!isLikelyLoop) {
-          console.log('🔍 Detecting stelliums for user chart...');
-        }
         const stelliumResult = detectStelliums(metadata.chartData);
-        
+
         // Prepare user update data
         const userUpdateData: any = { hasNatalChart: true };
-        
+
         if (stelliumResult.signStelliums.length > 0) {
           userUpdateData.stelliumSigns = stelliumResult.signStelliums;
         }
-        
+
         if (stelliumResult.houseStelliums.length > 0) {
           userUpdateData.stelliumHouses = stelliumResult.houseStelliums;
         }
-        
+
         if (stelliumResult.sunSign) {
           userUpdateData.sunSign = stelliumResult.sunSign;
         }
-        
+
         if (stelliumResult.detailedStelliums && stelliumResult.detailedStelliums.length > 0) {
           userUpdateData.detailedStelliums = stelliumResult.detailedStelliums;
         }
-        
-        if (!isLikelyLoop) {
-          console.log('📊 Chart data extracted for user update:', userUpdateData);
-        }
-        
+
         // Update user profile with extracted chart data
         await UserService.updateUser(body.userId, userUpdateData);
-        
-        if (!isLikelyLoop) {
-          console.log('✅ User chart data updated successfully');
-        }
       } catch (stelliumError) {
         console.error('Error detecting/updating stelliums:', stelliumError);
         // Don't fail the chart generation if stellium detection fails

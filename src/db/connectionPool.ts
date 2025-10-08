@@ -197,9 +197,6 @@ export class TursoConnectionPool {
         reject,
         timestamp: Date.now()
       });
-      
-      // Log queue status for debugging
-      console.log(`🔄 Connection queued. Queue length: ${this.waitingQueue.length}, Active connections: ${Array.from(this.connections.values()).filter(c => c.isInUse).length}/${this.connections.size}`);
     });
   }
 
