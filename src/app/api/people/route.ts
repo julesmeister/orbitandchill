@@ -78,12 +78,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Return successful response with created person
-    const response = PersonDataTransformers.createPersonResponse(
-      result.data!,
-      'Person created successfully'
-    );
-    
-    return HttpResponseUtils.success(response, {
+    // Client expects { success: true, person: {...} } format
+    return HttpResponseUtils.success({
+      success: true,
+      person: PersonDataTransformers.sanitize(result.data!),
+      message: 'Person created successfully'
+    }, {
       'Cache-Control': 'no-store' // Don't cache creation responses
     }, 201);
 
