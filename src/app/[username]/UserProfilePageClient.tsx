@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useUserStore } from '../../store/userStore';
-import { useNatalChart } from '../../hooks/useNatalChart';
 import { getAvatarByIdentifier } from '../../utils/avatarUtils';
 import NatalChartForm from '../../components/forms/NatalChartForm';
 import { NatalChartFormData } from '../../hooks/useNatalChartForm';
@@ -67,7 +66,6 @@ export default function UserProfilePageClient({ params }: PageProps) {
   const resolvedParams = React.use(params);
   const username = resolvedParams?.username as string;
   const { user: currentUser, updateUser, updateBirthData } = useUserStore();
-  const { getUserCharts } = useNatalChart();
   
   // Profile user state (the user whose profile we're viewing)
   const [profileUser, setProfileUser] = useState<User | null>(null);
@@ -249,19 +247,22 @@ export default function UserProfilePageClient({ params }: PageProps) {
   const loadChartCount = useCallback(async () => {
     if (profileUser) {
       try {
-        // For now, we can only load charts for the current user
-        // Later you might want to add an API endpoint to get public chart counts
-        if (isOwnProfile) {
-          const charts = await getUserCharts();
-          setChartCount(charts.length);
+        // Fetch charts count directly via API using the profile user's ID
+        // This works for both own profile and other users' profiles
+        const response = await fetch(`/api/charts/user/${profileUser.id}`);
+        const data = await response.json();
+
+        if (data.success && data.charts) {
+          setChartCount(data.charts.length);
         } else {
-          setChartCount(0); // Or fetch from a public API endpoint
+          setChartCount(0);
         }
       } catch (error) {
+        console.error('Error loading chart count:', error);
         setChartCount(0);
       }
     }
-  }, [profileUser, isOwnProfile, getUserCharts]);
+  }, [profileUser]);
 
   useEffect(() => {
     loadChartCount();
