@@ -452,5 +452,104 @@ export const celestialPointAspectCombinations: Record<
       opposition: "Transformative authenticity faces external prosperity and material expectations. This creates awareness of the balance between genuine psychological transformation and social expectations for power, transformation, and success through regenerative control.",
       quincunx: "Transformative power requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible regenerative abilities that maintain authentic psychological transformation while adapting to external requirements for success and transformative achievement."
     }
+  },
+
+  // CELESTIAL POINT TO CELESTIAL POINT ASPECTS
+  // ===========================================
+
+  // LILITH ASPECTS TO OTHER CELESTIAL POINTS
+  lilith: {
+    chiron: {
+      conjunction: "Shadow self merges with wounded healer energy. This creates profound healing through embracing rejected aspects and wild nature, but may manifest as intense healing crises around authentic power and feminine expression.",
+      sextile: "Shadow integration and healing wisdom support each other through conscious therapeutic work. This brings the ability to heal by embracing what has been rejected and help others integrate their shadow when inner work actively includes wild, instinctual nature.",
+      square: "Shadow aspects conflict with wounded patterns and healing work, creating tension between authentic power and therapeutic responsibility. This develops deep healing through learning to integrate rather than suppress wild feminine wisdom and rejected aspects.",
+      trine: "Shadow integration and healing wisdom flow together naturally. This creates natural ability to heal through embracing authentic power and help others integrate rejected aspects without destructive shadow eruptions or healing resistance.",
+      opposition: "Shadow self faces wounded healer role and therapeutic service. This creates awareness of healing through shadow work and the need to integrate wild, instinctual wisdom with compassionate healing service to others.",
+      quincunx: "Shadow integration requires ongoing adjustment to healing work and wounded patterns. This develops the ability to maintain authentic power while serving others' healing needs and integrating wild nature with therapeutic responsibility."
+    },
+    northnode: {
+      conjunction: "Shadow self aligns with soul purpose and karmic destiny. This creates personalities whose wild, instinctual nature and authentic power naturally serve spiritual evolution through embracing what has been rejected by society.",
+      sextile: "Shadow integration and soul purpose support each other through conscious authenticity development. This brings opportunities to fulfill life mission by embracing wild feminine power and authentic expression when inner work actively includes shadow acceptance.",
+      square: "Shadow aspects conflict with soul purpose, creating tension between authentic power and karmic responsibility. This develops spiritual evolution through learning to integrate wild, instinctual wisdom with soul mission rather than suppress natural magnetism.",
+      trine: "Shadow integration and soul purpose flow together harmoniously. This creates natural ability to fulfill karmic destiny through authentic power expression and wild feminine wisdom without sacrificing spiritual evolution for social acceptance.",
+      opposition: "Shadow self faces karmic destiny and evolutionary responsibility. This creates awareness of how embracing rejected aspects serves soul growth and the need to integrate wild nature with spiritual mission and evolutionary purpose.",
+      quincunx: "Shadow integration requires ongoing adjustment to soul purpose and karmic requirements. This develops the ability to honor wild, instinctual nature while serving spiritual evolution and integrating authentic power with evolutionary responsibility."
+    },
+    southnode: {
+      conjunction: "Shadow self draws on past-life knowledge of wild feminine power and rejected aspects. This creates natural magnetism and authentic power but may manifest as repeating past patterns of rebellion or rejection by society.",
+      sextile: "Shadow integration and past wisdom support each other when consciously balanced. This brings the ability to use natural wild power while ensuring authentic expression serves current growth rather than past rejection patterns.",
+      square: "Shadow aspects conflict with over-reliance on past power patterns, creating challenges around spiritual evolution versus familiar rebellion dynamics. This develops authentic power through using wild nature for current growth rather than repeating rejection cycles.",
+      trine: "Shadow integration and past power patterns flow together effortlessly. This creates natural wild feminine power and comfortable authentic expression, though conscious effort is needed to ensure shadow work serves current spiritual evolution.",
+      opposition: "Shadow self faces past-life power comfort and familiar rejection patterns. This creates awareness of how natural magnetism may need to serve growth rather than repeat familiar rebellion dynamics or outsider status superiority.",
+      quincunx: "Shadow integration requires ongoing adjustment between past power patterns and current growth needs. This develops the ability to use wild feminine wisdom in service of evolution rather than rebellious stagnation or rejection repetition."
+    },
+    partoffortune: {
+      conjunction: "Shadow self aligns with joy and material prosperity. This creates personalities whose authentic wild power and embraced rejected aspects naturally attract success and happiness through instinctual magnetism and shadow integration.",
+      sextile: "Shadow integration and prosperity support each other through conscious authenticity alignment. This brings opportunities for success and joy when wild feminine power and authentic expression are actively embraced and celebrated rather than suppressed.",
+      square: "Shadow aspects conflict with prosperity requirements, creating tension between authentic power and material success. This develops true prosperity through learning to find joy in wild feminine wisdom and success through embracing rather than hiding rejected aspects.",
+      trine: "Shadow integration and prosperity flow together naturally. This creates natural magnetism for success and happiness through authentic wild power, instinctual wisdom, and prosperity-centered approaches to shadow work and feminine expression.",
+      opposition: "Shadow authenticity faces external prosperity and material expectations. This creates awareness of the balance between wild power expression and social expectations for success, developing prosperity through authentic magnetism rather than suppressed nature.",
+      quincunx: "Shadow integration requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible authentic expression that maintains wild feminine power while adapting to external requirements for success through embraced instinctual wisdom."
+    }
+  },
+
+  // CHIRON ASPECTS TO OTHER CELESTIAL POINTS
+  chiron: {
+    northnode: {
+      conjunction: "Wounded healer energy aligns with soul purpose and karmic destiny. This creates personalities whose healing abilities and therapeutic wisdom naturally serve spiritual evolution through processing pain and facilitating transformation for others.",
+      sextile: "Healing wisdom and soul purpose support each other through conscious therapeutic development. This brings opportunities to fulfill life mission through healing service and helping others process wounds when healing gifts are actively cultivated for evolutionary service.",
+      square: "Wounded patterns conflict with soul purpose, creating tension between healing work and karmic responsibility. This develops authentic spiritual service through learning to heal self while serving others' evolution and integrating therapeutic wisdom with soul mission.",
+      trine: "Healing wisdom and soul purpose flow together harmoniously. This creates natural ability to fulfill karmic destiny through compassionate healing service and therapeutic work that facilitates spiritual evolution for self and others without therapeutic burnout.",
+      opposition: "Wounded healer role faces karmic destiny and evolutionary responsibility. This creates awareness of how healing work serves soul growth and the need to integrate therapeutic service with personal spiritual evolution and karmic mission fulfillment.",
+      quincunx: "Healing wisdom requires ongoing adjustment to soul purpose and karmic requirements. This develops the ability to maintain therapeutic effectiveness while serving spiritual evolution and integrating healing gifts with evolutionary responsibility and personal growth."
+    },
+    southnode: {
+      conjunction: "Wounded healer energy draws on past-life knowledge of therapeutic work and healing abilities. This creates natural healing talents and wisdom but may manifest as repeating past patterns of martyrdom or healing without proper boundaries.",
+      sextile: "Healing wisdom and past therapeutic patterns support each other when consciously balanced. This brings the ability to use natural healing gifts while ensuring therapeutic work serves current growth rather than past martyrdom or boundary-less service patterns.",
+      square: "Wounded patterns conflict with over-reliance on past healing approaches, creating challenges around spiritual evolution versus familiar therapeutic dynamics. This develops authentic healing through using past gifts for current growth rather than repeating savior complexes.",
+      trine: "Healing wisdom and past therapeutic patterns flow together effortlessly. This creates natural healing abilities and comfortable therapeutic service, though conscious effort is needed to ensure healing work serves current spiritual evolution rather than past martyr patterns.",
+      opposition: "Wounded healer role faces past-life therapeutic comfort and familiar healing patterns. This creates awareness of how natural healing abilities may need to serve growth rather than repeat familiar martyrdom dynamics or therapeutic superiority without proper self-care.",
+      quincunx: "Healing wisdom requires ongoing adjustment between past therapeutic patterns and current growth needs. This develops the ability to use healing gifts in service of evolution rather than martyrdom repetition or boundary-less service that depletes personal resources."
+    },
+    partoffortune: {
+      conjunction: "Wounded healer energy aligns with joy and material prosperity. This creates personalities whose healing abilities and therapeutic wisdom naturally attract success and happiness through compassionate service and facilitating transformation that brings both healing and abundance.",
+      sextile: "Healing wisdom and prosperity support each other through conscious therapeutic alignment. This brings opportunities for success and joy when healing gifts and therapeutic service are actively expressed and developed in ways that create both transformation and material abundance.",
+      square: "Wounded patterns conflict with prosperity requirements, creating tension between healing service and material success. This develops true prosperity through learning to find joy in therapeutic work and creating abundance through compassionate healing rather than martyrdom or poverty consciousness.",
+      trine: "Healing wisdom and prosperity flow together naturally. This creates natural magnetism for success and happiness through authentic therapeutic service, compassionate healing, and prosperity-centered approaches to facilitating transformation that honors both service and self-worth.",
+      opposition: "Healing authenticity faces external prosperity and material expectations. This creates awareness of the balance between therapeutic service and financial self-worth, developing prosperity through healing work that honors both compassionate service and appropriate material compensation.",
+      quincunx: "Healing wisdom requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible therapeutic service that maintains authentic healing abilities while adapting to external requirements for success and creating abundance through compassionate work."
+    }
+  },
+
+  // NORTH NODE ASPECTS TO OTHER CELESTIAL POINTS
+  northnode: {
+    southnode: {
+      conjunction: "This is astronomically impossible - North Node and South Node are always in exact opposition (180°), never in conjunction. This aspect cannot occur in any natal chart.",
+      sextile: "This aspect is astronomically impossible - North and South Nodes are always exactly 180° apart. Any aspect between them other than opposition cannot occur in a natal chart.",
+      square: "This aspect is astronomically impossible - North and South Nodes are always exactly 180° apart. Any aspect between them other than opposition cannot occur in a natal chart.",
+      trine: "This aspect is astronomically impossible - North and South Nodes are always exactly 180° apart. Any aspect between them other than opposition cannot occur in a natal chart.",
+      opposition: "Soul purpose faces past-life comfort and familiar patterns. This is the natural, permanent relationship between the Nodes - representing the tension between evolutionary growth (North) and comfortable past patterns (South). The key is consciously using past gifts to serve future evolution.",
+      quincunx: "This aspect is astronomically impossible - North and South Nodes are always exactly 180° apart. Any aspect between them other than opposition cannot occur in a natal chart."
+    },
+    partoffortune: {
+      conjunction: "Soul purpose aligns with joy and material prosperity. This creates personalities whose karmic mission and spiritual evolution naturally attract success and happiness through fulfilling life purpose and serving soul growth with material abundance as a natural byproduct.",
+      sextile: "Soul purpose and prosperity support each other through conscious evolutionary alignment. This brings opportunities for success and joy when karmic mission and spiritual growth are actively pursued and life purpose is expressed in ways that create both transformation and material rewards.",
+      square: "Karmic mission conflicts with prosperity requirements, creating tension between soul purpose and material success. This develops authentic abundance through learning to find joy in spiritual evolution and creating prosperity through serving life mission rather than ego desires or comfort seeking.",
+      trine: "Soul purpose and prosperity flow together naturally. This creates natural magnetism for success and happiness through fulfilling karmic destiny, serving spiritual evolution, and prosperity-centered approaches to life mission that honor both soul growth and material manifestation.",
+      opposition: "Karmic mission faces material prosperity and external success expectations. This creates awareness of the balance between spiritual evolution and financial manifestation, developing prosperity through serving soul purpose in ways that honor both evolutionary responsibility and material needs.",
+      quincunx: "Soul purpose requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible evolutionary service that maintains authentic karmic mission while adapting to external requirements for success and creating abundance through spiritual growth and life purpose fulfillment."
+    }
+  },
+
+  // SOUTH NODE ASPECTS TO OTHER CELESTIAL POINTS
+  southnode: {
+    partoffortune: {
+      conjunction: "Past-life patterns align with joy and material prosperity. This creates personalities whose familiar talents and comfortable abilities naturally attract success and happiness, though conscious effort is needed to ensure prosperity serves current spiritual growth rather than stagnation.",
+      sextile: "Past wisdom and prosperity support each other through conscious balance of comfort and growth. This brings opportunities for success and joy when natural talents are actively used in service of current evolution rather than spiritual avoidance through familiar patterns that prevent growth.",
+      square: "Comfortable patterns conflict with prosperity requirements, creating tension between familiar talents and material success through growth. This develops authentic abundance through learning to use past gifts for current evolution rather than prosperity through spiritual stagnation or comfort-seeking that limits potential.",
+      trine: "Past patterns and prosperity flow together effortlessly. This creates natural magnetism for success through comfortable talents and familiar abilities, though conscious effort is needed to ensure material abundance serves spiritual evolution rather than reinforcing stagnant patterns or comfort addiction.",
+      opposition: "Past-life comfort faces soul-aligned prosperity and evolutionary abundance. This creates awareness of how material success may need to serve spiritual growth rather than reinforce comfortable patterns, developing prosperity through using familiar talents in service of evolution and karmic mission.",
+      quincunx: "Past patterns require ongoing adjustment to prosperity needs and material circumstances. This develops flexible use of natural talents that honors familiar abilities while ensuring success serves current spiritual evolution rather than comfortable stagnation or past-pattern repetition that limits growth potential."
+    }
   }
 };
