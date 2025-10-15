@@ -8,7 +8,7 @@ import * as Astronomy from 'astronomy-engine';
 import { PlanetPosition, NatalChartData, ChartAspect } from '@/types/astrology';
 import { PLANETS, SIGNS, ASTRONOMY_BODIES, ASPECTS } from '@/constants/astrological';
 import { calculatePlacidusHouses, determineHouse } from './houseSystemService';
-import { calculateLilith, calculateChiron, calculateLunarNodes, calculatePartOfFortune } from './celestialPointsService';
+import { calculateLilith, calculateChiron, calculateLunarNodes, calculatePartOfFortune, calculateVertex } from './celestialPointsService';
 
 /**
  * Calculate planetary positions using astronomy-engine
@@ -261,10 +261,10 @@ export async function calculatePlanetaryPositions(
     const moon = planets.find(p => p.name === 'moon');
     if (sun && moon) {
       // Determine if it's a day birth (sun above horizon)
-      // Houses 7-12 are ABOVE the horizon (western half of chart)
-      // Houses 1-6 are BELOW the horizon (eastern half of chart)
+      // Houses 10, 11, 12, 1, 2, 3 are ABOVE the horizon (from MC through ASC to IC)
+      // Houses 4, 5, 6, 7, 8, 9 are BELOW the horizon (from IC through DSC to MC)
       const sunHouse = sun.house;
-      const isDayBirth = sunHouse >= 7 && sunHouse <= 12; // Sun in houses 7-12 = day birth
+      const isDayBirth = sunHouse <= 3 || sunHouse >= 10; // Sun above horizon = day birth
 
       const partOfFortune = calculatePartOfFortune(
         sun.longitude,
@@ -288,6 +288,23 @@ export async function calculatePlanetaryPositions(
       };
       celestialPoints.push(partOfFortuneComplete);
     }
+
+    // Calculate Vertex
+    const vertex = calculateVertex(date, latitude, longitude);
+    vertex.house = determineHouse(vertex.longitude!, housesData.houses);
+
+    // Ensure all required properties are present for Vertex
+    const vertexComplete: PlanetPosition = {
+      name: vertex.name || 'vertex',
+      longitude: vertex.longitude || 0,
+      sign: vertex.sign || 'aries',
+      house: vertex.house || 1,
+      retrograde: vertex.retrograde || false,
+      isPlanet: false,
+      pointType: vertex.pointType,
+      symbol: vertex.symbol
+    };
+    celestialPoints.push(vertexComplete);
 
     // Combine regular planets with celestial points
     const allCelestialBodies = [...planets, ...celestialPoints];

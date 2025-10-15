@@ -150,6 +150,86 @@ export function calculateLunarNodes(date: Date): { northNode: Partial<PlanetPosi
 }
 
 /**
+ * Calculate Vertex (Electric Ascendant)
+ * The Vertex is found at the intersection of the ecliptic with the prime vertical
+ * It represents fated encounters and significant relationships
+ */
+export function calculateVertex(
+  date: Date,
+  latitude: number,
+  longitude: number
+): Partial<PlanetPosition> {
+  try {
+    // Calculate Local Sidereal Time
+    const astroTime = new Astronomy.AstroTime(date);
+
+    // Get the Mean Sidereal Time at Greenwich (in hours)
+    const mst = Astronomy.SiderealTime(astroTime);
+
+    // Convert longitude to hours (15 degrees = 1 hour)
+    const longitudeHours = longitude / 15;
+
+    // Calculate Local Sidereal Time
+    let lst = mst + longitudeHours;
+    if (lst < 0) lst += 24;
+    if (lst >= 24) lst -= 24;
+
+    // Convert LST to degrees
+    const lstDegrees = lst * 15;
+
+    // Calculate RAMC (Right Ascension of the Midheaven)
+    const ramc = lstDegrees;
+
+    // For Vertex calculation, we need the colatitude (90° - latitude)
+    const colatitude = 90 - Math.abs(latitude);
+
+    // Calculate the Vertex using the formula:
+    // tan(Vertex) = sin(RAMC) / (cos(RAMC) * sin(colatitude) - tan(latitude) * cos(colatitude))
+
+    const ramcRad = (ramc * Math.PI) / 180;
+    const colatRad = (colatitude * Math.PI) / 180;
+    const latRad = (latitude * Math.PI) / 180;
+
+    const numerator = Math.sin(ramcRad);
+    const denominator = Math.cos(ramcRad) * Math.sin(colatRad) - Math.tan(latRad) * Math.cos(colatRad);
+
+    let vertexLongitude = Math.atan2(numerator, denominator) * (180 / Math.PI);
+
+    // Adjust to 0-360 range
+    if (vertexLongitude < 0) vertexLongitude += 360;
+
+    // The Vertex is typically in the western hemisphere (houses 5-8)
+    // Add 180° to move from anti-vertex to vertex
+    vertexLongitude = (vertexLongitude + 180) % 360;
+
+    const signIndex = Math.floor(vertexLongitude / 30) % 12;
+    const sign = SIGNS[signIndex] || 'aries';
+
+    return {
+      name: 'vertex',
+      longitude: vertexLongitude,
+      sign: sign,
+      retrograde: false,
+      isPlanet: false,
+      pointType: 'angle',
+      symbol: 'Vx'
+    };
+  } catch (error) {
+    console.warn('Failed to calculate Vertex:', error);
+    // Return a fallback position
+    return {
+      name: 'vertex',
+      longitude: 0,
+      sign: 'aries',
+      retrograde: false,
+      isPlanet: false,
+      pointType: 'angle',
+      symbol: 'Vx'
+    };
+  }
+}
+
+/**
  * Calculate Chiron position using ephemeris-based approximation
  * Chiron's orbital period is 50.39 years with significant eccentricity
  * For production use, Swiss Ephemeris would provide exact positions

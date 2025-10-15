@@ -15,7 +15,7 @@ export interface PlanetPosition {
   distance?: number;       // Distance in AU
   // Additional metadata for celestial points
   isPlanet?: boolean;      // True for actual planets, false for calculated points
-  pointType?: 'planet' | 'asteroid' | 'centaur' | 'node' | 'arabicPart' | 'apogee'; // Type of celestial point
+  pointType?: 'planet' | 'asteroid' | 'centaur' | 'node' | 'arabicPart' | 'apogee' | 'angle'; // Type of celestial point
   symbol?: string;         // Astrological symbol
 }
 
