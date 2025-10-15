@@ -19,6 +19,7 @@ const StelliumsSection = lazy(() => import('@/components/charts/sections/Stelliu
 const PlanetaryInfluencesSection = lazy(() => import('@/components/charts/sections/PlanetaryInfluencesSection'));
 const CelestialPointsSection = lazy(() => import('@/components/charts/sections/CelestialPointsSection'));
 const PlanetaryDignitiesSection = lazy(() => import('@/components/charts/sections/PlanetaryDignitiesSection'));
+const AngularAspectsSection = lazy(() => import('@/components/charts/sections/AngularAspectsSection'));
 
 /**
  * Chart interpretation module - lazy loaded with intersection observer
@@ -170,6 +171,8 @@ const ChartInterpretation = memo(function ChartInterpretation({ chartData: propC
         return <CelestialPointsSection {...commonProps} />;
       case 'planetaryDignities':
         return <PlanetaryDignitiesSection {...commonProps} />;
+      case 'angularAspects':
+        return <AngularAspectsSection {...commonProps} />;
       default:
         return null;
     }

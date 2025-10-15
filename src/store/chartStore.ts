@@ -91,6 +91,15 @@ export const DEFAULT_SECTIONS: InterpretationSection[] = [
     order: 7,
     isPremium: false
   },
+  {
+    id: 'angularAspects',
+    name: 'Angular Aspects',
+    description: 'Planets aspecting chart angles (AC, MC, DC, IC, Vertex)',
+    icon: '📐',
+    isVisible: true,
+    order: 8,
+    isPremium: false
+  }
 ];
 
 interface ChartStoreState {
