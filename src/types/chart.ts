@@ -13,6 +13,8 @@ export interface NatalChartData {
     generatedAt: string;
     chartData?: import('../utils/natalChart').NatalChartData;
     isOffline?: boolean;
+    timeZone?: string;      // IANA timezone used for calculations
+    utcOffset?: number;     // UTC offset in hours at time of birth
   };
 }
 

@@ -273,9 +273,9 @@ const PeopleSelector: React.FC<PeopleSelectorProps> = ({
           isOpen ? 'max-h-[600px] opacity-100 mt-2' : 'max-h-0 opacity-0'
         }`}
       >
-        <div 
+        <div
           className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[600px] flex flex-col overflow-hidden"
-          style={{ 
+          style={{
             zIndex: 3000,
             transform: 'translateZ(0)',
             isolation: 'isolate',

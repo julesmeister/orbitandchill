@@ -80,6 +80,8 @@ export async function generateNatalChart(birthData: {
       coordinates: birthData.coordinates,
       generatedAt: new Date().toISOString(),
       chartData,
+      timeZone: processedTime.timeZone,
+      utcOffset: processedTime.utcOffset,
     },
   };
 }

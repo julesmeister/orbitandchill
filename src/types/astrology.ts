@@ -51,4 +51,6 @@ export interface ChartMetadata {
   coordinates: { lat: string; lon: string };
   generatedAt: string;
   chartData: NatalChartData;
+  timeZone?: string;  // IANA timezone used for calculation (e.g., "Asia/Manila")
+  utcOffset?: number; // UTC offset in hours at time of birth
 }

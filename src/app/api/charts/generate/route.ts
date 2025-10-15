@@ -60,6 +60,9 @@ async function generateChartSVG(request: ChartGenerationRequest): Promise<{ svg:
         },
         chartData: result.metadata.chartData,
         generatedAt: result.metadata.generatedAt,
+        // CRITICAL: Include timezone data for birth details display
+        timeZone: result.metadata.timeZone,
+        utcOffset: result.metadata.utcOffset,
         version: '1.0.0',
       }
     };

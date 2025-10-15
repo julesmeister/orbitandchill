@@ -118,6 +118,7 @@ interface ChartStoreState {
   // Chart display preferences
   chartPreferences: {
     showAspectLines: boolean;
+    showCelestialPointAspects: boolean;
     showPlanetSymbols: boolean;
     showHouseNumbers: boolean;
     chartTheme: 'light' | 'dark' | 'classic';
@@ -168,6 +169,7 @@ export const useChartStore = create<ChartStore>()(
       sidebarCollapsed: false,
       chartPreferences: {
         showAspectLines: true,
+        showCelestialPointAspects: true,
         showPlanetSymbols: true,
         showHouseNumbers: true,
         chartTheme: 'light',

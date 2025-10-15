@@ -5,12 +5,14 @@
 
 import React from 'react';
 import type { NatalChartData } from '../../utils/natalChart';
+import { CELESTIAL_POINTS } from '../../constants/astrological';
 
 interface AspectLinesProps {
   chartData: NatalChartData;
   getChartCoordinates: (astroLongitude: number, radius: number) => { x: number; y: number };
   onAspectHover: (event: React.MouseEvent, aspect: any) => void;
   onAspectHoverEnd: () => void;
+  showCelestialPointAspects?: boolean;
 }
 
 /**
@@ -35,9 +37,18 @@ export const AspectLines: React.FC<AspectLinesProps> = ({
   chartData,
   getChartCoordinates,
   onAspectHover,
-  onAspectHoverEnd
+  onAspectHoverEnd,
+  showCelestialPointAspects = true
 }) => {
   const aspectRadius = 150;
+
+  // Helper function to check if a planet/point is a celestial point
+  const isCelestialPoint = (name: string): boolean => {
+    const normalizedName = name.toLowerCase().replace(/\s+/g, '');
+    return CELESTIAL_POINTS.some(cp =>
+      cp.toLowerCase().replace(/\s+/g, '') === normalizedName
+    );
+  };
 
   return (
     <g className="aspect-lines">
@@ -46,6 +57,17 @@ export const AspectLines: React.FC<AspectLinesProps> = ({
         const planet2 = chartData.planets.find(p => p.name === aspect.planet2);
 
         if (!planet1 || !planet2) return null;
+
+        // Filter out celestial point aspects if toggle is off
+        if (!showCelestialPointAspects) {
+          const isP1Celestial = isCelestialPoint(aspect.planet1);
+          const isP2Celestial = isCelestialPoint(aspect.planet2);
+
+          // Skip this aspect if either planet is a celestial point
+          if (isP1Celestial || isP2Celestial) {
+            return null;
+          }
+        }
 
         // Use unified coordinate system for aspect lines
         const pos1 = getChartCoordinates(planet1.longitude, aspectRadius);

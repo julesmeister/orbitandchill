@@ -18,6 +18,8 @@ interface CachedChart {
   metadata?: {
     name?: string;
     chartData?: any;
+    timeZone?: string;
+    utcOffset?: number;
   };
 }
 
@@ -98,6 +100,8 @@ export default function ChartDisplayContainer({
           <BirthDataSummary
             birthData={birthDataToShow}
             personName={cachedChart?.metadata?.name || personToShow?.name}
+            timeZone={cachedChart?.metadata?.timeZone}
+            utcOffset={cachedChart?.metadata?.utcOffset}
           />
         )}
 

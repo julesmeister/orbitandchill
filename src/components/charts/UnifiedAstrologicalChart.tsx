@@ -38,6 +38,7 @@ interface UnifiedAstrologicalChartProps {
   className?: string;
   showPlanetInfo?: boolean;
   showAspects?: boolean;
+  showCelestialPointAspects?: boolean;
   showAngularMarkers?: boolean;
   showPlanetCircles?: boolean;
   title?: string;
@@ -49,6 +50,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
   className = "",
   showPlanetInfo = true,
   showAspects = true,
+  showCelestialPointAspects = true,
   showAngularMarkers = true,
   showPlanetCircles = true,
   title
@@ -390,6 +392,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
               getChartCoordinates={getChartCoordinates}
               onAspectHover={handleAspectHover}
               onAspectHoverEnd={() => setTooltip(prev => ({ ...prev, visible: false }))}
+              showCelestialPointAspects={showCelestialPointAspects}
             />
           )}
 
