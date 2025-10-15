@@ -150,15 +150,6 @@ export class ChartApiService {
    * Transform API chart data to local format
    */
   static transformApiChartToLocal(apiChart: ChartData): NatalChartData {
-    // Log what timezone data is available
-    console.log('🔄 Transforming API chart, timezone data:', {
-      hasMetadata: !!apiChart.metadata,
-      hasTimeZone: !!apiChart.metadata?.timeZone,
-      timeZone: apiChart.metadata?.timeZone,
-      hasUtcOffset: apiChart.metadata?.utcOffset !== undefined,
-      utcOffset: apiChart.metadata?.utcOffset
-    });
-
     const transformed: any = {
       id: apiChart.id,
       svg: apiChart.chartData,

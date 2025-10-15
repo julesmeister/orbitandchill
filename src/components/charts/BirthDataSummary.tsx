@@ -39,15 +39,6 @@ function formatTimeZoneDisplay(timeZone?: string, utcOffset?: number): string {
 }
 
 export default function BirthDataSummary({ birthData, personName, timeZone, utcOffset }: BirthDataSummaryProps) {
-  // Debug logging for timezone data
-  console.log('🗺️ BirthDataSummary received:', {
-    hasTimeZone: !!timeZone,
-    timeZone,
-    hasUtcOffset: utcOffset !== undefined,
-    utcOffset,
-    personName
-  });
-
   // Format coordinates for display
   const formatCoordinate = (value: string, type: 'lat' | 'lon'): string => {
     const num = parseFloat(value);
