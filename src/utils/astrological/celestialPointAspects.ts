@@ -490,6 +490,14 @@ export const celestialPointAspectCombinations: Record<
       trine: "Shadow integration and prosperity flow together naturally. This creates natural magnetism for success and happiness through authentic wild power, instinctual wisdom, and prosperity-centered approaches to shadow work and feminine expression.",
       opposition: "Shadow authenticity faces external prosperity and material expectations. This creates awareness of the balance between wild power expression and social expectations for success, developing prosperity through authentic magnetism rather than suppressed nature.",
       quincunx: "Shadow integration requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible authentic expression that maintains wild feminine power while adapting to external requirements for success through embraced instinctual wisdom."
+    },
+    vertex: {
+      conjunction: "Shadow self aligns with fated encounters and destiny points. This creates personalities whose wild, authentic nature attracts significant relationships and destined connections that challenge social conditioning and demand authentic power expression.",
+      sextile: "Shadow integration and fated encounters support each other through conscious authenticity in relationships. This brings destined opportunities when wild feminine power is embraced and authentic expression opens doors to life-changing connections.",
+      square: "Shadow aspects conflict with fated relationship patterns, creating tension between authentic power and destined encounters. This develops genuine relating through learning to express wild nature in significant relationships rather than suppress instinctual wisdom to fit others' expectations.",
+      trine: "Shadow integration and fated encounters flow together naturally. This creates magnetic personalities whose authentic wild power naturally attracts destined relationships and significant life-changing connections that honor instinctual wisdom and rejected aspects.",
+      opposition: "Shadow self faces anti-vertex and complementary destiny points. This creates awareness of how authentic power attracts its opposite through fated encounters, developing relationships that integrate wild nature with others' complementary energies.",
+      quincunx: "Shadow integration requires ongoing adjustment to fated relationship patterns. This develops the ability to maintain authentic wild power while remaining open to destined encounters that challenge and evolve your expression of instinctual wisdom and rejected aspects."
     }
   },
 
@@ -518,6 +526,14 @@ export const celestialPointAspectCombinations: Record<
       trine: "Healing wisdom and prosperity flow together naturally. This creates natural magnetism for success and happiness through authentic therapeutic service, compassionate healing, and prosperity-centered approaches to facilitating transformation that honors both service and self-worth.",
       opposition: "Healing authenticity faces external prosperity and material expectations. This creates awareness of the balance between therapeutic service and financial self-worth, developing prosperity through healing work that honors both compassionate service and appropriate material compensation.",
       quincunx: "Healing wisdom requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible therapeutic service that maintains authentic healing abilities while adapting to external requirements for success and creating abundance through compassionate work."
+    },
+    vertex: {
+      conjunction: "Wounded healer energy aligns with fated encounters and destiny points. This creates personalities whose healing abilities attract significant relationships and destined connections that require therapeutic wisdom and facilitate deep transformation through fated healing encounters.",
+      sextile: "Healing wisdom and fated encounters support each other through conscious compassion in relationships. This brings destined opportunities when healing gifts are shared and therapeutic wisdom opens doors to life-changing connections that serve mutual healing.",
+      square: "Wounded patterns conflict with fated relationship dynamics, creating tension between healing work and destined encounters. This develops authentic relating through learning to bring therapeutic wisdom to significant relationships rather than repeat wounded patterns with fated connections.",
+      trine: "Healing wisdom and fated encounters flow together naturally. This creates compassionate personalities whose therapeutic abilities naturally attract destined relationships and significant life-changing connections that facilitate mutual healing and transformation.",
+      opposition: "Wounded healer role faces anti-vertex and complementary destiny points. This creates awareness of how healing abilities attract those who need therapeutic wisdom through fated encounters, developing relationships that integrate healing service with personal growth.",
+      quincunx: "Healing wisdom requires ongoing adjustment to fated relationship patterns. This develops the ability to maintain therapeutic boundaries while remaining open to destined encounters that challenge and evolve your healing abilities and wounded healer expression."
     }
   },
 
@@ -538,6 +554,14 @@ export const celestialPointAspectCombinations: Record<
       trine: "Soul purpose and prosperity flow together naturally. This creates natural magnetism for success and happiness through fulfilling karmic destiny, serving spiritual evolution, and prosperity-centered approaches to life mission that honor both soul growth and material manifestation.",
       opposition: "Karmic mission faces material prosperity and external success expectations. This creates awareness of the balance between spiritual evolution and financial manifestation, developing prosperity through serving soul purpose in ways that honor both evolutionary responsibility and material needs.",
       quincunx: "Soul purpose requires ongoing adjustment to changing prosperity needs and material circumstances. This develops flexible evolutionary service that maintains authentic karmic mission while adapting to external requirements for success and creating abundance through spiritual growth and life purpose fulfillment."
+    },
+    vertex: {
+      conjunction: "Soul purpose aligns with fated encounters and destiny points. This creates personalities whose karmic mission attracts significant relationships and destined connections that serve spiritual evolution and facilitate life purpose fulfillment through fated meetings.",
+      sextile: "Soul purpose and fated encounters support each other through conscious openness to destiny. This brings destined opportunities when karmic mission is pursued and spiritual evolution opens doors to life-changing connections that serve soul growth.",
+      square: "Karmic mission conflicts with fated relationship patterns, creating tension between soul purpose and destined encounters. This develops authentic evolution through learning to embrace fated connections that challenge comfort zones rather than resist relationships that serve spiritual growth.",
+      trine: "Soul purpose and fated encounters flow together naturally. This creates personalities whose karmic mission naturally attracts destined relationships and significant life-changing connections that effortlessly serve spiritual evolution and life purpose fulfillment.",
+      opposition: "Soul purpose faces anti-vertex and complementary destiny points. This creates awareness of how karmic mission attracts its opposite through fated encounters, developing relationships that integrate spiritual evolution with others' complementary growth paths.",
+      quincunx: "Soul purpose requires ongoing adjustment to fated relationship patterns. This develops the ability to maintain karmic mission while remaining open to destined encounters that challenge and evolve your spiritual path and life purpose expression."
     }
   },
 
@@ -550,6 +574,26 @@ export const celestialPointAspectCombinations: Record<
       trine: "Past patterns and prosperity flow together effortlessly. This creates natural magnetism for success through comfortable talents and familiar abilities, though conscious effort is needed to ensure material abundance serves spiritual evolution rather than reinforcing stagnant patterns or comfort addiction.",
       opposition: "Past-life comfort faces soul-aligned prosperity and evolutionary abundance. This creates awareness of how material success may need to serve spiritual growth rather than reinforce comfortable patterns, developing prosperity through using familiar talents in service of evolution and karmic mission.",
       quincunx: "Past patterns require ongoing adjustment to prosperity needs and material circumstances. This develops flexible use of natural talents that honors familiar abilities while ensuring success serves current spiritual evolution rather than comfortable stagnation or past-pattern repetition that limits growth potential."
+    },
+    vertex: {
+      conjunction: "Past-life patterns align with fated encounters and destiny points. This creates personalities whose familiar talents attract significant relationships and destined connections, though conscious effort is needed to ensure fated encounters serve spiritual evolution rather than reinforce comfortable patterns.",
+      sextile: "Past wisdom and fated encounters support each other through conscious balance of comfort and growth. This brings destined opportunities when natural talents are used in service of evolution rather than spiritual avoidance through familiar relationship patterns that prevent authentic connection.",
+      square: "Comfortable patterns conflict with fated relationship dynamics, creating tension between familiar approaches and destined encounters. This develops authentic relating through learning to use past gifts in significant relationships rather than repeat comfortable patterns that limit transformative connection.",
+      trine: "Past patterns and fated encounters flow together effortlessly. This creates natural magnetism for destined relationships through comfortable talents and familiar abilities, though conscious effort is needed to ensure significant connections serve spiritual evolution rather than reinforce stagnant relationship patterns.",
+      opposition: "Past-life comfort faces anti-vertex and complementary destiny points. This creates awareness of how fated encounters may challenge familiar patterns, developing relationships that integrate natural talents with evolutionary growth through destined connections that push beyond comfort zones.",
+      quincunx: "Past patterns require ongoing adjustment to fated relationship dynamics. This develops flexible use of natural talents in significant relationships while ensuring destined encounters serve current spiritual evolution rather than comfortable stagnation or past-pattern repetition in fated connections."
+    }
+  },
+
+  // PART OF FORTUNE ASPECTS TO OTHER CELESTIAL POINTS
+  partoffortune: {
+    vertex: {
+      conjunction: "Joy and material prosperity align with fated encounters and destiny points. This creates personalities whose path to success and happiness naturally attracts significant relationships and destined connections that facilitate abundance and fulfillment through fated meetings.",
+      sextile: "Prosperity and fated encounters support each other through conscious openness to destined abundance. This brings opportunities for success and joy when material manifestation aligns with spiritual destiny and significant relationships open doors to life-changing prosperity.",
+      square: "Prosperity needs conflict with fated relationship patterns, creating tension between material success and destined encounters. This develops authentic abundance through learning to embrace fated connections that challenge comfort zones rather than resist relationships that serve true prosperity and soul-aligned success.",
+      trine: "Prosperity and fated encounters flow together naturally. This creates personalities whose path to joy and material success naturally attracts destined relationships and significant life-changing connections that effortlessly facilitate abundance and happiness through aligned partnerships.",
+      opposition: "Prosperity path faces anti-vertex and complementary destiny points. This creates awareness of how material success and joy attract their opposite through fated encounters, developing relationships that integrate abundance with others' complementary prosperity paths and shared success.",
+      quincunx: "Prosperity path requires ongoing adjustment to fated relationship patterns. This develops the ability to maintain authentic abundance while remaining open to destined encounters that challenge and evolve your approach to success, joy, and material manifestation through significant partnerships."
     }
   }
 };
