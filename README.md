@@ -294,7 +294,9 @@ svg_string = chart.svg
 
 ### Modern Chart Architecture ⭐ NEW (2024)
 
-> **📚 Complete Chart Documentation**: See [CHART_SHARING_DOCUMENTATION.md](./CHART_SHARING_DOCUMENTATION.md) for detailed chart system implementation
+> **📚 Complete Chart Documentation**: See [CHART.md](./CHART.md) for organized chart system documentation with quick navigation
+> - **[Fixes History](./docs/chart/FIXES_HISTORY.md)** - Chronological record of 33+ fix rounds
+> - **[Comprehensive Reference](./CHART_SHARING_DOCUMENTATION.md)** - Complete 2425-line technical details
 
 **🚀 BREAKTHROUGH PERFORMANCE IMPROVEMENTS:** Completely redesigned chart architecture based on 2024 React best practices
 
