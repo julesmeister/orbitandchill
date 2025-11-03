@@ -31,10 +31,6 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
       description: "Black Moon Lilith represents your shadow self, repressed desires, and hidden strengths.",
       meaning: "Shows where you need to embrace your authentic power and break free from societal expectations."
     },
-    chiron: {
-      description: "Chiron, the wounded healer, represents where you've been deeply wounded and where you can help others heal.",
-      meaning: "Your greatest wound becomes your greatest strength and source of wisdom for helping others."
-    },
     northNode: {
       description: "The North Node represents your soul's purpose and the qualities you're developing in this lifetime.",
       meaning: "This is your karmic direction - the path toward growth, fulfillment, and spiritual evolution."
@@ -51,7 +47,6 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
 
   const pointIcons: Record<string, string> = {
     lilith: '⚸',
-    chiron: '⚷', 
     northNode: '☊',
     southNode: '☋',
     partOfFortune: '⊕'
@@ -59,7 +54,6 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
 
   const pointColors: Record<string, string> = {
     lilith: 'from-purple-500 to-purple-700',
-    chiron: 'from-green-600 to-green-800',
     northNode: 'from-blue-500 to-blue-700',
     southNode: 'from-gray-500 to-gray-700',
     partOfFortune: 'from-yellow-500 to-amber-600'
@@ -67,9 +61,8 @@ const CelestialPointsSection: React.FC<CelestialPointsSectionProps> = ({ chartDa
 
   const displayNames: Record<string, string> = {
     lilith: 'Black Moon Lilith',
-    chiron: 'Chiron',
     northNode: 'North Node',
-    southNode: 'South Node', 
+    southNode: 'South Node',
     partOfFortune: 'Part of Fortune'
   };
 

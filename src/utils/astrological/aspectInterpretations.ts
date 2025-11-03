@@ -18,7 +18,7 @@ export const getFullAspectInfo = (aspect: ChartAspect): AspectInfo => {
   const traditionalPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
   
   // Celestial points (these are typically the second planet in aspects)
-  const celestialPoints = ['lilith', 'chiron', 'northnode', 'southnode', 'partoffortune'];
+  const celestialPoints = ['lilith', 'northnode', 'southnode', 'partoffortune'];
 
   let interpretation: string | undefined;
 

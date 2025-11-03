@@ -16,7 +16,6 @@ const PlanetaryPositionsSection: React.FC<PlanetaryPositionsSectionProps> = ({ c
     jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇',
     // Additional celestial points
     lilith: '⚸',       // Black Moon Lilith
-    chiron: '⚷',       // Chiron
     northNode: '☊',    // North Node
     southNode: '☋',    // South Node
     partOfFortune: '⊕' // Part of Fortune
@@ -25,7 +24,7 @@ const PlanetaryPositionsSection: React.FC<PlanetaryPositionsSectionProps> = ({ c
   const planetDisplayNames: Record<string, string> = {
     sun: 'Sun', moon: 'Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars',
     jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto',
-    lilith: 'Lilith', chiron: 'Chiron', northNode: 'North Node', southNode: 'South Node',
+    lilith: 'Lilith', northNode: 'North Node', southNode: 'South Node',
     partOfFortune: 'Part of Fortune'
   };
 

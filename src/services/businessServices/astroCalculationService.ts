@@ -8,7 +8,7 @@ import * as Astronomy from 'astronomy-engine';
 import { PlanetPosition, NatalChartData, ChartAspect } from '@/types/astrology';
 import { PLANETS, SIGNS, ASTRONOMY_BODIES, ASPECTS } from '@/constants/astrological';
 import { calculatePlacidusHouses, determineHouse } from './houseSystemService';
-import { calculateLilith, calculateChiron, calculateLunarNodes, calculatePartOfFortune, calculateVertex } from './celestialPointsService';
+import { calculateLilith, calculateLunarNodes, calculatePartOfFortune, calculateVertex } from './celestialPointsService';
 
 /**
  * Calculate planetary positions using astronomy-engine
@@ -207,23 +207,6 @@ export async function calculatePlanetaryPositions(
     };
 
     celestialPoints.push(lilithComplete);
-
-    // Add Chiron
-    const chiron = calculateChiron(date);
-    chiron.house = determineHouse(chiron.longitude!, housesData.houses);
-
-    // Ensure all required properties are present
-    const chironComplete: PlanetPosition = {
-      name: chiron.name || 'chiron',
-      longitude: chiron.longitude || 0,
-      sign: chiron.sign || 'aries', // Use the sign calculated in the function
-      house: chiron.house || 1,
-      retrograde: chiron.retrograde || false,
-      isPlanet: false,
-      pointType: chiron.pointType,
-      symbol: chiron.symbol
-    };
-    celestialPoints.push(chironComplete);
 
     // Calculate Lunar Nodes
     const { northNode, southNode } = calculateLunarNodes(date);

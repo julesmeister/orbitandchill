@@ -36,7 +36,6 @@ const PlanetaryDignitiesSection: React.FC<PlanetaryDignitiesSectionProps> = ({
     pluto: '♇',
     // Additional celestial points
     lilith: '⚸',
-    chiron: '⚷',
     northNode: '☊',
     southNode: '☋',
     partOfFortune: '⊕'

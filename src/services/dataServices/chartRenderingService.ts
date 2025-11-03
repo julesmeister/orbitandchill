@@ -290,7 +290,6 @@ function generatePlanetWheel(
     pluto: "♇",
     // Additional celestial points
     lilith: "⚸",
-    chiron: "⚷",
     northNode: "☊",
     southNode: "☋",
     partOfFortune: "⊕",
@@ -309,7 +308,6 @@ function generatePlanetWheel(
     pluto: "#8B0000",
     // Additional celestial points
     lilith: "#800080",      // Purple for Lilith
-    chiron: "#228B22",      // Forest green for Chiron
     northNode: "#4682B4",   // Steel blue for North Node
     southNode: "#708090",   // Slate gray for South Node
     partOfFortune: "#DAA520", // Goldenrod for Part of Fortune

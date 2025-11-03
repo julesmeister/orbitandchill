@@ -104,7 +104,7 @@ const ChartInterpretation = memo(function ChartInterpretation({ chartData: propC
       const celestialPoints = chartData.planets.filter(p => {
         const name = p.name?.toLowerCase() || '';
         return [
-          'lilith', 'chiron', 'northnode', 'southnode', 'partoffortune',
+          'lilith', 'northnode', 'southnode', 'partoffortune',
           'northNode', 'southNode', 'partOfFortune', 'north node', 'south node', 'part of fortune'
         ].includes(name);
       });

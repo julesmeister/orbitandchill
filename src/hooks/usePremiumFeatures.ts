@@ -95,7 +95,7 @@ const FALLBACK_FEATURES: PremiumFeature[] = [
   {
     id: 'celestial-points',
     name: 'Celestial Points',
-    description: 'Lilith, Chiron, Nodes & Part of Fortune',
+    description: 'Lilith, Lunar Nodes & Part of Fortune',
     category: 'interpretation',
     isEnabled: true,
     isPremium: false,

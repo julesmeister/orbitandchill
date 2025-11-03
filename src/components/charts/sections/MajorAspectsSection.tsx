@@ -56,9 +56,9 @@ const MajorAspectsSection: React.FC<MajorAspectsSectionProps> = ({
       categories.push('career');
     }
 
-    // Spirituality aspects (Neptune, Pluto, Jupiter, Chiron, Nodes)
-    if (planets.includes('neptune') || planets.includes('pluto') || planets.includes('jupiter') || 
-        planets.includes('chiron') || planets.includes('northnode') || planets.includes('southnode')) {
+    // Spirituality aspects (Neptune, Pluto, Jupiter, Nodes)
+    if (planets.includes('neptune') || planets.includes('pluto') || planets.includes('jupiter') ||
+        planets.includes('northnode') || planets.includes('southnode')) {
       categories.push('spirituality');
     }
 

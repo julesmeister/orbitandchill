@@ -37,7 +37,6 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
     pluto: '♇',
     // Additional celestial points
     lilith: '⚸',
-    chiron: '⚷',
     northNode: '☊',
     southNode: '☋',
     partOfFortune: '⊕'
@@ -54,7 +53,6 @@ const PlanetaryInfluencesSection: React.FC<PlanetaryInfluencesSectionProps> = ({
     pluto: 'from-indigo-400 to-purple-500',
     // Additional celestial points
     lilith: 'from-purple-500 to-purple-700',
-    chiron: 'from-green-600 to-green-800',
     northNode: 'from-blue-500 to-blue-700',
     southNode: 'from-gray-500 to-gray-700',
     partOfFortune: 'from-yellow-500 to-amber-600'

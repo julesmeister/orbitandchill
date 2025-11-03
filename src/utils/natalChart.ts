@@ -26,7 +26,6 @@ export { calculatePlanetaryPositions, calculateAspects } from '@/services/busine
 export { calculatePlacidusHouses, determineHouse } from '@/services/businessServices/houseSystemService';
 export {
   calculateLilith,
-  calculateChiron,
   calculateLunarNodes,
   calculatePartOfFortune
 } from '@/services/businessServices/celestialPointsService';
