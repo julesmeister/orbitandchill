@@ -74,7 +74,7 @@ export default function AstrologicalEvents() {
     totalEventCount,
     mostCommonEventType,
     nextMajorEvent
-  } = useAstrologicalEvents(locationCoordinates);
+  } = useAstrologicalEvents({ location: locationCoordinates });
 
   // Use countdown timer hook
   const { countdowns } = useCountdownTimer(upcomingEvents, 60000);
