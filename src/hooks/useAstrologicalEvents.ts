@@ -28,17 +28,17 @@ interface UseAstrologicalEventsResult {
   // Raw event data
   allEvents: AstrologicalEvent[];
   isLoading: boolean;
-  
+
   // Processed event data
   upcomingEvents: AstrologicalEvent[];
   eventsByType: Record<string, AstrologicalEvent[]>;
   sortedEvents: AstrologicalEvent[];
-  
+
   // Statistics
   totalEventCount: number;
   mostCommonEventType: string | null;
   nextMajorEvent: AstrologicalEvent | null;
-  
+
   // Actions
   refreshEvents: () => void;
 }
@@ -48,7 +48,24 @@ interface LocationData {
   longitude?: number;
 }
 
-export const useAstrologicalEvents = (location?: LocationData): UseAstrologicalEventsResult => {
+interface UseAstrologicalEventsOptions {
+  location?: LocationData;
+  /**
+   * If true, delays event calculation to prevent blocking initial render
+   * Events will load in background after component mount
+   * Default: false
+   */
+  delayLoad?: boolean;
+  /**
+   * Delay in ms before starting event calculation
+   * Only used if delayLoad is true
+   * Default: 100ms
+   */
+  delayMs?: number;
+}
+
+export const useAstrologicalEvents = (options: UseAstrologicalEventsOptions = {}): UseAstrologicalEventsResult => {
+  const { location, delayLoad = false, delayMs = 100 } = options;
   const [realTimeEvents, setRealTimeEvents] = useState<AstrologicalEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -236,10 +253,19 @@ export const useAstrologicalEvents = (location?: LocationData): UseAstrologicalE
     setIsLoading(false);
   };
 
-  // Initialize events on mount
+  // Initialize events on mount with optional delay
   useEffect(() => {
-    generateRealEvents();
-  }, []);
+    if (delayLoad) {
+      // Delay event generation to prevent blocking initial render
+      const timer = setTimeout(() => {
+        generateRealEvents();
+      }, delayMs);
+
+      return () => clearTimeout(timer);
+    } else {
+      generateRealEvents();
+    }
+  }, [delayLoad, delayMs]);
 
   // Memoize sorted events using real-time data with smart sorting
   const sortedEvents = React.useMemo(() => 
