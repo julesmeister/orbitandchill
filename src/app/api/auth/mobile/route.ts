@@ -52,7 +52,7 @@ interface FirebaseAuthRequest {
 async function verifyGoogleToken(token: string): Promise<GoogleTokenInfo | null> {
   try {
     // Verify the token with Google's tokeninfo endpoint
-    const response = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`, {
+    const response = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
