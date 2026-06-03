@@ -80,7 +80,7 @@ async function verifyGoogleToken(token: string): Promise<GoogleTokenInfo | null>
     }
     
     // Verify the token issuer
-    if (tokenInfo.iss !== 'https://accounts.google.com') {
+    if (!tokenInfo.iss || !tokenInfo.iss.endsWith('accounts.google.com')) {
       console.error('Invalid token issuer:', tokenInfo.iss);
       return null;
     }
