@@ -31,6 +31,7 @@ import { PlanetMarker } from "../horary/PlanetMarker";
 import { AngularMarkers } from "../horary/AngularMarkers";
 import { ChartBackground } from "../horary/ChartBackground";
 import { ZODIAC_SYMBOLS, ZODIAC_NAMES, ZODIAC_COLORS } from "../horary/ZodiacSymbols";
+import { CELESTIAL_POINTS } from "../../constants/astrological";
 
 interface UnifiedAstrologicalChartProps {
   chartData: NatalChartData;
@@ -301,6 +302,14 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
     setTooltip(prev => ({ ...prev, visible: false }));
   };
 
+  // Helper function to check if a planet/point is a celestial point
+  const isCelestialPoint = (name: string): boolean => {
+    const normalizedName = name.toLowerCase().replace(/\s+/g, '');
+    return CELESTIAL_POINTS.some(cp =>
+      cp.toLowerCase().replace(/\s+/g, '') === normalizedName
+    );
+  };
+
   return (
     <div
       ref={containerRef}
@@ -375,7 +384,9 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
 
           {/* Planets */}
           <g className="planets-ring">
-            {chartData.planets.map((planet) => (
+            {chartData.planets
+              .filter(planet => showCelestialPointAspects || !isCelestialPoint(planet.name))
+              .map((planet) => (
               <PlanetMarker
                 key={`planet-${planet.name}`}
                 planet={planet}
@@ -390,7 +401,9 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
 
           {/* Planet ticks on inner circle edge */}
           <g className="planet-ticks">
-            {chartData.planets.map((planet) => {
+            {chartData.planets
+              .filter(planet => showCelestialPointAspects || !isCelestialPoint(planet.name))
+              .map((planet) => {
               const longitude = typeof planet.longitude === 'number' && !isNaN(planet.longitude)
                 ? planet.longitude : 0;
               const tickOuter = getChartCoordinates(longitude, 210);
