@@ -104,6 +104,9 @@ export const HouseCusp: React.FC<HouseCuspProps> = ({
   const opacity = isAngularHouse ? 0.9 : 0.6;
   const strokeColor = isAngularHouse ? "#000000" : "#374151";
 
+  const separatorStart = getChartCoordinates(house.angle, innerRadius);
+  const separatorEnd = getChartCoordinates(house.angle, outerRadius);
+
   const handleMouseEnter = (e: React.MouseEvent) => {
     setIsHovered(true);
     onMouseEnter?.(e, { 
@@ -131,6 +134,15 @@ export const HouseCusp: React.FC<HouseCuspProps> = ({
           fill={houseColors[house.number]}
           opacity={isHovered ? 0.7 : 0.5}
           stroke="none"
+        />
+        <line
+          x1={separatorStart.x}
+          y1={separatorStart.y}
+          x2={separatorEnd.x}
+          y2={separatorEnd.y}
+          stroke="#1F2937"
+          strokeWidth="1.5"
+          opacity="0.6"
         />
         <text
           x={textPos.x}
