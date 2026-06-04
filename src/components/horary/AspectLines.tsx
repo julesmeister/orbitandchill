@@ -40,7 +40,7 @@ export const AspectLines: React.FC<AspectLinesProps> = ({
   onAspectHoverEnd,
   showCelestialPointAspects = true
 }) => {
-  const aspectRadius = 150;
+  const aspectRadius = 200;
 
   // Helper function to check if a planet/point is a celestial point
   const isCelestialPoint = (name: string): boolean => {
