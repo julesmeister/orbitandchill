@@ -118,11 +118,11 @@ export const ZodiacWedge: React.FC<ZodiacWedgeProps> = ({
         style={{ pointerEvents: 'none' }}
       >
         <text
-          x={-20}
+          x={-50}
           y={0}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="12"
+          fontSize="16"
           fontFamily="Arial, sans-serif"
           fill="#1F2937"
         >
@@ -134,11 +134,11 @@ export const ZodiacWedge: React.FC<ZodiacWedgeProps> = ({
         </g>
 
         <text
-          x={20}
+          x={30}
           y={0}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize="12"
+          fontSize="16"
           fontFamily="Arial, sans-serif"
           fill="#1F2937"
         >
