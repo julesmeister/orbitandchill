@@ -123,6 +123,7 @@ interface ChartStoreState {
     showHouseNumbers: boolean;
     chartTheme: 'light' | 'dark' | 'classic';
     chartSize: 'small' | 'medium' | 'large';
+    chartSystem: 'placidus' | 'draconian' | 'vedic';
   };
 }
 
@@ -173,7 +174,8 @@ export const useChartStore = create<ChartStore>()(
         showPlanetSymbols: true,
         showHouseNumbers: true,
         chartTheme: 'light',
-        chartSize: 'medium'
+        chartSize: 'medium',
+        chartSystem: 'placidus'
       },
 
       // Tab management

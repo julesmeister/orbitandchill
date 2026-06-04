@@ -1,12 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { NatalChartFormData } from '@/hooks/useNatalChartForm';
 
-// Lazy load heavy components for better initial load performance
-const ClientWorldMap = lazy(() => import('@/components/ClientWorldMap'));
-const ElectionalAstrologyShowcase = lazy(() => import('@/components/ElectionalAstrologyShowcase'));
-const AstrologicalEvents = lazy(() => import('@/components/AstrologicalEvents'));
 import SectionButton from '@/components/reusable/SectionButton';
 import FeaturedArticlesList from '@/components/reusable/FeaturedArticlesList';
 import NatalChartSection from '@/components/reusable/NatalChartSection';
@@ -17,12 +13,9 @@ import { BRAND } from '@/config/brand';
 import { useUserStore } from '@/store/userStore';
 import { useNatalChart } from '@/hooks/useNatalChart';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useStatusToast } from '@/hooks/useStatusToast';
 import StatusToast from '@/components/reusable/StatusToast';
 import { useFeaturedPosts } from '@/hooks/useFeaturedPosts';
-import AstrologicalEventsStructuredData from '@/components/SEO/AstrologicalEventsStructuredData';
-import { useAstrologicalEvents } from '@/hooks/useAstrologicalEvents';
 import HomePageStructuredData from '@/components/SEO/HomePageStructuredData';
 import { useProgressiveLoad } from '@/hooks/useProgressiveLoad';
 
@@ -35,37 +28,11 @@ export default function HomePageClient() {
   // Use status toast hook
   const { toast: statusToast, showLoading, showSuccess, showError, hideStatus } = useStatusToast();
 
-  // Progressive loading setup - load sections one by one
-  // Hero + Featured Articles load immediately (above the fold)
   const { shouldLoad: shouldLoadNatalChart, ref: natalChartRef } = useProgressiveLoad({
-    delay: 300  // Load natal chart section after 300ms
+    delay: 300
   });
 
-  const { shouldLoad: shouldLoadAstrocartography, ref: astrocartographyRef } = useProgressiveLoad({
-    useIntersection: true,  // Load when scrolled near
-    rootMargin: '400px'     // Start loading 400px before entering viewport
-  });
-
-  const { shouldLoad: shouldLoadElectional, ref: electionalRef } = useProgressiveLoad({
-    useIntersection: true,
-    rootMargin: '400px'
-  });
-
-  const { shouldLoad: shouldLoadEvents, ref: eventsRef } = useProgressiveLoad({
-    useIntersection: true,
-    rootMargin: '400px'
-  });
-
-  // Get featured blog posts (cached for faster loading)
   const { featuredPosts, isLoading: blogPostsLoading } = useFeaturedPosts();
-
-  // Only load astrological events when section is visible (with delay to prevent blocking)
-  const { upcomingEvents } = useAstrologicalEvents({
-    delayLoad: !shouldLoadEvents, // Don't start calculations until section is about to load
-    delayMs: 500  // Additional 500ms delay after section becomes visible
-  });
-
-  // Note: Background sync is already handled by useBlogData hook
 
   // Disabled auto-generation to prevent loops - users can generate from chart page
   // The chart page (useChartPage.ts) already handles chart generation properly
@@ -113,11 +80,6 @@ export default function HomePageClient() {
     hasStoredData && isProfileComplete && cachedChart && !showingForm,
     [hasStoredData, isProfileComplete, cachedChart, showingForm]
   );
-
-  const handleCountryClick = useCallback((countryId: string, event?: MouseEvent) => {
-    // Country selection analytics could be tracked here
-    // Add any future country click functionality here
-  }, []);
 
   const scrollToSection = useCallback((sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -240,95 +202,6 @@ export default function HomePageClient() {
       </div>
 
 
-      {/* World Map - Full Width */}
-      <div ref={astrocartographyRef}>
-        {shouldLoadAstrocartography ? (
-          <section id="astrocartography-section" className="mt-32 bg-gradient-to-b from-blue-600 to-blue-500 py-12 scroll-mt-20 relative overflow-hidden">
-            <div className="container mx-auto px-4 text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-4 font-open-sans">
-                Astrocartography
-              </h2>
-              <p className="text-lg text-blue-100 max-w-3xl mx-auto">
-                Imagine if different places around the world could change how you feel and act!
-                That's what astrocartography is - it shows you where on Earth your stars would make you the happiest, luckiest, or most creative.
-              </p>
-              <div className="mt-6">
-                <Link href="/astrocartography" className="inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
-                  Explore Your Power Places
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Suspense fallback={
-                <div className="w-full h-96 bg-gradient-to-r from-blue-100 to-blue-50 animate-pulse flex items-center justify-center">
-                  <div className="text-blue-600 font-semibold">Loading Interactive Map...</div>
-                </div>
-              }>
-                <ClientWorldMap
-                  className="w-full"
-                  onCountryClick={handleCountryClick}
-                  whiteCountries={true}
-                />
-              </Suspense>
-            </div>
-          </section>
-        ) : (
-          <section className="mt-32">
-            <SectionSkeleton
-              title="Loading Astrocartography Map"
-              minHeight="28rem"
-              bgGradient="from-blue-600 to-blue-500"
-              textColor="text-white"
-            />
-          </section>
-        )}
-      </div>
-
-
-      <div ref={electionalRef} id="electional-astrology-section" className="mt-12 scroll-mt-20">
-        {shouldLoadElectional ? (
-          <Suspense fallback={
-            <div className="container mx-auto px-4 py-12">
-              <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-gray-300 rounded w-1/3 mx-auto"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
-                <div className="h-64 bg-gray-100 rounded"></div>
-              </div>
-            </div>
-          }>
-            <ElectionalAstrologyShowcase />
-          </Suspense>
-        ) : (
-          <SectionSkeleton title="Loading Electional Astrology" minHeight="24rem" />
-        )}
-      </div>
-
-      {/* Astrological Events Section */}
-      <div ref={eventsRef} id="astrological-events-section" className="scroll-mt-20">
-        {shouldLoadEvents ? (
-          <Suspense fallback={
-            <div className="container mx-auto px-4 py-12">
-              <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-gray-300 rounded w-1/2 mx-auto"></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-32 bg-gray-200 rounded"></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          }>
-            <AstrologicalEvents />
-          </Suspense>
-        ) : (
-          <SectionSkeleton title="Loading Astrological Events" minHeight="24rem" />
-        )}
-      </div>
-
       {/* Status Toast */}
       <StatusToast
         title={statusToast.title}
@@ -339,13 +212,6 @@ export default function HomePageClient() {
         duration={statusToast.duration}
         showProgress={statusToast.showProgress}
         progress={statusToast.progress}
-      />
-
-      {/* Structured Data for Astrological Events */}
-      <AstrologicalEventsStructuredData 
-        events={upcomingEvents}
-        siteName={BRAND.name}
-        siteUrl={process.env.NEXT_PUBLIC_SITE_URL || 'https://orbitandchill.com'}
       />
 
       {/* Homepage-specific Structured Data */}

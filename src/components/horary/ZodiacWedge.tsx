@@ -3,12 +3,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { renderZodiacSymbol, ZODIAC_COLORS, ZODIAC_SYMBOLS } from "./ZodiacSymbols";
+import { renderZodiacSymbol, ZODIAC_COLORS, ZODIAC_SYMBOLS, ZODIAC_NAMES } from "./ZodiacSymbols";
 import { CHART_CONFIG } from "./chartConfig";
 
 interface ZodiacWedgeProps {
   index: number;
-  ascendantLongitude: number; // Pass the ascendant longitude for proper rotation
+  ascendantLongitude: number;
+  houses?: Array<{ cusp: number; sign: string; number: number }>;
   onMouseEnter?: (event: React.MouseEvent, data: any) => void;
   onMouseLeave?: () => void;
 }
@@ -16,31 +17,27 @@ interface ZodiacWedgeProps {
 export const ZodiacWedge: React.FC<ZodiacWedgeProps> = ({
   index,
   ascendantLongitude,
+  houses = [],
   onMouseEnter,
   onMouseLeave
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Unified coordinate conversion function (same as in main chart)
   const getChartCoordinates = (astroLongitude: number, radius: number) => {
     const relativeAngle = (astroLongitude - ascendantLongitude + 360) % 360;
     const finalAngleDegrees = (relativeAngle + 180) % 360;
     const angleRad = (finalAngleDegrees * Math.PI) / 180;
-    
     const x = Math.cos(angleRad) * radius;
-    const y = -Math.sin(angleRad) * radius; // Negative Y for correct orientation
-    
+    const y = -Math.sin(angleRad) * radius;
     return { x, y };
   };
   
-  // Calculate zodiac sign boundaries
-  const signStartLongitude = index * 30; // 0° for Aries, 30° for Taurus, etc.
+  const signStartLongitude = index * 30;
   const signEndLongitude = signStartLongitude + 30;
   
   const innerRadius = 420;
   const outerRadius = 525;
 
-  // Get coordinates for wedge corners
   const startInner = getChartCoordinates(signStartLongitude, innerRadius);
   const startOuter = getChartCoordinates(signStartLongitude, outerRadius);
   const endOuter = getChartCoordinates(signEndLongitude, outerRadius);
@@ -55,12 +52,34 @@ export const ZodiacWedge: React.FC<ZodiacWedgeProps> = ({
     Z
   `;
 
-  // Text position at middle of sign
   const textRadius = (innerRadius + outerRadius) / 2;
-  const textPos = getChartCoordinates(signStartLongitude + 15, textRadius);
+  const wedgeCenterAngle = signStartLongitude + 15;
+  const textPos = getChartCoordinates(wedgeCenterAngle, textRadius);
   
   const symbol = ZODIAC_SYMBOLS[index];
   const color = ZODIAC_COLORS[symbol as keyof typeof ZODIAC_COLORS] || "#666666";
+
+  const houseCuspInSign = houses.find(house => {
+    const cuspLon = house.cusp;
+    return cuspLon >= signStartLongitude && cuspLon < signEndLongitude;
+  });
+
+  const degreeInSign = houseCuspInSign ? houseCuspInSign.cusp % 30 : 15;
+  const degrees = Math.floor(degreeInSign);
+  const minutes = Math.floor((degreeInSign - degrees) * 60);
+
+  const relativeAngle = (wedgeCenterAngle - ascendantLongitude + 360) % 360;
+  const canvasAngle = (relativeAngle + 180) % 360;
+
+  let rotationAngle: number;
+  if (canvasAngle < 90 || canvasAngle > 270) {
+    rotationAngle = -canvasAngle + 90 + 180 + 180;
+  } else {
+    rotationAngle = -canvasAngle - 90 + 180;
+  }
+
+  const separatorStart = getChartCoordinates(signStartLongitude, innerRadius);
+  const separatorEnd = getChartCoordinates(signStartLongitude, outerRadius);
 
   const handleMouseEnter = (e: React.MouseEvent) => {
     setIsHovered(true);
@@ -82,21 +101,49 @@ export const ZodiacWedge: React.FC<ZodiacWedgeProps> = ({
         d={pathData}
         fill={color}
         opacity={isHovered ? 0.9 : 0.6}
-        stroke="#19181a"
-        strokeWidth="2"
-        transform={isHovered ? 'scale(1.02)' : 'scale(1)'}
-        style={{
-          transition: 'all 0.3s ease',
-          transformOrigin: `${textPos.x}px ${textPos.y}px`
-        }}
+        stroke="none"
       />
+
+      <line
+        x1={separatorStart.x}
+        y1={separatorStart.y}
+        x2={separatorEnd.x}
+        y2={separatorEnd.y}
+        stroke="#1F2937"
+        strokeWidth="2"
+      />
+
       <g
-        transform={`translate(${textPos.x}, ${textPos.y})`}
-        style={{
-          pointerEvents: 'none'
-        }}
+        transform={`translate(${textPos.x}, ${textPos.y}) rotate(${rotationAngle})`}
+        style={{ pointerEvents: 'none' }}
       >
-        {renderZodiacSymbol(symbol)}
+        <text
+          x={-20}
+          y={0}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="12"
+          fontFamily="Arial, sans-serif"
+          fill="#1F2937"
+        >
+          {degrees}°
+        </text>
+
+        <g transform="scale(1.2) translate(-8, -8)">
+          {renderZodiacSymbol(symbol)}
+        </g>
+
+        <text
+          x={20}
+          y={0}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="12"
+          fontFamily="Arial, sans-serif"
+          fill="#1F2937"
+        >
+          {minutes}&apos;
+        </text>
       </g>
     </g>
   );

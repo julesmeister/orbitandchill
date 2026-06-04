@@ -38,9 +38,11 @@ export const PLANETS = [
 // Additional celestial points (not planets but important in astrology)
 export const CELESTIAL_POINTS = [
   "lilith",      // Black Moon Lilith (Moon's apogee)
+  "chiron",      // Chiron (centaur/asteroid)
   "partOfFortune", // Arabic Part (Lot of Fortune)
   "northNode",   // North Node (Rahu)
   "southNode",   // South Node (Ketu)
+  "vertex",      // Vertex (Electric Ascendant)
 ];
 
 // House numbers

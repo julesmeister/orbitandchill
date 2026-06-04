@@ -9,6 +9,8 @@ import { PlanetPosition, NatalChartData, ChartAspect } from '@/types/astrology';
 import { PLANETS, SIGNS, ASTRONOMY_BODIES, ASPECTS } from '@/constants/astrological';
 import { calculatePlacidusHouses, determineHouse } from './houseSystemService';
 import { calculateLilith, calculateLunarNodes, calculatePartOfFortune, calculateVertex } from './celestialPointsService';
+import { calculateChiron } from './chironCalculator';
+import { detectPatterns } from './aspectPatternService';
 
 /**
  * Calculate planetary positions using astronomy-engine
@@ -289,6 +291,22 @@ export async function calculatePlanetaryPositions(
     };
     celestialPoints.push(vertexComplete);
 
+    // Calculate Chiron (ephemeris-based interpolation)
+    const chiron = calculateChiron(date);
+    chiron.house = determineHouse(chiron.longitude!, housesData.houses);
+
+    const chironComplete: PlanetPosition = {
+      name: chiron.name || 'chiron',
+      longitude: chiron.longitude || 0,
+      sign: chiron.sign || 'aries',
+      house: chiron.house || 1,
+      retrograde: chiron.retrograde || false,
+      isPlanet: false,
+      pointType: chiron.pointType,
+      symbol: chiron.symbol
+    };
+    celestialPoints.push(chironComplete);
+
     // Combine regular planets with celestial points
     const allCelestialBodies = [...planets, ...celestialPoints];
 
@@ -304,14 +322,16 @@ export async function calculatePlanetaryPositions(
     // Calculate aspects including celestial points
     const aspects = calculateAspects(allCelestialBodies);
 
-    // Planetary positions calculation completed
+    // Detect aspect patterns (Grand Trines, T-Squares)
+    const aspectPatterns = detectPatterns(allCelestialBodies, aspects);
 
     return {
-      planets: allCelestialBodies,  // Now includes planets + celestial points
+      planets: allCelestialBodies,
       houses: housesData.houses,
       aspects,
       ascendant: housesData.ascendant,
       midheaven: housesData.midheaven,
+      aspectPatterns,
     };
   } catch (error) {
     console.error('Error calculating planetary positions:', error);

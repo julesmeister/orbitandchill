@@ -35,12 +35,24 @@ export interface ChartAspect {
   orb: number;
 }
 
+export interface AspectPattern {
+  name: string;
+  patternType: 'grand_trine' | 't_square';
+  element?: string;
+  quality?: string;
+  planets: string[];
+  apexPlanet?: string;
+  strength: number;
+  aspects: ChartAspect[];
+}
+
 export interface NatalChartData {
   planets: PlanetPosition[];
   houses: HousePosition[];
   aspects: ChartAspect[];
   ascendant: number;
   midheaven: number;
+  aspectPatterns?: AspectPattern[];
 }
 
 export interface ChartMetadata {

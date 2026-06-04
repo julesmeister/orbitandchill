@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useMemo } from 'react';
 import NextImage from 'next/image';
 import { useUserStore } from '../../store/userStore';
 import { useChartTab, useChartPreferences } from '../../store/chartStore';
@@ -8,6 +8,7 @@ import { getAvatarByIdentifier } from '../../utils/avatarUtils';
 import ChartTabs from './ChartTabs';
 import ChartActions from './ChartActions';
 import { ComponentErrorBoundary } from '../ErrorBoundary';
+import { convertChartSystem, ChartSystem } from '../../services/businessServices/chartSystemConverter';
 
 // TEMPORARILY DISABLED LAZY LOADING TO FIX CHUNK ERROR
 // const ChartInterpretation = lazy(() => import('../../app/chart/components/modules/ChartInterpretation'));
@@ -98,6 +99,19 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
     JSON.stringify(chartData?.planets || []),
     JSON.stringify(chartData?.houses || [])
   ]);
+
+  const birthYear = useMemo(() => {
+    if (!birthData?.dateOfBirth) return undefined;
+    const d = new Date(birthData.dateOfBirth);
+    return isNaN(d.getTime()) ? undefined : d.getFullYear();
+  }, [birthData?.dateOfBirth]);
+
+  const convertedChartData = useMemo(() => {
+    if (!stableChartData) return null;
+    const system: ChartSystem = chartPreferences.chartSystem || 'placidus';
+    if (system === 'placidus') return stableChartData;
+    return convertChartSystem(stableChartData, system, birthYear);
+  }, [stableChartData, chartPreferences.chartSystem, birthYear]);
   
 
   // Only set interpretation tab on initial load in development, not on every tab change
@@ -231,7 +245,24 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
               return (
                 <>
                   {/* Chart View Controls */}
-                  <div className="mb-4 flex justify-end">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    {/* Chart System Selector */}
+                    <div className="flex border-2 border-black">
+                      {(['placidus', 'draconian', 'vedic'] as ChartSystem[]).map((system) => (
+                        <button
+                          key={system}
+                          onClick={() => updateChartPreferences({ chartSystem: system })}
+                          className={`px-4 py-2 font-space-grotesk text-sm font-medium transition-colors border-r-2 border-black last:border-r-0 ${
+                            (chartPreferences.chartSystem || 'placidus') === system
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black hover:bg-gray-100'
+                          }`}
+                        >
+                          {system === 'placidus' ? 'Tropical' : system === 'draconian' ? 'Draconian' : 'Vedic'}
+                        </button>
+                      ))}
+                    </div>
+
                     <button
                       onClick={() => updateChartPreferences({
                         showCelestialPointAspects: !chartPreferences.showCelestialPointAspects
@@ -278,9 +309,9 @@ const NatalChartDisplay: React.FC<NatalChartDisplayProps> = ({
                         maxHeight: '90vh',
                       }}
                     >
-                      {stableChartData ? (
+                      {convertedChartData ? (
                         <UnifiedAstrologicalChart
-                          chartData={stableChartData}
+                          chartData={convertedChartData}
                           chartType="natal"
                           showPlanetInfo={true}
                           showAspects={true}

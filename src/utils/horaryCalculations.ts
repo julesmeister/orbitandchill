@@ -157,22 +157,28 @@ export const processHousesWithAngles = (houses: HousePosition[]): HouseWithAngle
 // Get planet color for rendering
 export const getPlanetColor = (planetName: string): string => {
   const colors: Record<string, string> = {
-    sun: "#FFD700",
+    sun: "#FF8C00",
     moon: "#C0C0C0", 
     mercury: "#FFA500",
-    venus: "#90EE90",
+    venus: "#FF69B4",
     mars: "#FF4500",
-    jupiter: "#9370DB",
+    jupiter: "#9932CC",
     saturn: "#8B4513",
-    uranus: "#00CED1",
-    neptune: "#4169E1", 
+    uranus: "#4169E1",
+    neptune: "#4682B4", 
     pluto: "#8B0000",
-    north_node: "#32CD32",
-    south_node: "#32CD32",
-    part_of_fortune: "#FFD700"
+    lilith: "#800080",
+    chiron: "#228B22",
+    northNode: "#4682B4",
+    southNode: "#708090",
+    north_node: "#4682B4",
+    south_node: "#708090",
+    partOfFortune: "#DAA520",
+    part_of_fortune: "#DAA520",
+    vertex: "#DC143C"
   };
   
-  return colors[planetName] || "#666666";
+  return colors[planetName] || "#333333";
 };
 
 // Get planet symbol
@@ -188,9 +194,15 @@ export const getPlanetSymbol = (planetName: string): string => {
     uranus: "♅",
     neptune: "♆",
     pluto: "♇",
+    lilith: "⚸",
+    chiron: "⚷",
+    northNode: "☊",
+    southNode: "☋",
     north_node: "☊",
     south_node: "☋", 
-    part_of_fortune: "⊕"
+    partOfFortune: "⊕",
+    part_of_fortune: "⊕",
+    vertex: "Vx"
   };
   
   return symbols[planetName] || planetName.charAt(0).toUpperCase();

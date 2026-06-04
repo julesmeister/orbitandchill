@@ -317,14 +317,14 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
         key={`unified-chart-svg-${chartType}-${chartData.ascendant}`}
         width="100%"
         height="100%"
-        viewBox="-600 -600 1200 1200"
+        viewBox="-650 -650 1300 1300"
         style={{ maxHeight: '90vh', minHeight: '600px' }}
       >
         {/* Chart elements - using unified coordinate system */}
         <g>
 
           {/* Chart background and base structure */}
-          <ChartBackground />
+          <ChartBackground ascendantLongitude={chartData.ascendant || 0} />
 
           {/* Zodiac signs ring */}
           <g className="zodiac-ring">
@@ -333,6 +333,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
                 key={`zodiac-${index}`}
                 index={index}
                 ascendantLongitude={chartData.ascendant || 0}
+                houses={chartData.houses}
                 onMouseEnter={handleZodiacHover}
                 onMouseLeave={handleHoverEnd}
               />
@@ -379,10 +380,42 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
                 planet={planet}
                 ascendantLongitude={chartData.ascendant || 0}
                 showCircles={showPlanetCircles}
+                sunLongitude={chartData.planets.find(p => p.name === 'sun')?.longitude}
                 onMouseEnter={handlePlanetHover}
                 onMouseLeave={handleHoverEnd}
               />
             ))}
+          </g>
+
+          {/* Planet ticks on inner circle edge */}
+          <g className="planet-ticks">
+            {chartData.planets.map((planet) => {
+              const longitude = typeof planet.longitude === 'number' && !isNaN(planet.longitude)
+                ? planet.longitude : 0;
+              const tickOuter = getChartCoordinates(longitude, 210);
+              const tickInner = getChartCoordinates(longitude, 200);
+              const tickColor = getPlanetColor(planet.name);
+              return (
+                <g key={`tick-${planet.name}`}>
+                  <line
+                    x1={tickOuter.x}
+                    y1={tickOuter.y}
+                    x2={tickInner.x}
+                    y2={tickInner.y}
+                    stroke={tickColor}
+                    strokeWidth="2.5"
+                    opacity="0.9"
+                  />
+                  <circle
+                    cx={tickInner.x}
+                    cy={tickInner.y}
+                    r="2.5"
+                    fill={tickColor}
+                    opacity="0.9"
+                  />
+                </g>
+              );
+            })}
           </g>
 
           {/* Aspect lines - drawn after center circle but before planets - using unified coordinates */}

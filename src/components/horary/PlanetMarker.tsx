@@ -8,159 +8,105 @@ import { calculateSVGAngle } from "../../utils/horaryCalculations";
 
 interface PlanetMarkerProps {
   planet: PlanetPosition;
-  ascendantLongitude: number; // Pass the ascendant longitude for proper rotation
-  showCircles?: boolean; // Option to show/hide the dashed circles
+  ascendantLongitude: number;
+  showCircles?: boolean;
+  sunLongitude?: number;
   onMouseEnter?: (event: React.MouseEvent, data: any) => void;
   onMouseLeave?: () => void;
 }
 
-// Planet symbols and colors matching _Old.tsx exactly
 const planetSymbols: { [key: string]: string } = {
   sun: "☉", moon: "☽", mercury: "☿", venus: "♀", mars: "♂",
   jupiter: "♃", saturn: "♄", uranus: "♅", neptune: "♆", pluto: "♇",
-  northNode: "☊", southNode: "☋", partOfFortune: "⊕"
+  lilith: "⚸", chiron: "⚷",
+  northNode: "☊", southNode: "☋", partOfFortune: "⊕", vertex: "Vx"
 };
 
 const planetColors: { [key: string]: string } = {
-  sun: "#FFD700", moon: "#C0C0C0", mercury: "#FFA500", venus: "#FF69B4",
+  sun: "#FF8C00", moon: "#C0C0C0", mercury: "#FFA500", venus: "#FF69B4",
   mars: "#FF4500", jupiter: "#9932CC", saturn: "#8B4513", uranus: "#4169E1",
-  neptune: "#00CED1", pluto: "#8B0000", northNode: "#6b21a8", southNode: "#6b21a8",
-  partOfFortune: "#10b981"
+  neptune: "#4682B4", pluto: "#8B0000", lilith: "#800080", chiron: "#228B22",
+  northNode: "#4682B4", southNode: "#708090", partOfFortune: "#DAA520",
+  vertex: "#DC143C"
 };
 
-// Helper function to check if planet is combust (within 8°30' of Sun)
 const isCombust = (planetLongitude: number, sunLongitude: number): boolean => {
   const distance = Math.abs(planetLongitude - sunLongitude);
-  return distance <= 8.5 || distance >= 351.5; // Account for 360° wrap
-};
-
-// Traditional planetary rulerships for significator detection
-const SIGN_RULERS = {
-  'aries': 'mars',
-  'taurus': 'venus',
-  'gemini': 'mercury',
-  'cancer': 'moon',
-  'leo': 'sun',
-  'virgo': 'mercury',
-  'libra': 'venus',
-  'scorpio': 'mars',
-  'sagittarius': 'jupiter',
-  'capricorn': 'saturn',
-  'aquarius': 'saturn',
-  'pisces': 'jupiter'
+  return distance <= 8.5 || distance >= 351.5;
 };
 
 export const PlanetMarker: React.FC<PlanetMarkerProps> = ({
   planet,
   ascendantLongitude,
   showCircles = true,
+  sunLongitude,
   onMouseEnter,
   onMouseLeave
 }) => {
-  // Unified coordinate conversion function (same as in main chart)
   const getChartCoordinates = (astroLongitude: number, radius: number) => {
     const relativeAngle = (astroLongitude - ascendantLongitude + 360) % 360;
     const finalAngleDegrees = (relativeAngle + 180) % 360;
     const angleRad = (finalAngleDegrees * Math.PI) / 180;
-    
     const x = Math.cos(angleRad) * radius;
-    const y = -Math.sin(angleRad) * radius; // Negative Y for correct orientation
-    
+    const y = -Math.sin(angleRad) * radius;
     return { x, y };
   };
 
-  // Calculate position using unified coordinate system
   const longitude = typeof planet.longitude === 'number' && !isNaN(planet.longitude)
     ? planet.longitude
     : 0;
 
-  const radius = 380; // Planets close to outer zodiac ring, matching _Old.tsx
-  const position = getChartCoordinates(longitude, radius);
+  const planetRadius = 380;
+  const position = getChartCoordinates(longitude, planetRadius);
+  const pointerStart = getChartCoordinates(longitude, 420);
+  const pointerEnd = getChartCoordinates(longitude, 405);
 
-  // Check for NaN coordinates
   if (isNaN(position.x) || isNaN(position.y)) {
-    console.warn('Invalid planet coordinates for', planet.name, { longitude, position });
     return null;
   }
 
-  // Calculate additional planetary conditions (matching _Old.tsx)
-  // For now, we'll use mock data for houses and significators since we don't have access to the full chart context
-  // In a real implementation, these would be passed as props
-  const mockHouses = [
-    { number: 1, sign: 'aries' },
-    { number: 7, sign: 'libra' }
-  ];
-  const mockSignificators = { querent: 1, quesited: 7 };
-  
-  const houseRulers = mockHouses.map(house => ({
-    house: house.number,
-    ruler: SIGN_RULERS[house.sign as keyof typeof SIGN_RULERS]
-  }));
-
-  const querentRuler = houseRulers.find(h => h.house === mockSignificators.querent)?.ruler;
-  const quesitedRuler = houseRulers.find(h => h.house === mockSignificators.quesited)?.ruler;
-  const isSignificator = planet.name === querentRuler || planet.name === quesitedRuler;
-  
-  // Mock sun longitude for combust calculations (in real implementation, get from chart data)
-  const mockSunLongitude = 120; // This should come from the actual sun planet data
-  const planetIsCombust = planet.name !== 'sun' && isCombust(planet.longitude, mockSunLongitude);
-
-  const planetColor = planetColors[planet.name] || "#666666";
+  const planetIsCombust = planet.name !== 'sun' && sunLongitude !== undefined && isCombust(planet.longitude, sunLongitude);
+  const planetColor = planetColors[planet.name] || "#333333";
   const planetSymbol = planetSymbols[planet.name] || planet.name.charAt(0).toUpperCase();
+  const isVertex = planet.name === 'vertex';
   
-  // Debug log for special planets - commented out to reduce noise
-  // if (['northNode', 'southNode', 'partOfFortune'].includes(planet.name)) {
-  //   console.log(`🔍 Special planet ${planet.name}:`, { 
-  //     symbol: planetSymbol, 
-  //     expected: planetSymbols[planet.name],
-  //     color: planetColor 
-  //   });
-  // }
-
   return (
     <g>
-      {/* Combust indicator - red glow - matching _Old.tsx */}
-      {showCircles && planetIsCombust && (
-        <circle
-          cx={position.x}
-          cy={position.y}
-          r="25"
-          fill="none"
-          stroke="#dc2626"
-          strokeWidth="2"
-          opacity="0.4"
-          strokeDasharray="2,2"
+      {showCircles && (
+        <line
+          x1={pointerStart.x}
+          y1={pointerStart.y}
+          x2={pointerEnd.x}
+          y2={pointerEnd.y}
+          stroke="#475569"
+          strokeWidth="1.5"
+          opacity="0.8"
         />
       )}
 
-      {/* Highlight circle for significators - matching _Old.tsx */}
-      {showCircles && isSignificator && (
+      {showCircles && (
         <circle
           cx={position.x}
           cy={position.y}
           r="20"
           fill="none"
-          stroke={planet.name === querentRuler ? "#10b981" : "#3b82f6"}
-          strokeWidth="3"
+          stroke={planetIsCombust ? "#dc2626" : planetColor}
+          strokeWidth="2"
           strokeDasharray="4,2"
-          opacity="0.8"
+          opacity={planetIsCombust ? 0.6 : 0.8}
         />
       )}
 
-      {/* Planet text symbol - matching _Old.tsx styling exactly */}
       <text
         x={position.x}
         y={position.y}
         textAnchor="middle"
         dominantBaseline="middle"
-        fontSize="27"
+        fontSize={isVertex ? "18" : "24"}
         fontFamily="Arial, sans-serif"
         fill={planetIsCombust ? "#dc2626" : planetColor}
         opacity={planetIsCombust ? 0.7 : 1}
-        style={{
-          cursor: 'pointer',
-          fontWeight: isSignificator ? 'bold' : 'normal'
-        }}
+        style={{ cursor: 'pointer' }}
         onMouseEnter={(e) => onMouseEnter?.(e, {
           type: 'planet',
           name: planet.name,
