@@ -369,6 +369,7 @@ const UnifiedAstrologicalChart: React.FC<UnifiedAstrologicalChartProps> = ({
             <PlanetInfoStack
               chartData={chartData}
               getChartCoordinates={getChartCoordinates}
+              showCelestialPoints={showCelestialPointAspects}
             />
           )}
 
